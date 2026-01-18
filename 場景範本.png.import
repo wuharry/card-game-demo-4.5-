@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b2r4eud13eirp"
-path="res://.godot/imported/場景.png-9f93dcaa09fd14001e566e2eb5d68ab7.ctex"
+path="res://.godot/imported/場景範本.png-8320be23fc4cedf16112fe81455a3a75.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://場景.png"
-dest_files=["res://.godot/imported/場景.png-9f93dcaa09fd14001e566e2eb5d68ab7.ctex"]
+source_file="res://場景範本.png"
+dest_files=["res://.godot/imported/場景範本.png-8320be23fc4cedf16112fe81455a3a75.ctex"]
 
 [params]
 
