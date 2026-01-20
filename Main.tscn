@@ -13,3 +13,6 @@ position = Vector2(252, 129)
 
 [node name="Card" parent="CardManger" instance=ExtResource("2_r0du0")]
 position = Vector2(119, 148)
+script = ExtResource("1_uu6xs")
+
+[node name="Background" type="TileMapLayer" parent="."]
