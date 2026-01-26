@@ -1,18 +1,9 @@
-[gd_scene load_steps=3 format=3 uid="uid://bhehoq0hgmn0w"]
+[gd_scene load_steps=2 format=3 uid="uid://bhehoq0hgmn0w"]
 
-[ext_resource type="Script" uid="uid://x0p4vc56j0os" path="res://CardManger.gd" id="1_uu6xs"]
-[ext_resource type="PackedScene" uid="uid://bd0cm7rwdysi1" path="res://Card.tscn" id="2_r0du0"]
+[ext_resource type="Texture2D" uid="uid://ox8w81co5b5i" path="res://cardBorder.png" id="1_glv2v"]
 
-[node name="Main" type="Node2D"]
+[node name="MainScene" type="Node3D"]
 
-[node name="CardManger" type="Node2D" parent="."]
-script = ExtResource("1_uu6xs")
-
-[node name="Card2" parent="CardManger" instance=ExtResource("2_r0du0")]
-position = Vector2(252, 129)
-
-[node name="Card" parent="CardManger" instance=ExtResource("2_r0du0")]
-position = Vector2(119, 148)
-script = ExtResource("1_uu6xs")
-
-[node name="Background" type="TileMapLayer" parent="."]
+[node name="Card_01" type="Sprite3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.30951262, 0, 0.16908765)
+texture = ExtResource("1_glv2v")
