@@ -1,10 +1,16 @@
-[gd_scene load_steps=2 format=3 uid="uid://bhehoq0hgmn0w"]
+[gd_scene load_steps=3 format=3 uid="uid://bhehoq0hgmn0w"]
 
 [ext_resource type="PackedScene" uid="uid://bfyrt127l5swf" path="res://card3D.tscn" id="1_glv2v"]
+[ext_resource type="Script" uid="uid://fq1anfl5s3w2" path="res://cardManger3D.gd" id="1_uu6xs"]
 
 [node name="MainScene" type="Node3D"]
 
-[node name="Card" parent="." instance=ExtResource("1_glv2v")]
+[node name="CardManger" type="Node3D" parent="."]
+script = ExtResource("1_uu6xs")
 
-[node name="Card2" parent="." instance=ExtResource("1_glv2v")]
+[node name="Card2" parent="CardManger" instance=ExtResource("1_glv2v")]
 transform = Transform3D(0.9989194, -0.045436654, -0.009784504, 0.043032665, 0.9836845, -0.17468053, 0.01756176, 0.1740707, 0.98457664, 5.469313, -0.07207632, -1.4861898)
+
+[node name="Card" parent="CardManger" instance=ExtResource("1_glv2v")]
+
+[node name="Camera3D" type="Camera3D" parent="."]
