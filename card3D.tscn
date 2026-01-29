@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3 uid="uid://bfyrt127l5swf"]
+
+[ext_resource type="Texture2D" uid="uid://ox8w81co5b5i" path="res://cardBorder.png" id="1_xwjj8"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_glv2v"]
+size = Vector3(2.615036, 3.8815613, 1)
+
+[node name="Card" type="Node3D"]
+
+[node name="CardImage" type="Sprite3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1414628, 0.16979289, 0.09326291)
+pixel_size = 0.005
+texture = ExtResource("1_xwjj8")
+
+[node name="Area3D" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.13647124, 0.15800476, 0)
+shape = SubResource("BoxShape3D_glv2v")
