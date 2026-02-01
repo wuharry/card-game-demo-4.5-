@@ -9,15 +9,15 @@
 script = ExtResource("1_uu6xs")
 
 [node name="Card2" parent="CardManger" instance=ExtResource("1_glv2v")]
-transform = Transform3D(0.9989194, -0.045436654, -0.009784504, 0.043032665, 0.9836845, -0.17468053, 0.01756176, 0.1740707, 0.98457664, 1.1958462, -0.33793974, 2.1020784)
+transform = Transform3D(0.99882036, 0.011623015, -0.047148325, -0.0133777335, 0.999223, -0.03707376, 0.046680775, 0.037660763, 0.99819964, 1.1958462, -0.33793974, 2.1020784)
 
 [node name="Card" parent="CardManger" instance=ExtResource("1_glv2v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6617963, 0, 2.4027596)
 
 [node name="CameraRig" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, -0.50000006, 0.8660254, 0, -0.8660254, -0.50000006, 0, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 0.70710677, 0.70710677, 0, -0.70710677, 0.70710677, 0, 0, 0)
 
 [node name="Camera3D" type="Camera3D" parent="CameraRig"]
-transform = Transform3D(0.9848078, -0.1736482, 0, 0.1736482, 0.9848078, 0, 0, 0, 1, 0, 0, 0)
+transform = Transform3D(0.9848077, -0.17364818, 0, 0.17364818, 0.9848077, 0, 0, 0, 1, 0, 4, 5)
 current = true
-fov = 109.6
+fov = 45.0
