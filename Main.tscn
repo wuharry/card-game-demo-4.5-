@@ -9,10 +9,19 @@
 script = ExtResource("1_uu6xs")
 
 [node name="Card2" parent="CardManger" instance=ExtResource("1_glv2v")]
-transform = Transform3D(0.9981349, 0.061048545, 2.0590882e-09, 6.1030636e-10, -4.370713e-08, 0.99999994, 0.061048552, -0.9981348, -4.3662858e-08, 1.1958462, -0.33793974, 2.1020784)
+transform = Transform3D(1.0000001, 0, 0, 0, 0.70710677, 0.7071067, 0, -0.70710677, 0.7071067, -1.1950349, -0.3379388, 2.463048)
 
 [node name="Card" parent="CardManger" instance=ExtResource("1_glv2v")]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -1.6617963, 0, 2.4027596)
+transform = Transform3D(1, 0, 0, 0, 0.70710677, 0.70710677, 0, -0.70710677, 0.70710677, -3.5876033, 0.33801794, 3.9036217)
+
+[node name="Card3" parent="CardManger" instance=ExtResource("1_glv2v")]
+transform = Transform3D(1, 0, 0, 0, 0.7071067, 0.7071067, 0, -0.7071067, 0.7071067, 2.2834907, 0.64991, 4.289007)
+
+[node name="Card4" parent="CardManger" instance=ExtResource("1_glv2v")]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -0.29056787, 0.6330271, -6.777254)
+
+[node name="Card5" parent="CardManger" instance=ExtResource("1_glv2v")]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 2.6713114, 0.71990967, -6.3316517)
 
 [node name="CameraRig" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.7071067, 0.7071067, 0, -0.7071067, 0.7071067, 0, 0, 0)
