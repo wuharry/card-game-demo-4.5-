@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: dbefec4429eb34a41976ff05dd1b1a8f
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 229065
+  packageName: Angle | Universal 2D/3D Pixel Art
+  packageVersion: 1.1
+  assetPath: Assets/Angle/Tilemap/RuleTiles/Platforms/Boards.asset
+  uploadId: 709141
