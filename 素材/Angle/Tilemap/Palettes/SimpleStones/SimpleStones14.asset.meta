@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: fa395bec03f92064d8074cbcc8d9a31b
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 229065
+  packageName: Angle | Universal 2D/3D Pixel Art
+  packageVersion: 1.1
+  assetPath: Assets/Angle/Tilemap/Palettes/SimpleStones/SimpleStones14.asset
+  uploadId: 709141

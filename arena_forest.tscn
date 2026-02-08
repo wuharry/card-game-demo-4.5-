@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3 uid="uid://d2ha8uw14w0sb"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_5nbl3"]
+size = Vector2(20, 20)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_uyk6n"]
+
+[node name="Arena_Forest" type="Node3D"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("PlaneMesh_5nbl3")
+surface_material_override/0 = SubResource("StandardMaterial3D_uyk6n")
