@@ -10,3 +10,7 @@ size = Vector2(20, 20)
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 mesh = SubResource("PlaneMesh_5nbl3")
 surface_material_override/0 = SubResource("StandardMaterial3D_uyk6n")
+
+[node name="SubViewport" type="SubViewport" parent="MeshInstance3D"]
+
+[node name="TileMapLayer" type="TileMapLayer" parent="MeshInstance3D/SubViewport"]
