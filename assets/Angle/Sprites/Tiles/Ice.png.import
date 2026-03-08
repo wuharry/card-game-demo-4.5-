@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://byl573k7a42ah"
-path="res://.godot/imported/Ice.png-d7c7a24a994d2e59579b6382853b0047.ctex"
+path="res://.godot/imported/Ice.png-2546c028fe2ddd931fb3ad4086013dc4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Tiles/Ice.png"
-dest_files=["res://.godot/imported/Ice.png-d7c7a24a994d2e59579b6382853b0047.ctex"]
+source_file="res://assets/Angle/Sprites/Tiles/Ice.png"
+dest_files=["res://.godot/imported/Ice.png-2546c028fe2ddd931fb3ad4086013dc4.ctex"]
 
 [params]
 

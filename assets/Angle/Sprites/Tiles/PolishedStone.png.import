@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bb01bxn1dmvpl"
-path="res://.godot/imported/PolishedStone.png-00a28632bd9b142a81ba04be37c9cca0.ctex"
+path="res://.godot/imported/PolishedStone.png-147e5bb715dc06b74d1e25a08cdefabe.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Tiles/PolishedStone.png"
-dest_files=["res://.godot/imported/PolishedStone.png-00a28632bd9b142a81ba04be37c9cca0.ctex"]
+source_file="res://assets/Angle/Sprites/Tiles/PolishedStone.png"
+dest_files=["res://.godot/imported/PolishedStone.png-147e5bb715dc06b74d1e25a08cdefabe.ctex"]
 
 [params]
 

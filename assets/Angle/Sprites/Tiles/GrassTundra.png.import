@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dl3wkk8d6ccsq"
-path="res://.godot/imported/GrassTundra.png-e854e56e2245a2b51dd86e5da4e079c2.ctex"
+path="res://.godot/imported/GrassTundra.png-97ad98782cd6f0a6f4eb93914ae2d219.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Tiles/GrassTundra.png"
-dest_files=["res://.godot/imported/GrassTundra.png-e854e56e2245a2b51dd86e5da4e079c2.ctex"]
+source_file="res://assets/Angle/Sprites/Tiles/GrassTundra.png"
+dest_files=["res://.godot/imported/GrassTundra.png-97ad98782cd6f0a6f4eb93914ae2d219.ctex"]
 
 [params]
 

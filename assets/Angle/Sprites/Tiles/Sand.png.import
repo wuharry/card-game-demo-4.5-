@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://co6lgja6ptc4s"
-path="res://.godot/imported/Sand.png-f026822311e60dd579dd01ed1e5d898c.ctex"
+path="res://.godot/imported/Sand.png-95fee2b39897070a63a20b5796810b67.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Tiles/Sand.png"
-dest_files=["res://.godot/imported/Sand.png-f026822311e60dd579dd01ed1e5d898c.ctex"]
+source_file="res://assets/Angle/Sprites/Tiles/Sand.png"
+dest_files=["res://.godot/imported/Sand.png-95fee2b39897070a63a20b5796810b67.ctex"]
 
 [params]
 
