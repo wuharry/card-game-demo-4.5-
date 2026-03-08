@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cw848nbu8c4l2"
-path="res://.godot/imported/ScotsPineTrees.png-0f14f8f39866cf2f32545a5979ddd918.ctex"
+path="res://.godot/imported/ScotsPineTrees.png-9b035eda3ab35a32967b033f3efd2856.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Environments/Natural/Trees/ScotsPineTrees.png"
-dest_files=["res://.godot/imported/ScotsPineTrees.png-0f14f8f39866cf2f32545a5979ddd918.ctex"]
+source_file="res://assets/Angle/Sprites/Environments/Natural/Trees/ScotsPineTrees.png"
+dest_files=["res://.godot/imported/ScotsPineTrees.png-9b035eda3ab35a32967b033f3efd2856.ctex"]
 
 [params]
 

@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c48solalr87is"
-path="res://.godot/imported/Tant.png-1e46c809cb8db5bfaf75989465893c70.ctex"
+path="res://.godot/imported/Tant.png-06010a6a6258cfccbd5f6e6aac73d875.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Environments/Artificial/Tant.png"
-dest_files=["res://.godot/imported/Tant.png-1e46c809cb8db5bfaf75989465893c70.ctex"]
+source_file="res://assets/Angle/Sprites/Environments/Artificial/Tant.png"
+dest_files=["res://.godot/imported/Tant.png-06010a6a6258cfccbd5f6e6aac73d875.ctex"]
 
 [params]
 

@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bqyropgulfdk6"
-path="res://.godot/imported/WarmRocks.png-dd2d0ed96a2668f7864300ab76c44b87.ctex"
+path="res://.godot/imported/WarmRocks.png-33c98d1fab0d7abf6411fccc97c34e4a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Environments/Natural/Rocks/WarmRocks.png"
-dest_files=["res://.godot/imported/WarmRocks.png-dd2d0ed96a2668f7864300ab76c44b87.ctex"]
+source_file="res://assets/Angle/Sprites/Environments/Natural/Rocks/WarmRocks.png"
+dest_files=["res://.godot/imported/WarmRocks.png-33c98d1fab0d7abf6411fccc97c34e4a.ctex"]
 
 [params]
 

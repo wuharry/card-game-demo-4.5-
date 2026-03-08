@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dibkmiov8my6m"
-path="res://.godot/imported/Smoke.png-83bf3806b8a82c8c119a22861fd3d6e6.ctex"
+path="res://.godot/imported/Smoke.png-37ea4e9b2d57a3059ee4842f02c4731a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Effects/Smoke.png"
-dest_files=["res://.godot/imported/Smoke.png-83bf3806b8a82c8c119a22861fd3d6e6.ctex"]
+source_file="res://assets/Angle/Sprites/Effects/Smoke.png"
+dest_files=["res://.godot/imported/Smoke.png-37ea4e9b2d57a3059ee4842f02c4731a.ctex"]
 
 [params]
 

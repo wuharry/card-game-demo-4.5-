@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://6vglv08ink6j"
-path="res://.godot/imported/RainDrop.png-b007bb7dcbbb49f4b0a2c54b813939de.ctex"
+path="res://.godot/imported/RainDrop.png-409d395a1d8f980cc250b2b1b8fa4687.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Effects/RainDrop.png"
-dest_files=["res://.godot/imported/RainDrop.png-b007bb7dcbbb49f4b0a2c54b813939de.ctex"]
+source_file="res://assets/Angle/Sprites/Effects/RainDrop.png"
+dest_files=["res://.godot/imported/RainDrop.png-409d395a1d8f980cc250b2b1b8fa4687.ctex"]
 
 [params]
 

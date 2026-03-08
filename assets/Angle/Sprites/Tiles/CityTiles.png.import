@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bje5k8sq1rrfc"
-path="res://.godot/imported/CityTiles.png-391636be7ed44830e6fffb9235c59593.ctex"
+path="res://.godot/imported/CityTiles.png-bee14753cf460057ad5b0924a56b34f1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Tiles/CityTiles.png"
-dest_files=["res://.godot/imported/CityTiles.png-391636be7ed44830e6fffb9235c59593.ctex"]
+source_file="res://assets/Angle/Sprites/Tiles/CityTiles.png"
+dest_files=["res://.godot/imported/CityTiles.png-bee14753cf460057ad5b0924a56b34f1.ctex"]
 
 [params]
 

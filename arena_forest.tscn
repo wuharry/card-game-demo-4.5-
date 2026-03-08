@@ -1,16 +1,37 @@
-[gd_scene load_steps=3 format=3 uid="uid://d2ha8uw14w0sb"]
+[gd_scene load_steps=6 format=3 uid="uid://chgkpoxgxfare"]
 
-[sub_resource type="PlaneMesh" id="PlaneMesh_5nbl3"]
+[sub_resource type="Environment" id="Environment_5nbl3"]
+
+[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_uyk6n"]
+
+[sub_resource type="Compositor" id="Compositor_m20m3"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_dgp1r"]
 size = Vector2(20, 20)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_uyk6n"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nu8hr"]
 
 [node name="Arena_Forest" type="Node3D"]
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-mesh = SubResource("PlaneMesh_5nbl3")
-surface_material_override/0 = SubResource("StandardMaterial3D_uyk6n")
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_5nbl3")
+camera_attributes = SubResource("CameraAttributesPractical_uyk6n")
+compositor = SubResource("Compositor_m20m3")
 
-[node name="SubViewport" type="SubViewport" parent="MeshInstance3D"]
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.7071068, 0.5, -0.5, 0, 0.7071068, 0.7071068, 0.7071068, -0.5, 0.5, 0, 0, 0)
+light_energy = 1.2
+shadow_enabled = true
+directional_shadow_split_2 = 0.244
+directional_shadow_max_distance = 113.0
 
-[node name="TileMapLayer" type="TileMapLayer" parent="MeshInstance3D/SubViewport"]
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.8660254, 0.5, 0, -0.5, 0.8660254, 0, 8, 6)
+projection = 1
+size = 10.0
+
+[node name="Ground" type="Node3D" parent="."]
+
+[node name="Ground_Base" type="MeshInstance3D" parent="Ground"]
+mesh = SubResource("PlaneMesh_dgp1r")
+surface_material_override/0 = SubResource("StandardMaterial3D_nu8hr")

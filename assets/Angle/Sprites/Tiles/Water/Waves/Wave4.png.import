@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://3ls23bnb2q8l"
-path="res://.godot/imported/Wave4.png-4e9cbf25c2a2505891ca7bc40ec879f6.ctex"
+path="res://.godot/imported/Wave4.png-8b175cb9d32ceb2795c2d5d34fbeda2e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Tiles/Water/Waves/Wave4.png"
-dest_files=["res://.godot/imported/Wave4.png-4e9cbf25c2a2505891ca7bc40ec879f6.ctex"]
+source_file="res://assets/Angle/Sprites/Tiles/Water/Waves/Wave4.png"
+dest_files=["res://.godot/imported/Wave4.png-8b175cb9d32ceb2795c2d5d34fbeda2e.ctex"]
 
 [params]
 

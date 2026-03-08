@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b7077wmlkqgxd"
-path="res://.godot/imported/FireStones.png-6c6dcb186aaf9d8dde1399950ecbbf0d.ctex"
+path="res://.godot/imported/FireStones.png-a9be5572c5f8013239a1e95d96f76d84.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Environments/Artificial/Firies/FireStones.png"
-dest_files=["res://.godot/imported/FireStones.png-6c6dcb186aaf9d8dde1399950ecbbf0d.ctex"]
+source_file="res://assets/Angle/Sprites/Environments/Artificial/Firies/FireStones.png"
+dest_files=["res://.godot/imported/FireStones.png-a9be5572c5f8013239a1e95d96f76d84.ctex"]
 
 [params]
 

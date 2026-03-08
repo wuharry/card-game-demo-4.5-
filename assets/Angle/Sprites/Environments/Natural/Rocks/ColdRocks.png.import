@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://npewb6lbvog5"
-path="res://.godot/imported/ColdRocks.png-0592ebcaf246997a80ca1df4640b3a3a.ctex"
+path="res://.godot/imported/ColdRocks.png-f26882fd2d7ee00e1e93f3be6cdf5340.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Environments/Natural/Rocks/ColdRocks.png"
-dest_files=["res://.godot/imported/ColdRocks.png-0592ebcaf246997a80ca1df4640b3a3a.ctex"]
+source_file="res://assets/Angle/Sprites/Environments/Natural/Rocks/ColdRocks.png"
+dest_files=["res://.godot/imported/ColdRocks.png-f26882fd2d7ee00e1e93f3be6cdf5340.ctex"]
 
 [params]
 

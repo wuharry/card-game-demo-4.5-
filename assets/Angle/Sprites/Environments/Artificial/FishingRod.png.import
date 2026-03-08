@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://0x7r11ogerbg"
-path="res://.godot/imported/FishingRod.png-f3ff031c072715f1e8dbf5022d94977e.ctex"
+path="res://.godot/imported/FishingRod.png-d7473497afea2e1f6162860742882b8e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Environments/Artificial/FishingRod.png"
-dest_files=["res://.godot/imported/FishingRod.png-f3ff031c072715f1e8dbf5022d94977e.ctex"]
+source_file="res://assets/Angle/Sprites/Environments/Artificial/FishingRod.png"
+dest_files=["res://.godot/imported/FishingRod.png-d7473497afea2e1f6162860742882b8e.ctex"]
 
 [params]
 

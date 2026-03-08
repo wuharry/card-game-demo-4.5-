@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://04sc5i0f241s"
-path="res://.godot/imported/WarmStones.png-61d836a5b2924bd703b2f0535575d77f.ctex"
+path="res://.godot/imported/WarmStones.png-721e41df9e8c875aa111aaf4e14620fa.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Environments/Natural/Stones/WarmStones.png"
-dest_files=["res://.godot/imported/WarmStones.png-61d836a5b2924bd703b2f0535575d77f.ctex"]
+source_file="res://assets/Angle/Sprites/Environments/Natural/Stones/WarmStones.png"
+dest_files=["res://.godot/imported/WarmStones.png-721e41df9e8c875aa111aaf4e14620fa.ctex"]
 
 [params]
 

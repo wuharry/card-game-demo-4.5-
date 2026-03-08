@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dw2y5dgtd86yv"
-path="res://.godot/imported/DeadBushes.png-a97b772818c9604c710fd8909b49fe7b.ctex"
+path="res://.godot/imported/DeadBushes.png-d7d2554e02a39faa52477c005b06a8bc.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Tiles/Grasses/DeadBushes.png"
-dest_files=["res://.godot/imported/DeadBushes.png-a97b772818c9604c710fd8909b49fe7b.ctex"]
+source_file="res://assets/Angle/Sprites/Tiles/Grasses/DeadBushes.png"
+dest_files=["res://.godot/imported/DeadBushes.png-d7d2554e02a39faa52477c005b06a8bc.ctex"]
 
 [params]
 

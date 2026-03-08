@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b6ef6jp1wpea7"
-path="res://.godot/imported/Tires.png-dee522c67e7285b753f0ab4081438ff5.ctex"
+path="res://.godot/imported/Tires.png-a9a8c97c5a5392e7869e5da0633bc771.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Environments/Artificial/Tires.png"
-dest_files=["res://.godot/imported/Tires.png-dee522c67e7285b753f0ab4081438ff5.ctex"]
+source_file="res://assets/Angle/Sprites/Environments/Artificial/Tires.png"
+dest_files=["res://.godot/imported/Tires.png-a9a8c97c5a5392e7869e5da0633bc771.ctex"]
 
 [params]
 

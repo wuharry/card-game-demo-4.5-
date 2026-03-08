@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://beybxy3bwa4iu"
-path="res://.godot/imported/WaterLake.png-8c250ec14646400606e6a36026181718.ctex"
+path="res://.godot/imported/WaterLake.png-cd528117746ec67cd816fbdecebb7fe9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Tiles/Water/WaterLake.png"
-dest_files=["res://.godot/imported/WaterLake.png-8c250ec14646400606e6a36026181718.ctex"]
+source_file="res://assets/Angle/Sprites/Tiles/Water/WaterLake.png"
+dest_files=["res://.godot/imported/WaterLake.png-cd528117746ec67cd816fbdecebb7fe9.ctex"]
 
 [params]
 

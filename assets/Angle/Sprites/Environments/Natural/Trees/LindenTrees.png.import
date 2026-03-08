@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dt455puqcv6by"
-path="res://.godot/imported/LindenTrees.png-323638c83922440aa2f2842562999058.ctex"
+path="res://.godot/imported/LindenTrees.png-6f4091d51a4738bddcc6f1f5314b0c21.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Environments/Natural/Trees/LindenTrees.png"
-dest_files=["res://.godot/imported/LindenTrees.png-323638c83922440aa2f2842562999058.ctex"]
+source_file="res://assets/Angle/Sprites/Environments/Natural/Trees/LindenTrees.png"
+dest_files=["res://.godot/imported/LindenTrees.png-6f4091d51a4738bddcc6f1f5314b0c21.ctex"]
 
 [params]
 

@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bm5x5rvmd3exd"
-path="res://.godot/imported/Cactuses.png-3ff0606904fcc78d090c08e5c72150ff.ctex"
+path="res://.godot/imported/Cactuses.png-da823298eefc733a41889c85f08f1913.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Environments/Natural/Cactuses/Cactuses.png"
-dest_files=["res://.godot/imported/Cactuses.png-3ff0606904fcc78d090c08e5c72150ff.ctex"]
+source_file="res://assets/Angle/Sprites/Environments/Natural/Cactuses/Cactuses.png"
+dest_files=["res://.godot/imported/Cactuses.png-da823298eefc733a41889c85f08f1913.ctex"]
 
 [params]
 
