@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ccm1e7qblvtf4"
-path="res://.godot/imported/TextAngle.png-823dcbe82302aa020d62ac89a29a1c85.ctex"
+path="res://.godot/imported/TextAngle.png-ab4e42354607d62d9fc32e3fce0cde5c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/TextAngle.png"
-dest_files=["res://.godot/imported/TextAngle.png-823dcbe82302aa020d62ac89a29a1c85.ctex"]
+source_file="res://assets/Angle/Sprites/TextAngle.png"
+dest_files=["res://.godot/imported/TextAngle.png-ab4e42354607d62d9fc32e3fce0cde5c.ctex"]
 
 [params]
 

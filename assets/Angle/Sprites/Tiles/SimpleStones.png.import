@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://14eqk7nqwvvx"
-path="res://.godot/imported/SimpleStones.png-fbdcc4cd6f6b2b2dd7b9e92a5221711e.ctex"
+path="res://.godot/imported/SimpleStones.png-e76f19ebba5214db9e86dc4d54e46157.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Tiles/SimpleStones.png"
-dest_files=["res://.godot/imported/SimpleStones.png-fbdcc4cd6f6b2b2dd7b9e92a5221711e.ctex"]
+source_file="res://assets/Angle/Sprites/Tiles/SimpleStones.png"
+dest_files=["res://.godot/imported/SimpleStones.png-e76f19ebba5214db9e86dc4d54e46157.ctex"]
 
 [params]
 

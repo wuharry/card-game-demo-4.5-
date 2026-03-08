@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://mecvuj1ohkmn"
-path="res://.godot/imported/Snow.png-4f7a576d705908070bc95c3f7fbd972d.ctex"
+path="res://.godot/imported/Snow.png-506cf2696bd53700fa58c034a37e16ff.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Tiles/Snow.png"
-dest_files=["res://.godot/imported/Snow.png-4f7a576d705908070bc95c3f7fbd972d.ctex"]
+source_file="res://assets/Angle/Sprites/Tiles/Snow.png"
+dest_files=["res://.godot/imported/Snow.png-506cf2696bd53700fa58c034a37e16ff.ctex"]
 
 [params]
 

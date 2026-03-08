@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://n5cb5e0v7xx3"
-path="res://.godot/imported/gress_28.png-c3033b918e3e848d68918b4f1c67366c.ctex"
+path="res://.godot/imported/gress_28.png-ede2726b170261d0a0d031c03f7c511d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/spritezip/gress_28.png"
-dest_files=["res://.godot/imported/gress_28.png-c3033b918e3e848d68918b4f1c67366c.ctex"]
+source_file="res://assets/spritezip/gress_28.png"
+dest_files=["res://.godot/imported/gress_28.png-ede2726b170261d0a0d031c03f7c511d.ctex"]
 
 [params]
 

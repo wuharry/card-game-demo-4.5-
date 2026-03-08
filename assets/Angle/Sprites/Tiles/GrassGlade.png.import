@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://j1cprcysgb8i"
-path.s3tc="res://.godot/imported/GrassGlade.png-612966d1b824362e1cea259649cb5e84.s3tc.ctex"
+path.s3tc="res://.godot/imported/GrassGlade.png-831e0a3a16d39233444a455cef42dac7.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Tiles/GrassGlade.png"
-dest_files=["res://.godot/imported/GrassGlade.png-612966d1b824362e1cea259649cb5e84.s3tc.ctex"]
+source_file="res://assets/Angle/Sprites/Tiles/GrassGlade.png"
+dest_files=["res://.godot/imported/GrassGlade.png-831e0a3a16d39233444a455cef42dac7.s3tc.ctex"]
 
 [params]
 
