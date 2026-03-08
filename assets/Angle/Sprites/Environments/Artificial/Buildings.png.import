@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d4e5pm54xmee0"
-path="res://.godot/imported/Buildings.png-2558300e2e00d4c79ac3f03549995a5c.ctex"
+path="res://.godot/imported/Buildings.png-fb39430fb946e7d7ec0e00eac65d5ed2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Environments/Artificial/Buildings.png"
-dest_files=["res://.godot/imported/Buildings.png-2558300e2e00d4c79ac3f03549995a5c.ctex"]
+source_file="res://assets/Angle/Sprites/Environments/Artificial/Buildings.png"
+dest_files=["res://.godot/imported/Buildings.png-fb39430fb946e7d7ec0e00eac65d5ed2.ctex"]
 
 [params]
 

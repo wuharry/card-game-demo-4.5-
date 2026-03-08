@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bgax7evraw65k"
-path="res://.godot/imported/CloudsForShadow.png-4339f057b0ecfc61e9ad0c80fcbd2a31.ctex"
+path="res://.godot/imported/CloudsForShadow.png-aed7acb0f4645b62f04a5017b520bd1b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Effects/CloudsForShadow.png"
-dest_files=["res://.godot/imported/CloudsForShadow.png-4339f057b0ecfc61e9ad0c80fcbd2a31.ctex"]
+source_file="res://assets/Angle/Sprites/Effects/CloudsForShadow.png"
+dest_files=["res://.godot/imported/CloudsForShadow.png-aed7acb0f4645b62f04a5017b520bd1b.ctex"]
 
 [params]
 

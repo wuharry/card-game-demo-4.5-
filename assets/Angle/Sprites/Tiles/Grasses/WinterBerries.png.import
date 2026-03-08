@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bbx7qpl61ok54"
-path="res://.godot/imported/WinterBerries.png-54ac8697d44a75d6a56ae94accc6247f.ctex"
+path="res://.godot/imported/WinterBerries.png-c07e06cf7ef80b65aa0750e2cbb1750e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Tiles/Grasses/WinterBerries.png"
-dest_files=["res://.godot/imported/WinterBerries.png-54ac8697d44a75d6a56ae94accc6247f.ctex"]
+source_file="res://assets/Angle/Sprites/Tiles/Grasses/WinterBerries.png"
+dest_files=["res://.godot/imported/WinterBerries.png-c07e06cf7ef80b65aa0750e2cbb1750e.ctex"]
 
 [params]
 

@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cqriq7njom52p"
-path="res://.godot/imported/SnowPineTrees.png-20eb0ad92536d9ecc67722f6633e6edd.ctex"
+path="res://.godot/imported/SnowPineTrees.png-803ee6ce05ae5e20a9867470fbf1ff02.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Environments/Natural/Trees/SnowPineTrees.png"
-dest_files=["res://.godot/imported/SnowPineTrees.png-20eb0ad92536d9ecc67722f6633e6edd.ctex"]
+source_file="res://assets/Angle/Sprites/Environments/Natural/Trees/SnowPineTrees.png"
+dest_files=["res://.godot/imported/SnowPineTrees.png-803ee6ce05ae5e20a9867470fbf1ff02.ctex"]
 
 [params]
 

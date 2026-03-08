@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ckk6rsssnrb08"
-path="res://.godot/imported/Tombstones.png-4ceb475bc1e635784f3ca87384318f84.ctex"
+path="res://.godot/imported/Tombstones.png-2fa553a4a26c4fa8c3614108f45f0702.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Environments/Artificial/Tombstones.png"
-dest_files=["res://.godot/imported/Tombstones.png-4ceb475bc1e635784f3ca87384318f84.ctex"]
+source_file="res://assets/Angle/Sprites/Environments/Artificial/Tombstones.png"
+dest_files=["res://.godot/imported/Tombstones.png-2fa553a4a26c4fa8c3614108f45f0702.ctex"]
 
 [params]
 

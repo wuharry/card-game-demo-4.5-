@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b4bg5v41eqatr"
-path="res://.godot/imported/FenceWood.png-eb61f8f7cd7385ebd01fab29d4032cfd.ctex"
+path="res://.godot/imported/FenceWood.png-1bc9a38e98470ca4f9d7d5fa212e1de8.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Tiles/Fences/FenceWood.png"
-dest_files=["res://.godot/imported/FenceWood.png-eb61f8f7cd7385ebd01fab29d4032cfd.ctex"]
+source_file="res://assets/Angle/Sprites/Tiles/Fences/FenceWood.png"
+dest_files=["res://.godot/imported/FenceWood.png-1bc9a38e98470ca4f9d7d5fa212e1de8.ctex"]
 
 [params]
 

@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dj7g8bwibk4qw"
-path="res://.godot/imported/WaterStream.png-4eda5aaed5da9bf4f3defad190691ac0.ctex"
+path="res://.godot/imported/WaterStream.png-4b0224fabee1b6ceb4f2442df20f3cde.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Tiles/Water/WaterStream.png"
-dest_files=["res://.godot/imported/WaterStream.png-4eda5aaed5da9bf4f3defad190691ac0.ctex"]
+source_file="res://assets/Angle/Sprites/Tiles/Water/WaterStream.png"
+dest_files=["res://.godot/imported/WaterStream.png-4b0224fabee1b6ceb4f2442df20f3cde.ctex"]
 
 [params]
 

@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b8yfyk38xt0iy"
-path="res://.godot/imported/StandsWithFire.png-25a963fd4d58be250f6d98ce4ee7d6a0.ctex"
+path="res://.godot/imported/StandsWithFire.png-a8c0a793767d28e1fe745ca26bc077a3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Environments/Artificial/Firies/StandsWithFire.png"
-dest_files=["res://.godot/imported/StandsWithFire.png-25a963fd4d58be250f6d98ce4ee7d6a0.ctex"]
+source_file="res://assets/Angle/Sprites/Environments/Artificial/Firies/StandsWithFire.png"
+dest_files=["res://.godot/imported/StandsWithFire.png-a8c0a793767d28e1fe745ca26bc077a3.ctex"]
 
 [params]
 

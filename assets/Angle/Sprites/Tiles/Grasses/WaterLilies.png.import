@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bnb8o0gql1bgg"
-path="res://.godot/imported/WaterLilies.png-91210d2129c71951488c339886717e84.ctex"
+path="res://.godot/imported/WaterLilies.png-2991e67c8802b221440fd7c7d73fcc77.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Tiles/Grasses/WaterLilies.png"
-dest_files=["res://.godot/imported/WaterLilies.png-91210d2129c71951488c339886717e84.ctex"]
+source_file="res://assets/Angle/Sprites/Tiles/Grasses/WaterLilies.png"
+dest_files=["res://.godot/imported/WaterLilies.png-2991e67c8802b221440fd7c7d73fcc77.ctex"]
 
 [params]
 

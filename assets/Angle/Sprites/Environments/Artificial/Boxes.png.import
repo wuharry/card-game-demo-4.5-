@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ct55jo4uiijx7"
-path="res://.godot/imported/Boxes.png-895ab1009b2e1930504956b7bc9d62b0.ctex"
+path="res://.godot/imported/Boxes.png-784191a4873d339204b5c688065c7426.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Environments/Artificial/Boxes.png"
-dest_files=["res://.godot/imported/Boxes.png-895ab1009b2e1930504956b7bc9d62b0.ctex"]
+source_file="res://assets/Angle/Sprites/Environments/Artificial/Boxes.png"
+dest_files=["res://.godot/imported/Boxes.png-784191a4873d339204b5c688065c7426.ctex"]
 
 [params]
 

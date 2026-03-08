@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d1mo0i5lsewrk"
-path="res://.godot/imported/RainMapCameraTrail.png-f99473817c5edf6d404664dad9fe3571.ctex"
+path="res://.godot/imported/RainMapCameraTrail.png-c09d7434ab4f398e27402a76935bb8af.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/NormalMaps/RainMapCameraTrail.png"
-dest_files=["res://.godot/imported/RainMapCameraTrail.png-f99473817c5edf6d404664dad9fe3571.ctex"]
+source_file="res://assets/Angle/Sprites/NormalMaps/RainMapCameraTrail.png"
+dest_files=["res://.godot/imported/RainMapCameraTrail.png-c09d7434ab4f398e27402a76935bb8af.ctex"]
 
 [params]
 

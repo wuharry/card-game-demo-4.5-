@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dfoj1dxn5s80c"
-path="res://.godot/imported/SimpleRocks.png-a51aa1824e476d866f16fda61b543009.ctex"
+path="res://.godot/imported/SimpleRocks.png-6e2c33d458802415e70f519d7e512941.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Environments/Natural/Rocks/SimpleRocks.png"
-dest_files=["res://.godot/imported/SimpleRocks.png-a51aa1824e476d866f16fda61b543009.ctex"]
+source_file="res://assets/Angle/Sprites/Environments/Natural/Rocks/SimpleRocks.png"
+dest_files=["res://.godot/imported/SimpleRocks.png-6e2c33d458802415e70f519d7e512941.ctex"]
 
 [params]
 

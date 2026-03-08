@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://capp7rmkxxr04"
-path="res://.godot/imported/RiverFlow.png-ab4eebfe39db05a86843a76090b24fd0.ctex"
+path="res://.godot/imported/RiverFlow.png-9123ef413f5798b19093f444f5cbec0f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://素材/Angle/Sprites/Environments/Artificial/RiverFlow.png"
-dest_files=["res://.godot/imported/RiverFlow.png-ab4eebfe39db05a86843a76090b24fd0.ctex"]
+source_file="res://assets/Angle/Sprites/Environments/Artificial/RiverFlow.png"
+dest_files=["res://.godot/imported/RiverFlow.png-9123ef413f5798b19093f444f5cbec0f.ctex"]
 
 [params]
 
