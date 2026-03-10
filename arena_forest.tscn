@@ -1,3 +1,39 @@
-[gd_scene format=3 uid="uid://chgkpoxgxfare"]
+[gd_scene load_steps=4 format=3 uid="uid://chgkpoxgxfare"]
 
-[node name="Node3D" type="Node3D"]
+[sub_resource type="Environment" id="Environment_5nbl3"]
+background_mode = 1
+background_color = Color(0.07058824, 0.16470589, 0.1882353, 1)
+ambient_light_source = 2
+ambient_light_color = Color(1, 1, 1, 1)
+ambient_light_energy = 0.5
+glow_enabled = true
+glow_intensity = 0.3
+glow_bloom = 0.1
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_5nbl3"]
+size = Vector2(20, 20)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_uyk6n"]
+
+[node name="Arena_Forest" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_5nbl3")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.70710677, 0.49999997, -0.49999997, 0, 0.70710677, 0.70710677, 0.70710677, -0.49999997, 0.49999997, 0, 0, 0)
+light_color = Color(1, 0.9607843, 0.8156863, 1)
+light_energy = 1.2
+shadow_enabled = true
+shadow_blur = 2.0
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.8660254, 0.5, 0, -0.5, 0.8660254, 0, 8, 6)
+projection = 1
+size = 10.0
+
+[node name="Ground" type="Node3D" parent="."]
+
+[node name="Ground_Base" type="MeshInstance3D" parent="Ground"]
+mesh = SubResource("PlaneMesh_5nbl3")
+surface_material_override/0 = SubResource("StandardMaterial3D_uyk6n")
