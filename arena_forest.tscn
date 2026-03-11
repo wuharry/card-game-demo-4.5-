@@ -1,6 +1,7 @@
-[gd_scene load_steps=5 format=3 uid="uid://chgkpoxgxfare"]
+[gd_scene load_steps=6 format=3 uid="uid://chgkpoxgxfare"]
 
 [ext_resource type="Texture2D" uid="uid://265cep84v0lv" path="res://assets/hd2d_assets/ground/grass_seamless.png" id="1_uyk6n"]
+[ext_resource type="Texture2D" uid="uid://dt455puqcv6by" path="res://assets/Angle/Sprites/Environments/Natural/Trees/LindenTrees.png" id="2_m20m3"]
 
 [sub_resource type="Environment" id="Environment_5nbl3"]
 background_mode = 1
@@ -42,3 +43,12 @@ size = 10.0
 [node name="Ground_Base" type="MeshInstance3D" parent="Ground"]
 mesh = SubResource("PlaneMesh_5nbl3")
 surface_material_override/0 = SubResource("StandardMaterial3D_uyk6n")
+
+[node name="Props_3D" type="Node3D" parent="."]
+
+[node name="Tree_01" type="Sprite3D" parent="Props_3D"]
+billboard = 1
+shaded = true
+texture = ExtResource("2_m20m3")
+region_enabled = true
+region_rect = Rect2(2, 0, 80, 96)
