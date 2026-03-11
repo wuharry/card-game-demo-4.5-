@@ -1,7 +1,7 @@
 [gd_scene load_steps=6 format=3 uid="uid://chgkpoxgxfare"]
 
 [ext_resource type="Texture2D" uid="uid://265cep84v0lv" path="res://assets/hd2d_assets/ground/grass_seamless.png" id="1_uyk6n"]
-[ext_resource type="Texture2D" uid="uid://dt455puqcv6by" path="res://assets/Angle/Sprites/Environments/Natural/Trees/LindenTrees.png" id="2_m20m3"]
+[ext_resource type="Texture2D" uid="uid://dxxv028qvx0ti" path="res://assets/hd2d_assets/trees/linden_1.png" id="2_m20m3"]
 
 [sub_resource type="Environment" id="Environment_5nbl3"]
 background_mode = 1
@@ -18,7 +18,7 @@ size = Vector2(20, 20)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_uyk6n"]
 albedo_texture = ExtResource("1_uyk6n")
-uv1_scale = Vector3(5, 5, 5)
+uv1_scale = Vector3(8, 8, 8)
 texture_filter = 0
 
 [node name="Arena_Forest" type="Node3D"]
@@ -47,8 +47,11 @@ surface_material_override/0 = SubResource("StandardMaterial3D_uyk6n")
 [node name="Props_3D" type="Node3D" parent="."]
 
 [node name="Tree_01" type="Sprite3D" parent="Props_3D"]
-billboard = 1
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.253, 0.059, -0.91)
+centered = false
+offset = Vector2(-40, 0)
+billboard = 2
 shaded = true
+alpha_cut = 1
 texture = ExtResource("2_m20m3")
-region_enabled = true
 region_rect = Rect2(2, 0, 80, 96)
