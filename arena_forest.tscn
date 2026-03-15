@@ -1,7 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://chgkpoxgxfare"]
+[gd_scene load_steps=8 format=3 uid="uid://chgkpoxgxfare"]
 
 [ext_resource type="Texture2D" uid="uid://265cep84v0lv" path="res://assets/hd2d_assets/ground/grass_seamless.png" id="1_uyk6n"]
 [ext_resource type="Texture2D" uid="uid://dxxv028qvx0ti" path="res://assets/hd2d_assets/trees/linden_1.png" id="2_m20m3"]
+[ext_resource type="Texture2D" uid="uid://c2uqomidt1et2" path="res://assets/hd2d_assets/shadows/radial_shadow.png" id="3_nu8hr"]
+[ext_resource type="Texture2D" uid="uid://dgjofd1ptgtkq" path="res://assets/hd2d_assets/decals/grass_edge_top.png" id="4_l0ith"]
 
 [sub_resource type="Environment" id="Environment_5nbl3"]
 background_mode = 1
@@ -55,3 +57,16 @@ shaded = true
 alpha_cut = 1
 texture = ExtResource("2_m20m3")
 region_rect = Rect2(2, 0, 80, 96)
+
+[node name="Shadow_Decal" type="Decal" parent="Props_3D"]
+transform = Transform3D(1.5, 0, 0, 0, 0.2, 0, 0, 0, 1.5, -0.253, 0, -0.91)
+texture_albedo = ExtResource("3_nu8hr")
+emission_energy = 0.95
+modulate = Color(0, 0, 0, 0.5882353)
+
+[node name="Decals" type="Node3D" parent="."]
+
+[node name="Grass_Edge_Top" type="Decal" parent="Decals"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -9)
+size = Vector3(20, 1, 3)
+texture_albedo = ExtResource("4_l0ith")
