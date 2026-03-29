@@ -1,9 +1,6 @@
-[gd_scene load_steps=8 format=3 uid="uid://chgkpoxgxfare"]
+[gd_scene format=3 uid="uid://chgkpoxgxfare"]
 
-[ext_resource type="Texture2D" uid="uid://265cep84v0lv" path="res://assets/hd2d_assets/ground/grass_seamless.png" id="1_uyk6n"]
-[ext_resource type="Texture2D" uid="uid://dxxv028qvx0ti" path="res://assets/hd2d_assets/trees/linden_1.png" id="2_m20m3"]
-[ext_resource type="Texture2D" uid="uid://c2uqomidt1et2" path="res://assets/hd2d_assets/shadows/radial_shadow.png" id="3_nu8hr"]
-[ext_resource type="Texture2D" uid="uid://dgjofd1ptgtkq" path="res://assets/hd2d_assets/decals/grass_edge_top.png" id="4_l0ith"]
+[ext_resource type="MeshLibrary" uid="uid://bhkww34j8tya5" path="res://assets/test_libs/ grassland_tiles.meshlib" id="1_uyk6n"]
 
 [sub_resource type="Environment" id="Environment_5nbl3"]
 background_mode = 1
@@ -12,61 +9,35 @@ ambient_light_source = 2
 ambient_light_color = Color(1, 1, 1, 1)
 ambient_light_energy = 0.5
 glow_enabled = true
-glow_intensity = 0.3
 glow_bloom = 0.1
 
-[sub_resource type="PlaneMesh" id="PlaneMesh_5nbl3"]
-size = Vector2(20, 20)
+[node name="Arena_Forest" type="Node3D" unique_id=107736439]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_uyk6n"]
-albedo_texture = ExtResource("1_uyk6n")
-uv1_scale = Vector3(8, 8, 8)
-texture_filter = 0
+[node name="Props" type="Node3D" parent="." unique_id=513737213]
 
-[node name="Arena_Forest" type="Node3D"]
-
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=361735587]
 environment = SubResource("Environment_5nbl3")
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=20063189]
 transform = Transform3D(0.70710677, 0.49999997, -0.49999997, 0, 0.70710677, 0.70710677, 0.70710677, -0.49999997, 0.49999997, 0, 0, 0)
 light_color = Color(1, 0.9607843, 0.8156863, 1)
 light_energy = 1.2
 shadow_enabled = true
 shadow_blur = 2.0
 
-[node name="Camera3D" type="Camera3D" parent="."]
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1805499783]
 transform = Transform3D(1, 0, 0, 0, 0.8660254, 0.5, 0, -0.5, 0.8660254, 0, 8, 6)
 projection = 1
 size = 10.0
 
-[node name="Ground" type="Node3D" parent="."]
+[node name="GridMap" type="GridMap" parent="." unique_id=1096468843]
+mesh_library = ExtResource("1_uyk6n")
+cell_size = Vector3(1, 1, 1)
+data = {
+"cells": PackedInt32Array(-2, 1, 0, -2, 0, 0, -1, 0, 0, -65536, 0, 0, -65536, 1, 0, -65535, 0, 0, -65535, 65535, 0, -1, 65534, 0, -65536, 65532, 0, -65536, 65533, 0, -1, 65533, 0, -65536, 65534, 0, -1, 65535, 0, -65536, 65535, 0, -3, 1, 0, -1, 1, 0, -65535, 1, 0, -65535, 65534, 0)
+}
+metadata/_editor_floor_ = Vector3(0, -1, 0)
 
-[node name="Ground_Base" type="MeshInstance3D" parent="Ground"]
-mesh = SubResource("PlaneMesh_5nbl3")
-surface_material_override/0 = SubResource("StandardMaterial3D_uyk6n")
+[node name="Terrain" type="Node3D" parent="." unique_id=1294075962]
 
-[node name="Props_3D" type="Node3D" parent="."]
-
-[node name="Tree_01" type="Sprite3D" parent="Props_3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.253, 0.059, -0.91)
-centered = false
-offset = Vector2(-40, 0)
-billboard = 2
-shaded = true
-alpha_cut = 1
-texture = ExtResource("2_m20m3")
-region_rect = Rect2(2, 0, 80, 96)
-
-[node name="Shadow_Decal" type="Decal" parent="Props_3D"]
-transform = Transform3D(1.5, 0, 0, 0, 0.2, 0, 0, 0, 1.5, -0.253, 0, -0.91)
-texture_albedo = ExtResource("3_nu8hr")
-emission_energy = 0.95
-modulate = Color(0, 0, 0, 0.5882353)
-
-[node name="Decals" type="Node3D" parent="."]
-
-[node name="Grass_Edge_Top" type="Decal" parent="Decals"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -9)
-size = Vector3(20, 1, 3)
-texture_albedo = ExtResource("4_l0ith")
+[node name="Cliffs" type="Node3D" parent="." unique_id=1531476697]

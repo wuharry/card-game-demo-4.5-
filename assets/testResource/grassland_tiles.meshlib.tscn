@@ -1,0 +1,60 @@
+[gd_scene format=3 uid="uid://dck76p8nrsr1n"]
+
+[ext_resource type="ArrayMesh" uid="uid://dbaram40huw4g" path="res://assets/Pixel_3D_地板包_2.0/Modular Tile Models/OBJ/Grass_Dirt_Tile_01.obj" id="1_xnbld"]
+[ext_resource type="Material" uid="uid://oj1f4gatgcgk" path="res://assets/testResource/mat_grass.tres" id="2_0m7aw"]
+[ext_resource type="ArrayMesh" uid="uid://dmlk352tptgl8" path="res://assets/Pixel_3D_地板包_2.0/Modular Tile Models/OBJ/Grass_Dirt_Tile_02.obj" id="3_gjxs6"]
+[ext_resource type="ArrayMesh" uid="uid://m12xbipbjqh0" path="res://assets/Pixel_3D_地板包_2.0/Modular Tile Models/OBJ/Grass_Dirt_Tile_03.obj" id="4_4vttg"]
+[ext_resource type="ArrayMesh" uid="uid://dmo74wgqqs6g3" path="res://assets/Pixel_3D_地板包_2.0/Modular Tile Models/OBJ/Dirt_Tile_01.obj" id="5_sslw4"]
+[ext_resource type="Material" uid="uid://17fp88e1x4hq" path="res://assets/testResource/mat_dirt.tres" id="6_guvw0"]
+[ext_resource type="ArrayMesh" uid="uid://dv5qeo8w4a4rs" path="res://assets/Pixel_3D_地板包_2.0/Modular Tile Models/OBJ/Grass_Dirt_Tile_04.obj" id="7_h1qmm"]
+[ext_resource type="ArrayMesh" uid="uid://8n66jg6ool2v" path="res://assets/Pixel_3D_地板包_2.0/Modular Tile Models/OBJ/Grass_Dirt_Tile_05.obj" id="8_hdp08"]
+[ext_resource type="ArrayMesh" uid="uid://bn6n0aqwsc26c" path="res://assets/Pixel_3D_地板包_2.0/Modular Tile Models/OBJ/Grass_Dirt_Tile_06.obj" id="9_3801t"]
+[ext_resource type="ArrayMesh" uid="uid://w0vcdmifqlvd" path="res://assets/Pixel_3D_地板包_2.0/Modular Tile Models/OBJ/Grass_Dirt_Tile_07.obj" id="10_py7hi"]
+[ext_resource type="ArrayMesh" uid="uid://cv7ksyjusxb3l" path="res://assets/Pixel_3D_地板包_2.0/Modular Tile Models/OBJ/Grass_Dirt_Tile_08.obj" id="11_5qex3"]
+
+[node name="TileLibrary" type="Node3D" unique_id=869610346]
+
+[node name="GrassDirtTile01" type="MeshInstance3D" parent="." unique_id=1527502176]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3409892, -1.1920929e-07, 0.95937276)
+mesh = ExtResource("1_xnbld")
+surface_material_override/0 = ExtResource("2_0m7aw")
+
+[node name="GrassDirtTile02" type="MeshInstance3D" parent="." unique_id=1436113542]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.328879, 0, 0.9817476)
+mesh = ExtResource("3_gjxs6")
+surface_material_override/0 = ExtResource("2_0m7aw")
+
+[node name="GrassDirtTile03" type="MeshInstance3D" parent="." unique_id=1676714428]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.63509136, -0.025318027, 0.9579282)
+mesh = ExtResource("4_4vttg")
+surface_material_override/0 = ExtResource("2_0m7aw")
+
+[node name="DirtTile01" type="MeshInstance3D" parent="." unique_id=1103531778]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6716906, 0.008490682, 1.0015965)
+mesh = ExtResource("5_sslw4")
+surface_material_override/0 = ExtResource("6_guvw0")
+
+[node name="GrassDirtTile04" type="MeshInstance3D" parent="." unique_id=37367501]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4445505, -1.1920929e-07, 0.8573623)
+mesh = ExtResource("7_h1qmm")
+surface_material_override/0 = ExtResource("2_0m7aw")
+
+[node name="GrassDirtTile05" type="MeshInstance3D" parent="." unique_id=29750636]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.7191148, -0.41303015, -1.0260229)
+mesh = ExtResource("8_hdp08")
+surface_material_override/0 = ExtResource("2_0m7aw")
+
+[node name="GrassDirtTile06" type="MeshInstance3D" parent="." unique_id=657465267]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.91988695, 1.1920929e-07, -0.1091671)
+mesh = ExtResource("9_3801t")
+surface_material_override/0 = ExtResource("2_0m7aw")
+
+[node name="GrassDirtTile07" type="MeshInstance3D" parent="." unique_id=1831536439]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.07202971, 0, -0.09465814)
+mesh = ExtResource("10_py7hi")
+surface_material_override/0 = ExtResource("2_0m7aw")
+
+[node name="GrassDirtTile08" type="MeshInstance3D" parent="." unique_id=1240425836]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.9890335, 0, -0.090446234)
+mesh = ExtResource("11_5qex3")
+surface_material_override/0 = ExtResource("2_0m7aw")
