@@ -8,11 +8,6 @@
 
 [node name="CardManger" type="Node3D" parent="."]
 script = ExtResource("1_uu6xs")
-hand_arc_radius = null
-max_spread_angle = null
-card_y_offset = null
-card_z_base = null
-fan_rotation = null
 
 [node name="Card2" parent="CardManger" instance=ExtResource("1_glv2v")]
 transform = Transform3D(0.6, 0, 0, 0, 0.42426407, 0.42426407, 0, -0.42426407, 0.42426407, 0, 3, 9)

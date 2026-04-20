@@ -10,9 +10,33 @@ var card_being_dragged: Node3D = null
 var drag_plane_height: float = 0.0
 
 func _ready() -> void:
+	# 1. 遊戲開始時，先綁定所有卡片的信號
+	connect_card_signals()
 	# 3D 不需要像 2D 那樣限制 screen_size，因為世界座標跟螢幕像素不同
 	pass
 
+# --- 新增：綁定信號的邏輯 ---
+func connect_card_signals() -> void:
+	for child in get_children():
+		if child is Card:
+			# 將卡片的信號，連接到 Manager 底下的 _on_card_hovered 函式
+			# 因為卡片有傳遞 self 出來，所以接收端也要預留參數位置
+			child.card_hovered.connect(_on_card_hovered)
+			child.card_unhovered.connect(_on_card_unhovered)
+
+# --- 新增：接收廣播後的處理函式 ---
+func _on_card_hovered(card: Card) -> void:
+	# 防呆檢查：如果現在沒有在拖拽任何卡片，才允許卡片放大
+	if card_being_dragged == null:
+		card.animate_hover()
+		# 未來你可以在這裡加入：讓這張卡片的 Z 軸往前移 (防穿模)
+
+func _on_card_unhovered(card: Card) -> void:
+	if card_being_dragged == null:
+		card.animate_unhover()
+		# 未來你可以在這裡加入：讓這張卡片的 Z 軸退回原位
+			
+			
 func _process(delta: float) -> void:
 	if card_being_dragged:
 		# 1. 建立一個數學平面 (Plane)。
