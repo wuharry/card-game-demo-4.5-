@@ -8,7 +8,8 @@ const COLLISION_MASK_CARD = 1
 var card_being_dragged: Node3D = null
 # 用來記錄拖曳時的平面高度 (Y軸)
 var drag_plane_height: float = 0.0
-
+# --- 記錄目前被 Hover 的卡片(全場同時永遠「只有一張」卡片能被放大) ---
+var currently_hovered_card: Card = null
 func _ready() -> void:
 	# 1. 遊戲開始時，先綁定所有卡片的信號
 	connect_card_signals()
@@ -18,6 +19,7 @@ func _ready() -> void:
 # --- 新增：綁定信號的邏輯 ---
 func connect_card_signals() -> void:
 	for child in get_children():
+		# mapping card中.....
 		if child is Card:
 			# 將卡片的信號，連接到 Manager 底下的 _on_card_hovered 函式
 			# 因為卡片有傳遞 self 出來，所以接收端也要預留參數位置
@@ -26,14 +28,31 @@ func connect_card_signals() -> void:
 
 # --- 新增：接收廣播後的處理函式 ---
 func _on_card_hovered(card: Card) -> void:
-	# 防呆檢查：如果現在沒有在拖拽任何卡片，才允許卡片放大
-	if card_being_dragged == null:
-		card.animate_hover()
+# 防呆 1：如果正在拖曳，直接忽略任何 Hover (底下的牌不會亂放大)
+	if card_being_dragged != null:
+		return
+		
+	# 防呆 2：如果已經有其他卡片被放大了，先把它縮小 (解決重疊卡死)
+	if currently_hovered_card != null and currently_hovered_card != card:
+		currently_hovered_card.animate_unhover()
+		
+	# 記錄並執行新卡片的放大
+	currently_hovered_card = card
+	card.animate_hover()
 		# 未來你可以在這裡加入：讓這張卡片的 Z 軸往前移 (防穿模)
 
 func _on_card_unhovered(card: Card) -> void:
-	if card_being_dragged == null:
+	# 確認離開的是目前記錄的這張卡片
+	if currently_hovered_card == card:
+		currently_hovered_card = null
 		card.animate_unhover()
+		
+		# --- 防呆補償邏輯 ---
+		# 主動射一條射線，看看底下還有沒有卡片被忽略了
+		var underneath_card = raycast_check_for_card()
+		# 如果有掃到卡片，且我們沒有在拖曳，就主動觸發它的 Hover
+		if underneath_card and underneath_card is Card and card_being_dragged == null:
+			_on_card_hovered(underneath_card)
 		# 未來你可以在這裡加入：讓這張卡片的 Z 軸退回原位
 			
 			
@@ -67,9 +86,14 @@ func _input(event: InputEvent) -> void:
 				card_being_dragged = card
 				# 記錄卡片當前的高度，這樣拖曳時不會突然飛高或穿地板
 				drag_plane_height = card.global_position.y
+				# --- 卡片被抓起來時，強制取消它的放大狀態 ---
+				if currently_hovered_card == card:
+					currently_hovered_card = null
+					card.animate_unhover()
 		else:
 			print('左鍵釋放 (3D)')
 			card_being_dragged = null
+			# organize_hand() # 放開時重新扇形排列(目前還沒實作)
 
 # 用來檢測點擊下去的地方是否有卡片 (3D 版本)
 func raycast_check_for_card():
