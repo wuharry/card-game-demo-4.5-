@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://241df27qvpgv"
+path="res://.godot/imported/Fence_End_02.obj-d6477bd9c0b3d996f513d5bd173b7338.mesh"
+
+[deps]
+
+files=["res://.godot/imported/Fence_End_02.obj-d6477bd9c0b3d996f513d5bd173b7338.mesh"]
+
+source_file="res://assets/Pixel_3D_地板包_2.0/Objects/OBJ/Fence_End_02.obj"
+dest_files=["res://.godot/imported/Fence_End_02.obj-d6477bd9c0b3d996f513d5bd173b7338.mesh", "res://.godot/imported/Fence_End_02.obj-d6477bd9c0b3d996f513d5bd173b7338.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

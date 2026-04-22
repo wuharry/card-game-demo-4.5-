@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://mg2kv0oeumcx"
+path="res://.godot/imported/Rubble_02_End.obj-d8e1842ed286e1e94ce88cee96018d03.mesh"
+
+[deps]
+
+files=["res://.godot/imported/Rubble_02_End.obj-d8e1842ed286e1e94ce88cee96018d03.mesh"]
+
+source_file="res://assets/Pixel_3D_地板包_2.0/Structures/OBJ/Rubble_02_End.obj"
+dest_files=["res://.godot/imported/Rubble_02_End.obj-d8e1842ed286e1e94ce88cee96018d03.mesh", "res://.godot/imported/Rubble_02_End.obj-d8e1842ed286e1e94ce88cee96018d03.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false
