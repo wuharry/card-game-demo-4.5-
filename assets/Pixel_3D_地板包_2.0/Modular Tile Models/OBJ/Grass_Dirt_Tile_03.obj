@@ -1,0 +1,16 @@
+# Blender v2.93.5 OBJ File: 'Grass_Dirt_Tile_03.blend'
+# www.blender.org
+mtllib Grass_Dirt_Tile_03.mtl
+o Cube
+v 0.000000 0.000000 0.000000
+v 0.000000 0.000000 -1.000000
+v -1.000000 0.000000 -1.000000
+v -1.000000 0.000000 0.000000
+vt 0.250098 0.875098
+vt 0.374902 0.875098
+vt 0.374902 0.999902
+vt 0.250098 0.999902
+vn 0.0000 1.0000 0.0000
+usemtl GrassLands_NEW_C
+s off
+f 1/1/1 2/2/1 3/3/1 4/4/1

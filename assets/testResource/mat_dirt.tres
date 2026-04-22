@@ -1,0 +1,11 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://17fp88e1x4hq"]
+
+[ext_resource type="Texture2D" uid="uid://chq78sh0lxf34" path="res://assets/Pixel_3D_地板包_2.0/Landscape Material Tiles/Grassland_Dirt_Tile_01.png" id="1_v2mc1"]
+[ext_resource type="Texture2D" uid="uid://56d45ugeg3h6" path="res://assets/Pixel_3D_地板包_2.0/Landscape Material Tiles/Grassland_Dirt_Tile_N_01.png" id="2_jawre"]
+
+[resource]
+albedo_texture = ExtResource("1_v2mc1")
+normal_enabled = true
+normal_texture = ExtResource("2_jawre")
+uv1_scale = Vector3(4, 4, 4)
+texture_filter = 0
