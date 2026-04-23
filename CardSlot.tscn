@@ -1,10 +1,15 @@
-[gd_scene load_steps=2 format=3 uid="uid://df3ao5yyr27qy"]
+[gd_scene load_steps=3 format=3 uid="uid://df3ao5yyr27qy"]
+
+[ext_resource type="Texture2D" uid="uid://eqy1s8fn5uuc" path="res://assets/卡匡包/free frames pack by batareya/base 6.png" id="1_5tl20"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_r0du0"]
+size = Vector3(0.6, 0.05, 0.9)
 
 [node name="CardSlot" type="Area3D"]
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+[node name="Sprite3D" type="Sprite3D" parent="."]
+axis = 1
+texture = ExtResource("1_5tl20")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("BoxShape3D_r0du0")
