@@ -1,15 +1,19 @@
-[gd_scene load_steps=3 format=3 uid="uid://df3ao5yyr27qy"]
+[gd_scene load_steps=4 format=3 uid="uid://df3ao5yyr27qy"]
 
-[ext_resource type="Texture2D" uid="uid://eqy1s8fn5uuc" path="res://assets/卡匡包/free frames pack by batareya/base 6.png" id="1_5tl20"]
+[ext_resource type="Script" uid="uid://qamurfhd1wtm" path="res://card_slot.gd" id="1_mt86f"]
+[ext_resource type="Texture2D" uid="uid://bjl4yrc1e4yo1" path="res://assets/卡匡包/free frames pack by batareya/base 7.png" id="2_iqweo"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_r0du0"]
 size = Vector3(0.6, 0.05, 0.9)
 
 [node name="CardSlot" type="Area3D"]
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("1_mt86f")
 
 [node name="Sprite3D" type="Sprite3D" parent="."]
 axis = 1
-texture = ExtResource("1_5tl20")
+texture = ExtResource("2_iqweo")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("BoxShape3D_r0du0")
