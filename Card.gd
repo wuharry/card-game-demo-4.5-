@@ -26,3 +26,18 @@ func animate_hover() -> void:
 func animate_unhover() -> void:
 	var tw = create_tween()
 	tw.tween_property(self, "scale", original_scale, 0.15)
+
+# --- 公開方法 ---
+# 將卡片物理鎖死，使其無法再被滑鼠拖曳 (放進卡槽時呼叫)
+func lock_interaction() -> void:
+	var col_shape = $Area3D/CollisionShape3D 
+	if col_shape:
+		col_shape.disabled = true
+		print("[狀態] 卡片已鎖定，滑鼠無法拖曳")
+
+# 解除物理鎖定，讓卡片可以再次被玩家拖曳 (回手牌時呼叫)
+func unlock_interaction() -> void:
+	var col_shape = $Area3D/CollisionShape3D 
+	if col_shape:
+		col_shape.disabled = false
+		print("[狀態] 卡片已解鎖，恢復互動能力")

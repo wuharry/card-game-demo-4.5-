@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://df3ao5yyr27qy"]
 
-[ext_resource type="Script" uid="uid://qamurfhd1wtm" path="res://card_slot.gd" id="1_mt86f"]
+[ext_resource type="Script" uid="uid://bcaj2uvhp7nt6" path="res://CardSlot.gd" id="1_mt86f"]
 [ext_resource type="Texture2D" uid="uid://bjl4yrc1e4yo1" path="res://assets/卡匡包/free frames pack by batareya/base 7.png" id="2_iqweo"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_r0du0"]
