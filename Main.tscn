@@ -20,10 +20,10 @@ transform = Transform3D(0.6, 0, 0, 0, 0.42426407, 0.42426407, 0, -0.42426407, 0.
 transform = Transform3D(0.6, 0, 0, 0, 0.42426407, 0.42426407, 0, -0.42426407, 0.42426407, 1.5, 3, 9)
 
 [node name="Card4" parent="CardManger" instance=ExtResource("1_glv2v")]
-transform = Transform3D(0.6, 0, 0, 0, -0.016145835, 0.5997827, 0, -0.5997827, -0.016145835, 2.664967, 0.96154284, 3.5005727)
+transform = Transform3D(0.6, 0, 0, 0, -0.016145835, 0.5997827, 0, -0.5997827, -0.016145835, 2.665, 0.01, 3.501)
 
 [node name="Card5" parent="CardManger" instance=ExtResource("1_glv2v")]
-transform = Transform3D(0.6, 0, 0, 0, -2.6226834e-08, 0.6, 0, -0.6, -2.6226834e-08, 4.998706, 0.9682307, 3.4932888)
+transform = Transform3D(0.6, 0, 0, 0, -2.6226834e-08, 0.6, 0, -0.6, -2.6226834e-08, 4.999, 0.01, 3.493)
 
 [node name="CameraRig" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.7071067, 0.7071067, 0, -0.7071067, 0.7071067, 0, 0, 0)
@@ -36,4 +36,4 @@ fov = 45.0
 [node name="Arena_Forest" parent="." instance=ExtResource("3_r0du0")]
 
 [node name="CardSlot" parent="." instance=ExtResource("4_cm0pq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5851023, 1.0280101, 3.4718432)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.585, 0.001, 3.472)
