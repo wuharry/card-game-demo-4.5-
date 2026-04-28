@@ -1,5 +1,9 @@
 extends Area3D
-class_name CardSlot# 賦予身分證，讓 Manager 知道這是一個卡槽
+
+# 賦予身分證，讓 Manager 知道這是一個卡槽
+
+class_name CardSlot
+
 # --- 狀態變數 ---
 # 記錄這個卡槽目前是否為空
 var is_empty: bool = true
