@@ -36,9 +36,6 @@ fov = 45.0
 
 [node name="Arena_Forest" parent="." instance=ExtResource("3_r0du0")]
 
-[node name="CardSlot" parent="." instance=ExtResource("4_cm0pq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.585, 0.001, 3.472)
-
 [node name="PlayerBoard" type="Node3D" parent="."]
 script = ExtResource("5_fos0i")
 card_slot_scene = ExtResource("4_cm0pq")
