@@ -20,10 +20,10 @@ transform = Transform3D(0.6, 0, 0, 0, 0.42426407, 0.42426407, 0, -0.42426407, 0.
 transform = Transform3D(0.6, 0, 0, 0, 0.42426407, 0.42426407, 0, -0.42426407, 0.42426407, 1.5, 3, 9)
 
 [node name="Card4" parent="CardManger" instance=ExtResource("1_glv2v")]
-transform = Transform3D(0.6, 0, 0, 0, -0.016145835, 0.5997827, 0, -0.5997827, -0.016145835, 2.665, 0.01, 3.501)
+transform = Transform3D(0.6, 0, 0, 0, 0.42426404, 0.42426404, 0, -0.42426404, 0.42426404, 3.3, 3, 9)
 
 [node name="Card5" parent="CardManger" instance=ExtResource("1_glv2v")]
-transform = Transform3D(0.6, 0, 0, 0, -2.6226834e-08, 0.6, 0, -0.6, -2.6226834e-08, 4.999, 0.01, 3.493)
+transform = Transform3D(0.6, 0, 0, 0, 0.42426407, 0.42426407, 0, -0.42426407, 0.42426407, 5, 3, 9)
 
 [node name="CameraRig" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.7071067, 0.7071067, 0, -0.7071067, 0.7071067, 0, 0, 0)
