@@ -16,6 +16,8 @@ var card_being_dragged: Node3D = null
 var drag_plane_height: float = 0.0
 # --- 記錄目前被 Hover 的卡片(全場同時永遠「只有一張」卡片能被放大) ---
 var currently_hovered_card: Card = null
+# --- 記錄拖曳時，目前懸停在哪個卡槽上 ---
+var currently_hovered_slot: CardSlot = null
 
 func _ready() -> void:
 	# 1. 遊戲開始時，先綁定所有卡片的信號
@@ -61,7 +63,7 @@ func _on_card_unhovered(card: Card) -> void:
 		if underneath_card and underneath_card is Card and card_being_dragged == null:
 			_on_card_hovered(underneath_card)
 		# 未來你可以在這裡加入：讓這張卡片的 Z 軸退回原位
-			
+
 func _process(delta: float) -> void:
 	if card_being_dragged:
 		# 1. 建立一個數學平面 (Plane)。
@@ -82,6 +84,20 @@ func _process(delta: float) -> void:
 		if intersect_pos:
 			# 更新卡片位置 (你可以選擇是否要平滑移動，這裡先直接賦值)
 			card_being_dragged.global_position = intersect_pos
+			# ================= 拖曳時的卡槽預覽邏輯 =================
+			var found_slot = raycast_check_for_card_slot()
+			# 如果掃描到的卡槽，跟「上一個記錄的卡槽」不一樣 (代表滑鼠移動到新卡槽，或離開了卡槽)
+			if found_slot != currently_hovered_slot:
+				# 1. 先把舊的卡槽恢復原狀 (如果有記錄的話)
+				if currently_hovered_slot != null:
+					currently_hovered_slot.unhighlight()
+				
+				# 2. 如果新掃到的是一個「空卡槽」，就讓它亮起來！
+				if found_slot != null and found_slot.is_empty:
+					found_slot.highlight()
+				
+				# 3. 更新大腦的記錄
+				currently_hovered_slot = found_slot
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
