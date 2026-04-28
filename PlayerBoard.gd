@@ -1,7 +1,8 @@
 extends Node3D
 
+#場景建築藍圖
 @export var card_slot_scene: PackedScene
-# --- 神級擴充：讓這個組件知道自己是玩家還是對手的棋盤 ---
+# --- 參數讓這個組件知道自己是玩家還是對手的棋盤 ---
 @export var is_enemy: bool = false 
 
 func _ready() -> void:
