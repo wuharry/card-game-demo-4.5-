@@ -1,17 +1,59 @@
-# Godot 4+ specific ignores
+# =========================
+# Godot 4 編輯器快取 / 本機狀態
+# =========================
+# 編輯器產生的快取、索引、暫存資料（每台電腦不同）
 .godot/
-/android/
+
+# =========================
+# Godot 匯入系統產物
+# =========================
+# 每個資源（png / svg / wav 等）都會產生 .import 檔（自動生成）
+*.import
+
+# =========================
+# Android / 行動平台暫存
+# =========================
+# Android 媒體掃描忽略檔
 .nomedia
 
-# Godot-specific ignores
-.import/
-export.cfg
-export_credentials.cfg
-
-# Imported translations (automatically generated from CSV files)
-*.translation
-
-# Mono-specific ignores
+# =========================
+# C# / Mono 編譯與快取（如果有用）
+# =========================
 .mono/
 data_*/
 mono_crash.*.json
+
+# =========================
+# 匯出（Build）產物
+# =========================
+# Windows
+*.exe
+*.x86_64
+
+# macOS
+*.dmg
+*.app
+
+# Android
+*.apk
+*.aab
+
+# =========================
+# Godot 匯出設定（通常是本機機密）
+# =========================
+# 包含簽章資訊 / 憑證（不應進版控）
+export.cfg
+export_credentials.cfg
+
+# =========================
+# 作業系統垃圾檔
+# =========================
+# macOS Finder 產生
+.DS_Store
+
+# =========================
+# (視情況) 外掛輸出或安裝目錄
+# =========================
+# 如果 addons/ 是「你自己寫的外掛原始碼」→ 不要忽略
+# 如果是「安裝或產生出來的外掛」→ 可以忽略
+ addons/
