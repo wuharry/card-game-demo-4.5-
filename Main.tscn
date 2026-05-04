@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://bhehoq0hgmn0w"]
+[gd_scene load_steps=5 format=3 uid="uid://bhehoq0hgmn0w"]
 
 [ext_resource type="PackedScene" uid="uid://ms5b78mvgm7c" path="res://card3D.tscn" id="1_glv2v"]
 [ext_resource type="Script" uid="uid://fq1anfl5s3w2" path="res://cardManger3D.gd" id="1_uu6xs"]
 [ext_resource type="PackedScene" uid="uid://chgkpoxgxfare" path="res://arena_forest.tscn" id="3_r0du0"]
+[ext_resource type="PackedScene" uid="uid://d3snrkgtw7cj4" path="res://player_board.tscn" id="4_cm0pq"]
 
 [node name="MainScene" type="Node3D"]
 
@@ -19,10 +20,10 @@ transform = Transform3D(0.6, 0, 0, 0, 0.42426407, 0.42426407, 0, -0.42426407, 0.
 transform = Transform3D(0.6, 0, 0, 0, 0.42426407, 0.42426407, 0, -0.42426407, 0.42426407, 1.5, 3, 9)
 
 [node name="Card4" parent="CardManger" instance=ExtResource("1_glv2v")]
-transform = Transform3D(0.6, 0, 0, 0, -0.016145835, 0.5997827, 0, -0.5997827, -0.016145835, 2.664967, 0.96154284, 3.5005727)
+transform = Transform3D(0.6, 0, 0, 0, 0.42426404, 0.42426404, 0, -0.42426404, 0.42426404, 3.3, 3, 9)
 
 [node name="Card5" parent="CardManger" instance=ExtResource("1_glv2v")]
-transform = Transform3D(0.6, 0, 0, 0, -2.6226834e-08, 0.6, 0, -0.6, -2.6226834e-08, 4.998706, 0.9682307, 3.4932888)
+transform = Transform3D(0.6, 0, 0, 0, 0.42426407, 0.42426407, 0, -0.42426407, 0.42426407, 5, 3, 9)
 
 [node name="CameraRig" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.7071067, 0.7071067, 0, -0.7071067, 0.7071067, 0, 0, 0)
@@ -33,3 +34,10 @@ current = true
 fov = 45.0
 
 [node name="Arena_Forest" parent="." instance=ExtResource("3_r0du0")]
+
+[node name="EnemyBoard" parent="." instance=ExtResource("4_cm0pq")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4)
+is_enemy = true
+
+[node name="PlayerBoard" parent="." instance=ExtResource("4_cm0pq")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2)
