@@ -33,7 +33,8 @@ func place_card(card: Card) -> void:
 	var tw = create_tween().set_parallel(true)
 
 	# 1. 計算目標高度 (稍微浮起避免穿模)
-	var target_position = global_position + Vector3(0, 0.06, 0)
+	var target_position = global_position + Vector3(0, 0.09, 0)
+
 
 	# 2. 執行位移動畫
 	tw.tween_property(card, "global_position", target_position, 0.15)
