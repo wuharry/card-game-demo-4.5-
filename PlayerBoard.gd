@@ -1,4 +1,4 @@
-@tool # 關鍵字：讓這個腳本在編輯器內直接執行
+# @tool # 關鍵字：讓這個腳本在編輯器內直接執行
 
 extends Node3D
 
@@ -20,7 +20,7 @@ func generate_board() -> void:
 	var row_gap := 2.5  # 列（前後）間距
 
 	# 玩家在近端（Z 正方向），敵人在遠端（Z 負方向）
-	var z_offset := 2.0 if not is_enemy else -9.5
+	var z_offset := 0.7 if not is_enemy else -8.5
 	# 棋盤原點：Y 軸微微抬高防止穿模,Z 軸根據敵我不同有不同的偏移
 	var board_origin := Vector3(0.0, 0.01, z_offset)
 
