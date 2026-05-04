@@ -35,4 +35,9 @@ fov = 45.0
 
 [node name="Arena_Forest" parent="." instance=ExtResource("3_r0du0")]
 
+[node name="EnemyBoard" parent="." instance=ExtResource("4_cm0pq")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4)
+is_enemy = true
+
 [node name="PlayerBoard" parent="." instance=ExtResource("4_cm0pq")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2)
