@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://chgkpoxgxfare"]
 
-[ext_resource type="MeshLibrary" uid="uid://bhkww34j8tya5" path="res://assets/test_libs/ grassland_tiles.meshlib" id="1_uyk6n"]
+[ext_resource type="MeshLibrary" uid="uid://bhkww34j8tya5" path="res://assets/terrain/resources/grassland_tiles.meshlib" id="1_uyk6n"]
 
 [sub_resource type="Environment" id="Environment_5nbl3"]
 background_mode = 1

@@ -1,0 +1,11 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://csmmt2wo2ndkb"]
+
+[ext_resource type="Texture2D" uid="uid://dtn4hmrtstk8k" path="res://assets/terrain/pixel_3d_grasslands/landscape_tiles/Grassland_Mountain_Tile_01.png" id="1_bbjw7"]
+[ext_resource type="Texture2D" uid="uid://pmrvojq53xe8" path="res://assets/terrain/pixel_3d_grasslands/landscape_tiles/Grassland_Mountain_Tile_N_01.png" id="2_lqhcg"]
+
+[resource]
+albedo_texture = ExtResource("1_bbjw7")
+normal_enabled = true
+normal_texture = ExtResource("2_lqhcg")
+uv1_scale = Vector3(4, 4, 4)
+texture_filter = 0
