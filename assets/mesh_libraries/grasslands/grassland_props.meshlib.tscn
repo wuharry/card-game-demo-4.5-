@@ -1,0 +1,194 @@
+[gd_scene format=3 uid="uid://cp7k9xwvyz3np"]
+
+[ext_resource type="ArrayMesh" uid="uid://bwu4swii1bcxp" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Axe_Log.obj" id="1_axelog"]
+[ext_resource type="ArrayMesh" uid="uid://btql8h5pi8cik" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Bush_01.obj" id="2_bush01"]
+[ext_resource type="ArrayMesh" uid="uid://c57s3vm0xdrdj" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Bush_02.obj" id="3_bush02"]
+[ext_resource type="ArrayMesh" uid="uid://cqcjmsogvnmxi" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Dead_Tree_01.obj" id="4_dtree01"]
+[ext_resource type="ArrayMesh" uid="uid://bwwplu1h8p6sn" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Dead_Tree_02.obj" id="5_dtree02"]
+[ext_resource type="ArrayMesh" uid="uid://c0vgu164xgwfv" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Fallen_log_01.obj" id="6_flog01"]
+[ext_resource type="ArrayMesh" uid="uid://2wejlugkofla" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Fallen_log_02.obj" id="7_flog02"]
+[ext_resource type="ArrayMesh" uid="uid://dokftxjuixip6" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Fence_01.obj" id="8_fnc01"]
+[ext_resource type="ArrayMesh" uid="uid://ccie7sm4gs6dc" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Fence_02.obj" id="9_fnc02"]
+[ext_resource type="ArrayMesh" uid="uid://bh20lxgjdogru" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Fence_03.obj" id="10_fnc03"]
+[ext_resource type="ArrayMesh" uid="uid://b221vjutjkt8o" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Fence_04.obj" id="11_fnc04"]
+[ext_resource type="ArrayMesh" uid="uid://0c5d0tjrc5bs" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Fence_End_01.obj" id="12_fnce01"]
+[ext_resource type="ArrayMesh" uid="uid://241df27qvpgv" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Fence_End_02.obj" id="13_fnce02"]
+[ext_resource type="ArrayMesh" uid="uid://dhoisdciph37w" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Fence_End_03.obj" id="14_fnce03"]
+[ext_resource type="ArrayMesh" uid="uid://d3m5wa1wr1f10" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Flowers_01.obj" id="15_flw01"]
+[ext_resource type="ArrayMesh" uid="uid://c8ctfvse6t7wj" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Flowers_02.obj" id="16_flw02"]
+[ext_resource type="ArrayMesh" uid="uid://d3qn0kd2e2lfm" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Grass_01.obj" id="17_grs01"]
+[ext_resource type="ArrayMesh" uid="uid://cjx0knojioe3i" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Grass_02.obj" id="18_grs02"]
+[ext_resource type="ArrayMesh" uid="uid://c6qia7pejecyh" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Grass_03.obj" id="19_grs03"]
+[ext_resource type="ArrayMesh" uid="uid://b0eji1uljgo60" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Grass_04.obj" id="20_grs04"]
+[ext_resource type="ArrayMesh" uid="uid://bgjut3p6ny0ee" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Grass_05.obj" id="21_grs05"]
+[ext_resource type="ArrayMesh" uid="uid://dwt0novfgrg5m" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Lamp_Post.obj" id="22_lamp"]
+[ext_resource type="ArrayMesh" uid="uid://b75klhxomubbf" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Lrg_Tree.obj" id="23_ltree"]
+[ext_resource type="ArrayMesh" uid="uid://cmi12fq6v0cf" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Pine_Tree.obj" id="24_ptree"]
+[ext_resource type="ArrayMesh" uid="uid://vhcwl2e5x7yv" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Sign_Post_01.obj" id="25_sgn01"]
+[ext_resource type="ArrayMesh" uid="uid://35ykm0rtuoa4" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Sign_Post_02.obj" id="26_sgn02"]
+[ext_resource type="ArrayMesh" uid="uid://dhs4ni40mo1fq" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Sign_Post_03.obj" id="27_sgn03"]
+[ext_resource type="ArrayMesh" uid="uid://c6bo44fcs620t" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Sign_Post_04.obj" id="28_sgn04"]
+[ext_resource type="ArrayMesh" uid="uid://c2pl3bg3nnk80" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Sign_Post_05.obj" id="29_sgn05"]
+[ext_resource type="ArrayMesh" uid="uid://cadg2pc3vbib3" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Sign_Post_06.obj" id="30_sgn06"]
+[ext_resource type="ArrayMesh" uid="uid://cdh6yurmhwag3" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Stone_01.obj" id="31_stn01"]
+[ext_resource type="ArrayMesh" uid="uid://nwelmf3t2bee" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Stone_02.obj" id="32_stn02"]
+[ext_resource type="ArrayMesh" uid="uid://oxsvdr23jk7" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Stone_03.obj" id="33_stn03"]
+[ext_resource type="ArrayMesh" uid="uid://8p0aw86sjmuv" path="res://assets/terrain/pixel_3d_grasslands/objects/OBJ/Stone_04.obj" id="34_stn04"]
+[ext_resource type="ArrayMesh" uid="uid://bxqyu7dmjc7tg" path="res://assets/terrain/pixel_3d_grasslands/structures/OBJ/Rubble_01.obj" id="35_rbl01"]
+[ext_resource type="ArrayMesh" uid="uid://mg2kv0oeumcx" path="res://assets/terrain/pixel_3d_grasslands/structures/OBJ/Rubble_02_End.obj" id="36_rbl02e"]
+[ext_resource type="ArrayMesh" uid="uid://dkm7jf6jbpx6l" path="res://assets/terrain/pixel_3d_grasslands/structures/OBJ/Rubble_02_Mid.obj" id="37_rbl02m"]
+[ext_resource type="ArrayMesh" uid="uid://cx3d6gb4q2b7k" path="res://assets/terrain/pixel_3d_grasslands/structures/OBJ/Rubble_03_End.obj" id="38_rbl03e"]
+
+[node name="PropsLibrary" type="Node3D" unique_id=400000000]
+
+[node name="AxeLog" type="MeshInstance3D" parent="." unique_id=400000001]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0, 0.0)
+mesh = ExtResource("1_axelog")
+
+[node name="Bush01" type="MeshInstance3D" parent="." unique_id=400000002]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.0, 0, 0.0)
+mesh = ExtResource("2_bush01")
+
+[node name="Bush02" type="MeshInstance3D" parent="." unique_id=400000003]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.0, 0, 0.0)
+mesh = ExtResource("3_bush02")
+
+[node name="DeadTree01" type="MeshInstance3D" parent="." unique_id=400000004]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.0, 0, 0.0)
+mesh = ExtResource("4_dtree01")
+
+[node name="DeadTree02" type="MeshInstance3D" parent="." unique_id=400000005]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.0, 0, 0.0)
+mesh = ExtResource("5_dtree02")
+
+[node name="FallenLog01" type="MeshInstance3D" parent="." unique_id=400000006]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.0, 0, 0.0)
+mesh = ExtResource("6_flog01")
+
+[node name="FallenLog02" type="MeshInstance3D" parent="." unique_id=400000007]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0, 3.0)
+mesh = ExtResource("7_flog02")
+
+[node name="Fence01" type="MeshInstance3D" parent="." unique_id=400000008]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.0, 0, 3.0)
+mesh = ExtResource("8_fnc01")
+
+[node name="Fence02" type="MeshInstance3D" parent="." unique_id=400000009]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.0, 0, 3.0)
+mesh = ExtResource("9_fnc02")
+
+[node name="Fence03" type="MeshInstance3D" parent="." unique_id=400000010]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.0, 0, 3.0)
+mesh = ExtResource("10_fnc03")
+
+[node name="Fence04" type="MeshInstance3D" parent="." unique_id=400000011]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.0, 0, 3.0)
+mesh = ExtResource("11_fnc04")
+
+[node name="FenceEnd01" type="MeshInstance3D" parent="." unique_id=400000012]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.0, 0, 3.0)
+mesh = ExtResource("12_fnce01")
+
+[node name="FenceEnd02" type="MeshInstance3D" parent="." unique_id=400000013]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0, 6.0)
+mesh = ExtResource("13_fnce02")
+
+[node name="FenceEnd03" type="MeshInstance3D" parent="." unique_id=400000014]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.0, 0, 6.0)
+mesh = ExtResource("14_fnce03")
+
+[node name="Flowers01" type="MeshInstance3D" parent="." unique_id=400000015]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.0, 0, 6.0)
+mesh = ExtResource("15_flw01")
+
+[node name="Flowers02" type="MeshInstance3D" parent="." unique_id=400000016]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.0, 0, 6.0)
+mesh = ExtResource("16_flw02")
+
+[node name="Grass01" type="MeshInstance3D" parent="." unique_id=400000017]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.0, 0, 6.0)
+mesh = ExtResource("17_grs01")
+
+[node name="Grass02" type="MeshInstance3D" parent="." unique_id=400000018]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.0, 0, 6.0)
+mesh = ExtResource("18_grs02")
+
+[node name="Grass03" type="MeshInstance3D" parent="." unique_id=400000019]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0, 9.0)
+mesh = ExtResource("19_grs03")
+
+[node name="Grass04" type="MeshInstance3D" parent="." unique_id=400000020]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.0, 0, 9.0)
+mesh = ExtResource("20_grs04")
+
+[node name="Grass05" type="MeshInstance3D" parent="." unique_id=400000021]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.0, 0, 9.0)
+mesh = ExtResource("21_grs05")
+
+[node name="LampPost" type="MeshInstance3D" parent="." unique_id=400000022]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.0, 0, 9.0)
+mesh = ExtResource("22_lamp")
+
+[node name="LrgTree" type="MeshInstance3D" parent="." unique_id=400000023]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.0, 0, 9.0)
+mesh = ExtResource("23_ltree")
+
+[node name="PineTree" type="MeshInstance3D" parent="." unique_id=400000024]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.0, 0, 9.0)
+mesh = ExtResource("24_ptree")
+
+[node name="SignPost01" type="MeshInstance3D" parent="." unique_id=400000025]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0, 12.0)
+mesh = ExtResource("25_sgn01")
+
+[node name="SignPost02" type="MeshInstance3D" parent="." unique_id=400000026]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.0, 0, 12.0)
+mesh = ExtResource("26_sgn02")
+
+[node name="SignPost03" type="MeshInstance3D" parent="." unique_id=400000027]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.0, 0, 12.0)
+mesh = ExtResource("27_sgn03")
+
+[node name="SignPost04" type="MeshInstance3D" parent="." unique_id=400000028]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.0, 0, 12.0)
+mesh = ExtResource("28_sgn04")
+
+[node name="SignPost05" type="MeshInstance3D" parent="." unique_id=400000029]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.0, 0, 12.0)
+mesh = ExtResource("29_sgn05")
+
+[node name="SignPost06" type="MeshInstance3D" parent="." unique_id=400000030]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.0, 0, 12.0)
+mesh = ExtResource("30_sgn06")
+
+[node name="Stone01" type="MeshInstance3D" parent="." unique_id=400000031]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0, 15.0)
+mesh = ExtResource("31_stn01")
+
+[node name="Stone02" type="MeshInstance3D" parent="." unique_id=400000032]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.0, 0, 15.0)
+mesh = ExtResource("32_stn02")
+
+[node name="Stone03" type="MeshInstance3D" parent="." unique_id=400000033]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.0, 0, 15.0)
+mesh = ExtResource("33_stn03")
+
+[node name="Stone04" type="MeshInstance3D" parent="." unique_id=400000034]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.0, 0, 15.0)
+mesh = ExtResource("34_stn04")
+
+[node name="Rubble01" type="MeshInstance3D" parent="." unique_id=400000035]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.0, 0, 15.0)
+mesh = ExtResource("35_rbl01")
+
+[node name="Rubble02End" type="MeshInstance3D" parent="." unique_id=400000036]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.0, 0, 15.0)
+mesh = ExtResource("36_rbl02e")
+
+[node name="Rubble02Mid" type="MeshInstance3D" parent="." unique_id=400000037]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0, 18.0)
+mesh = ExtResource("37_rbl02m")
+
+[node name="Rubble03End" type="MeshInstance3D" parent="." unique_id=400000038]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.0, 0, 18.0)
+mesh = ExtResource("38_rbl03e")
