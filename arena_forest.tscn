@@ -1,6 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://chgkpoxgxfare"]
+[gd_scene load_steps=5 format=3 uid="uid://chgkpoxgxfare"]
 
 [ext_resource type="MeshLibrary" uid="uid://bhkww34j8tya5" path="res://assets/mesh_libraries/grasslands/grassland_tiles.meshlib" id="1_uyk6n"]
+[ext_resource type="MeshLibrary" uid="uid://bdsnqml13anbo" path="res://assets/mesh_libraries/grasslands/grassland_cliffs.meshlib" id="2_cliffs"]
+[ext_resource type="MeshLibrary" uid="uid://dvvtjyil2xyu7" path="res://assets/mesh_libraries/grasslands/grassland_props.meshlib" id="3_props"]
 
 [sub_resource type="Environment" id="Environment_5nbl3"]
 background_mode = 1
@@ -35,4 +37,12 @@ metadata/_editor_floor_ = Vector3(0, -1, 0)
 
 [node name="Terrain" type="Node3D" parent="."]
 
+[node name="PropsMap" type="GridMap" parent="Terrain"]
+mesh_library = ExtResource("3_props")
+cell_size = Vector3(1, 1, 1)
+
 [node name="Cliffs" type="Node3D" parent="."]
+
+[node name="CliffsMap" type="GridMap" parent="Cliffs"]
+mesh_library = ExtResource("2_cliffs")
+cell_size = Vector3(1, 1, 1)

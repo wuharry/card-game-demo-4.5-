@@ -1,7 +1,7 @@
 [gd_scene load_steps=7 format=3 uid="uid://d4mvahmoqcyqj"]
 
-[ext_resource type="Shader" path="res://ocean_surface/ocean_surface.gdshader" id="1_c8j3c"]
-[ext_resource type="Texture2D" uid="uid://cc7bu8k61vqmr" path="res://ocean_surface/clear+sea+water-2048x2048.png" id="2_kor7k"]
+[ext_resource type="Shader" path="res://assets/water/psx_ocean_surface/ocean_surface.gdshader" id="1_c8j3c"]
+[ext_resource type="Texture2D" uid="uid://cc7bu8k61vqmr" path="res://assets/water/psx_ocean_surface/clear+sea+water-2048x2048.png" id="2_kor7k"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_mymsq"]
 size = Vector2(200, 200)
@@ -33,7 +33,3 @@ shader_parameter/noise_texture = SubResource("NoiseTexture2D_jvqv0")
 [node name="OceanSurface" type="MeshInstance3D"]
 mesh = SubResource("PlaneMesh_mymsq")
 surface_material_override/0 = SubResource("ShaderMaterial_3pxpg")
-
-[node name="CSGBox3D" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.3243, 4.34703, -3.64513)
-size = Vector3(10, 10, 10)
