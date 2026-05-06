@@ -11,6 +11,14 @@
 [ext_resource type="ArrayMesh" uid="uid://bn6n0aqwsc26c" path="res://assets/terrain/pixel_3d_grasslands/tile_models/OBJ/Grass_Dirt_Tile_06.obj" id="9_3801t"]
 [ext_resource type="ArrayMesh" uid="uid://w0vcdmifqlvd" path="res://assets/terrain/pixel_3d_grasslands/tile_models/OBJ/Grass_Dirt_Tile_07.obj" id="10_py7hi"]
 [ext_resource type="ArrayMesh" uid="uid://cv7ksyjusxb3l" path="res://assets/terrain/pixel_3d_grasslands/tile_models/OBJ/Grass_Dirt_Tile_08.obj" id="11_5qex3"]
+[ext_resource type="ArrayMesh" uid="uid://drbooii57w33w" path="res://assets/terrain/pixel_3d_grasslands/tile_models/OBJ/Grass_Dirt_Tile_09.obj" id="12_tl09"]
+[ext_resource type="ArrayMesh" uid="uid://da3iwo4662ii7" path="res://assets/terrain/pixel_3d_grasslands/tile_models/OBJ/Grass_Dirt_Tile_10.obj" id="13_tl10"]
+[ext_resource type="ArrayMesh" uid="uid://c07kl7pwjn2vy" path="res://assets/terrain/pixel_3d_grasslands/tile_models/OBJ/Grass_Dirt_Tile_11.obj" id="14_tl11"]
+[ext_resource type="ArrayMesh" uid="uid://bhmvc87ccnh0s" path="res://assets/terrain/pixel_3d_grasslands/tile_models/OBJ/Grass_Dirt_Tile_12.obj" id="15_tl12"]
+[ext_resource type="ArrayMesh" uid="uid://po4ex3xqrepd" path="res://assets/terrain/pixel_3d_grasslands/tile_models/OBJ/Grass_Tile_01.obj" id="16_tg01"]
+[ext_resource type="ArrayMesh" uid="uid://biio4bpmjgvmt" path="res://assets/terrain/pixel_3d_grasslands/tile_models/OBJ/Mountain_Tile_01.obj" id="17_mt01"]
+[ext_resource type="ArrayMesh" uid="uid://bswo2ywmcrsyv" path="res://assets/terrain/pixel_3d_grasslands/tile_models/OBJ/Mountain_Tile_02.obj" id="18_mt02"]
+[ext_resource type="Material" uid="uid://csmmt2wo2ndkb" path="res://assets/terrain/resources/mat_mountain.tres" id="19_matm"]
 
 [node name="TileLibrary" type="Node3D" unique_id=869610346]
 
@@ -58,3 +66,38 @@ surface_material_override/0 = ExtResource("2_0m7aw")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.9890335, 0, -0.090446234)
 mesh = ExtResource("11_5qex3")
 surface_material_override/0 = ExtResource("2_0m7aw")
+
+[node name="GrassDirtTile09" type="MeshInstance3D" parent="." unique_id=200000001]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.0, 0, 3.0)
+mesh = ExtResource("12_tl09")
+surface_material_override/0 = ExtResource("2_0m7aw")
+
+[node name="GrassDirtTile10" type="MeshInstance3D" parent="." unique_id=200000002]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.0, 0, 3.0)
+mesh = ExtResource("13_tl10")
+surface_material_override/0 = ExtResource("2_0m7aw")
+
+[node name="GrassDirtTile11" type="MeshInstance3D" parent="." unique_id=200000003]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.0, 0, 3.0)
+mesh = ExtResource("14_tl11")
+surface_material_override/0 = ExtResource("2_0m7aw")
+
+[node name="GrassDirtTile12" type="MeshInstance3D" parent="." unique_id=200000004]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0, 3.0)
+mesh = ExtResource("15_tl12")
+surface_material_override/0 = ExtResource("2_0m7aw")
+
+[node name="GrassTile01" type="MeshInstance3D" parent="." unique_id=200000005]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.0, 0, 3.0)
+mesh = ExtResource("16_tg01")
+surface_material_override/0 = ExtResource("2_0m7aw")
+
+[node name="MountainTile01" type="MeshInstance3D" parent="." unique_id=200000006]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.0, 0, 3.0)
+mesh = ExtResource("17_mt01")
+surface_material_override/0 = ExtResource("19_matm")
+
+[node name="MountainTile02" type="MeshInstance3D" parent="." unique_id=200000007]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.0, 0, 3.0)
+mesh = ExtResource("18_mt02")
+surface_material_override/0 = ExtResource("19_matm")

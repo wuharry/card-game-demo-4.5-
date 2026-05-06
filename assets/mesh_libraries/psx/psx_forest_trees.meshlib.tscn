@@ -1,0 +1,180 @@
+[gd_scene format=3 uid="uid://drt5j2mnabc6q"]
+
+[ext_resource type="PackedScene" uid="uid://bn0fnm1htafvy" path="res://assets/environment/psx_trees/models/bush01.fbx" id="1_bush01"]
+[ext_resource type="PackedScene" uid="uid://fy3ddp4ykyxd" path="res://assets/environment/psx_trees/models/bush02.fbx" id="2_bush02"]
+[ext_resource type="PackedScene" uid="uid://vi5klrl5xph" path="res://assets/environment/psx_trees/models/bush03.fbx" id="3_bush03"]
+[ext_resource type="PackedScene" uid="uid://dq5tfexrffson" path="res://assets/environment/psx_trees/models/bush04.fbx" id="4_bush04"]
+[ext_resource type="PackedScene" uid="uid://xq312ic6jeda" path="res://assets/environment/psx_trees/models/bush05.fbx" id="5_bush05"]
+[ext_resource type="PackedScene" uid="uid://ceaxgcvy00brn" path="res://assets/environment/psx_trees/models/bush06.fbx" id="6_bush06"]
+[ext_resource type="PackedScene" uid="uid://4q5m1ss11g7j" path="res://assets/environment/psx_trees/models/bush07.fbx" id="7_bush07"]
+[ext_resource type="PackedScene" uid="uid://rin2gs8yadxh" path="res://assets/environment/psx_trees/models/bush08.fbx" id="8_bush08"]
+[ext_resource type="PackedScene" uid="uid://cytx7r8h73lxg" path="res://assets/environment/psx_trees/models/tree01.fbx" id="9_tree01"]
+[ext_resource type="PackedScene" uid="uid://djnsxlt8oci2s" path="res://assets/environment/psx_trees/models/tree02.fbx" id="10_tree02"]
+[ext_resource type="PackedScene" uid="uid://733pyw8dbdkh" path="res://assets/environment/psx_trees/models/tree03.fbx" id="11_tree03"]
+[ext_resource type="PackedScene" uid="uid://d16nopaocofby" path="res://assets/environment/psx_trees/models/tree04.fbx" id="12_tree04"]
+[ext_resource type="PackedScene" uid="uid://bx5or8akvivr3" path="res://assets/environment/psx_trees/models/tree05.fbx" id="13_tree05"]
+[ext_resource type="PackedScene" uid="uid://cc1w3q53i1k55" path="res://assets/environment/psx_trees/models/tree06.fbx" id="14_tree06"]
+[ext_resource type="PackedScene" uid="uid://bkh6cocyskixq" path="res://assets/environment/psx_trees/models/tree07.fbx" id="15_tree07"]
+[ext_resource type="PackedScene" uid="uid://c76je5qydlwlm" path="res://assets/environment/psx_trees/models/tree08.fbx" id="16_tree08"]
+[ext_resource type="PackedScene" uid="uid://coo6rkss31v12" path="res://assets/environment/psx_trees/models/tree09.fbx" id="17_tree09"]
+[ext_resource type="PackedScene" uid="uid://cvpi5cde76jyl" path="res://assets/environment/psx_trees/models/tree10.fbx" id="18_tree10"]
+[ext_resource type="PackedScene" uid="uid://dm3s3qfsfl6mk" path="res://assets/environment/psx_trees/models/tree11.fbx" id="19_tree11"]
+[ext_resource type="PackedScene" uid="uid://qd108glmlbvb" path="res://assets/environment/psx_trees/models/tree12.fbx" id="20_tree12"]
+[ext_resource type="PackedScene" uid="uid://cuo45w2i0hiec" path="res://assets/environment/psx_trees/models/tree13.fbx" id="21_tree13"]
+[ext_resource type="PackedScene" uid="uid://bmibp1mjfyo2t" path="res://assets/environment/psx_trees/models/tree14.fbx" id="22_tree14"]
+[ext_resource type="PackedScene" uid="uid://c7xcnfnapphcd" path="res://assets/environment/psx_trees/models/tree15.fbx" id="23_tree15"]
+[ext_resource type="PackedScene" uid="uid://cag35mbupq5ic" path="res://assets/environment/psx_trees/models/tree16.fbx" id="24_tree16"]
+[ext_resource type="PackedScene" uid="uid://bnfad2yyvblsr" path="res://assets/environment/psx_trees/models/tree17.fbx" id="25_tree17"]
+[ext_resource type="PackedScene" uid="uid://dpvsbe30g02f1" path="res://assets/environment/psx_trees/models/tree18.fbx" id="26_tree18"]
+[ext_resource type="PackedScene" uid="uid://3mxw3r4od8uq" path="res://assets/environment/psx_trees/models/tree19.fbx" id="27_tree19"]
+[ext_resource type="PackedScene" uid="uid://c78t8wce4mysk" path="res://assets/environment/psx_trees/models/tree20.fbx" id="28_tree20"]
+[ext_resource type="PackedScene" uid="uid://dwt4cv7muu537" path="res://assets/environment/psx_trees/models/tree21.fbx" id="29_tree21"]
+[ext_resource type="PackedScene" uid="uid://c0vyqjc017vn0" path="res://assets/environment/psx_trees/models/tree22.fbx" id="30_tree22"]
+[ext_resource type="PackedScene" uid="uid://bf8gri36wo1e7" path="res://assets/environment/psx_trees/models/tree23.fbx" id="31_tree23"]
+[ext_resource type="PackedScene" uid="uid://d1cdpj7f0s21t" path="res://assets/environment/psx_trees/models/tree24.fbx" id="32_tree24"]
+[ext_resource type="PackedScene" uid="uid://jrwbxden3bsi" path="res://assets/environment/psx_trees/models/tree25.fbx" id="33_tree25"]
+[ext_resource type="PackedScene" uid="uid://cciv3l60j4pi6" path="res://assets/environment/psx_trees/models/tree26.fbx" id="34_tree26"]
+[ext_resource type="PackedScene" uid="uid://c8ifgdefvc4ga" path="res://assets/environment/psx_trees/models/tree27.fbx" id="35_tree27"]
+[ext_resource type="PackedScene" uid="uid://cihqotl6wpxss" path="res://assets/environment/psx_trees/models/tree28.fbx" id="36_tree28"]
+[ext_resource type="PackedScene" uid="uid://bv6qjjr00infh" path="res://assets/environment/psx_trees/models/tree29.fbx" id="37_tree29"]
+[ext_resource type="PackedScene" uid="uid://42kv21tmkljl" path="res://assets/environment/psx_trees/models/tree30.fbx" id="38_tree30"]
+[ext_resource type="PackedScene" uid="uid://dwpfd7dsvnfd6" path="res://assets/environment/psx_trees/models/tree31.fbx" id="39_tree31"]
+[ext_resource type="PackedScene" uid="uid://c1gf8s44ttl5h" path="res://assets/environment/psx_trees/models/tree32.fbx" id="40_tree32"]
+[ext_resource type="PackedScene" uid="uid://kjxnko6l4vqg" path="res://assets/environment/psx_trees/models/tree33.fbx" id="41_tree33"]
+[ext_resource type="PackedScene" uid="uid://c0i01he1ycpee" path="res://assets/environment/psx_trees/models/tree34.fbx" id="42_tree34"]
+[ext_resource type="PackedScene" uid="uid://btmeafjqikcs" path="res://assets/environment/psx_trees/models/tree35.fbx" id="43_tree35"]
+[ext_resource type="PackedScene" uid="uid://bigs8013bnlem" path="res://assets/environment/psx_trees/models/tree36.fbx" id="44_tree36"]
+
+[node name="PSXForestTrees" type="Node3D" unique_id=500000000]
+
+[node name="Bush01" parent="." instance=ExtResource("1_bush01")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0, 0.0)
+
+[node name="Bush02" parent="." instance=ExtResource("2_bush02")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.0, 0, 0.0)
+
+[node name="Bush03" parent="." instance=ExtResource("3_bush03")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.0, 0, 0.0)
+
+[node name="Bush04" parent="." instance=ExtResource("4_bush04")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.0, 0, 0.0)
+
+[node name="Bush05" parent="." instance=ExtResource("5_bush05")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.0, 0, 0.0)
+
+[node name="Bush06" parent="." instance=ExtResource("6_bush06")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.0, 0, 0.0)
+
+[node name="Bush07" parent="." instance=ExtResource("7_bush07")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24.0, 0, 0.0)
+
+[node name="Bush08" parent="." instance=ExtResource("8_bush08")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28.0, 0, 0.0)
+
+[node name="Tree01" parent="." instance=ExtResource("9_tree01")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0, 6.0)
+
+[node name="Tree02" parent="." instance=ExtResource("10_tree02")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.0, 0, 6.0)
+
+[node name="Tree03" parent="." instance=ExtResource("11_tree03")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.0, 0, 6.0)
+
+[node name="Tree04" parent="." instance=ExtResource("12_tree04")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.0, 0, 6.0)
+
+[node name="Tree05" parent="." instance=ExtResource("13_tree05")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.0, 0, 6.0)
+
+[node name="Tree06" parent="." instance=ExtResource("14_tree06")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.0, 0, 6.0)
+
+[node name="Tree07" parent="." instance=ExtResource("15_tree07")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24.0, 0, 6.0)
+
+[node name="Tree08" parent="." instance=ExtResource("16_tree08")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28.0, 0, 6.0)
+
+[node name="Tree09" parent="." instance=ExtResource("17_tree09")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0, 12.0)
+
+[node name="Tree10" parent="." instance=ExtResource("18_tree10")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.0, 0, 12.0)
+
+[node name="Tree11" parent="." instance=ExtResource("19_tree11")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.0, 0, 12.0)
+
+[node name="Tree12" parent="." instance=ExtResource("20_tree12")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.0, 0, 12.0)
+
+[node name="Tree13" parent="." instance=ExtResource("21_tree13")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.0, 0, 12.0)
+
+[node name="Tree14" parent="." instance=ExtResource("22_tree14")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.0, 0, 12.0)
+
+[node name="Tree15" parent="." instance=ExtResource("23_tree15")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24.0, 0, 12.0)
+
+[node name="Tree16" parent="." instance=ExtResource("24_tree16")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28.0, 0, 12.0)
+
+[node name="Tree17" parent="." instance=ExtResource("25_tree17")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0, 18.0)
+
+[node name="Tree18" parent="." instance=ExtResource("26_tree18")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.0, 0, 18.0)
+
+[node name="Tree19" parent="." instance=ExtResource("27_tree19")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.0, 0, 18.0)
+
+[node name="Tree20" parent="." instance=ExtResource("28_tree20")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.0, 0, 18.0)
+
+[node name="Tree21" parent="." instance=ExtResource("29_tree21")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.0, 0, 18.0)
+
+[node name="Tree22" parent="." instance=ExtResource("30_tree22")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.0, 0, 18.0)
+
+[node name="Tree23" parent="." instance=ExtResource("31_tree23")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24.0, 0, 18.0)
+
+[node name="Tree24" parent="." instance=ExtResource("32_tree24")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28.0, 0, 18.0)
+
+[node name="Tree25" parent="." instance=ExtResource("33_tree25")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0, 24.0)
+
+[node name="Tree26" parent="." instance=ExtResource("34_tree26")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.0, 0, 24.0)
+
+[node name="Tree27" parent="." instance=ExtResource("35_tree27")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.0, 0, 24.0)
+
+[node name="Tree28" parent="." instance=ExtResource("36_tree28")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.0, 0, 24.0)
+
+[node name="Tree29" parent="." instance=ExtResource("37_tree29")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.0, 0, 24.0)
+
+[node name="Tree30" parent="." instance=ExtResource("38_tree30")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.0, 0, 24.0)
+
+[node name="Tree31" parent="." instance=ExtResource("39_tree31")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24.0, 0, 24.0)
+
+[node name="Tree32" parent="." instance=ExtResource("40_tree32")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28.0, 0, 24.0)
+
+[node name="Tree33" parent="." instance=ExtResource("41_tree33")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0, 30.0)
+
+[node name="Tree34" parent="." instance=ExtResource("42_tree34")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.0, 0, 30.0)
+
+[node name="Tree35" parent="." instance=ExtResource("43_tree35")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.0, 0, 30.0)
+
+[node name="Tree36" parent="." instance=ExtResource("44_tree36")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.0, 0, 30.0)
