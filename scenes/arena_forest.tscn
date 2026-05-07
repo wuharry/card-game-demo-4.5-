@@ -6,12 +6,20 @@
 
 [sub_resource type="Environment" id="Environment_5nbl3"]
 background_mode = 1
-background_color = Color(0.07058824, 0.16470589, 0.1882353, 1)
+background_color = Color(0.04, 0.07, 0.04, 1)
 ambient_light_source = 2
-ambient_light_color = Color(1, 1, 1, 1)
-ambient_light_energy = 0.5
+ambient_light_color = Color(0.72, 0.88, 0.60, 1)
+ambient_light_energy = 0.38
+fog_enabled = true
+fog_light_color = Color(0.28, 0.42, 0.20, 1)
+fog_light_energy = 0.7
+fog_density = 0.012
+fog_aerial_perspective = 0.25
 glow_enabled = true
-glow_bloom = 0.1
+glow_normalized = true
+glow_intensity = 0.55
+glow_bloom = 0.07
+glow_blend_mode = 2
 
 [node name="Arena_Forest" type="Node3D"]
 
@@ -22,10 +30,10 @@ environment = SubResource("Environment_5nbl3")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.70710677, 0.49999997, -0.49999997, 0, 0.70710677, 0.70710677, 0.70710677, -0.49999997, 0.49999997, 0, 0, 0)
-light_color = Color(1, 0.9607843, 0.8156863, 1)
-light_energy = 1.2
+light_color = Color(1.0, 0.88, 0.56, 1)
+light_energy = 1.5
 shadow_enabled = true
-shadow_blur = 2.0
+shadow_blur = 1.5
 
 [node name="GridMap" type="GridMap" parent="."]
 mesh_library = ExtResource("1_uyk6n")
@@ -40,9 +48,15 @@ metadata/_editor_floor_ = Vector3(0, -1, 0)
 [node name="PropsMap" type="GridMap" parent="Terrain"]
 mesh_library = ExtResource("3_props")
 cell_size = Vector3(1, 1, 1)
+data = {
+"cells": PackedInt32Array(-11, -8, 30, -10, -8, 30, -65527, -8, 32, -65528, -8, 31, -11, 6, 31, -10, 6, 31, -65527, 6, 30, -65528, 6, 30, -11, -3, 33, -11, 2, 30, -65527, -3, 30, -65527, 2, 30, -11, -7, 1, -10, -7, 1, -11, 5, 1, -10, 5, 1, -65528, -7, 2, -65527, -7, 1, -65528, 5, 2, -65527, 5, 2, -3, -5, 14, -65534, -5, 14, -5, 3, 15, -65532, 3, 15, -1, 1, 15, -65533, -2, 14, -6, -4, 17, -2, -6, 18, -65531, -4, 16, -65530, 2, 16, -4, 4, 19, -65535, -4, 16)
+}
 
 [node name="Cliffs" type="Node3D" parent="."]
 
 [node name="CliffsMap" type="GridMap" parent="Cliffs"]
 mesh_library = ExtResource("2_cliffs")
 cell_size = Vector3(1, 1, 1)
+data = {
+"cells": PackedInt32Array(65524, -10, 12, 65525, -10, 12, 65526, -10, 12, 65527, -10, 12, 65528, -10, 12, 65529, -10, 12, 65530, -10, 12, 65531, -10, 12, 65532, -10, 12, 65533, -10, 12, 65534, -10, 12, 65535, -10, 12, 0, -10, 12, 1, -10, 12, 2, -10, 12, 3, -10, 12, 4, -10, 12, 5, -10, 12, 6, -10, 12, 7, -10, 12, 8, -10, 12, 9, -10, 12, 10, -10, 12, 65524, 8, 12, 65525, 8, 12, 65526, 8, 12, 65527, 8, 12, 65528, 8, 12, 65529, 8, 12, 65530, 8, 12, 65531, 8, 12, 65532, 8, 12, 65533, 8, 12, 65534, 8, 12, 65535, 8, 12, 0, 8, 12, 1, 8, 12, 2, 8, 12, 3, 8, 12, 4, 8, 12, 5, 8, 12, 6, 8, 12, 7, 8, 12, 8, 8, 12, 9, 8, 12, 10, 8, 12, 65523, -9, 12, 65523, -8, 12, 65523, -7, 12, 65523, -6, 12, 65523, -5, 12, 65523, -4, 12, 65523, -3, 12, 65523, -2, 12, 65523, -1, 12, 65523, 0, 12, 65523, 1, 12, 65523, 2, 12, 65523, 3, 12, 65523, 4, 12, 65523, 5, 12, 65523, 6, 12, 65523, 7, 12, 11, -9, 12, 11, -8, 12, 11, -7, 12, 11, -6, 12, 11, -5, 12, 11, -4, 12, 11, -3, 12, 11, -2, 12, 11, -1, 12, 11, 0, 12, 11, 1, 12, 11, 2, 12, 11, 3, 12, 11, 4, 12, 11, 5, 12, 11, 6, 12, 11, 7, 12, 65523, -10, 14, 11, -10, 14, 65523, 8, 14, 11, 8, 14)
+}

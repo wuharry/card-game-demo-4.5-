@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://du1dkojttcs14"
-path.s3tc="res://.godot/imported/grass_spritesheet.png-338f26940e1147dec19eca3643ab1279.s3tc.ctex"
+uid="uid://ox8w81co5b5i"
+path.s3tc="res://.godot/imported/card_border.png-2b87ea49800842f781f4b6653b805dc7.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://grass_spritesheet.png"
-dest_files=["res://.godot/imported/grass_spritesheet.png-338f26940e1147dec19eca3643ab1279.s3tc.ctex"]
+source_file="res://assets/ui/textures/card_border.png"
+dest_files=["res://.godot/imported/card_border.png-2b87ea49800842f781f4b6653b805dc7.s3tc.ctex"]
 
 [params]
 
