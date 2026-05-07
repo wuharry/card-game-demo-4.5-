@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3 uid="uid://d3snrkgtw7cj4"]
+
+[ext_resource type="Script" uid="uid://cisvwf65333fl" path="res://src/player_board/player_board.gd" id="1_ple8l"]
+[ext_resource type="PackedScene" uid="uid://df3ao5yyr27qy" path="res://src/card_slot/card_slot.tscn" id="2_0wpmg"]
+
+[node name="PlayerBoard" type="Node3D"]
+script = ExtResource("1_ple8l")
+card_slot_scene = ExtResource("2_0wpmg")
