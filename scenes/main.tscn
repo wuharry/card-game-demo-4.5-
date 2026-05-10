@@ -1,29 +1,14 @@
 [gd_scene load_steps=5 format=3 uid="uid://bhehoq0hgmn0w"]
 
-[ext_resource type="PackedScene" uid="uid://ms5b78mvgm7c" path="res://src/card/card.tscn" id="1_glv2v"]
 [ext_resource type="Script" uid="uid://fq1anfl5s3w2" path="res://src/card_manager/card_manager.gd" id="1_uu6xs"]
 [ext_resource type="PackedScene" uid="uid://chgkpoxgxfare" path="res://scenes/arena_forest.tscn" id="3_r0du0"]
 [ext_resource type="PackedScene" uid="uid://d3snrkgtw7cj4" path="res://src/player_board/player_board.tscn" id="4_cm0pq"]
+[ext_resource type="Script" uid="uid://tufcahb6ac65" path="res://src/play_hand/player_hand.gd" id="5_ph001"]
 
 [node name="MainScene" type="Node3D"]
 
 [node name="CardManger" type="Node3D" parent="."]
 script = ExtResource("1_uu6xs")
-
-[node name="Card2" parent="CardManger" instance=ExtResource("1_glv2v")]
-transform = Transform3D(0.6, 0, 0, 0, 0.42426407, 0.42426407, 0, -0.42426407, 0.42426407, 0, 3, 9)
-
-[node name="Card" parent="CardManger" instance=ExtResource("1_glv2v")]
-transform = Transform3D(0.6, 0, 0, 0, 0.42426407, 0.42426407, 0, -0.42426407, 0.42426407, -2, 3, 9)
-
-[node name="Card3" parent="CardManger" instance=ExtResource("1_glv2v")]
-transform = Transform3D(0.6, 0, 0, 0, 0.42426407, 0.42426407, 0, -0.42426407, 0.42426407, 1.5, 3, 9)
-
-[node name="Card4" parent="CardManger" instance=ExtResource("1_glv2v")]
-transform = Transform3D(0.6, 0, 0, 0, 0.42426404, 0.42426404, 0, -0.42426404, 0.42426404, 3.3, 3, 9)
-
-[node name="Card5" parent="CardManger" instance=ExtResource("1_glv2v")]
-transform = Transform3D(0.6, 0, 0, 0, 0.42426407, 0.42426407, 0, -0.42426407, 0.42426407, 5, 3, 9)
 
 [node name="CameraRig" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.7071067, 0.7071067, 0, -0.7071067, 0.7071067, 0, 0, 0)
@@ -41,3 +26,7 @@ is_enemy = true
 
 [node name="PlayerBoard" parent="." instance=ExtResource("4_cm0pq")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2)
+
+[node name="PlayerHand" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 9)
+script = ExtResource("5_ph001")
