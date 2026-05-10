@@ -19,10 +19,11 @@ var currently_hovered_card: Card = null
 # --- 記錄拖曳時，目前懸停在哪個卡槽上 ---
 var currently_hovered_slot: CardSlot = null
 
-@onready var player_hand = get_node("../PlayerHand")
-
 func _ready() -> void:
+	# 1. 遊戲開始時，先綁定所有卡片的信號
 	connect_card_signals()
+	# 3D 不需要像 2D 那樣限制 screen_size，因為世界座標跟螢幕像素不同
+	pass
 
 # --- 新增：綁定信號的邏輯 ---
 func connect_card_signals() -> void:
@@ -63,7 +64,7 @@ func _on_card_unhovered(card: Card) -> void:
 			_on_card_hovered(underneath_card)
 		# 未來你可以在這裡加入：讓這張卡片的 Z 軸退回原位
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if card_being_dragged:
 		# 1. 建立一個數學平面 (Plane)。
 		# Vector3.UP 代表平面朝上 (正常的桌子表面)，drag_plane_height 是高度
@@ -192,6 +193,8 @@ func raycast_check_for_card_slot() -> CardSlot:
 		
 	return null
 
+# --- 未來擴充準備 ---
 func organize_hand() -> void:
-	if player_hand:
-		player_hand.organize_hand()
+	# TODO: 之後跟著教學第 4 集，在這裡實作將卡片排成扇形的邏輯
+	print("準備觸發 organize_hand，但目前還沒實作！")
+	pass
