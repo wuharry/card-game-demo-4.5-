@@ -6,10 +6,10 @@ class_name PlayerHand
 const CARD_SCENE = preload("res://src/card/card.tscn")
 
 @export var hand_size: int = 5
-@export var fan_radius: float = 12.0       # 扇形圓弧半徑（越大越平緩）
-@export var fan_spread_degrees: float = 40.0 # 扇形總張開角度
-@export var card_tilt_x: float = 45.0      # 卡片向攝影機傾斜的角度
-@export var card_uniform_scale: float = 0.6
+@export var fan_radius: float = 7.0        # 扇形圓弧半徑（越大越平緩）
+@export var fan_spread_degrees: float = 25.0 # 扇形總張開角度
+@export var card_tilt_x: float = 55.0      # 卡片向攝影機傾斜的角度
+@export var card_uniform_scale: float = 0.3
 
 var cards: Array[Node3D] = []
 
@@ -21,6 +21,7 @@ func _ready() -> void:
 func draw_starting_hand(count: int) -> void:
 	for i in range(count):
 		var card: Card = CARD_SCENE.instantiate()
+		card.scale = Vector3.ONE * card_uniform_scale
 		add_child(card)
 		cards.append(card)
 		card.card_hovered.connect(_card_manager._on_card_hovered)
