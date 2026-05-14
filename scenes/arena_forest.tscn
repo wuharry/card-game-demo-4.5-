@@ -7,7 +7,7 @@ background_mode = 1
 background_color = Color(0.03, 0.05, 0.03, 1)
 ambient_light_source = 2
 ambient_light_color = Color(0.86, 0.72, 0.48, 1)
-ambient_light_energy = 0.42
+ambient_light_energy = 0.2
 fog_enabled = true
 fog_light_color = Color(0.35, 0.26, 0.14, 1)
 fog_light_energy = 0.8
@@ -15,8 +15,8 @@ fog_density = 0.010
 fog_aerial_perspective = 0.20
 glow_enabled = true
 glow_normalized = true
-glow_intensity = 0.50
-glow_bloom = 0.08
+glow_intensity = 0.8
+glow_bloom = 0.12
 glow_blend_mode = 2
 
 [node name="Arena_Forest" type="Node3D"]
@@ -29,9 +29,10 @@ environment = SubResource("Environment_5nbl3")
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.70710677, 0.49999997, -0.49999997, 0, 0.70710677, 0.70710677, 0.70710677, -0.49999997, 0.49999997, 0, 0, 0)
 light_color = Color(1.0, 0.88, 0.62, 1)
-light_energy = 1.6
+light_energy = 2.8
 shadow_enabled = true
-shadow_blur = 2.0
+shadow_blur = 0.5
+directional_shadow_max_distance = 50.0
 
 [node name="GridMap" type="GridMap" parent="."]
 mesh_library = ExtResource("1_uyk6n")
