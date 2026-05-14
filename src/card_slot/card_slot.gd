@@ -28,19 +28,12 @@ func place_card(card: Card) -> void:
 	# 放入後立刻取消 highlight 狀態（卡槽已滿，視覺回到正常）
 	unhighlight()
 
-	# 視覺升級：平滑吸附到卡槽中心，並且「同時躺平」
-	# set_parallel(true)：讓位移與旋轉同時執行，而不是依序執行
 	var tw = create_tween().set_parallel(true)
 
-	# 1. 計算目標高度 (稍微浮起避免穿模)
 	var target_position = global_position + Vector3(0, 0.09, 0)
-
-
-	# 2. 執行位移動畫
 	tw.tween_property(card, "global_position", target_position, 0.15)
-
-	# 3. 執行旋轉動畫 (X軸轉 -90 度，讓卡片躺平)
-	tw.tween_property(card, "rotation_degrees", Vector3(-90, 0, 0), 0.15)
+	tw.tween_property(card, "rotation_degrees", Vector3(0, 0, 0), 0.15)
+	tw.tween_property(card, "scale", Vector3.ONE * 0.23, 0.15)
 
 	# 物理：鎖死這張卡片，防止玩家再次拖曳
 	card.lock_interaction()
@@ -51,9 +44,9 @@ func remove_card() -> void:
 		# 解除物理鎖定，讓卡片可以再次被拖曳
 		card_in_slot.unlock_interaction()
 
-		# 對稱還原：讓卡片立起來（與 place_card 的躺平動畫對稱）
-		var tw = create_tween()
+		var tw = create_tween().set_parallel(true)
 		tw.tween_property(card_in_slot, "rotation_degrees", Vector3(0, 0, 0), 0.15)
+		tw.tween_property(card_in_slot, "scale", card_in_slot.original_scale, 0.15)
 
 	# 清空卡槽狀態
 	is_empty = true
