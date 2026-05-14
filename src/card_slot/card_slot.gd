@@ -33,7 +33,7 @@ func place_card(card: Card) -> void:
 	var target_position = global_position + Vector3(0, 0.09, 0)
 	tw.tween_property(card, "global_position", target_position, 0.15)
 	tw.tween_property(card, "rotation_degrees", Vector3(0, 0, 0), 0.15)
-	tw.tween_property(card, "scale", Vector3.ONE * 0.23, 0.15)
+	tw.tween_property(card, "scale", Vector3.ONE * 0.61, 0.15)
 
 	# 物理：鎖死這張卡片，防止玩家再次拖曳
 	card.lock_interaction()

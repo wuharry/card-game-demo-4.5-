@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://b8eudg7ob7if" path="res://assets/ui/card_frames/base 11.png" id="2_mt86f"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_r0du0"]
-size = Vector3(0.6, 0.05, 0.9)
+size = Vector3(1.6, 0.05, 2.4)
 
 [node name="CardSlot" type="Area3D"]
 collision_layer = 2
