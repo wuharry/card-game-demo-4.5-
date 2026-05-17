@@ -125,6 +125,8 @@ func _input(event: InputEvent) -> void:
 				if found_slot and found_slot.is_empty:
 					# 呼叫我們剛才在 CardSlot 寫好的完美封裝函式！
 					found_slot.place_card(card_being_dragged)
+					player_hand.cards.erase(card_being_dragged) # 從手牌陣列移除已出的牌
+					organize_hand() # 出牌後立刻重排剩餘手牌，觸發靠攏動畫
 					print("成功把卡片放進卡槽！")
 				else:
 					# 如果底下沒有卡槽，或卡槽已經滿了，退回原本的手牌區
