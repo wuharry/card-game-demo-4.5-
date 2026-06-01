@@ -22,20 +22,13 @@ var currently_hovered_slot: CardSlot = null
 @onready var player_hand = get_node("../PlayerHand")
 
 func _ready() -> void:
-	connect_card_signals()
+	# 連接 PlayerHand 的中繼信號，讓 CardManager 統一從 PlayerHand 接收 hover 事件
+	# 這樣不管手牌有幾張、何時新增，CardManager 都只需要訂閱一個來源
+	player_hand.card_hovered.connect(on_card_hovered)
+	player_hand.card_unhovered.connect(on_card_unhovered)
 
-# --- 新增：綁定信號的邏輯 ---
-func connect_card_signals() -> void:
-	for child in get_children():
-		# mapping card中.....
-		if child is Card:
-			# 將卡片的信號，連接到 Manager 底下的 _on_card_hovered 函式
-			# 因為卡片有傳遞 self 出來，所以接收端也要預留參數位置
-			child.card_hovered.connect(_on_card_hovered)
-			child.card_unhovered.connect(_on_card_unhovered)
-
-# --- 新增：接收廣播後的處理函式 ---
-func _on_card_hovered(card: Card) -> void:
+# 接收 PlayerHand 中繼過來的 hover 事件（公開命名，無底線前綴）
+func on_card_hovered(card: Card) -> void:
 	# 防呆 1：如果正在拖曳，直接忽略任何 Hover (底下的牌不會亂放大)
 	if card_being_dragged != null:
 		return
@@ -49,18 +42,18 @@ func _on_card_hovered(card: Card) -> void:
 	card.animate_hover()
 	# 未來你可以在這裡加入：讓這張卡片的 Z 軸往前移 (防穿模)
 
-func _on_card_unhovered(card: Card) -> void:
+func on_card_unhovered(card: Card) -> void:
 	# 確認離開的是目前記錄的這張卡片
 	if currently_hovered_card == card:
 		currently_hovered_card = null
 		card.animate_unhover()
-		
+
 		# --- 防呆補償邏輯 ---
 		# 主動射一條射線，看看底下還有沒有卡片被忽略了
 		var underneath_card = raycast_check_for_card()
 		# 如果有掃到卡片，且我們沒有在拖曳，就主動觸發它的 Hover
 		if underneath_card and underneath_card is Card and card_being_dragged == null:
-			_on_card_hovered(underneath_card)
+			on_card_hovered(underneath_card) # 改用公開名稱呼叫，與方法定義一致
 		# 未來你可以在這裡加入：讓這張卡片的 Z 軸退回原位
 
 func _process(_delta: float) -> void:
