@@ -3,7 +3,7 @@
 extends Node3D
 class_name PlayerHand
 
-const CARD_SCENE = preload("res://src/card/card.tscn")
+@export var card_scene: PackedScene = preload("res://src/card/card.tscn")
 
 @export var hand_size: int = 5
 @export var fan_radius: float = 7.0             # 扇形圓弧半徑，數值越大弧線越平緩
@@ -14,19 +14,24 @@ const CARD_SCENE = preload("res://src/card/card.tscn")
 
 var cards: Array[Node3D] = []
 
-@onready var _card_manager = get_node("../CardManger")
+# PlayerHand 自己的中繼信號：當任何一張手牌被 hover/unhover，就向外廣播
+# 這樣 CardManager 只需要訂閱 PlayerHand，不用讓 PlayerHand 直接戳 CardManager 的內部方法
+signal card_hovered(card: Card)
+signal card_unhovered(card: Card)
 
 func _ready() -> void:
 	draw_starting_hand(hand_size)
 
 func draw_starting_hand(count: int) -> void:
 	for i in range(count):
-		var card: Card = CARD_SCENE.instantiate()
+		var card: Card = card_scene.instantiate()
 		card.scale = Vector3.ONE * card_uniform_scale
 		add_child(card)
 		cards.append(card)
-		card.card_hovered.connect(_card_manager._on_card_hovered)
-		card.card_unhovered.connect(_card_manager._on_card_unhovered)
+		# 用 lambda（匿名函式）把單張牌的信號，轉發給 PlayerHand 自己的中繼信號
+		# 這樣外部（CardManager）只需要連接 PlayerHand，不需要知道每張牌的存在
+		card.card_hovered.connect(func(c: Card) -> void: card_hovered.emit(c))
+		card.card_unhovered.connect(func(c: Card) -> void: card_unhovered.emit(c))
 	_arrange_fan()
 
 # 供 CardManager 呼叫，讓手牌平滑地重新排列
