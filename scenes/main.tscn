@@ -1,9 +1,11 @@
-[gd_scene load_steps=5 format=3 uid="uid://bhehoq0hgmn0w"]
+[gd_scene load_steps=6 format=3 uid="uid://bhehoq0hgmn0w"]
 
 [ext_resource type="Script" uid="uid://fq1anfl5s3w2" path="res://src/card_manager/card_manager.gd" id="1_uu6xs"]
 [ext_resource type="PackedScene" uid="uid://chgkpoxgxfare" path="res://scenes/arena_forest.tscn" id="3_r0du0"]
 [ext_resource type="PackedScene" uid="uid://d3snrkgtw7cj4" path="res://src/player_board/player_board.tscn" id="4_cm0pq"]
 [ext_resource type="Script" uid="uid://tufcahb6ac65" path="res://src/play_hand/player_hand.gd" id="5_ph001"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_jyhfs"]
 
 [node name="MainScene" type="Node3D"]
 
@@ -30,3 +32,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2)
 [node name="PlayerHand" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 2, 9.2)
 script = ExtResource("5_ph001")
+
+[node name="Deck" type="Node3D" parent="."]
+
+[node name="Area3D" type="Area3D" parent="Deck"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Deck/Area3D"]
+shape = SubResource("BoxShape3D_jyhfs")
