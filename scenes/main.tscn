@@ -1,9 +1,10 @@
-[gd_scene load_steps=6 format=3 uid="uid://bhehoq0hgmn0w"]
+[gd_scene load_steps=7 format=3 uid="uid://bhehoq0hgmn0w"]
 
 [ext_resource type="Script" uid="uid://fq1anfl5s3w2" path="res://src/card_manager/card_manager.gd" id="1_uu6xs"]
 [ext_resource type="PackedScene" uid="uid://chgkpoxgxfare" path="res://scenes/arena_forest.tscn" id="3_r0du0"]
 [ext_resource type="PackedScene" uid="uid://d3snrkgtw7cj4" path="res://src/player_board/player_board.tscn" id="4_cm0pq"]
 [ext_resource type="Script" uid="uid://tufcahb6ac65" path="res://src/play_hand/player_hand.gd" id="5_ph001"]
+[ext_resource type="Texture2D" uid="uid://bb3418gtpi6y8" path="res://暫定卡背.png" id="5_tbgi4"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_jyhfs"]
 
@@ -35,7 +36,10 @@ script = ExtResource("5_ph001")
 
 [node name="Deck" type="Node3D" parent="."]
 
-[node name="Sprite3D" type="Sprite3D" parent="Deck"]
+[node name="Card_Sprite3D" type="Sprite3D" parent="Deck"]
+transform = Transform3D(0.681, 0, 0, 0, 0.5642, 0, 0, 0, 1, 0, 0, 0)
+pixel_size = 0.005
+texture = ExtResource("5_tbgi4")
 
 [node name="Area3D" type="Area3D" parent="Deck"]
 
