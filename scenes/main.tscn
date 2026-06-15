@@ -35,6 +35,8 @@ script = ExtResource("5_ph001")
 
 [node name="Deck" type="Node3D" parent="."]
 
+[node name="Sprite3D" type="Sprite3D" parent="Deck"]
+
 [node name="Area3D" type="Area3D" parent="Deck"]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Deck/Area3D"]
