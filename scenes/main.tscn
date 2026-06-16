@@ -4,9 +4,10 @@
 [ext_resource type="PackedScene" uid="uid://chgkpoxgxfare" path="res://scenes/arena_forest.tscn" id="3_r0du0"]
 [ext_resource type="PackedScene" uid="uid://d3snrkgtw7cj4" path="res://src/player_board/player_board.tscn" id="4_cm0pq"]
 [ext_resource type="Script" uid="uid://tufcahb6ac65" path="res://src/play_hand/player_hand.gd" id="5_ph001"]
-[ext_resource type="Texture2D" uid="uid://bb3418gtpi6y8" path="res://暫定卡背.png" id="5_tbgi4"]
+[ext_resource type="Texture2D" uid="uid://n4ac73p70pqg" path="res://assets/ui/textures/card_back.png" id="5_tbgi4"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_jyhfs"]
+size = Vector3(1.6, 0.18, 2.24)
 
 [node name="MainScene" type="Node3D"]
 
@@ -36,12 +37,58 @@ script = ExtResource("5_ph001")
 
 [node name="Deck" type="Node3D" parent="."]
 
-[node name="Card_Sprite3D" type="Sprite3D" parent="Deck"]
-transform = Transform3D(0.681, 0, 0, 0, 0.5642, 0, 0, 0, 1, 0, 0, 0)
+[node name="CardStack" type="Node3D" parent="Deck"]
+
+[node name="CardBack_0" type="Sprite3D" parent="Deck/CardStack"]
+transform = Transform3D(0.3125, 0, 0, 0, 0, -0.3125, 0, 1, 0, 0, 0, 0)
+pixel_size = 0.005
+texture = ExtResource("5_tbgi4")
+
+[node name="CardBack_1" type="Sprite3D" parent="Deck/CardStack"]
+visible = false
+transform = Transform3D(0.3125, 0, 0, 0, 0, -0.3125, 0, 1, 0, 0, 0.022, 0)
+pixel_size = 0.005
+texture = ExtResource("5_tbgi4")
+
+[node name="CardBack_2" type="Sprite3D" parent="Deck/CardStack"]
+visible = false
+transform = Transform3D(0.3125, 0, 0, 0, 0, -0.3125, 0, 1, 0, 0, 0.044, 0)
+pixel_size = 0.005
+texture = ExtResource("5_tbgi4")
+
+[node name="CardBack_3" type="Sprite3D" parent="Deck/CardStack"]
+visible = false
+transform = Transform3D(0.3125, 0, 0, 0, 0, -0.3125, 0, 1, 0, 0, 0.066, 0)
+pixel_size = 0.005
+texture = ExtResource("5_tbgi4")
+
+[node name="CardBack_4" type="Sprite3D" parent="Deck/CardStack"]
+visible = false
+transform = Transform3D(0.3125, 0, 0, 0, 0, -0.3125, 0, 1, 0, 0, 0.088, 0)
+pixel_size = 0.005
+texture = ExtResource("5_tbgi4")
+
+[node name="CardBack_5" type="Sprite3D" parent="Deck/CardStack"]
+visible = false
+transform = Transform3D(0.3125, 0, 0, 0, 0, -0.3125, 0, 1, 0, 0, 0.11, 0)
+pixel_size = 0.005
+texture = ExtResource("5_tbgi4")
+
+[node name="CardBack_6" type="Sprite3D" parent="Deck/CardStack"]
+visible = false
+transform = Transform3D(0.3125, 0, 0, 0, 0, -0.3125, 0, 1, 0, 0, 0.132, 0)
+pixel_size = 0.005
+texture = ExtResource("5_tbgi4")
+
+[node name="CardBack_7" type="Sprite3D" parent="Deck/CardStack"]
+visible = false
+transform = Transform3D(0.3125, 0, 0, 0, 0, -0.3125, 0, 1, 0, 0, 0.154, 0)
 pixel_size = 0.005
 texture = ExtResource("5_tbgi4")
 
 [node name="Area3D" type="Area3D" parent="Deck"]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Deck/Area3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.077, 0)
 shape = SubResource("BoxShape3D_jyhfs")
+disabled = true
