@@ -10,7 +10,7 @@ class_name PlayerHand
 @export var max_fan_spread_degrees: float = 25.0 # 手牌滿時允許的最大總張開角度（上限）
 @export var card_angle_gap: float = 6.0          # 相鄰兩張牌之間的固定角度間距（爐石風格核心）
 @export var card_tilt_x: float = 55.0            # 卡片向攝影機傾斜的角度
-@export var card_uniform_scale: float = 0.3      # 手牌的統一縮放比例
+@export var card_uniform_scale: float = 0.6      # 手牌的統一縮放比例
 
 var cards: Array[Node3D] = []
 
