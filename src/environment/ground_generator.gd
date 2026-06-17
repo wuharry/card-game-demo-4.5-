@@ -28,6 +28,7 @@ extends GridMap
 @export var grass_variation: float = 0.05              # 草地中混入少量過渡磚的機率
 @export var patch_scale: float = 0.11                   # 噪聲頻率（越小斑塊越大）
 @export var rng_seed: int = 20240617
+@export var random_orientation: bool = false           # 隨機 Y 朝向會與法線貼圖打架，造成同種磚明暗斑駁，預設關閉
 
 const Y_ORIENT: Array[int] = [0, 22, 10, 16]           # 四個 Y 軸 90° 正交朝向
 
@@ -56,5 +57,5 @@ func _generate() -> void:
 			elif rng.randf() < grass_variation:
 				item = blend_items[rng.randi_range(0, blend_items.size() - 1)]
 
-			var orient: int = Y_ORIENT[rng.randi_range(0, Y_ORIENT.size() - 1)]
+			var orient: int = Y_ORIENT[rng.randi_range(0, Y_ORIENT.size() - 1)] if random_orientation else 0
 			set_cell_item(Vector3i(x, y_level, z), item, orient)
