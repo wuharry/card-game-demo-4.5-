@@ -1,6 +1,9 @@
-[gd_scene load_steps=3 format=3 uid="uid://chgkpoxgxfare"]
+[gd_scene load_steps=10 format=3 uid="uid://chgkpoxgxfare"]
 
 [ext_resource type="MeshLibrary" uid="uid://bhkww34j8tya5" path="res://assets/mesh_libraries/grasslands/grassland_tiles.meshlib" id="1_uyk6n"]
+[ext_resource type="Script" path="res://src/environment/forest_scatter.gd" id="2_scatter"]
+[ext_resource type="Shader" path="res://assets/water/stream_water.gdshader" id="3_stream"]
+[ext_resource type="Texture2D" uid="uid://cc7bu8k61vqmr" path="res://assets/water/psx_ocean_surface/clear+sea+water-2048x2048.png" id="4_watertex"]
 
 [sub_resource type="Environment" id="Environment_5nbl3"]
 background_mode = 1
@@ -14,6 +17,10 @@ ssao_enabled = true
 ssao_radius = 1.0
 ssao_intensity = 1.5
 ssao_power = 1.5
+ssr_enabled = true
+ssr_max_steps = 48
+ssr_fade_in = 0.15
+ssr_fade_out = 2.0
 fog_enabled = true
 fog_light_color = Color(0.55, 0.45, 0.32, 1)
 fog_light_energy = 1.0
@@ -33,9 +40,45 @@ adjustment_brightness = 1.0
 adjustment_contrast = 1.08
 adjustment_saturation = 1.18
 
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_stream"]
+frequency = 0.05
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_stream"]
+seamless = true
+noise = SubResource("FastNoiseLite_stream")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_stream"]
+render_priority = 0
+shader = ExtResource("3_stream")
+shader_parameter/water_tex = ExtResource("4_watertex")
+shader_parameter/noise_tex = SubResource("NoiseTexture2D_stream")
+shader_parameter/deep_color = Color(0.04, 0.16, 0.28, 1)
+shader_parameter/shallow_color = Color(0.2, 0.48, 0.55, 1)
+shader_parameter/flow_dir = Vector2(1, 0)
+shader_parameter/flow_speed = 0.05
+shader_parameter/uv_scale = 0.12
+shader_parameter/wave_height = 0.05
+shader_parameter/ripple_strength = 0.35
+shader_parameter/water_roughness = 0.05
+shader_parameter/fresnel_power = 4.0
+shader_parameter/water_alpha = 0.9
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_stream"]
+size = Vector2(60, 1.8)
+subdivide_width = 160
+subdivide_depth = 8
+
 [node name="Arena_Forest" type="Node3D"]
 
 [node name="Props" type="Node3D" parent="."]
+
+[node name="ForestScatter" type="Node3D" parent="Props"]
+script = ExtResource("2_scatter")
+
+[node name="Stream" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0.35)
+mesh = SubResource("PlaneMesh_stream")
+surface_material_override/0 = SubResource("ShaderMaterial_stream")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_5nbl3")
