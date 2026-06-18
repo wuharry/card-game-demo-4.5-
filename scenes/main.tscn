@@ -12,8 +12,9 @@ size = Vector3(1.6, 0.18, 2.4)
 
 [node name="MainScene" type="Node3D"]
 
-[node name="CardManger" type="Node3D" parent="."]
+[node name="CardManger" type="Node3D" parent="." node_paths=PackedStringArray("player_hand")]
 script = ExtResource("1_uu6xs")
+player_hand = NodePath("../PlayerHand")
 
 [node name="CameraRig" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.7071067, 0.7071067, 0, -0.7071067, 0.7071067, 0, 0, 0)

@@ -52,7 +52,7 @@ func generate_board() -> void:
 	for row in range(rows):
 		for col in range(cols):
 			# instantiate() = 依照藍圖「實體化」出一個真正的卡槽節點。
-			var slot = card_slot_scene.instantiate()
+			var slot := card_slot_scene.instantiate()
 			# add_child() = 把它掛到場景樹底下，這樣它才會真的出現在畫面中。
 			add_child(slot)
 

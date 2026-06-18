@@ -60,6 +60,13 @@ func organize_hand() -> void:
 	_arrange_fan()
 
 
+## 出牌：把這張牌移出手牌並重新靠攏。由 CardManager 在成功入槽後呼叫，
+## 讓「移除 + 重排」封裝在手牌自己身上，外部不必直接操作 cards 陣列。
+func play_card(card: Node3D) -> void:
+	cards.erase(card)
+	_arrange_fan()
+
+
 ## ── 核心：把 cards 陣列裡的牌排成圓弧扇形 ──────────
 ## 開頭底線 _ 代表這是內部函式。
 func _arrange_fan() -> void:
