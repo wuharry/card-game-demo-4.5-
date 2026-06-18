@@ -46,11 +46,11 @@ func place_card(card: Card) -> void:
 	unhighlight()
 
 	# set_parallel(true)：底下幾個 tween_property 會「同時」播放，而不是排隊。
-	var tw = create_tween().set_parallel(true)
+	var tw := create_tween().set_parallel(true)
 
 	# 目標位置 = 卡槽位置再往上抬 0.09，讓卡片疊在卡槽上方一點點、不會穿插。
 	# global_position 是「世界座標」(整個場景的絕對位置)。
-	var target_position = global_position + Vector3(0, 0.09, 0)
+	var target_position := global_position + Vector3(0, 0.09, 0)
 	tw.tween_property(card, "global_position", target_position, 0.15)  # 0.15 秒滑到定位
 	tw.tween_property(card, "rotation_degrees", Vector3(0, 0, 0), 0.15) # 同時把卡片轉正
 	# scale 設成 1.0 倍：卡片入槽後大小正好等於卡槽 (兩者原生都是 1.6×2.4)。
@@ -66,7 +66,7 @@ func remove_card() -> void:
 		# 解鎖，讓這張卡重新可以被滑鼠抓取。
 		card_in_slot.unlock_interaction()
 
-		var tw = create_tween().set_parallel(true)
+		var tw := create_tween().set_parallel(true)
 		tw.tween_property(card_in_slot, "rotation_degrees", Vector3(0, 0, 0), 0.15)
 		# 縮回卡片自己記住的「原始大小」(在 card.gd 的 original_scale)。
 		tw.tween_property(card_in_slot, "scale", card_in_slot.original_scale, 0.15)

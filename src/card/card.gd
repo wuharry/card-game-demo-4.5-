@@ -52,12 +52,12 @@ func _on_area_3d_mouse_exited() -> void:
 ## 把「要不要放大」的決策權交給 Manager，卡片只負責「怎麼放大」。
 func animate_hover() -> void:
 	# create_tween() 會建立一個補間動畫器：在一段時間內把某個屬性平滑地變化。
-	var tw = create_tween()
+	var tw := create_tween()
 	# 把 scale 在 0.15 秒內，從現在平滑變到「原始大小 × 1.2」(放大兩成)。
 	tw.tween_property(self, "scale", original_scale * 1.2, 0.15)
 
 func animate_unhover() -> void:
-	var tw = create_tween()
+	var tw := create_tween()
 	# 0.15 秒內縮回原始大小。
 	tw.tween_property(self, "scale", original_scale, 0.15)
 
@@ -66,7 +66,7 @@ func animate_unhover() -> void:
 ## 卡片能不能被滑鼠射線「打到」，取決於它的 CollisionShape3D 有沒有被停用。
 func lock_interaction() -> void:
 	# $Area3D/CollisionShape3D 是「節點路徑」寫法：從自己往下找這個子節點。
-	var col_shape = $Area3D/CollisionShape3D
+	var col_shape := $Area3D/CollisionShape3D
 	if col_shape:
 		# disabled = true 等同在 Inspector 勾選 CollisionShape3D 的「Disabled」。
 		# 停用後射線打不到它 → 卡片放進卡槽後就抓不動了。
@@ -74,7 +74,7 @@ func lock_interaction() -> void:
 		print("[狀態] 卡片已鎖定，滑鼠無法拖曳")
 
 func unlock_interaction() -> void:
-	var col_shape = $Area3D/CollisionShape3D
+	var col_shape := $Area3D/CollisionShape3D
 	if col_shape:
 		# 重新啟用碰撞形狀，卡片又可以被滑鼠抓取(例如從卡槽拿回手牌時)。
 		col_shape.disabled = false

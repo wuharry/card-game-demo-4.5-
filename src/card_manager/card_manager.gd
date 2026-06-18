@@ -26,7 +26,7 @@ const COLLISION_MASK_SLOT = 2  # 第 2 層：桌面卡槽(放牌時要找的對�
 @onready var camera: Camera3D = get_viewport().get_camera_3d()
 
 ## 目前「被滑鼠抓著拖曳」的卡片。沒有在拖任何卡時是 null。
-var card_being_dragged: Node3D = null
+var card_being_dragged: Card = null
 ## 拖曳時把卡片鎖在這個高度(Y 軸)，避免它忽高忽低或穿進地板。
 var drag_plane_height: float = 0.0
 ## 目前被滑鼠 hover(放大)的卡片。全場同時「只能有一張」被放大，避免畫面混亂。
@@ -34,8 +34,10 @@ var currently_hovered_card: Card = null
 ## 拖曳時，目前懸停在哪個卡槽上方(用來控制卡槽的高亮提示)。
 var currently_hovered_slot: CardSlot = null
 
-## 取得手牌節點。"../PlayerHand" 是相對路徑：".." 先回到父節點，再往下找 PlayerHand。
-@onready var player_hand = get_node("../PlayerHand")
+## 手牌節點。改用 @export 注入：在 main.tscn 的 Inspector 把 PlayerHand 指定進來，
+## 取代字串路徑 get_node("../PlayerHand")，這樣重命名/搬移節點時不會等到執行期才出錯，
+## 也讓 player_hand 帶有 PlayerHand 型別，享有自動補全與編譯期檢查。
+@export var player_hand: PlayerHand
 
 
 func _ready() -> void:
@@ -70,7 +72,7 @@ func on_card_unhovered(card: Card) -> void:
 
 		# 補償邏輯：扇形手牌彼此重疊，滑鼠從上面那張移開時，
 		# 其實可能正停在下面另一張牌上 → 主動再射一條線確認。
-		var underneath_card = raycast_check_for_card()
+		var underneath_card := raycast_check_for_card()
 		# 若底下真的還有牌、而且沒有在拖曳，就主動幫它觸發 hover(放大)。
 		if underneath_card and underneath_card is Card and card_being_dragged == null:
 			on_card_hovered(underneath_card)
@@ -83,14 +85,14 @@ func _process(_delta: float) -> void:
 	if card_being_dragged:
 		# 1. 想像桌面是一個「數學平面」：法線朝上(Vector3.UP)、高度為 drag_plane_height。
 		#    卡片只會在這個水平面上滑動，不會亂飛。
-		var drop_plane = Plane(Vector3.UP, drag_plane_height)
+		var drop_plane := Plane(Vector3.UP, drag_plane_height)
 
 		# 2. 取得滑鼠在螢幕上的像素位置。
-		var mouse_position = get_viewport().get_mouse_position()
+		var mouse_position := get_viewport().get_mouse_position()
 
 		# 3. 從攝影機朝滑鼠方向射線：origin = 起點、normal = 方向。
-		var ray_origin = camera.project_ray_origin(mouse_position)
-		var ray_normal = camera.project_ray_normal(mouse_position)
+		var ray_origin := camera.project_ray_origin(mouse_position)
+		var ray_normal := camera.project_ray_normal(mouse_position)
 
 		# 4. 算出這條射線和桌面平面的交點 = 滑鼠在桌面上對應的 3D 位置。
 		var intersect_pos = drop_plane.intersects_ray(ray_origin, ray_normal)
@@ -101,7 +103,7 @@ func _process(_delta: float) -> void:
 
 			# ── 拖曳時的卡槽高亮預覽 ──
 			# 順便往下看現在懸停在哪個卡槽上。
-			var found_slot = raycast_check_for_card_slot()
+			var found_slot := raycast_check_for_card_slot()
 			# 只有當「懸停的卡槽改變了」才更新，避免每幀重複觸發動畫。
 			if found_slot != currently_hovered_slot:
 				# 先把上一個卡槽的高亮收掉。
@@ -122,7 +124,7 @@ func _input(event: InputEvent) -> void:
 		if event.pressed:
 			# ── 左鍵按下 = 嘗試抓牌 ──
 			print("左鍵點擊 (3D)")
-			var card = raycast_check_for_card()
+			var card := raycast_check_for_card()
 			if card:
 				card_being_dragged = card
 				# 記住卡片當下的高度，拖曳時就維持在這個高度水平移動。
@@ -139,13 +141,12 @@ func _input(event: InputEvent) -> void:
 			# 1. 先確認手上真的有抓著卡。
 			if card_being_dragged:
 				# 2. 往下射線，看看放開的位置下面有沒有卡槽。
-				var found_slot = raycast_check_for_card_slot()
+				var found_slot := raycast_check_for_card_slot()
 
 				# 3. 找到卡槽、而且是空的 → 成功出牌。
 				if found_slot and found_slot.is_empty:
 					found_slot.place_card(card_being_dragged)         # 交給卡槽處理入槽動畫+鎖定
-					player_hand.cards.erase(card_being_dragged)       # 從手牌陣列移除這張牌
-					organize_hand()                                   # 剩下的手牌重新靠攏
+					player_hand.play_card(card_being_dragged)         # 移除手牌+重新靠攏，封裝在手牌自己身上
 					print("成功把卡片放進卡槽！")
 				else:
 					# 沒對準卡槽 / 卡槽已滿 → 讓它回到手牌扇形原位。
@@ -156,29 +157,29 @@ func _input(event: InputEvent) -> void:
 
 
 ## ── 射線：找滑鼠下方的「卡片」(第 1 層)──────────────
-func raycast_check_for_card():
-	var mouse_pos = get_viewport().get_mouse_position()
+func raycast_check_for_card() -> Card:
+	var mouse_pos := get_viewport().get_mouse_position()
 
 	# 射線起點 = 攝影機；終點 = 往滑鼠方向延伸 1000 單位(夠長即可)。
-	var from = camera.project_ray_origin(mouse_pos)
-	var to = from + camera.project_ray_normal(mouse_pos) * 1000.0
+	var from := camera.project_ray_origin(mouse_pos)
+	var to := from + camera.project_ray_normal(mouse_pos) * 1000.0
 
 	# 取得 3D 物理世界，準備做查詢。
-	var space_state = get_world_3d().direct_space_state
+	var space_state := get_world_3d().direct_space_state
 
 	# 建立射線查詢參數(3D 用 intersect_ray；2D 才是 intersect_point)。
-	var query = PhysicsRayQueryParameters3D.create(from, to)
+	var query := PhysicsRayQueryParameters3D.create(from, to)
 	query.collide_with_areas = true   # 卡片用的是 Area3D，必須打開才掃得到
 	query.collide_with_bodies = true
 	query.collision_mask = COLLISION_MASK_CARD  # 只掃第 1 層(卡片)
 
 	# 執行射線。打中東西時 result 是一個字典，沒打中是空的。
-	var result = space_state.intersect_ray(query)
+	var result := space_state.intersect_ray(query)
 
 	if result:
 		# result.collider 是被打中的 Area3D，它的父節點才是 Card 本體。
 		print('點擊在卡片上', result.collider.get_parent())
-		return result.collider.get_parent()
+		return result.collider.get_parent() as Card
 	else:
 		print('點擊在卡片外面')
 		return null
@@ -187,19 +188,19 @@ func raycast_check_for_card():
 ## ── 射線：找滑鼠下方的「卡槽」(第 2 層)──────────────
 ## 回傳型別寫成 -> CardSlot，代表這個函式保證回傳一個卡槽(或 null)。
 func raycast_check_for_card_slot() -> CardSlot:
-	var space_state = get_world_3d().direct_space_state
-	var mouse_pos = get_viewport().get_mouse_position()
+	var space_state := get_world_3d().direct_space_state
+	var mouse_pos := get_viewport().get_mouse_position()
 
-	var ray_origin = camera.project_ray_origin(mouse_pos)
-	var ray_end = ray_origin + camera.project_ray_normal(mouse_pos) * 1000.0
+	var ray_origin := camera.project_ray_origin(mouse_pos)
+	var ray_end := ray_origin + camera.project_ray_normal(mouse_pos) * 1000.0
 
-	var query = PhysicsRayQueryParameters3D.create(ray_origin, ray_end)
+	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_end)
 	# 關鍵：這次只掃第 2 層(卡槽)，所以不會誤打到卡片。
 	query.collision_mask = COLLISION_MASK_SLOT
 	# CardSlot 本身就是 Area3D，必須打開這個才掃得到。
 	query.collide_with_areas = true
 
-	var result = space_state.intersect_ray(query)
+	var result := space_state.intersect_ray(query)
 	if result:
 		# as CardSlot：把打中的東西「當作」CardSlot 型別回傳(方便後續取用它的方法)。
 		return result.collider as CardSlot
