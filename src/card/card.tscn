@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://ms5b78mvgm7c"]
 
 [ext_resource type="Script" uid="uid://6uvt42jb5nhh" path="res://src/card/card.gd" id="1_vbgb5"]
-[ext_resource type="Texture2D" path="res://NewCard.png" id="1_xwjj8"]
+[ext_resource type="Texture2D" uid="uid://ddwp0jcv2s00u" path="res://NewCard.png" id="1_xwjj8"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_glv2v"]
 size = Vector3(1.6, 2.4, 0.2)
@@ -9,7 +9,25 @@ size = Vector3(1.6, 2.4, 0.2)
 [node name="Card" type="Node3D"]
 script = ExtResource("1_vbgb5")
 
-[node name="CardImage" type="Sprite3D" parent="."]
+[node name="NameLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0.01)
+text = "怪物名稱"
+font_size = 39
+
+[node name="CostLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.535, 0.93, 0.3)
+text = "0
+"
+
+[node name="ATKLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, -0.76, 0.5)
+text = "0"
+
+[node name="HPLabel" type="Label3D" parent="."]
+
+[node name="CardArt" type="Sprite3D" parent="."]
+
+[node name="CardFrame" type="Sprite3D" parent="."]
 pixel_size = 0.0043956
 texture = ExtResource("1_xwjj8")
 
