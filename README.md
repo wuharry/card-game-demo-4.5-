@@ -66,8 +66,6 @@ main.tscn  ← 遊戲進入點 (MainScene, Node3D)
 | [src/environment/ground_generator.gd](src/environment/ground_generator.gd) | `@tool` GridMap 噪聲鋪地：純草為底、泥土依噪聲成簇、邊緣草泥過渡磚、每格隨機朝向 |
 | [src/environment/forest_scatter.gd](src/environment/forest_scatter.gd) | `@tool` 程序散佈 PSX 樹/灌木：成簇分布、內圈與前方淨空、生成時補上 alpha 鏤空雙面材質 |
 
-> ⚠️ 根目錄的 `cardManger3D.gd` 為早期管理器原型，已被 `src/card_manager/card_manager.gd` 取代，**目前無任何引用，可移除**。
-
 ### 場景
 
 | 檔案 | 說明 |
