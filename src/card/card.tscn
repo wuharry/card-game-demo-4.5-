@@ -10,7 +10,7 @@ size = Vector3(1.6, 2.4, 0.2)
 script = ExtResource("1_vbgb5")
 
 [node name="NameLabel" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0.02)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0.022)
 text = "怪物名稱"
 font_size = 39
 
