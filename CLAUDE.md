@@ -122,6 +122,19 @@
 > 以下是讓你能正確協作的事實底子。**完整架構、檔案表、待辦清單以 [README.md](README.md) 為單一真實來源**,
 > 這裡只放 README 沒講、但你動手前必須知道的事。
 
+## 知識庫結構(長內容放哪)
+> 這份 CLAUDE.md **每個 session 全量載入、每輪都付 token**。原則:只放**每個任務都相關的**(互動風格、專案架構慣例、短 checklist)。
+
+- **長而偶爾才用的主題參考(> 約 40 行)搬到 [docs/](docs/)**,CLAUDE.md 只留**一行指標**(例:「GDScript 效能陷阱見 `docs/godot-perf.md`」)。
+- **目前尚無此類長內容,故刻意先不建空檔**(想過才不做:建空檔只會製造要靠捏造填的坑)。內容長出來時再依主題建檔,候選:
+  - `docs/godot-perf.md` — `_process`/`_physics_process` 濫用、`get_node` 快取、實例化 vs 物件池
+  - `docs/godot-signals.md` — signal 連接慣例、記憶體洩漏防範、autoload 濫用陷阱
+  - `docs/scene-architecture.md` — scene 繼承/組合、節點命名、資料流方向
+- 踩坑紀錄用**三段式(規則 / Why / How)**;只有**真架構級決策**(例:某系統為何用 C# 而非 GDScript、網路同步選型)才升級成 ADR 五段式,聚焦技術取捨。
+- 遊戲設計規則(數值、勝負、關鍵字…)屬**業務語意**,一律留在 [README.md](README.md) 的 Gameplay Spec,別搬進來也別自行改寫。
+- **hook**:待 docs 實際建立後,才考慮加 `UserPromptSubmit` hook(依 `_process`/`signal`/`autoload`… 關鍵字提示讀對應檔);現在無檔可指,故不加。
+- 現有 [docs/HANDOFF_card_data.md](docs/HANDOFF_card_data.md) 是交接筆記,非常駐參考。
+
 ## 專案速覽
 - **引擎**:Godot **4.5**,語言 **GDScript**(無 C#)。
 - **主場景**:`scenes/main.tscn`(進入點)。
@@ -140,7 +153,6 @@
 ## 操作雷區(動檔案的規矩)
 - **`.tscn` / `.import` / `.uid` / `.godot/` 不要手改**(見 §2 通則)。
 - **刪資源走 Godot 編輯器**:FileSystem → 右鍵 → Delete,讓引擎同步清除 `.import` 快取與 UID,別用 `rm`(見 README「開發備註」)。
-- 根目錄若仍有 `cardManger3D.gd`,那是已被取代的早期原型(README 已註明可移除),別參考它。
 
 ## 跑專案 / 驗證
 - 互動/動畫(拖曳、hover、出牌、扇形重排)**要實際在 Godot 編輯器按播放才看得到**,無法純靠讀 code 驗證。
