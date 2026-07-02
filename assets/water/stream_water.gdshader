@@ -24,6 +24,14 @@ uniform float water_roughness = 0.05;     // 粗糙度(越低越像鏡面、反�
 uniform float fresnel_power = 4.0;        // 菲涅耳次方(控制掠角變亮的範圍)
 uniform float water_alpha = 0.9;          // 透明度參數(此版水面為不透明，保留備用)
 
+// ── 額外動向：蜿蜒 + 白沫 ─────────────────────────────────────────
+uniform float meander_amp = 0.6;          // 蜿蜒幅度(世界單位)：紋路左右擺多遠，0 = 死板直流
+uniform float meander_freq = 0.25;        // 蜿蜒空間頻率：沿河道多久彎一次(越小彎得越緩)
+uniform float meander_speed = 0.5;        // 蜿蜒時間速度：擺動本身漂移的快慢
+uniform vec3 foam_color : source_color = vec3(0.82, 0.90, 0.93); // 白沫色(避開純白，免得過曝觸發 glow)
+uniform float foam_edge_width = 0.35;     // 岸邊白沫帶寬(佔半幅河寬的比例 0~1)
+uniform float foam_streaks = 0.5;         // 中流白沫絲強度(0 = 關閉)
+
 // varying = 在 vertex() 算好、傳給 fragment() 共用的變數。
 // 這裡傳「這個點在世界空間(整個場景的絕對座標)的位置」。
 varying vec3 wpos;
@@ -35,11 +43,22 @@ void vertex() {
 	float n = texture(noise_tex, wpos.xz * 0.04 + flow_dir * flow_speed * TIME).r;
 	// 用 sin 波讓頂點 Y(高度)上下擺動 → 水面起伏。n*6.2831(≈2π) 把雜訊轉成相位偏移。
 	VERTEX.y += sin(wpos.x * 0.7 + TIME * 1.5 + n * 6.2831) * wave_height;
+	// 第二道「垂直於主流向」的小碎波：頻率、速度都跟主波錯開。
+	// 單一 sin 波週期太規律，眼睛幾秒就看穿；兩組不同頻率疊加後節奏就亂得像真水。
+	VERTEX.y += sin(wpos.z * 2.3 + TIME * 1.1) * wave_height * 0.4;
 }
 
 void fragment() {
 	vec2 base = wpos.xz * uv_scale;          // 用世界 XZ 當取樣座標(俯視水面的平面座標)
 	vec2 fl = flow_dir * flow_speed * TIME;  // 隨時間移動的偏移 → 讓紋路「流動」
+
+	// ── 蜿蜒主流向 ──
+	// 給取樣座標加一個「沿河道位置變化、隨時間漂移」的橫向偏移：
+	// 紋路不再直直往下游平移，而是邊流邊左右迂迴——直河道也能看出活水的擺動。
+	// 加在 base 上 = 波紋法線、底圖、白沫全部一起擺，不會各擺各的穿幫。
+	float sway = sin(wpos.x * meander_freq + TIME * meander_speed);
+	base.y += sway * meander_amp * uv_scale;
+
 	float e = 0.02;                          // 取樣間距，用來估算斜率(算法線用)
 
 	// ── 算波紋法線 ──
@@ -64,10 +83,25 @@ void fragment() {
 	col = mix(col, col * tex * 1.6, 0.35);                              // 疊一點底圖紋理
 	col += shallow_color * fres * 0.6;                                  // 掠角(邊緣)加亮，模擬反射
 
+	// ── 白沫 ──
+	// UV.y 橫跨河面(0=此岸、1=彼岸)；×2-1 再取絕對值 → 0=河中心、1=岸邊。
+	float edge = abs(UV.y * 2.0 - 1.0);
+	// 白沫噪聲：X 方向壓扁(×0.6 vs ×3.0)拉成順流的「絲」，
+	// 且用比水面快 2.6 倍的速度往下游捲——白沫跑得比水快，是眼睛讀出流速的最強線索。
+	vec2 streak_uv = vec2(base.x * 0.6, base.y * 3.0) - fl * 2.6;
+	float streak_n = texture(noise_tex, streak_uv).r;
+	// 岸邊白沫：越靠岸越濃，用噪聲打碎邊界；smoothstep 上界 >1 → 貼岸處也不會糊成整條純白。
+	float edge_foam = smoothstep(1.0 - foam_edge_width, 1.05, edge + (streak_n - 0.5) * 0.5);
+	// 中流白沫絲：只取噪聲最亮的尖端(0.78~0.92) → 稀疏的細絲，而不是滿版白斑。
+	float mid_foam = smoothstep(0.78, 0.92, streak_n) * foam_streaks;
+	float foam = clamp(edge_foam + mid_foam, 0.0, 1.0);
+	col = mix(col, foam_color, foam * 0.85);   // 0.85：留一點水色透出來，白沫才不像貼紙
+
 	// ── 輸出給 Godot 的標準材質欄位 ──
 	ALBEDO = col;                  // 基礎顏色
 	METALLIC = 0.0;                // 非金屬
-	ROUGHNESS = water_roughness;   // 低粗糙 → 像鏡面，反射清晰
+	// 白沫是霧面的：有沫的地方粗糙度拉高，別跟著水面一起鏡面反光。
+	ROUGHNESS = mix(water_roughness, 0.75, foam);
 	SPECULAR = 0.7;                // 高光強度
 	// 註：刻意維持不透明，這樣 SSR(螢幕空間反射)才能把場景樹林反射到水面上。
 }
