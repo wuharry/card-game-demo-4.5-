@@ -140,7 +140,8 @@
 - **主場景**:`scenes/main.tscn`(進入點)。
 - **程式碼都在 [src/](src/)**:每個功能一個資料夾(`card/`、`card_manager/`、`card_slot/`、`play_hand/`、`player_board/`、`environment/`)。
 - **目前沒有 autoload / 單例**:狀態都掛在節點上,互動中樞是 `CardManager`。
-- ⚠️ 算繪器:[README.md](README.md) 寫 Forward+,但 `project.godot` 的 `config/features` 目前標記 **GL Compatibility**——兩者不一致。**動到光照/材質/shader 前,先以 `project.godot` 為準確認實際算繪器**,別照 README 假設。
+- 算繪器:**Forward+**(2026-07-02 已在編輯器右上角切換器確認)。`project.godot` 的 `config/features` 殘留過時標籤 "GL Compatibility"——那只是中繼資料非開關;真正的設定鍵 `rendering/renderer/rendering_method` 不存在 = 吃預設 `forward_plus`。標籤別手改,留給編輯器同步。
+- 後製/燈光都在 `scenes/arena_forest.tscn`(被 main.tscn 實例化):WorldEnvironment(ACES/SSAO/SSR/霧/**glow 已啟用**,`glow_hdr_threshold=0.95`)+ 暖色 DirectionalLight3D。**main.tscn 自己沒有環境節點,別在那裡找。**
 
 ## 關鍵慣例(改 code 前先記住)
 - **signal 中繼鏈**:每張 `Card` 的 hover 信號 → `PlayerHand`(中繼站,以自己名義轉發)→ `CardManager`(只訂閱這一個來源)。新增會發信號的物件時沿用這條鏈,別讓 `CardManager` 直接連每張卡。
