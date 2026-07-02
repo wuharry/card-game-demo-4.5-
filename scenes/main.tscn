@@ -1,5 +1,6 @@
-[gd_scene load_steps=8 format=3 uid="uid://bhehoq0hgmn0w"]
+[gd_scene load_steps=9 format=3 uid="uid://bhehoq0hgmn0w"]
 
+[ext_resource type="Script" path="res://src/main_scene/main_scene.gd" id="0_swap"]
 [ext_resource type="Script" uid="uid://fq1anfl5s3w2" path="res://src/card_manager/card_manager.gd" id="1_uu6xs"]
 [ext_resource type="PackedScene" uid="uid://chgkpoxgxfare" path="res://scenes/arena_forest.tscn" id="3_r0du0"]
 [ext_resource type="PackedScene" uid="uid://d3snrkgtw7cj4" path="res://src/player_board/player_board.tscn" id="4_cm0pq"]
@@ -11,6 +12,7 @@
 size = Vector3(1.6, 0.18, 2.4)
 
 [node name="MainScene" type="Node3D"]
+script = ExtResource("0_swap")
 
 [node name="CardManger" type="Node3D" parent="." node_paths=PackedStringArray("player_hand")]
 script = ExtResource("1_uu6xs")
