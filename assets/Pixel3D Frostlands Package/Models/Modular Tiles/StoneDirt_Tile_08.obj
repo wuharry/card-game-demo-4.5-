@@ -1,0 +1,16 @@
+# Blender v2.93.5 OBJ File: 'Frostlands.blend'
+# www.blender.org
+mtllib StoneDirt_Tile_08.mtl
+o Cube.136_export_temp_Cube.061
+v 0.500000 0.000000 0.500000
+v 0.500000 0.000000 -0.500000
+v -0.500000 0.000000 -0.500000
+v -0.500000 0.000000 0.500000
+vt 0.750049 0.750049
+vt 0.812451 0.750049
+vt 0.812451 0.812451
+vt 0.750049 0.812451
+vn 0.0000 1.0000 -0.0000
+usemtl frostland_tilesheet
+s off
+f 4/1/1 1/2/1 2/3/1 3/4/1

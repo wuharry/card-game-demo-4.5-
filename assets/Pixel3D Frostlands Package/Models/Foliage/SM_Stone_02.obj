@@ -1,0 +1,16 @@
+# Blender v2.93.5 OBJ File: 'Frostlands.blend'
+# www.blender.org
+mtllib SM_Stone_02.mtl
+o Cylinder.024_export_temp_Cylinder.009
+v 0.234375 0.000000 0.000000
+v -0.234375 0.000000 0.000000
+v -0.234375 0.249026 0.000000
+v 0.234375 0.249026 0.000000
+vt 0.031250 0.312500
+vt 0.058594 0.312500
+vt 0.058594 0.328125
+vt 0.031250 0.328125
+vn 0.0000 0.0000 1.0000
+usemtl frostland_tilesheet
+s 1
+f 2/1/1 1/2/1 4/3/1 3/4/1

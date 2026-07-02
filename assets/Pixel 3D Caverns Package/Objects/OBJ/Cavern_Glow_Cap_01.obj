@@ -1,0 +1,16 @@
+# Blender v2.93.5 OBJ File: 'Cavern_Glow_Cap_01.blend'
+# www.blender.org
+mtllib Cavern_Glow_Cap_01.mtl
+o Cube
+v 0.000000 0.156250 0.062500
+v 0.000000 0.156250 -0.062500
+v 0.000000 0.000000 -0.062500
+v 0.000000 0.000000 0.062500
+vt 0.184730 0.562598
+vt 0.195952 0.562598
+vt 0.195952 0.581934
+vt 0.184730 0.581934
+vn 1.0000 0.0000 0.0000
+usemtl Caverns_Tileset
+s off
+f 4/1/1 3/2/1 2/3/1 1/4/1
