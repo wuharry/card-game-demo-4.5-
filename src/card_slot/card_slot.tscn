@@ -1,7 +1,15 @@
-[gd_scene load_steps=4 format=3 uid="uid://df3ao5yyr27qy"]
+[gd_scene load_steps=6 format=3 uid="uid://df3ao5yyr27qy"]
 
 [ext_resource type="Script" uid="uid://bcaj2uvhp7nt6" path="res://src/card_slot/card_slot.gd" id="1_mt86f"]
 [ext_resource type="Texture2D" uid="uid://b8eudg7ob7if" path="res://assets/ui/card_frames/base 11.png" id="2_mt86f"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_i8i2m"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_i8i2m"]
+transparency = 1
+albedo_color = Color(0.40143624, 0.8118157, 0.94692093, 0.34509805)
+emission_enabled = true
+emission_energy_multiplier = 0.7
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_r0du0"]
 size = Vector3(1.6, 0.05, 2.4)
@@ -10,6 +18,11 @@ size = Vector3(1.6, 0.05, 2.4)
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("1_mt86f")
+
+[node name="SlotTile" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.8, 0, 0, 0, 1, 0, 0, 0, 1.4, 0, 0.02, 0)
+mesh = SubResource("PlaneMesh_i8i2m")
+surface_material_override/0 = SubResource("StandardMaterial3D_i8i2m")
 
 [node name="Sprite3D" type="Sprite3D" parent="."]
 transform = Transform3D(2.5, 0, 0, 0, 2.5, 0, 0, 0, 2.5, 0, 0, 0)

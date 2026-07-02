@@ -16,8 +16,8 @@ class_name PlayerHand
 
 @export var hand_size: int = 5                   # 起手牌張數(對應 Inspector「Hand Size」)
 @export var fan_radius: float = 7.0              # 扇形圓弧半徑，越大弧線越平緩
-@export var max_fan_spread_degrees: float = 25.0 # 手牌滿時允許的「最大」總張開角度(上限)
-@export var card_angle_gap: float = 6.0          # 相鄰兩張牌之間的固定角度間距(爐石風格核心)
+@export var max_fan_spread_degrees: float = 32.0 # 手牌滿時允許的「最大」總張開角度(上限)
+@export var card_angle_gap: float = 8.0          # 相鄰兩張牌之間的固定角度間距(爐石風格核心)
 @export var card_tilt_x: float = 55.0            # 卡片往攝影機方向傾斜的角度
 @export var card_uniform_scale: float = 0.6      # 手牌統一縮放比例(手牌看起來多大)
 
