@@ -1,0 +1,16 @@
+# Blender v2.79 (sub 0) OBJ File: 'Blacksmith_water_01.blend'
+# www.blender.org
+mtllib Blacksmith_water_01.mtl
+o Cube
+v 0.000000 0.250000 0.000000
+v 0.000000 0.250000 -0.500000
+v 0.000000 0.000000 -0.500000
+v 0.000000 0.000000 0.000000
+vt 0.562549 0.375049
+vt 0.593701 0.375049
+vt 0.593701 0.390576
+vt 0.562549 0.390576
+vn 1.0000 0.0000 0.0000
+usemtl Sprytile_Set_Town_01
+s off
+f 4/1/1 3/2/1 2/3/1 1/4/1
