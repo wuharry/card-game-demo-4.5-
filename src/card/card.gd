@@ -29,12 +29,33 @@ signal card_unhovered(card: Card)
 ## 若不記住、每次都拿當下大小再放大，多播幾次就會越變越大而失真。
 var original_scale: Vector3 = Vector3.ONE
 
+## 這張卡目前套用的資料(由發牌端透過 setup() 餵入)。
+## CardData = 純資料的 Resource(見 card_data.gd)；Card 只負責把它「顯示出來」。
+@export var data: CardData
+
 
 ## _ready() 是 Godot 的生命週期函式：節點一進入場景、準備好時自動執行一次。
 func _ready() -> void:
 	# 把「進場時的縮放」存起來當基準。
 	# scale 是每個 3D 節點都有的內建屬性，對應 Inspector 的 Transform → Scale。
 	original_scale = scale
+
+
+## ── 套用卡片資料 ─────────────────────────────────
+## 由發牌端呼叫：PlayerHand 抽到一份 CardData → card.setup(data) → 卡面顯示該卡。
+## 一份資料可以餵給很多張卡(資料與場上物件分離，見 card_data.gd 開頭的說明)。
+func setup(card_data: CardData) -> void:
+	data = card_data
+	$NameLabel.text = data.card_name
+	$CostLabel.text = str(data.cost)   # Label3D 的 text 只吃字串，int 要用 str() 轉
+	$ATKLabel.text = str(data.atk)
+	$HPLabel.text = str(data.hp)
+	$CardArt.texture = data.art
+	# 像素角色圖(100x100)要用「鄰近取樣」，放大才是銳利的格子而不是糊成一團。
+	$CardArt.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	# 卡圖沿卡面法線抬 0.01：CardArt 和 CardFrame 都在 z=0 會深度打架(z-fighting)。
+	# (原理同交接筆記 §B——這是「往鏡頭方向的深度」，跟著卡片一起轉，不會浮。)
+	$CardArt.position.z = 0.01
 
 
 ## ── 滑鼠事件 → 轉成信號對外廣播 ──────────────────

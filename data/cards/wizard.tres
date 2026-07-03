@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://src/card/card_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/小小RPG角色素材包/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Wizard/Wizard/Wizard_Idle.png" id="2_art"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
+atlas = ExtResource("2_art")
+region = Rect2(0, 0, 100, 100)
+
+[resource]
+script = ExtResource("1_script")
+card_name = "巫師"
+cost = 4
+atk = 6
+hp = 2
+art = SubResource("AtlasTexture_frame")
