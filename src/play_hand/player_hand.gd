@@ -24,6 +24,9 @@ class_name PlayerHand
 ## 用一個陣列記住目前手上有哪些卡。出牌時會從這個陣列移除。
 var cards: Array[Node3D] = []
 
+## 卡池:data/cards/ 底下所有 .tres 載進來的 CardData(第一次發牌時才載,見下)。
+var _card_pool: Array[CardData] = []
+
 ## ── 中繼信號 ──────────────────────────────────
 ## 為什麼要中繼？因為手牌數量會一直變(抽牌/出牌)，
 ## 若 CardManager 要直接連接每一張卡會很麻煩。改成：每張卡 → PlayerHand → CardManager，
@@ -39,6 +42,10 @@ func _ready() -> void:
 
 ## 發 count 張牌到手上。
 func draw_starting_hand(count: int) -> void:
+	# 卡池是「懶載入」:第一次要發牌才去載,而不是 _ready 就載
+	# (這支是 @tool 腳本,編輯器裡也會跑;懶載入讓載入失敗的影響縮到最小)。
+	if _card_pool.is_empty():
+		_load_card_pool()
 	for i in range(count):
 		# 依藍圖實體化一張卡。
 		var card: Card = card_scene.instantiate()
@@ -46,6 +53,10 @@ func draw_starting_hand(count: int) -> void:
 		card.scale = Vector3.ONE * card_uniform_scale
 		add_child(card)        # 掛進場景樹才會顯示
 		cards.append(card)     # 記進手牌陣列
+		# 從卡池隨機抽一份資料餵給這張卡:名字/費用/攻血/卡圖立刻換成該卡的。
+		# (正式的「牌堆抽牌不重複」之後做在 Deck;現在先隨機,驗證資料流打通。)
+		if not _card_pool.is_empty():
+			card.setup(_card_pool.pick_random())
 
 		# 把每張卡的 hover 信號「轉發」成 PlayerHand 自己的信號。
 		# func(c): ... 是「匿名函式(lambda)」：收到卡的信號時，立刻用自己的名義再發一次。
@@ -53,6 +64,23 @@ func draw_starting_hand(count: int) -> void:
 		card.card_unhovered.connect(func(c: Card) -> void: card_unhovered.emit(c))
 	# 全部發完後排成扇形。
 	_arrange_fan()
+
+
+## 把 data/cards/ 底下所有 .tres 載進卡池。
+## 用 DirAccess 掃資料夾而不是寫死 24 個 preload:之後加新卡 = 丟一個新 .tres
+## 進資料夾就完事,這支程式一行都不用動(資料變、程式不變)。
+func _load_card_pool() -> void:
+	_card_pool.clear()
+	var dir := DirAccess.open("res://data/cards")
+	if dir == null:
+		push_warning("找不到卡池資料夾 res://data/cards,手牌會是空白佔位卡")
+		return
+	for f in dir.get_files():
+		# 匯出成正式版時,檔名清單裡可能是 xxx.tres.remap(Godot 的匯出重映射),
+		# 把 .remap 後綴剝掉再載入,編輯器/正式版兩邊都通。
+		var file_name := f.trim_suffix(".remap")
+		if file_name.ends_with(".tres"):
+			_card_pool.append(load("res://data/cards/" + file_name))
 
 
 ## 供 CardManager 在出牌後呼叫，讓剩下的手牌平滑靠攏重排。
