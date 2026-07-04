@@ -17,6 +17,10 @@ extends Node3D
 ## is_enemy：這份棋盤是不是敵方。對應 Inspector 的「Is Enemy」勾選框。
 ## main.tscn 裡敵方那份會把它設成 true，用來決定棋盤要擺在遠端還是近端。
 @export var is_enemy: bool = false
+## 卡槽整體縮放。0.8 是配合較細的立牌像素密度(card.gd 的 standee_pixel_size 0.016)：
+## 卡片/卡槽縮小後，「角色 vs 卡片」的比例回到約 1/3，角色在卡上才有份量。
+## 卡片入槽時會自動乘上同倍率(見 card_slot.gd 的 _base_scale)，不用另外調。
+@export var slot_scale: float = 0.8
 
 
 func _ready() -> void:
@@ -31,8 +35,8 @@ func _ready() -> void:
 func generate_board() -> void:
 	var cols := 5      # 每排幾個卡槽(欄，左右方向)
 	var rows := 2      # 總共幾排(列，前後方向)
-	var col_gap := 2.0 # 欄與欄的水平間距(X 方向)
-	var row_gap := 2.5 # 排與排的前後間距(Z 方向)
+	var col_gap := 2.0 * slot_scale # 欄與欄的水平間距(X 方向，跟著卡槽縮放走)
+	var row_gap := 2.5 * slot_scale # 排與排的前後間距(Z 方向)
 
 	# 玩家棋盤往近端(Z 正方向)偏，敵人棋盤往遠端(Z 負方向)偏，兩邊才不會重疊。
 	var z_offset := 0.7 if not is_enemy else -8.5
@@ -53,6 +57,9 @@ func generate_board() -> void:
 		for col in range(cols):
 			# instantiate() = 依照藍圖「實體化」出一個真正的卡槽節點。
 			var slot := card_slot_scene.instantiate()
+			# 縮放要在 add_child「之前」設好：卡槽的 _ready 會在 add_child 當下執行，
+			# 它要拿「進場時的 scale」當高亮動畫的基準(設晚了就會快照到錯的 1.0)。
+			slot.scale = Vector3.ONE * slot_scale
 			# add_child() = 把它掛到場景樹底下，這樣它才會真的出現在畫面中。
 			add_child(slot)
 
