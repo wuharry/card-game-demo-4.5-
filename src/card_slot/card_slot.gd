@@ -30,10 +30,15 @@ var card_in_slot: Card = null
 ## 否則滑鼠快速進進出出時，多個動畫會打架造成大小抖動。
 var _highlight_tween: Tween = null
 
+## 卡槽的「基準縮放」:PlayerBoard 生成時會整體縮放卡槽(slot_scale,配合立牌像素密度)。
+## 高亮動畫要以它為基準去乘;若寫死 Vector3.ONE,一次高亮就把縮放洗掉了。
+## (基準值要快照、即時值才即時讀——和 card.gd 的 original_scale 是同一條原則。)
+var _base_scale: Vector3 = Vector3.ONE
+
 
 func _ready() -> void:
-	# pass = 「這裡什麼都不做」。卡槽在準備階段不需要初始化任何東西。
-	pass
+	# 把「進場時的縮放」拍下來當基準(PlayerBoard 在 add_child 前就把 scale 設好了)。
+	_base_scale = scale
 
 
 ## ── 公開方法：放入一張卡 ───────────────────────
@@ -52,9 +57,17 @@ func place_card(card: Card) -> void:
 	# global_position 是「世界座標」(整個場景的絕對位置)。
 	var target_position := global_position + Vector3(0, 0.09, 0)
 	tw.tween_property(card, "global_position", target_position, 0.15)  # 0.15 秒滑到定位
-	tw.tween_property(card, "rotation_degrees", Vector3(0, 0, 0), 0.15) # 同時把卡片轉正
-	# scale 設成 1.0 倍：卡片入槽後大小正好等於卡槽 (兩者原生都是 1.6×2.4)。
-	tw.tween_property(card, "scale", Vector3.ONE * 1.0, 0.15)
+	# 「轉正」= local (0,0,0)。注意這是「相對 PlayerHand」的旋轉：卡片上桌後仍掛在
+	# PlayerHand 底下，而 PlayerHand 自己就轉了 -90°X —— 所以 local (0,0,0) 疊上
+	# 父節點的旋轉，世界結果正是「躺平、卡面朝上、卡頂朝敵方」(遊戲王式擺法)。
+	# ⚠ 別在這裡再補 -90°：兩個旋轉會疊加，卡片就立起來了(local vs world，同 §B)。
+	tw.tween_property(card, "rotation_degrees", Vector3(0, 0, 0), 0.15)
+	# 卡片大小「跟著卡槽走」:兩者原生同為 1.6×2.4;卡槽被 PlayerBoard 縮放過,
+	# 卡片就乘上同一個倍率,入槽後才會剛好蓋住卡槽。
+	tw.tween_property(card, "scale", Vector3.ONE * _base_scale.x, 0.15)
+	# chain()：從「同時播放」切回「排隊」——等上面的躺平動畫都走完，
+	# 才呼叫 show_standee() 讓角色現身，時序上就是「卡落地 → 怪獸登場」。
+	tw.chain().tween_callback(card.show_standee)
 
 	# 鎖死這張卡 (停用它的碰撞)，玩家就不能再把它從卡槽拖走。
 	card.lock_interaction()
@@ -63,6 +76,8 @@ func place_card(card: Card) -> void:
 ## ── 公開方法：把卡片取出 ───────────────────────
 func remove_card() -> void:
 	if card_in_slot:
+		# 先收掉站在卡上的立牌(卡要離開桌面了，怪獸跟著退場)。
+		card_in_slot.hide_standee()
 		# 解鎖，讓這張卡重新可以被滑鼠抓取。
 		card_in_slot.unlock_interaction()
 
@@ -86,9 +101,9 @@ func highlight() -> void:
 	if _highlight_tween:
 		_highlight_tween.kill()
 
-	# 把整個卡槽稍微放大到 1.1 倍，產生「即將吸附」的視覺提示。
+	# 把整個卡槽稍微放大到「基準的 1.1 倍」，產生「即將吸附」的視覺提示。
 	_highlight_tween = create_tween()
-	_highlight_tween.tween_property(self, "scale", Vector3(1.1, 1.1, 1.1), 0.1)
+	_highlight_tween.tween_property(self, "scale", _base_scale * 1.1, 0.1)
 
 
 ## ── 取消高亮：滑鼠離開、或卡片已放入後 ─────────────
@@ -96,6 +111,6 @@ func unhighlight() -> void:
 	if _highlight_tween:
 		_highlight_tween.kill()
 
-	# 縮回原本大小 (Vector3.ONE = 1 倍)。
+	# 縮回「基準大小」(不是 Vector3.ONE——卡槽可能被 PlayerBoard 整體縮放過)。
 	_highlight_tween = create_tween()
-	_highlight_tween.tween_property(self, "scale", Vector3.ONE, 0.1)
+	_highlight_tween.tween_property(self, "scale", _base_scale, 0.1)

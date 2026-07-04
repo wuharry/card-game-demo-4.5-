@@ -1,10 +1,10 @@
 [gd_resource type="Resource" script_class="CardData" load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://src/card/card_data.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/小小RPG角色素材包/Tiny RPG Character Asset Pack 02 -Free Demon_A&Blood Monster_A/Characters(100x100 split)/Blood Monster_A/Blood Monster_A/Blood Monster_A_Idle.png" id="2_art"]
+[ext_resource type="Texture2D" path="res://assets/小小RPG角色素材包/Tiny RPG Character Asset Pack 02 -Free Demon_A&Blood Monster_A/Characters(100x100 split)/Blood Monster_A/Blood Monster_A/Blood Monster_A_Idle.png" id="2_sheet"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
-atlas = ExtResource("2_art")
+atlas = ExtResource("2_sheet")
 region = Rect2(0, 0, 100, 100)
 
 [resource]
@@ -14,3 +14,4 @@ cost = 6
 atk = 8
 hp = 5
 art = SubResource("AtlasTexture_frame")
+standee = ExtResource("2_sheet")
