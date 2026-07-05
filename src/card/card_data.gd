@@ -14,8 +14,8 @@ class_name CardData   # 註冊全域型別:Inspector 的「新增資源」搜尋
 @export var cost: int = 1                  # 召喚費用(左上 CostLabel)
 @export var atk: int = 1                   # 攻擊力(左下 ATKLabel)
 @export var hp: int = 1                    # 生命值(右下 HPLabel)
-@export var art: Texture2D                 # 卡圖:卡框中央的繪畫風插圖
-                                           # (AI 卡圖生出來前,先拿像素圖佔位)
-@export var standee: Texture2D             # 立牌圖:召喚上桌時「站在卡片上」的
-                                           # HD-2D 像素角色(billboard 顯示,功能待做;
-                                           # 資料先備好 = 之後召喚系統直接讀這欄)
+@export var art: Texture2D                 # 卡圖(備用):AI 繪圖路線已棄用,現行
+                                           # 卡圖由 card.gd 從 standee 掃第 0 幀放大;
+                                           # 這欄留給未來真的有手繪卡圖時替換
+@export var standee: Texture2D             # 立牌動畫表:card.gd 的卡圖與召喚立牌
+                                           # 都讀這欄(show_standee 切幀播待機動畫)

@@ -39,7 +39,6 @@ var original_scale: Vector3 = Vector3.ONE
 ## 換了卡框圖的話,這三個常數要重量(掃透明區的位置)。
 const ART_WINDOW_CENTER := Vector2(0.022, 0.488)   # 窗中心(卡片本地 x/y)
 const ART_WINDOW_SIZE := Vector2(1.297, 0.910)     # 窗寬高(世界單位)
-const ART_BLEED := 1.06   # 出血:圖比窗大 6%,邊緣藏到卡框後面,接縫處不漏底
 
 ## 立牌「角色可見高度」(世界單位)。召喚時會掃描角色圖的不透明範圍,
 ## 把「看得見的身體」縮放到正好這個高度——素材格子的透明留白不參與計算,
@@ -68,32 +67,31 @@ func setup(card_data: CardData) -> void:
 	$CostLabel.text = str(data.cost)   # Label3D 的 text 只吃字串，int 要用 str() 轉
 	$ATKLabel.text = str(data.atk)
 	$HPLabel.text = str(data.hp)
-	$CardArt.texture = data.art
-	# ── 卡圖「塞進卡框挖空窗」:蓋滿窗、超出裁掉、永遠壓不到卡框美術 ──
-	# 關鍵:卡圖擺在卡框「後面」(z = -0.01),從透明挖空處露出來——
-	# 框的邊飾永遠畫在圖上面,所以不管圖多大,卡框美術都不會被改到。
-	var tex_w := maxf(float(data.art.get_width()), 1.0)    # maxf 防呆:除以零
-	var tex_h := maxf(float(data.art.get_height()), 1.0)
-	if tex_w <= 128.0:
-		# 像素佔位圖:整張塞進窗內(contain,不裁切),鄰近取樣保銳利格子。
+	# ── 卡圖:像素角色第 0 幀「放大」塞進卡框挖空窗 ──────────────
+	# (AI 繪圖卡圖已棄用:和像素立牌風格打架。卡圖=立牌同一張動畫表,全場統一。)
+	# 100×100 的格子裡角色本體只佔中間約 30px:整格塞窗,角色會小得像圖示。
+	# 所以先掃出第 0 幀的「可見範圍」(和 show_standee 共用同一把尺),
+	# 用 region 只裁出本體、等比放大進窗;NEAREST 讓放大後的像素塊保持銳利。
+	# 卡圖擺在卡框「後面」(z = -0.01),從透明挖空處露出來——
+	# 框的邊飾永遠畫在圖上面,所以不管圖放多大,卡框美術都不會被壓到。
+	if data.standee != null:
+		var cell := maxf(float(data.standee.get_height()), 1.0)
+		var bounds := _visible_bounds_of_frame0(data.standee)
+		# grow(2):四周留 2px 呼吸邊;再夾回格子範圍,region 才不會取樣到界外。
+		bounds = bounds.grow(2).intersection(Rect2(0.0, 0.0, cell, cell))
+		$CardArt.texture = data.standee
+		$CardArt.region_enabled = true
+		$CardArt.region_rect = bounds
+		$CardArt.pixel_size = minf(ART_WINDOW_SIZE.x / bounds.size.x,
+			ART_WINDOW_SIZE.y / bounds.size.y)   # contain:整個本體進窗,不裁到肉
+	elif data.art != null:
+		# 理論上不會走到(24 張都有立牌圖):沒有就退回直接顯示 art、不裁切。
+		var tex_w := maxf(float(data.art.get_width()), 1.0)
+		var tex_h := maxf(float(data.art.get_height()), 1.0)
+		$CardArt.texture = data.art
 		$CardArt.region_enabled = false
 		$CardArt.pixel_size = minf(ART_WINDOW_SIZE.x / tex_w, ART_WINDOW_SIZE.y / tex_h)
-		$CardArt.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-	else:
-		# AI 繪畫圖:aspect-fill——縮放取「剛好蓋滿窗」的倍率,超出窗的部分
-		# 用 region(裁切框)切掉。窗是橫式、圖是直式 3:4 → 上下會被裁;
-		# 裁切框垂直「偏上」(0.30 而非置中 0.5):人像的頭在上半,置中裁會切頭。
-		var fit := maxf(ART_WINDOW_SIZE.x * ART_BLEED / tex_w,
-			ART_WINDOW_SIZE.y * ART_BLEED / tex_h)   # 單位/像素
-		$CardArt.pixel_size = fit
-		var crop_w := ART_WINDOW_SIZE.x * ART_BLEED / fit   # 換算回:窗需要幾「像素」
-		var crop_h := ART_WINDOW_SIZE.y * ART_BLEED / fit
-		$CardArt.region_enabled = true
-		$CardArt.region_rect = Rect2(
-			(tex_w - crop_w) * 0.5,    # 水平置中
-			(tex_h - crop_h) * 0.30,   # 垂直偏上保頭部
-			crop_w, crop_h)
-		$CardArt.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	$CardArt.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST   # 像素圖要銳利
 	# 擺到窗中心、退到卡框後 0.01(透明物件由遠到近畫:後面的圖先畫、框蓋在上)。
 	$CardArt.position = Vector3(ART_WINDOW_CENTER.x, ART_WINDOW_CENTER.y, -0.01)
 
@@ -118,27 +116,10 @@ func show_standee() -> void:
 	# ── 量出角色的「可見範圍」:大小與腳位都以它為準 ──────────
 	# 素材每格 100×100 裡,角色本體只佔中間約 30px,其餘是透明留白;
 	# 按「整格」算大小,角色會只剩帳面的三分之一、還因置中錨定而懸空。
-	# 解法:掃第 0 幀的 alpha,找出最上/最下的不透明像素列——
 	# 「可見高度」拿來算縮放,「最下列 = 腳底」拿來把腳貼到卡面。
-	var top_row := 0.0
-	var feet_row := sheet_h - 1.0   # 掃不到時的預設:當作整格都是身體
-	var img := data.standee.get_image()
-	if img != null:
-		if img.is_compressed():
-			img.decompress()   # VRAM 壓縮貼圖要先解壓,get_pixel 才讀得到
-		var cell := int(sheet_h)
-		var min_y := -1
-		var max_y := -1
-		for y in range(cell):
-			for x in range(cell):   # 只掃第 0 幀(x 0..cell-1)
-				if img.get_pixel(x, y).a > 0.1:
-					if min_y < 0:
-						min_y = y   # 第一次遇到不透明 = 最上緣(頭頂)
-					max_y = y       # 持續更新 = 最後一次就是最下緣(腳底)
-					break           # 這一列確定有身體,跳下一列
-		if max_y >= 0:
-			top_row = float(min_y)
-			feet_row = float(max_y)
+	var bounds := _visible_bounds_of_frame0(data.standee)
+	var top_row := bounds.position.y
+	var feet_row := bounds.end.y - 1.0   # end 是「界外」的下一格,最下列要 -1
 	var visible_px := maxf(1.0, feet_row - top_row + 1.0)
 
 	# 縮放:讓「看得見的身體」正好 standee_char_height 這麼高(留白不算數)。
@@ -166,6 +147,34 @@ func hide_standee() -> void:
 	if _standee != null:
 		_standee.queue_free()
 		_standee = null
+
+
+## ── 掃描動畫表第 0 幀的「可見範圍」───────────────────────
+## 回傳不透明像素的最小外接矩形(像素座標)。卡圖放大與立牌縮放/貼地共用:
+## 素材格子的透明留白從此不參與任何大小計算(基準值用「量的」,別信帳面)。
+## 掃不到東西(圖讀不出來、整格全透明)就回傳整格,行為退化成按整格算,不會炸。
+func _visible_bounds_of_frame0(sheet: Texture2D) -> Rect2:
+	var cell := maxi(int(sheet.get_height()), 1)   # 每格正方形:格寬 = 圖高
+	var full := Rect2(0.0, 0.0, cell, cell)
+	var img := sheet.get_image()
+	if img == null:
+		return full
+	if img.is_compressed():
+		img.decompress()   # VRAM 壓縮貼圖要先解壓,get_pixel 才讀得到
+	var min_x := cell
+	var max_x := -1
+	var min_y := cell
+	var max_y := -1
+	for y in range(cell):
+		for x in range(cell):   # 只掃第 0 幀(x 0..cell-1)
+			if img.get_pixel(x, y).a > 0.1:
+				min_x = mini(min_x, x)
+				max_x = maxi(max_x, x)
+				min_y = mini(min_y, y)
+				max_y = maxi(max_y, y)
+	if max_x < 0:
+		return full   # 整格全透明:退回整格
+	return Rect2(min_x, min_y, max_x - min_x + 1, max_y - min_y + 1)
 
 
 ## ── 滑鼠事件 → 轉成信號對外廣播 ──────────────────
