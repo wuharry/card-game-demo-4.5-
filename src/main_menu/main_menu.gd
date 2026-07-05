@@ -6,33 +6,48 @@
 ## 結構(全部由程式組裝,場景檔只有一個空根節點):
 ##   MainMenu (Node3D, 本腳本)
 ##   ├─ Arena_Town        ← 3D 城鎮(scenes/arena_town.tscn,黃昏廣場)
-##   ├─ CameraPivot/Camera3D ← 繞著廣場緩慢環繞的鏡頭
+##   ├─ Camera3D          ← 固定鏡頭:站在廣場內側望向對面房屋(不旋轉)
 ##   └─ CanvasLayer/UI    ← 2D 選單疊在 3D 畫面上(CanvasItem 永遠畫在 3D 之上)
 ##
-## 為什麼版面用程式碼組裝、場景檔保持極薄?
-##   ① 「置中 + 垂直排列」的規則版面用容器程式碼描述,比在編輯器手擺更好讀;
-##   ② 專案慣例是 .tscn 由編輯器維護,內容放 code,場景檔就幾乎不會再被改。
+## 視覺對標歧路旅人的標題畫面:襯線字標題 + 細金線 + 純文字選單(不是色塊
+## 按鈕)+ 四周壓暗的 vignette;被選中的選項會亮起、底下浮出一條金線。
 extends Node3D
 
 ## ── Inspector 可調參數 ──────────────────────────────
 @export var game_title: String = "卡牌對決"                      # 主標題(改名不用動 code)
-@export var game_subtitle: String = "CardGame Demo · Godot 4.5"  # 副標題
-@export var orbit_speed: float = 0.04    # 鏡頭環繞速度(弧度/秒;0 = 不轉)
+@export var game_subtitle: String = "CardGame Demo · Godot 4.5"  # 底部小字
+
+@export_group("鏡頭構圖(不滿意就調這裡,不用動 code)")
+## 房屋圈半徑 13(見 arena_town.gd);舊版鏡頭放在 r=12,等於「站進房子裡」,
+## 開場整個畫面都是屋頂。退到廣場內側 r=9,一開場就是完整的廣場與對面街景。
+@export var cam_position := Vector3(0.0, 5.0, 9.0)
+@export var cam_pitch_deg: float = -13.0   # 俯角:兼顧廣場地面和對面房子
+@export var cam_fov: float = 45.0          # 視角略窄:望遠感,街景比較「滿」
 
 ## ── 遊戲場景與牌桌抽籤 ─────────────────────────────
 ## 玩法場景永遠是 main.tscn;「這一局用哪個環境」(森林/洞窟/冰原)由
 ## ArenaPool 抽籤決定,main.tscn 上的 main_scene.gd 依抽籤結果把環境換上去。
-## 想加新牌桌:去 src/environment/arena_pool.gd 的 ARENAS 加一行路徑即可。
 const GAME_SCENE := "res://scenes/main.tscn"
 
 ## 主選單背景用的城鎮場景(黃昏廣場,見 src/environment/arena_town.gd)。
 const TOWN_SCENE: PackedScene = preload("res://scenes/arena_town.tscn")
 
-## 標題上方的裝飾卡背圖,直接重用牌堆的卡背素材。
-const CARD_BACK: Texture2D = preload("res://assets/ui/textures/card_back.png")
+## ── 字型 ────────────────────────────────────────────
+## 思源宋體(Noto Serif TC)= 中文襯線主角:標題與選單都用它,氣質靠它撐;
+## Playpen Sans 只拿來排底部那行英文小字。兩套都是 SIL OFL 授權,可安心商用。
+const FONT_TITLE: FontFile = preload(
+	"res://assets/fonts/Noto_Serif_TC/static/NotoSerifTC-Bold.ttf")
+const FONT_MENU: FontFile = preload(
+	"res://assets/fonts/Noto_Serif_TC/static/NotoSerifTC-SemiBold.ttf")
+const FONT_SUB: FontFile = preload(
+	"res://assets/fonts/Playpen_Sans/static/PlaypenSans-Regular.ttf")
+
+## ── 配色:同一組「暮色金」貫穿全畫面,和城鎮的夕陽/窗光同色系 ──
+const GOLD := Color("f2e3ae")       # 亮金:標題
+const GOLD_DIM := Color("b8a984")   # 沉金:未選中的選單文字
+const LINE_GOLD := Color(0.83, 0.72, 0.45, 0.85)   # 裝飾細線
 
 var _start_button: Button    # 記住開始鈕,換場景前要鎖它防連點
-var _cam_pivot: Node3D       # 鏡頭的旋轉軸(轉它,不轉相機本身)
 var _fade_rect: ColorRect    # 蓋在最上層的黑幕:開場淡入、換場景淡出都靠它
 
 
@@ -45,27 +60,18 @@ func _ready() -> void:
 	create_tween().tween_property(_fade_rect, "color:a", 0.0, 0.8)
 
 
-func _process(delta: float) -> void:
-	# 鏡頭繞著廣場慢慢轉,讓背景是「活」的。轉的是 pivot(旋轉軸),
-	# 相機掛在 pivot 上保持固定偏移——比直接搬相機座標簡單且不會累積誤差。
-	if _cam_pivot != null:
-		_cam_pivot.rotate_y(delta * orbit_speed)
-
-
-## ── 3D 背景:實例化城鎮 + 架環繞鏡頭 ──────────────────
+## ── 3D 背景:實例化城鎮 + 固定構圖鏡頭 ──────────────────
 func _build_town_backdrop() -> void:
 	var town := TOWN_SCENE.instantiate()
 	add_child(town)   # 城鎮自帶 WorldEnvironment 與燈光(黃昏),選單直接沿用
 
-	_cam_pivot = Node3D.new()
-	_cam_pivot.name = "CameraPivot"
-	add_child(_cam_pivot)   # pivot 停在世界原點 = 廣場中心
-
+	# 固定鏡頭、不再環繞:主選單要的是「一幅構圖好的畫」,不是場景導覽。
+	# 城鎮用固定亂數種子生成(rng_seed 7777),所以這個構圖每次開遊戲都一樣。
 	var cam := Camera3D.new()
-	_cam_pivot.add_child(cam)
-	cam.position = Vector3(0.0, 5.0, 12.0)        # 從廣場外緣、約兩層樓高往裡看
-	cam.rotation_degrees = Vector3(-14.0, 0.0, 0.0)  # 微俯角:看得到廣場也看得到房子
-	cam.fov = 50.0
+	add_child(cam)
+	cam.position = cam_position
+	cam.rotation_degrees = Vector3(cam_pitch_deg, 0.0, 0.0)
+	cam.fov = cam_fov
 	cam.current = true
 
 
@@ -77,52 +83,95 @@ func _build_ui() -> void:
 	var ui := Control.new()
 	ui.name = "UI"
 	layer.add_child(ui)
-	ui.set_anchors_preset(Control.PRESET_FULL_RECT)   # 撐滿整個視窗
+	# ⚠ 一定要用 set_anchors_AND_offsets_preset:舊版用的 set_anchors_preset()
+	# 只改「錨點」,而且會反算偏移、保留呼叫當下的矩形——UI 根節點因此被鎖在
+	# 開遊戲那一刻的視窗大小,視窗一放大,選單中心就往左上飄(之前「沒置中」的
+	# 根因)。帶 offsets 的版本才等於編輯器 Layout 選單裡的「Full Rect」。
+	ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
-	# 半透明暗角:上緣淡、下緣深的漸層壓在 3D 畫面上,
-	# 不遮城鎮風景,但讓中央的白色標題字在亮背景上也讀得清。
-	var grad := Gradient.new()
-	grad.set_color(0, Color(0.0, 0.0, 0.0, 0.25))
-	grad.set_color(1, Color(0.0, 0.0, 0.0, 0.6))
-	var grad_tex := GradientTexture2D.new()
-	grad_tex.gradient = grad
-	grad_tex.fill_from = Vector2(0.0, 0.0)   # 垂直漸層:從上到下
-	grad_tex.fill_to = Vector2(0.0, 1.0)
-	var scrim := TextureRect.new()
-	scrim.texture = grad_tex
-	scrim.stretch_mode = TextureRect.STRETCH_SCALE
-	ui.add_child(scrim)
-	scrim.set_anchors_preset(Control.PRESET_FULL_RECT)
-
-	# 選單主體:置中容器 → 垂直排列(卡背、標題、副標、按鈕)。
-	var center_box := CenterContainer.new()
-	ui.add_child(center_box)
-	center_box.set_anchors_preset(Control.PRESET_FULL_RECT)
-
-	var col := VBoxContainer.new()
-	col.alignment = BoxContainer.ALIGNMENT_CENTER
-	col.add_theme_constant_override("separation", 14)   # 直排元素的統一間距(px)
-	center_box.add_child(col)
-
-	col.add_child(_make_card_emblem())
-	col.add_child(_make_label(game_title, 64, Color("f2e3ae")))    # 暖金標題,呼應夕陽
-	col.add_child(_make_label(game_subtitle, 18, Color("cdbfae")))
-	col.add_child(_make_spacer(26))   # 標題區和按鈕區之間單獨拉開一段
-
-	_start_button = _make_button("開始遊戲", 26, Vector2(280, 58), Color("2e6b46"))
-	_start_button.pressed.connect(_on_start_pressed)
-	col.add_child(_start_button)
-
-	var quit_btn := _make_button("離開遊戲", 18, Vector2(280, 44), Color("3a3f44"))
-	quit_btn.pressed.connect(func() -> void: get_tree().quit())   # 直接關閉遊戲
-	col.add_child(quit_btn)
+	_build_vignette(ui)
+	_build_menu_column(ui)
+	_build_footer(ui)
 
 	# 黑幕:最後才 add(畫在最上層)。IGNORE = 滑鼠事件穿透,不擋按鈕點擊。
 	_fade_rect = ColorRect.new()
 	_fade_rect.color = Color(0.0, 0.0, 0.0, 0.0)
 	_fade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ui.add_child(_fade_rect)
-	_fade_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_fade_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+
+## ── vignette:中央透亮、四角沉黑的放射狀壓暗 ─────────────
+## 歧路旅人標題畫面的同款手法:不遮風景,但把視線「推」向中央的標題與選單。
+## (之前的上下漸層只壓天和地,左右兩側壓不住,亮背景時字會浮。)
+func _build_vignette(ui: Control) -> void:
+	var grad := Gradient.new()
+	grad.set_color(0, Color(0.0, 0.0, 0.0, 0.10))
+	grad.set_color(1, Color(0.0, 0.0, 0.0, 0.62))
+	var tex := GradientTexture2D.new()
+	tex.gradient = grad
+	tex.fill = GradientTexture2D.FILL_RADIAL
+	tex.fill_from = Vector2(0.5, 0.5)    # 圓心 = 畫面正中央
+	tex.fill_to = Vector2(0.5, -0.15)    # 半徑略超出畫面,只有邊角吃到最深的黑
+	var rect := TextureRect.new()
+	rect.texture = tex
+	rect.stretch_mode = TextureRect.STRETCH_SCALE
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ui.add_child(rect)
+	rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+
+## ── 選單主體:置中一欄(標題 → 金線 → 選項)──────────────
+func _build_menu_column(ui: Control) -> void:
+	var center_box := CenterContainer.new()
+	ui.add_child(center_box)
+	center_box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 10)
+	center_box.add_child(col)
+
+	# 標題:襯線粗體 + 往下柔影。陰影比粗描邊高級:大字配粗描邊會有「貼紙感」。
+	var title := Label.new()
+	title.text = game_title
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_override("font", FONT_TITLE)
+	title.add_theme_font_size_override("font_size", 84)
+	title.add_theme_color_override("font_color", GOLD)
+	title.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.65))
+	title.add_theme_constant_override("shadow_offset_x", 0)
+	title.add_theme_constant_override("shadow_offset_y", 4)
+	col.add_child(title)
+
+	# 標題底下一條細金線:印刷品式的裝飾,成本一個 ColorRect,氣質到位。
+	var line := ColorRect.new()
+	line.color = LINE_GOLD
+	line.custom_minimum_size = Vector2(300, 2)
+	line.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	col.add_child(line)
+
+	col.add_child(_make_spacer(52))   # 標題區和選項區之間拉開呼吸空間
+
+	_start_button = _make_menu_option("開始遊戲")
+	_start_button.pressed.connect(_on_start_pressed)
+	col.add_child(_start_button)
+
+	var quit_btn := _make_menu_option("離開遊戲")
+	quit_btn.pressed.connect(func() -> void: get_tree().quit())   # 直接關閉遊戲
+	col.add_child(quit_btn)
+
+
+## ── 底部小字:版本行,像標題畫面角落的版權訊息 ─────────────
+func _build_footer(ui: Control) -> void:
+	var sub := Label.new()
+	sub.text = game_subtitle
+	sub.add_theme_font_override("font", FONT_SUB)
+	sub.add_theme_font_size_override("font_size", 14)
+	sub.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 0.45))
+	ui.add_child(sub)
+	# CENTER_BOTTOM 預設模式會用文字的最小尺寸定位;最後的 18 = 離底邊 18px。
+	sub.set_anchors_and_offsets_preset(
+		Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 18)
 
 
 ## ── 按下「開始遊戲」:抽牌桌環境,淡出後進入遊戲 ──
@@ -144,38 +193,35 @@ func _on_start_pressed() -> void:
 		_start_button.disabled = false
 
 
-## ── 標題上方的卡背圖:純裝飾,給畫面一個「這是卡牌遊戲」的視覺錨點 ──
-func _make_card_emblem() -> TextureRect:
-	var card := TextureRect.new()
-	card.texture = CARD_BACK
-	card.custom_minimum_size = Vector2(150, 210)                  # 展示用的小尺寸
-	card.expand_mode = TextureRect.EXPAND_IGNORE_SIZE             # 允許把大圖縮進上面的框
-	card.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED  # 等比縮放置中,不變形
-	# rotation 是繞著 pivot_offset 轉;pivot 預設在左上角,直接轉會整張「掃」出去。
-	# 等它有了實際尺寸再把 pivot 移到中心——resized 信號會在尺寸確定/改變時發出。
-	card.resized.connect(func() -> void: card.pivot_offset = card.size / 2.0)
-	# 微微搖擺的待機動畫:2.4 秒盪過去、2.4 秒盪回來,set_loops() = 無限循環。
-	# SINE + EASE_IN_OUT = 兩端慢、中間快,像鐘擺,不會機械式急停。
-	var sway := create_tween().set_loops()
-	sway.tween_property(card, "rotation_degrees", 5.0, 2.4)\
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	sway.tween_property(card, "rotation_degrees", -5.0, 2.4)\
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	return card
+## ── 歧路旅人式「文字選單項」────────────────────────────
+## 平常是沉金純文字;滑鼠 hover「或」鍵盤焦點時文字亮起、底下浮出金線。
+## 同一份樣式同時接 hover 和 focus:滑鼠派和鍵盤派看到的回饋一致。
+func _make_menu_option(text_value: String) -> Button:
+	var btn := Button.new()
+	btn.text = text_value
+	btn.custom_minimum_size = Vector2(280, 48)
+	btn.add_theme_font_override("font", FONT_MENU)
+	btn.add_theme_font_size_override("font_size", 26)
+	btn.add_theme_color_override("font_color", GOLD_DIM)
+	btn.add_theme_color_override("font_hover_color", Color("fff3cf"))
+	btn.add_theme_color_override("font_focus_color", Color("fff3cf"))
+	btn.add_theme_color_override("font_pressed_color", GOLD)
+	# normal 狀態給「空樣式」= 沒有底沒有框,就是一行字(色塊按鈕感從這裡消失)。
+	btn.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
+	var lit := _make_underline_style()
+	btn.add_theme_stylebox_override("hover", lit)
+	btn.add_theme_stylebox_override("focus", lit)
+	btn.add_theme_stylebox_override("pressed", _make_underline_style())
+	return btn
 
 
-## ── 造一個置中的文字標籤,主/副標題共用 ──
-func _make_label(text_value: String, font_size: int, color: Color) -> Label:
-	var lb := Label.new()
-	lb.text = text_value
-	lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	# add_theme_*_override:只影響「這一個」節點的主題屬性,不會動到全域 theme。
-	lb.add_theme_font_size_override("font_size", font_size)
-	lb.add_theme_color_override("font_color", color)
-	# 文字壓在 3D 風景上,加一圈深色描邊保住可讀性(比陰影穩:不挑背景亮暗)。
-	lb.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.6))
-	lb.add_theme_constant_override("outline_size", 6)
-	return lb
+## 選中狀態的樣式:透明底 + 只開「下邊框」的金線(StyleBoxFlat 可逐邊開關)。
+func _make_underline_style() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(1.0, 1.0, 1.0, 0.04)   # 極淡提亮,整行有「浮起」感
+	sb.border_color = LINE_GOLD
+	sb.border_width_bottom = 2
+	return sb
 
 
 ## ── 純占位的透明空隙 ──
@@ -184,30 +230,3 @@ func _make_spacer(height: float) -> Control:
 	var sp := Control.new()
 	sp.custom_minimum_size = Vector2(0.0, height)
 	return sp
-
-
-## ── 造一顆按鈕:同一份底色自動衍生三態(normal / hover / pressed)──
-func _make_button(text_value: String, font_size: int, size_px: Vector2,
-		base_color: Color) -> Button:
-	var btn := Button.new()
-	btn.text = text_value
-	btn.custom_minimum_size = size_px
-	btn.add_theme_font_size_override("font_size", font_size)
-	btn.add_theme_color_override("font_color", Color("e6efe8"))
-	btn.add_theme_color_override("font_hover_color", Color("ffffff"))
-	# lightened()/darkened() 回傳「調亮/調暗後的新顏色」,原色不變:
-	# hover 提亮 25%、pressed 壓暗 25%,三態同形狀、只換色。
-	btn.add_theme_stylebox_override("normal", _make_panel_style(base_color))
-	btn.add_theme_stylebox_override("hover", _make_panel_style(base_color.lightened(0.25)))
-	btn.add_theme_stylebox_override("pressed", _make_panel_style(base_color.darkened(0.25)))
-	return btn
-
-
-## ── 圓角 + 細邊框的面板底,按鈕三態共用的形狀 ──
-func _make_panel_style(bg: Color) -> StyleBoxFlat:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = bg
-	sb.border_color = bg.lightened(0.35)   # 邊框比底色亮一階,便宜的立體感
-	sb.set_border_width_all(2)
-	sb.set_corner_radius_all(10)
-	return sb

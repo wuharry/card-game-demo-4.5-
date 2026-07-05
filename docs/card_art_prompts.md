@@ -13,8 +13,8 @@
 3. 存檔命名照「`slug 中文.png`」(例:`knight 騎士.png`),放進 `assets/ui/card_art/`
    ——已生成的 10 張就是這格式,剩下的照做,Claude 批次接線時能自動對上。
 
-> **進度:10 / 24 已生成並接進 `.tres`**(armored_axeman、armored_orc、armored_skeleton、
-> elite_orc、greatsword_skeleton、knight、lancer、necromancer、priest、wizard)。
+> **進度:16 / 24 已生成並接進 `.tres`**。
+> 還缺 8 張:archer、bat、orc、skeleton、skeleton_archer、slime、soldier、swordsman。
 
 ## 重要原則(為什麼 prompt 長這樣)
 
