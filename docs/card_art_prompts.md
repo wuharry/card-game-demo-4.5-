@@ -13,8 +13,9 @@
 3. 存檔命名照「`slug 中文.png`」(例:`knight 騎士.png`),放進 `assets/ui/card_art/`
    ——已生成的 10 張就是這格式,剩下的照做,Claude 批次接線時能自動對上。
 
-> **進度:16 / 24 已生成並接進 `.tres`**。
-> 還缺 8 張:archer、bat、orc、skeleton、skeleton_archer、slime、soldier、swordsman。
+> **⚠ 此路線已棄用(2026-07)**:AI 繪圖卡圖與像素立牌風格不合,卡圖改為直接
+> 放大像素角色第 0 幀(見 `card.gd` 的 `setup()`)。本清單留作紀錄,
+> 若未來回頭做手繪/AI 卡圖,把圖接回 CardData 的 `art` 欄位即可。
 
 ## 重要原則(為什麼 prompt 長這樣)
 
