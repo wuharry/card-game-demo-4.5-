@@ -29,7 +29,9 @@ class_name ForestScatter
 @export var rng_seed: int = 1337
 
 @export_group("外觀")
-@export var y_offset: float = 0.0                  # 樹根貼地微調（樹浮空就調這個）
+# 地表面在 -0.5 不是 0!地磚是薄片、貼在 cell 正中央(見 ground_generator.gd 的說明),
+# 種在 0 整片森林都會浮空 0.5。
+@export var y_offset: float = -0.5                 # 樹根貼地微調（樹浮空就調這個）
 @export var tree_scale: float = 0.12               # 整體縮放（fbx 原生很大，預設已調小）
 @export var scale_jitter: float = 0.35             # 大小隨機幅度
 @export var bush_ratio: float = 0.25               # 灌木佔比
@@ -44,6 +46,16 @@ class_name ForestScatter
 @export var edge_bush_bias: float = 1.8            # 叢緣灌木倍率：灌木偏好長在樹叢邊緣(林下植被的真實分布)
 @export var stream_z: float = 0.35                 # 溪流中心的世界 Z（對齊場景 Stream 節點）
 @export var stream_half_width: float = 1.7         # 溪流兩側各留這麼寬不長樹：樹不該站在水裡
+
+@export_group("地景小物(打散方塊感)")
+@export var props_enabled: bool = true
+@export var tuft_count: int = 46        # 草叢+花:小型,可進前方走廊、貼近牌桌矩形外緣
+@export var stone_count: int = 8        # 石頭:原模超小(高 0.1~0.25),放大 2~3 倍當岩塊
+@export var deadwood_count: int = 12    # 枯木+倒木:中型,照樹的規矩避開淨空區
+@export var props_inner: float = 6.8    # 小物最靠近中心的半徑(可比樹的 ring_inner 近)
+@export var hill_count: int = 8         # 遠景土丘(landmass 地塊):給地平線一個輪廓
+@export var hill_radius_min: float = 23.0
+@export var hill_radius_max: float = 28.0
 
 const TREES: Array[PackedScene] = [
 	preload("res://assets/environment/psx_trees/models/tree01.fbx"),
@@ -78,7 +90,38 @@ const BUSH_TEX: Array[Texture2D] = [
 	preload("res://assets/environment/psx_trees/textures/bush04.png"),
 ]
 
+## ── 草原素材包的地景小物 ─────────────────────────────
+## 注意:這包的小物多數是「單片紙片」模型(AABB 的 X 向厚度 0.00001,面朝 ±X),
+## 側面看會整個消失——_make_prop() 會依 AABB 自動把薄片兩片十字交叉;
+## 倒木、landmass 是有厚度的立體模型,單片即可。
+const GL_DIR := "res://assets/terrain/pixel_3d_grasslands/"
+const TUFT_FILES: Array[String] = [
+	"objects/OBJ/Grass_01.obj", "objects/OBJ/Grass_02.obj", "objects/OBJ/Grass_03.obj",
+	"objects/OBJ/Grass_04.obj", "objects/OBJ/Grass_05.obj",
+	"objects/OBJ/Flowers_01.obj", "objects/OBJ/Flowers_02.obj",
+]
+const STONE_FILES: Array[String] = [
+	"objects/OBJ/Stone_01.obj", "objects/OBJ/Stone_02.obj",
+	"objects/OBJ/Stone_03.obj", "objects/OBJ/Stone_04.obj",
+]
+const DEADWOOD_FILES: Array[String] = [
+	"objects/OBJ/Dead_Tree_01.obj", "objects/OBJ/Dead_Tree_02.obj",
+	"objects/OBJ/Fallen_log_01.obj", "objects/OBJ/Fallen_log_02.obj",
+]
+const HILL_FILES: Array[String] = [
+	"landmass/OBJ/Grasslands_Landmass_01.obj", "landmass/OBJ/Grasslands_Landmass_02.obj",
+	"landmass/OBJ/Grasslands_Landmass_03.obj", "landmass/OBJ/Grasslands_Landmass_04.obj",
+	"landmass/OBJ/Grasslands_Landmass_05.obj", "landmass/OBJ/Grasslands_Landmass_06.obj",
+	"landmass/OBJ/Grasslands_Landmass_07.obj",
+]
+## 小物共用的貼圖(整包 UV 都對到同一張 tilesheet;色圖 + 法線)。
+const GL_SHEET_C: Texture2D = preload(
+	"res://assets/terrain/pixel_3d_grasslands/tilesheets/Updated_Sheets/GrassLands_NEW_C.png")
+const GL_SHEET_N: Texture2D = preload(
+	"res://assets/terrain/pixel_3d_grasslands/tilesheets/Updated_Sheets/GrassLands_NEW_N.png")
+
 var _mat_cache: Dictionary = {}
+var _prop_mat: StandardMaterial3D = null
 
 func _ready() -> void:
 	_scatter()   # 一啟動就散佈一次
@@ -131,7 +174,7 @@ func _scatter() -> void:
 		var p := c + off                                                  # 叢心 + 偏移 = 這棵的最終 XZ
 		if _in_clear_zone(p):                                             # 一樣避開淨空區
 			continue
-		if not _far_enough(p, placed_pts):                                # 跟已放的太擠 → 退件重抽
+		if not _far_enough(p, placed_pts, min_spacing):                   # 跟已放的太擠 → 退件重抽
 			continue
 
 		# 決定這棵是灌木還是樹。灌木機率隨「離叢心多遠」提高：
@@ -168,6 +211,10 @@ func _scatter() -> void:
 		placed_pts.append(p)                                              # 登記位置，給後續間距檢查
 		placed += 1
 
+	# 3) 樹好了之後,鋪地景小物(草叢/石頭/枯木)與遠景土丘,打散大片平地的方塊感。
+	_scatter_ground_props(rng, placed_pts)
+	_scatter_hills(rng)
+
 ## 判斷某個位置是不是「淨空區」，是的話回傳 true(該位置要跳過、不長樹)。
 ## p 為相對 center 的 XZ 偏移。
 func _in_clear_zone(p: Vector2) -> bool:
@@ -181,16 +228,143 @@ func _in_clear_zone(p: Vector2) -> bool:
 		return true
 	return false
 
-## 檢查位置 p 是否跟所有已放的樹/灌木都保持 min_spacing 以上的距離。
+## 檢查位置 p 是否跟 pts 裡所有已放的東西都保持 spacing 以上的距離。
 ## 用「距離平方」比較，省掉每次開根號。
 ## 線性掃描是 O(已放數量)：count ≈ 72，整次重生成最壞也才幾萬次比較，
 ## 是「編輯器按一下」的量級——不值得為它上空間網格(想過才不做)。
-func _far_enough(p: Vector2, pts: PackedVector2Array) -> bool:
-	var min_sq := min_spacing * min_spacing
+func _far_enough(p: Vector2, pts: PackedVector2Array, spacing: float) -> bool:
+	var min_sq := spacing * spacing
 	for q in pts:
 		if p.distance_squared_to(q) < min_sq:
 			return false
 	return true
+
+## ── 地景小物:草叢/花/石頭/枯木,打散大片平地的「方塊感」──
+func _scatter_ground_props(rng: RandomNumberGenerator, tree_pts: PackedVector2Array) -> void:
+	if not props_enabled:
+		return
+	var pts: PackedVector2Array = []   # 小物之間共用的間距登記(跟樹分開:草長在樹下很正常)
+	# 小型(草叢+花):可進前方走廊、貼近牌桌,只避開「牌桌矩形」和水面
+	_scatter_prop_class(rng, TUFT_FILES, tuft_count, 0.8, 1.3, 0.9, false, pts, tree_pts)
+	# 石頭:原模是高 0.1~0.25 的小卵石,放大 2~3 倍才有「岩塊」的存在感
+	_scatter_prop_class(rng, STONE_FILES, stone_count, 2.2, 3.4, 1.6, false, pts, tree_pts)
+	# 枯木/倒木:體積大,照樹的規矩走(避開牌桌大圓、前方走廊、溪流帶,也別跟樹幹疊)
+	_scatter_prop_class(rng, DEADWOOD_FILES, deadwood_count, 0.9, 1.3, 1.8, true, pts, tree_pts)
+
+
+## 放一類小物。strict_zone=true 走樹的淨空規則;false 用較貼身的「牌桌矩形」規則。
+func _scatter_prop_class(rng: RandomNumberGenerator, files: Array[String], amount: int,
+		s_min: float, s_max: float, spacing: float, strict_zone: bool,
+		pts: PackedVector2Array, tree_pts: PackedVector2Array) -> void:
+	var meshes := _load_gl_meshes(files)
+	if meshes.is_empty():
+		return
+	var placed := 0
+	var attempts := 0
+	while placed < amount and attempts < amount * 20:
+		attempts += 1
+		# 半徑用 sqrt 插值:按「面積」均勻取樣,不然小物會擠在內圈(外圈圓周比較長)
+		var t := sqrt(rng.randf())
+		var rad := lerpf(props_inner, ring_outer, t)
+		var ang := rng.randf() * TAU
+		var p := Vector2(sin(ang) * rad, cos(ang) * rad)
+		if strict_zone:
+			if _in_clear_zone(p):
+				continue
+			if not _far_enough(p, tree_pts, min_spacing):   # 大件別跟樹幹疊在一起
+				continue
+		else:
+			# 牌桌矩形(含邊距)內不放:小物可以貼得比樹的大圓近,但別上桌
+			var wz := p.y + center.z
+			if absf(p.x) < 5.5 and wz > -9.8 and wz < 5.6:
+				continue
+			if absf(wz - stream_z) < 1.2:   # 別長在水裡(可比樹更貼近岸:1.2 < 1.7)
+				continue
+		if not _far_enough(p, pts, spacing):
+			continue
+		var mesh: Mesh = meshes[rng.randi_range(0, meshes.size() - 1)]
+		var prop := _make_prop(mesh)
+		add_child(prop)
+		prop.position = center + Vector3(p.x, y_offset, p.y)
+		prop.rotation.y = rng.randf() * TAU
+		var s := rng.randf_range(s_min, s_max)
+		prop.scale = Vector3(s, s, s)
+		pts.append(p)
+		placed += 1
+
+
+## ── 遠景土丘:landmass 地塊放大埋進地裡,只露出丘頂,給地平線一個輪廓 ──
+## 山身大半沉在地磚下面藏起來;位置都落在(加大後的)地板範圍內,不會懸空。
+func _scatter_hills(rng: RandomNumberGenerator) -> void:
+	if not props_enabled or hill_count <= 0:
+		return
+	var meshes := _load_gl_meshes(HILL_FILES)
+	if meshes.is_empty():
+		return
+	var pts: PackedVector2Array = []
+	var placed := 0
+	var attempts := 0
+	while placed < hill_count and attempts < hill_count * 20:
+		attempts += 1
+		var ang := rng.randf() * TAU
+		var rad := rng.randf_range(hill_radius_min, hill_radius_max)
+		var p := Vector2(sin(ang) * rad, cos(ang) * rad)
+		if absf((p.y + center.z) - stream_z) < 5.0:   # 土丘很寬,離溪流遠一點
+			continue
+		if not _far_enough(p, pts, 7.0):              # 丘與丘散開,別黏成一大坨
+			continue
+		var mesh: Mesh = meshes[rng.randi_range(0, meshes.size() - 1)]
+		var mi := MeshInstance3D.new()
+		mi.mesh = mesh
+		mi.material_override = _get_prop_material()
+		add_child(mi)
+		var s := rng.randf_range(3.0, 5.0)
+		mi.scale = Vector3(s, s, s)
+		mi.rotation.y = rng.randf() * TAU
+		# 用 AABB 頂端反推 Y:丘頂 = 地面 + peak,其餘山身沉到地磚下面
+		var peak := rng.randf_range(1.2, 3.5)
+		mi.position = center + Vector3(p.x, y_offset + peak - mesh.get_aabb().end.y * s, p.y)
+		pts.append(p)
+		placed += 1
+
+
+## 依 AABB 判斷:薄片模型(X 向厚度趨近 0)複製兩片十字交叉,立體模型單片即可。
+func _make_prop(mesh: Mesh) -> Node3D:
+	var root := Node3D.new()
+	var copies := 2 if mesh.get_aabb().size.x < 0.05 else 1
+	for i in range(copies):
+		var mi := MeshInstance3D.new()
+		mi.mesh = mesh
+		mi.material_override = _get_prop_material()
+		mi.rotation.y = PI * 0.5 * float(i)   # 第二片轉 90°,側面看才不會消失
+		root.add_child(mi)
+	return root
+
+
+## 把相對 GL_DIR 的檔案清單載成 Mesh 陣列(載不到就略過,不炸)。
+func _load_gl_meshes(files: Array[String]) -> Array[Mesh]:
+	var out: Array[Mesh] = []
+	for f in files:
+		var m: Mesh = load(GL_DIR + f)
+		if m != null:
+			out.append(m)
+	return out
+
+
+## 草原小物共用材質:tilesheet 色圖 + 法線,鄰近取樣保像素感,
+## alpha 鏤空 + 雙面(薄片模型的標配,理由同下方樹葉材質)。
+func _get_prop_material() -> StandardMaterial3D:
+	if _prop_mat == null:
+		_prop_mat = StandardMaterial3D.new()
+		_prop_mat.albedo_texture = GL_SHEET_C
+		_prop_mat.normal_enabled = true
+		_prop_mat.normal_texture = GL_SHEET_N
+		_prop_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+		_prop_mat.alpha_scissor_threshold = 0.5
+		_prop_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		_prop_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
+	return _prop_mat
+
 
 ## 把整棵樹(可能由多個 Mesh 子節點組成)都換上鏤空材質。
 ## PSX 樹是「交叉平面 + alpha 鏤空」模型，fbx 匯入不會自動接外部 png，
