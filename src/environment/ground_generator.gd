@@ -15,11 +15,16 @@ extends GridMap   # GridMap = 3D 版磚塊地圖：把 meshlib 裡的格子 mesh
 			_generate()
 
 @export_group("範圍")
-@export var min_x: int = -26
-@export var max_x: int = 23
-@export var min_z: int = -21
-@export var max_z: int = 16
-@export var y_level: int = -1
+# 範圍比戰場大很多:把「世界的盡頭」推遠、配合霧氣淡出,鏡頭裡才看不到草皮的斷邊。
+# 78 × 69 ≈ 5400 格,@tool 重鋪仍是一瞬間的量級,不值得為此優化。
+@export var min_x: int = -40
+@export var max_x: int = 37
+@export var min_z: int = -38
+@export var max_z: int = 30
+# 地表鋪在哪一層。磚是「紙片」貼在 cell 正中央:磚面高度 = (y_level + 0.5) × cell_size.y。
+# 場景把 cell_size.y 設成 0.2(垂直步距變細),y_level -3 → 磚面 -0.5(和舊制一樣高);
+# 河床(y_level - 1)只低 0.2 而非一整格 1 公尺——薄片磚沒有側壁,溝挖太深會看到漏空。
+@export var y_level: int = -3
 
 @export_group("地貌")
 @export var grass_item: int = 13                       # 純草
@@ -34,8 +39,10 @@ extends GridMap   # GridMap = 3D 版磚塊地圖：把 meshlib 裡的格子 mesh
 @export var random_orientation: bool = false           # 隨機 Y 朝向會與法線貼圖打架，造成同種磚明暗斑駁，預設關閉
 
 @export_group("河岸")
-# 場景裡的 Stream(水面)只是一片浮在草皮上的平面，看起來像「擺上去的」。
-# 這組參數沿著溪流把地磚換成泥土河床 + 草泥過渡帶，讓水看起來是「切進地形裡」的。
+# 沿著溪流挖出一條「真的凹下去」的河床:河床磚鋪在低一層(y_level - 1),
+# 兩側再用草泥過渡帶漸層回草地。水面(場景裡的 Stream 平面)要夾在
+# 「草皮頂」和「河床頂」之間(草皮 -0.5、河床 -0.7,水目前 -0.62),
+# 水才是局部最低點、不會浮在草上。
 @export var bank_enabled: bool = true                   # 開關：要不要鋪河岸
 @export var stream_z: float = 0.35                      # 溪流中心的世界 Z（要對齊場景裡 Stream 節點的 z）
 @export var bank_core_width: float = 1.3                # 離溪流中心這距離內 → 純泥河床（大約蓋住水面下方＋兩側waterline）
@@ -85,6 +92,7 @@ func _generate() -> void:
 			# 沒有這段時，水面是「浮在草皮上的一條藍帶」；有了泥河床+過渡帶，
 			# 水才像是切進地形裡的溪。
 			var on_bank := false
+			var cell_y := y_level   # 這格要鋪在哪一層(預設 = 地表層)
 			if bank_enabled:
 				# GridMap 的 cell 座標指的是格子「角落」，+0.5 才是格子中心的世界座標。
 				var dist := absf((float(z) + 0.5) - stream_z)     # 這格中心離溪流中心多遠
@@ -94,6 +102,9 @@ func _generate() -> void:
 				if d < bank_core_width:
 					item = dirt_item                              # 河床/waterline：純泥
 					on_bank = true
+					# 河床鋪到下一層(低一個 cell 高度):地形「真的凹下去」,
+					# 水面才能低於岸邊、成為局部最低點——換材質治標,換高度治本。
+					cell_y = y_level - 1
 				elif d < bank_edge_width:
 					# 河岸往草地的漸層：隨機挑草泥過渡磚
 					item = blend_items[rng.randi_range(0, blend_items.size() - 1)]
@@ -115,5 +126,5 @@ func _generate() -> void:
 			var orient: int = 0
 			if random_orientation:
 				orient = Y_ORIENT[rng.randi_range(0, Y_ORIENT.size() - 1)]
-			# 真正把這一格放上去：座標(含高度 y_level)、要放的磚 item、朝向 orient。
-			set_cell_item(Vector3i(x, y_level, z), item, orient)
+			# 真正把這一格放上去：座標(高度用 cell_y,河床格比地表低一層)、磚 item、朝向 orient。
+			set_cell_item(Vector3i(x, cell_y, z), item, orient)
