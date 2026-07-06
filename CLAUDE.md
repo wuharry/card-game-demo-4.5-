@@ -134,12 +134,13 @@
 - 遊戲設計規則(數值、勝負、關鍵字…)屬**業務語意**,一律留在 [README.md](README.md) 的 Gameplay Spec,別搬進來也別自行改寫。
 - **hook**:待 docs 實際建立後,才考慮加 `UserPromptSubmit` hook(依 `_process`/`signal`/`autoload`… 關鍵字提示讀對應檔);現在無檔可指,故不加。
 - 現有 [docs/HANDOFF_card_data.md](docs/HANDOFF_card_data.md) 是交接筆記,非常駐參考。
+- [docs/LEARNING_LEDGER.md](docs/LEARNING_LEDGER.md) 是**逃生艙學習債清單**(AI 代工過、Harvey 未必懂的觀念 × 三級評等 × 考題方向)。Harvey 主動要求「複習/考我/學以前的東西」時→從該表挑等級最低者出題並更新等級;每次逃生艙任務收尾→把新觀念記進去(預設初階/未驗)。
 
 ## 專案速覽
 - **引擎**:Godot **4.5**,語言 **GDScript**(無 C#)。
-- **主場景**:`scenes/main.tscn`(進入點)。
-- **程式碼都在 [src/](src/)**:每個功能一個資料夾(`card/`、`card_manager/`、`card_slot/`、`play_hand/`、`player_board/`、`environment/`)。
-- **目前沒有 autoload / 單例**:狀態都掛在節點上,互動中樞是 `CardManager`。
+- **進入點**:`scenes/main_menu.tscn`(主選單)→「開始遊戲」→ `scenes/main.tscn`(牌桌;`main_scene.gd` 依 ArenaPool 抽籤抽換戰場)。
+- **程式碼都在 [src/](src/)**:每個功能一個資料夾(`card/`、`card_manager/`、`card_slot/`、`play_hand/`、`player_board/`、`environment/`、`main_menu/`、`main_scene/`)。
+- **目前沒有 autoload / 單例**:狀態都掛在節點上,互動中樞是 `CardManager`;跨場景傳值用 `ArenaPool`(static 類別,見 `src/environment/arena_pool.gd`),別為此開 autoload。
 - 算繪器:**Forward+**(2026-07-02 已在編輯器右上角切換器確認)。`project.godot` 的 `config/features` 殘留過時標籤 "GL Compatibility"——那只是中繼資料非開關;真正的設定鍵 `rendering/renderer/rendering_method` 不存在 = 吃預設 `forward_plus`。標籤別手改,留給編輯器同步。
 - 後製/燈光都在 `scenes/arena_forest.tscn`(被 main.tscn 實例化):WorldEnvironment(ACES/SSAO/SSR/霧/**glow 已啟用**,`glow_hdr_threshold=0.95`)+ 暖色 DirectionalLight3D。**main.tscn 自己沒有環境節點,別在那裡找。**
 
