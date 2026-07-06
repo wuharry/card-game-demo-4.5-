@@ -82,12 +82,63 @@
 
 ---
 
-## 待分類:範圍外的 AI 代工(3f97f17…HEAD)
+## 續帳(3f97f17…HEAD,本機 session;2026-07-06 依 session 全記錄補齊)
 
-> 這段 commit 多半也是 AI 做的(含另一台機器的 session)。**Harvey 圈認後移入主帳**,先列觀念佔位:
+> 原「待分類」五條全部展開移入。等級照規則預設「初階/未驗」;
+> 有實際問答依據的兩處已標註(§12 河道根因 = 中階、§9 出血 / §11 錨點 = 出過題未答)。
 
-- **CardData 實作層**(`d959cb7`):DirAccess 掃資料夾載卡池、懶載入(第一次用才載)、`.remap` 後綴剝除、`pick_random()` —— 注意:觀念層(資料/視覺分離)在主帳 §7,這裡是實作層
-- **卡圖與立牌**(`09f8b40`、`8ddf5a5`):卡框挖空窗定位(alpha 掃描出視窗常數)、像素圖第 0 幀裁切放大、立牌待機動畫切幀
-- **場景繼承與跨場景傳值**(`9385150`):ArenaBase 基底 + 子類 `_build()`(為何用繼承);ArenaPool 用 static 類別傳值(為何不用 autoload)
-- **主選單**(`2fb80f8`):CanvasLayer 讓 2D UI 疊在 3D 上、UI 全程式組裝、固定鏡頭構圖參數化
-- **`free()` vs `queue_free()`**([src/main_scene/main_scene.gd](../src/main_scene/main_scene.gd)):換 WorldEnvironment 為何必須「立刻」free —— 兩個環境並存一幀的未定義行為
+### 8. CardData 資料層實作(`d959cb7`;[src/card/card_data.gd](../src/card/card_data.gd)、[data/cards/](../data/cards/))
+
+> 觀念層(資料/視覺分離)在主帳 §7,這裡是實作層。
+
+| 觀念 | 等級 | 考題方向 |
+|---|---|---|
+| .tres 檔解剖:ext_resource(引用外部檔)vs sub_resource(內嵌小資源) | 初階/未驗 | 「打開 knight.tres:哪行是引用、哪行是內嵌?刪掉被引用的 png 會發生什麼?」 |
+| AtlasTexture:在大圖上「框一格」當獨立貼圖(卡圖佔位 = 動畫表第 0 幀) | 初階/未驗 | 「region = Rect2(0,0,100,100) 在說什麼?想改用第 3 幀改哪個數字?」 |
+| DirAccess 掃資料夾 + 懶載入(卡池第一次要用才載);`.remap` 後綴剝除 | 初階/未驗 | 「卡池是開遊戲瞬間載入,還是第一次發牌才載?懶載入買到什麼?」 |
+
+### 9. 卡圖挖空窗與召喚立牌(`09f8b40`、`8ddf5a5`;[src/card/card.gd](../src/card/card.gd))
+
+| 觀念 | 等級 | 考題方向 |
+|---|---|---|
+| 透明繪製順序:卡圖擺卡框「後面」(z=-0.01)從挖空窗露出 → 怎麼縮放都壓不到框的美術 | 初階/未驗 | 「為什麼放後面反而安全?改成 +0.01 疊前面會出什麼事?」 |
+| 出血(bleed):遮罩決定形狀、內容做大藏在遮罩後——卡圖出血 6% 和水面板加寬是同一條原則 | 初階(2026-07-05 出題未答) | 「bank_jitter 調到 2.0,水面板要多寬才不露餡?公式?」 |
+| 可見範圍掃描:alpha 掃出角色實佔行列,大小/腳位用「量出來的」——100×100 格子裡角色只有 ~30px,信帳面就會又小又飄 | 初階/未驗 | 「按整格算,角色為什麼只剩帳面 1/3 還懸空?掃描一次解決哪兩件事?」 |
+| Sprite3D 立牌三件套:hframes 切格(幀數=寬÷高)、tween_callback+set_loops 播待機、BILLBOARD_FIXED_Y 直立面向鏡頭 | 初階/未驗 | 「幀數 6 是誰算出來的?為什麼這批素材能用寬除以高?」 |
+| 旋轉疊加(§5 牙籤原則的旋轉版):place_card 轉 local (0,0,0) 就是躺平——父節點 PlayerHand 已 -90°X;再補 -90 卡會立起來 | 初階/未驗 | 「卡在槽裡 local rotation=0,世界裡為什麼是躺的?『躺』是誰給的?」 |
+
+### 10. 戰場家族與輪替(`9385150`;[src/environment/arena_base.gd](../src/environment/arena_base.gd)、[arena_pool.gd](../src/environment/arena_pool.gd))
+
+| 觀念 | 等級 | 考題方向 |
+|---|---|---|
+| 場景繼承:共同流程在基底(環境/地板/散佈工具),子類只覆寫 `_build()` | 初階/未驗 | 「新增『沙漠』牌桌要寫哪些函式、哪些直接繼承來用?」 |
+| static 類別變數跨場景傳值:static 活在類別上,change_scene 清不掉(ArenaPool 不用 autoload 的原因) | 初階/未驗 | 「換場景後 main.tscn 為什麼還讀得到抽籤結果?什麼時候該升級成 autoload?」 |
+| free() vs queue_free():queue_free 等幀尾才刪;換 WorldEnvironment 必須立刻 free,兩環境並存一幀會打架 | 初階/未驗 | 「哪種情境不能等幀尾?main_scene.gd 那行為什麼用 free()?」 |
+
+### 11. 主選單(`2fb80f8`;[src/main_menu/main_menu.gd](../src/main_menu/main_menu.gd))
+
+| 觀念 | 等級 | 考題方向 |
+|---|---|---|
+| 錨點=比例、偏移=像素修正;`set_anchors_preset` 只動錨點且「保留當下矩形」→ UI 鎖死在舊視窗大小(置中 bug 根因);帶 `and_offsets` 的才等於 Layout 選單 | 初階(2026-07-05 教過+出題未答) | 「編輯器裡擺好的 Control 呼叫 set_anchors_preset 會不會歪?跟 code 生成的 0×0 新節點差在哪?」 |
+| CanvasLayer:2D 疊層永遠畫在 3D 之上(選單、黑幕都掛它下面) | 初階/未驗 | 「UI 不掛 CanvasLayer、直接掛在 Node3D 下會發生什麼?」 |
+| 主題覆寫做文字選單:normal 給 StyleBoxEmpty、hover/focus 共用「只開下邊框」的 StyleBoxFlat → 滑鼠/鍵盤回饋一致 | 初階/未驗 | 「為什麼 focus 也要接樣式?只接 hover 冷落了誰?」 |
+| 轉場模式:鎖按鈕 → tween 黑幕 → `await tw.finished` → change_scene_to_file,失敗要還原 | 初階/未驗 | 「await 那行在等什麼信號?不鎖按鈕連點兩下會怎樣?」 |
+
+### 12. 森林地形整修(`4ab417d`;[ground_generator.gd](../src/environment/ground_generator.gd)、[forest_scatter.gd](../src/environment/forest_scatter.gd))
+
+| 觀念 | 等級 | 考題方向 |
+|---|---|---|
+| 水面必須是「局部最低點」:換材質治標、換高度治本 | **中階**(2026-07-05 自己推出根因與修法方向) | 升高階:新情境開藥方——「岩漿池 / 流沙坑要怎麼做才不浮?」 |
+| 磚是紙片、貼 cell 正中央:面高度 = (y_level + 0.5) × cell_size.y = -0.5;「地表在 0」是幻覺,樹和水都因此浮過 | 初階(兩個高度數字自己查到;薄片幾何是 AI 量的) | 「y_level -3、cell_size.y 0.2,地表在哪?想要 0.1 深的河改哪兩個數字?」 |
+| cell_size.y 當垂直解析度:GridMap 只能整格跳,格距改細 = 垂直步距變細(1 → 0.2) | 初階/未驗 | 「為什麼不能『把河床磚往下移 0.2』,非得動 cell_size?」 |
+| 薄片模型處置:兩片十字交叉才不會側面消失;用 AABB 反推貼地 / 露頂高度(土丘埋地只露丘頂) | 初階/未驗 | 「_make_prop 怎麼判斷要不要交叉?土丘的 Y 是怎麼算出來的?」 |
+| 面積均勻取樣:環帶內半徑要用 sqrt(rand) 插值,否則點擠內圈 | 初階/未驗 | 「為什麼要開根號?不開的話點擠哪邊、為什麼?」 |
+| headless Godot 當診斷工具:`--headless -s` 跑一次性腳本印 AABB——「用量的代替用猜的」 | 初階/未驗 | 「想知道某個 mesh 的實際尺寸和原點,除了拖進場景目測,還有什麼辦法?」 |
+
+### 13. 工作流的坑(跨任務,反覆咬人)
+
+| 觀念 | 等級 | 考題方向 |
+|---|---|---|
+| 編輯器舊緩衝蓋檔:外部改過 .gd/.tscn 後回 Godot,提示一律選 **Reload**,否則一存檔就把改動蓋回舊版 | 初階(本 session 踩過多次) | 「什麼情況會跳這個提示?選錯會發生什麼、怎麼發現?」 |
+| git 暫存區與工作區是兩本帳:檔案刪了但 index 還留著 A,照樣會被寫進歷史(字型 zip 事件) | 初階(2026-07-05 教過) | 「status 顯示 `AD` 是什麼狀態?怎麼把它從暫存區退掉?」 |
+| 刪資源的順序:先把所有引用(.tres/.gd)退掉 → 再走編輯器 FileSystem 刪,不用 rm | 初階(2026-07-06 教過) | 「先刪圖再改引用會出什麼事?為什麼要走編輯器刪?」 |
