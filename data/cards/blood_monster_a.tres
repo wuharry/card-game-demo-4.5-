@@ -1,11 +1,28 @@
-[gd_resource type="Resource" script_class="CardData" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://src/card/card_data.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/小小RPG角色素材包/Tiny RPG Character Asset Pack 02 -Free Demon_A&Blood Monster_A/Characters(100x100 split)/Blood Monster_A/Blood Monster_A/Blood Monster_A_Idle.png" id="2_sheet"]
+[ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
 atlas = ExtResource("2_sheet")
 region = Rect2(0, 0, 100, 100)
+
+[sub_resource type="Resource" id="Skill_main"]
+script = ExtResource("3_skill")
+skill_name = "血之狂宴"
+description = "本次攻擊 +2,並回復等同傷害的生命。"
+kind = 0
+cost = 3
+anim = "Attack02"
+power = 2
+modifier = 4
+effect = 0
+effect_target = 2
+amount = 0
+status = 0
+status_turns = 1
+summon_card = ""
 
 [resource]
 script = ExtResource("1_script")
@@ -15,3 +32,4 @@ atk = 8
 hp = 5
 art = SubResource("AtlasTexture_frame")
 standee = ExtResource("2_sheet")
+active_skill = SubResource("Skill_main")
