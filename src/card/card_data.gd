@@ -19,3 +19,25 @@ class_name CardData   # 註冊全域型別:Inspector 的「新增資源」搜尋
                                            # 這欄留給未來真的有手繪卡圖時替換
 @export var standee: Texture2D             # 立牌動畫表:card.gd 的卡圖與召喚立牌
                                            # 都讀這欄(show_standee 切幀播待機動畫)
+@export var active_skill: SkillData        # 主動技能(預設 Attack02 動畫;null = 無主動技,
+                                           # 見 README §6.1 與 docs/skills_design.md)
+@export var keywords: Array[StringName] = []   # 被動關鍵字(README §8):
+                                               # &"飛行"、&"不滅"、&"鐵壁"、&"衝鋒"…
+
+
+## 從 standee 的路徑推「同資料夾的兄弟動畫表」,例:get_anim_sheet("Attack02")。
+## 素材命名規則是 <角色>_<動畫>.png,把最後一個底線之後換掉即可——
+## 這樣連蝙蝠(standee 是 Bat_Flying.png、沒有 Idle)也能正確推出 Bat_Attack02。
+## 命名地雷(Swordsman_Attack3、Necromancer_DEATH…)由呼叫端填「完整後綴」處理;
+## 檔案不存在回傳 null,呼叫端自行退回待機動畫,不炸。
+func get_anim_sheet(suffix: String) -> Texture2D:
+	if standee == null:
+		return null
+	var stem := standee.resource_path.get_basename()   # 去掉 .png
+	var cut := stem.rfind("_")                         # 最後一個底線 = 動畫後綴起點
+	if cut < 0:
+		return null
+	var path := stem.substr(0, cut + 1) + suffix + ".png"
+	if not ResourceLoader.exists(path):
+		return null
+	return load(path)

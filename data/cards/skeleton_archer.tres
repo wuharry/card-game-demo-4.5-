@@ -15,3 +15,4 @@ atk = 2
 hp = 2
 art = SubResource("AtlasTexture_frame")
 standee = ExtResource("2_sheet")
+keywords = Array[StringName]([&"不滅"])
