@@ -50,6 +50,8 @@ var ui_state: UiState = UiState.IDLE
 
 ## 指令選單(程式生成的 CanvasLayer,見 battle_ui.gd)。
 var battle_ui: BattleUI = null
+## 戰鬥帳房:魔力/回合/HP 真結算(程式生成,見 battle_manager.gd)。
+var battle_manager: BattleManager = null
 ## 選單目前的主角(被點擊的上桌單位)。
 var active_unit: Card = null
 ## 等待指定目標的技能;null 代表等待目標的是「普通攻擊」。
@@ -73,6 +75,14 @@ func _ready() -> void:
 	battle_ui.attack_chosen.connect(_on_attack_chosen)
 	battle_ui.skill_chosen.connect(_on_skill_chosen)
 	battle_ui.cancelled.connect(_cancel_command)
+	battle_ui.end_turn_pressed.connect(_on_end_turn)
+	# 戰鬥帳房:規則與數值都在它那裡。UI 的決定經中樞轉發給帳房、
+	# 帳的變化再流回 UI——兩端只認識中樞,互不相識(同 hover 中繼鏈的哲學)。
+	battle_manager = BattleManager.new()
+	battle_manager.state_changed.connect(battle_ui.update_hud)
+	battle_manager.unit_died.connect(_on_unit_died)
+	action_performed.connect(battle_manager.on_action_performed)
+	add_child(battle_manager)
 
 
 ## ── 收到「滑鼠移到某張卡上」事件 ──────────────────
@@ -215,7 +225,11 @@ func _on_left_pressed_idle() -> void:
 	if card.is_on_board:
 		active_unit = card
 		ui_state = UiState.MENU_OPEN
-		battle_ui.open(card)
+		# 把「不能做的理由」一起交給選單:按鈕灰化+描述列說明。
+		# 規則只寫在帳房一份,按鈕永遠只是轉述。
+		battle_ui.open(card,
+			battle_manager.attack_block_reason(card),
+			battle_manager.skill_block_reason(card))
 		return
 	# ── 抓牌(原本的拖曳邏輯)──
 	card_being_dragged = card
@@ -233,11 +247,18 @@ func _on_left_released_drag() -> void:
 	# 往下射線，看看放開的位置下面有沒有卡槽。
 	var found_slot := raycast_check_for_card_slot()
 
-	# 找到卡槽、而且是空的 → 成功出牌。
+	# 找到卡槽、而且是空的 → 再過「召喚費」這關(§3):付得起才落地。
 	if found_slot and found_slot.is_empty:
-		found_slot.place_card(card_being_dragged)         # 交給卡槽處理入槽動畫+鎖定
-		player_hand.play_card(card_being_dragged)         # 移除手牌+重新靠攏，封裝在手牌自己身上
-		print("成功把卡片放進卡槽！")
+		var cost := card_being_dragged.data.cost
+		if battle_manager.can_afford(cost):
+			battle_manager.spend(cost)
+			battle_manager.mark_summoned(card_being_dragged)  # 召喚暈眩:當回合不能攻擊
+			found_slot.place_card(card_being_dragged)     # 交給卡槽處理入槽動畫+鎖定
+			player_hand.play_card(card_being_dragged)     # 移除手牌+重新靠攏
+		else:
+			battle_ui.flash_message(
+				"魔力不足:召喚需要 ◆%d(現有 %d)" % [cost, battle_manager.mana])
+			organize_hand()
 	else:
 		# 沒對準卡槽 / 卡槽已滿 → 讓它回到手牌扇形原位。
 		organize_hand()
@@ -258,11 +279,20 @@ func _on_left_pressed_targeting() -> void:
 ## ── 指令選單的三個回應(BattleUI 的信號接進來)──────────
 
 func _on_attack_chosen() -> void:
+	# UI 已灰化過,這裡再驗一次:規則的最後一道門在帳房,不在按鈕。
+	var reason := battle_manager.attack_block_reason(active_unit)
+	if reason != "":
+		battle_ui.flash_message(reason)
+		return
 	pending_skill = null   # null = 這次等目標的是普通攻擊
 	_enter_targeting("選擇攻擊目標(右鍵取消)")
 
 
 func _on_skill_chosen(skill: SkillData) -> void:
+	var reason := battle_manager.skill_block_reason(active_unit)
+	if reason != "":
+		battle_ui.flash_message(reason)
+		return
 	pending_skill = skill
 	# 目標是「自己」的技能(戰吼、自療)不用選目標,選了直接發動。
 	if skill.effect_target == SkillData.Target.SELF:
@@ -294,21 +324,32 @@ func _is_valid_target(card: Card) -> bool:
 		return false
 	var want_ally: bool = pending_skill != null \
 		and pending_skill.effect_target == SkillData.Target.ALLY
-	var side := _unit_side(card)
+	var side := battle_manager.side_of(card)
 	if want_ally:
 		return side == "player"
 	return side == "enemy" and card != active_unit
 
 
-## 這個單位站在誰的棋盤上?用卡槽群組反查——
-## player_board 生成卡槽時就分好了 player_*/enemy_* 群組,正是給這種查詢用的。
-## 量級:最多 20 個槽的線性掃描,一次點擊才查一次,不用快取。
-func _unit_side(card: Card) -> String:
-	for group in ["player_front", "player_back", "enemy_front", "enemy_back"]:
-		for slot in get_tree().get_nodes_in_group(group):
-			if slot is CardSlot and slot.card_in_slot == card:
-				return "player" if (group as String).begins_with("player") else "enemy"
-	return ""
+## (陣營查詢已搬進 BattleManager.side_of:帳房管規則,查詢跟著規則走。)
+
+
+## 結束回合(BattleUI 的按鈕):先收掉開著的指令流程(旗標要重算),再讓帳房翻頁。
+func _on_end_turn() -> void:
+	if ui_state == UiState.MENU_OPEN or ui_state == UiState.TARGETING:
+		_cancel_command()
+	battle_manager.end_turn()
+	battle_ui.flash_message("第 %d 回合" % battle_manager.turn)
+
+
+## 有單位死了(BattleManager 廣播):把指向死者的參考清掉,
+## 之後才不會去摸已被 free 的物件(懸空參考)。
+func _on_unit_died(unit: Card) -> void:
+	if hovered_target == unit:
+		hovered_target = null
+	if currently_hovered_card == unit:
+		currently_hovered_card = null
+	if active_unit == unit:
+		_cancel_command()
 
 
 ## ── 發動(純演出版)────────────────────────────────

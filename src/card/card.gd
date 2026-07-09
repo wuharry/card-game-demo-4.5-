@@ -58,6 +58,16 @@ var _standee_anim: Tween = null
 ## 選單永遠開不起來);點擊的分流由 CardManager 依這個旗標決定。
 var is_on_board: bool = false
 
+## ── 執行期戰鬥狀態(由 BattleManager 讀寫)──────────
+## CardData 是 24 張卡「共用」的資料模板,絕不能把當前血量寫回去
+## (寫了 = 全場同名卡一起掉血);會變動的數值都放在場上這個 Card 實例身上。
+var current_hp: int = 0
+var attacked_this_turn: bool = false
+var skill_used_this_turn: bool = false
+var summoned_this_turn: bool = false
+## HPLabel 進場時的原色(受傷變紅、補滿要變得回來——基準先快照)。
+var _hp_label_color: Color = Color.WHITE
+
 
 ## _ready() 是 Godot 的生命週期函式：節點一進入場景、準備好時自動執行一次。
 func _ready() -> void:
@@ -75,6 +85,8 @@ func setup(card_data: CardData) -> void:
 	$CostLabel.text = str(data.cost)   # Label3D 的 text 只吃字串，int 要用 str() 轉
 	$ATKLabel.text = str(data.atk)
 	$HPLabel.text = str(data.hp)
+	current_hp = data.hp                  # 執行期血量從模板拷貝出來(見上方變數說明)
+	_hp_label_color = $HPLabel.modulate   # 原色快照:受傷變紅後要能變回來
 	# ── 卡圖:像素角色第 0 幀「放大」塞進卡框挖空窗 ──────────────
 	# (AI 繪圖卡圖已棄用:和像素立牌風格打架。卡圖=立牌同一張動畫表,全場統一。)
 	# 100×100 的格子裡角色本體只佔中間約 30px:整格塞窗,角色會小得像圖示。
@@ -298,3 +310,58 @@ func enter_board_mode() -> void:
 func exit_board_mode() -> void:
 	is_on_board = false
 	print("[狀態] 卡片回手:恢復拖曳")
+
+
+## ── 血量增減(由 BattleManager 呼叫)────────────────
+func take_damage(amount: int) -> void:
+	current_hp = maxi(0, current_hp - amount)
+	_refresh_hp_label()
+
+
+func heal(amount: int) -> void:
+	current_hp = mini(data.hp, current_hp + amount)   # 治療不超過上限
+	_refresh_hp_label()
+
+
+func _refresh_hp_label() -> void:
+	$HPLabel.text = str(current_hp)
+	# 殘血紅字:一眼掃出誰快死了;補滿就恢復原色。
+	if current_hp < data.hp:
+		$HPLabel.modulate = Color(1.0, 0.32, 0.28)
+	else:
+		$HPLabel.modulate = _hp_label_color
+
+
+## ── 死亡演出:死亡表定格 → 縮小消失 → 自毀 ─────────
+## 由 BattleManager 在 HP 歸零時呼叫(卡槽已先清位)。
+func die() -> void:
+	is_on_board = false
+	# 屍體不該再吃射線:關碰撞(用 deferred——物理回呼期間直接改會報錯)。
+	var shape: CollisionShape3D = get_node_or_null("Area3D/CollisionShape3D")
+	if shape != null:
+		shape.set_deferred("disabled", true)
+	var played := _play_death_anim()
+	var tw := create_tween()
+	tw.tween_interval(0.65 if played else 0.1)   # 讓倒地動畫(6 格 × 0.1s)播完
+	tw.tween_property(self, "scale", Vector3.ONE * 0.01, 0.25)\
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	tw.tween_callback(queue_free)
+
+
+## 播死亡表:與 play_one_shot_anim 幾乎相同,但「不」回待機——定格在最後一格。
+## 死靈法師的表名是全大寫 DEATH(素材包命名地雷),找不到就換備案再試。
+func _play_death_anim() -> bool:
+	if _standee == null or data == null:
+		return false
+	var tex := data.get_anim_sheet("Death")
+	if tex == null:
+		tex = data.get_anim_sheet("DEATH")
+	if tex == null:
+		return false
+	var frames := _apply_sheet(tex)
+	if _standee_anim != null:
+		_standee_anim.kill()
+	_standee_anim = _standee.create_tween()
+	for f in range(frames):
+		_standee_anim.tween_callback(func() -> void: _standee.frame = f).set_delay(0.1)
+	return true

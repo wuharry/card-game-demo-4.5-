@@ -173,3 +173,22 @@
 | 刪資源的順序:先把所有引用(.tres/.gd)退掉 → 再走編輯器 FileSystem 刪,不用 rm | 初階(2026-07-06 教過) | 「先刪圖再改引用會出什麼事?為什麼要走編輯器刪?」 |
 | 量尺寸的時機:PRESET_MODE_MINSIZE 是「當下最小尺寸」的快照——面板還空著就定位=量到 0,內容進來後往預設方向(右下)長出螢幕外只剩標題列;修法=內容就位後重新定位+grow_vertical 往上長。與 original_scale 快照同族:基準要在資料就位後才拍 | 初階/未驗 | 「open() 裡的 reset_size+重新 set_anchors_and_offsets_preset 拿掉,選單會變怎樣?為什麼?」 |
 | 2D↔3D 座標往返:project_ray_*(螢幕→3D 射線)與 unproject_position(3D→螢幕像素)互為反運算——導引箭頭=每幀把施放者的 3D 位置投回螢幕,用 Line2D 畫二次貝茲弧線;鎖定目標時尖端吸附目標(吸附=把類比輸入折算成明確意圖的回饋) | 初階/未驗 | 「箭頭起點為什麼要每幀重算而不是進 TARGETING 時算一次?哪種情況下只算一次會出錯?」 |
+
+### 17. 卡槽高亮著色器(2026-07-10;[slot_tile.gdshader](../src/card_slot/slot_tile.gdshader)、[card_slot.gd](../src/card_slot/card_slot.gd))
+
+| 觀念 | 等級 | 考題方向 |
+|---|---|---|
+| SDF(有號距離場)畫程序化 UI 形狀:sd_rounded_box 回傳「到邊緣的距離」,一個距離值就能同時做外框線(abs(d)≈0)、第二道內線(d+0.045)、內緣漸層(d<0 的 smoothstep)——形狀是「算」出來的,不是貼圖 | 初階/未驗 | 「要再加第三道更靠內的細線,改哪個數字?為什麼 abs() 能讓一條線出現在邊的兩側?」 |
+| 非等比縮放會把圓角拉成橢圓:先把 UV 乘上「寬/深」壓回等比空間再算 SDF(aspect uniform 由 GDScript 從節點實際 scale 算出傳入) | 初階/未驗 | 「拿掉 aspect 校正,卡槽四個角會變成什麼樣?為什麼?」 |
+| shader_parameter/* 是 shader 解析後才存在的「動態屬性」:tween_property 綁它在 headless(dummy 渲染器)下會炸;tween_method + set_shader_parameter 不依賴算繪器狀態。搭配「從當下值起跑」避免動畫中途反向時跳變 | 初階/未驗 | 「為什麼 _current_glow() 不直接回傳 0 或 1?什麼操作序列會讓寫死起點的版本跳一下?」 |
+| 執行期換材質:_ready 裡 new ShaderMaterial 蓋掉場景材質 → .tscn 零改動、每個實例一份材質(各槽發光獨立);headless 驗證的時序陷阱:SceneTree 腳本 _init 時 _ready 還沒跑,要 await process_frame | 初階/未驗 | 「20 個卡槽共用一份 ShaderMaterial 會出什麼視覺 bug?」 |
+
+### 18. 魔力與生命值(2026-07-10;[battle_manager.gd](../src/battle_manager/battle_manager.gd)、[card.gd](../src/card/card.gd))
+
+| 觀念 | 等級 | 考題方向 |
+|---|---|---|
+| 模板 vs 實例:CardData 是 24 張卡共用的 Resource,當前血量絕不能寫回模板(寫了=全場同名卡一起掉血);會變動的執行期狀態(current_hp、行動旗標)放場上的 Card 實例身上 | 初階/未驗 | 「把 current_hp 存進 CardData 會出什麼 bug?兩張「士兵」同場時會發生什麼?」 |
+| 「同時結算」的實作:雙向傷害交換要先把反擊值記下來再一起扣——若順序扣血,先歸零的一方就打不出反擊,規則就錯了(交戰前快照,和 original_scale 同族) | 初階/未驗 | 「_resolve_attack 裡的 counter 變數為什麼要在 take_damage 之前取?刪掉先取的動作會怎樣?」 |
+| 規則的單一出口:合法性檢查回傳「被擋的理由字串」(""=可做),UI 拿去灰化+轉述、發動前再驗一次——按鈕永遠只是轉述,最後一道門在帳房 | 初階/未驗 | 「為什麼 _on_attack_chosen 還要再查一次 attack_block_reason?UI 已經灰化了不是嗎?」 |
+| 死亡的收尾順序:先清卡槽(位子馬上能用)→ 廣播 unit_died(讓別人清參考)→ 再播死亡演出+queue_free;拿著 freed 物件的參考=懸空參考,摸下去就炸 | 初階/未驗 | 「CardManager._on_unit_died 不清 hovered_target 會在什麼操作下炸掉?」 |
+| await + create_timer 做「演出對時」:結算延後 0.35 秒讓數字跟拳頭一起落地;await 之後世界可能已變(單位死了),恢復執行前要 is_instance_valid 再驗 | 初階/未驗 | 「on_action_performed 裡 await 後面那句 is_instance_valid(caster) 防的是什麼劇本?」 |

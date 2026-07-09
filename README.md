@@ -80,7 +80,8 @@ main.tscn  ← 牌桌主場景 (MainScene, Node3D)  [src/main_scene/main_scene.g
 | [src/environment/arena_pool.gd](src/environment/arena_pool.gd) | 戰場抽籤桶（static 純工具，不進場景樹）：主選單抽路徑 → `main_scene.gd` 讀取決定換不換環境 |
 | [src/main_scene/main_scene.gd](src/main_scene/main_scene.gd) | 牌桌環境切換器：依 ArenaPool 抽籤結果，`_ready` 時把烤死的森林換成抽到的戰場（用 `free()` 避免兩個 WorldEnvironment 並存） |
 | [src/main_menu/main_menu.gd](src/main_menu/main_menu.gd) | 主選單：3D 城鎮背景 + 固定鏡頭 + 歧路旅人式純文字選單（UI 全由程式組裝，CanvasLayer 疊在 3D 上） |
-| [src/battle_ui/battle_ui.gd](src/battle_ui/battle_ui.gd) | 指令選單（歧路旅人式）：點擊上桌單位 → 攻擊/技能/取消 + 效果描述列；指定目標時出提示字。全程式生成，由 CardManager 掛載並訂閱信號 |
+| [src/battle_ui/battle_ui.gd](src/battle_ui/battle_ui.gd) | 指令選單（歧路旅人式）：點擊上桌單位 → 攻擊/技能/取消 + 效果描述列；指定目標時出提示字；戰況 HUD（回合/魔力/結束回合/提示訊息）。全程式生成，由 CardManager 掛載並訂閱信號 |
+| [src/battle_manager/battle_manager.gd](src/battle_manager/battle_manager.gd) | 戰鬥帳房：魔力/回合/行動經濟（§1/§3/§6）與真結算（§4.2 雙向傷害交換、死亡清位）。訂閱 `CardManager.action_performed`；規則只寫這一份，UI 轉述 |
 | [src/card/skill_data.gd](src/card/skill_data.gd) | `SkillData`（Resource）：主動技能的資料定義（類別/費用/動畫表/效果參數），設計明細見 [docs/skills_design.md](docs/skills_design.md) |
 
 ### 場景
@@ -365,6 +366,7 @@ func apply_freeze(unit, turns := 1) -> void:
 - [x] 卡圖嵌入卡框挖空窗 + 遊戲王式召喚立牌（像素角色第 0 幀卡圖、入槽立牌待機動畫）
 - [x] 動畫驅動技能資料層：24 卡 `active_skill` / `keywords` 全接線（[§6.1](#61-動畫驅動技能animation-driven-skills-數位調整)）；卡面顯示技能名+費用+描述
 - [x] 指令選單（純演出版）：點上桌單位 → 歧路旅人式選單 → 指定目標 → 施放/受擊動畫；結算走 `action_performed` 信號留給戰鬥系統
+- [x] 魔力與生命值（BattleManager）：魔力回合成長/召喚與技能費用檢查（§1/§3）、行動分離+召喚暈眩+衝鋒（§6）、雙向傷害交換與治療（§4.2）、死亡演出+卡槽清位；HUD 回合/魔力/結束回合
 
 **場景與美術**
 - [x] Forward+ 算繪 + ACES tonemap + bloom + SSAO + 暖色氛圍燈光
@@ -374,6 +376,7 @@ func apply_freeze(unit, turns := 1) -> void:
 - [x] 牌堆視覺（玩家右側卡背堆疊）
 - [x] 主選單（歧路旅人式：3D 城鎮背景 + 固定鏡頭 + 純文字選單）
 - [x] 戰場家族：洞窟 / 冰原 / 城鎮（ArenaBase 繼承 + ArenaPool 隨機輪替）
+- [x] 卡槽高亮著色器（鈴蘭之劍式：圓角雙框 SDF + 內緣漸層 + 拖曳懸停呼吸脈動發光；執行期掛材質、場景檔零改動）
 
 ---
 
@@ -381,12 +384,12 @@ func apply_freeze(unit, turns := 1) -> void:
 
 依優先順序：
 
-1. **卡槽發光高亮（進行中）** — 鈴蘭之劍式高亮格。`SlotTile`（PlaneMesh + emission 材質）已在 `card_slot.tscn` 就位；剩 `card_slot.gd` 的 `highlight()/unhighlight()` 從「縮放 1.1」改成 tween `emission_energy_multiplier`（方案 1 收尾）。之後可升級手寫 shader：圓角、邊框、呼吸脈動（方案 2）。
-2. **從牌堆抽牌** — 目前 `PlayerHand` 對卡池 `pick_random()`（同卡可重複）。做真正的 `Deck: Array[CardData]`：洗牌、不重複抽、點牌堆 → 飛入手牌動畫 → 觸發重排。
-3. **卡片從卡槽取回** — `card_slot.gd` 的 `remove_card()` 已寫好，但尚未接上互動（例如再次拖出或右鍵取消）。
-4. **敵方棋盤邏輯** — `EnemyBoard` 已生成卡槽，但目前無任何 AI / 出牌行為，需要敵方出牌與目標分群運用（`enemy_front` / `enemy_back`）。
-5. **回合與戰鬥系統** — 回合切換、魔力與召喚費用檢查（`CardData.cost` 已就位）、攻擊/結算判定、狀態效果 tick。→ 完整規格見 [§5 回合流程](#5-回合流程)、[§4 攻擊與戰鬥結算](#4-攻擊與戰鬥結算)、[§9 狀態效果](#9-狀態效果)。
-6. **CardData 欄位擴充** — 技能資料層與 24 張接線已完成；剩 `attack_range` / `Sacrifice` / 卡牌類型（[§4.1](#41-攻擊範圍-數位調整)、[§7](#7-卡牌類型)）等回合系統動工時一起加（YAGNI）。戰鬥系統動工時訂閱 `CardManager.action_performed` 做真結算（演出流程不用改）。
+1. **戰鬥系統收尾（demo 關鍵路徑）** — 魔力/HP/雙向傷害/行動經濟已完成（`battle_manager.gd`）；剩：狀態效果 tick（[§9](#9-狀態效果)）、打法修飾（橫掃/貫穿/連擊/吸血）、召喚系技能效果、不滅復活、玩家本體 HP 與 Face 攻擊（[§1](#1-勝負與資源)/[§4.1](#41-攻擊範圍-數位調整)）。
+2. **敵方棋盤邏輯** — `EnemyBoard` 已生成卡槽，但目前無任何 AI / 出牌行為，需要敵方出牌與目標分群運用（`enemy_front` / `enemy_back`）。
+3. **從牌堆抽牌** — 目前 `PlayerHand` 對卡池 `pick_random()`（同卡可重複）。做真正的 `Deck: Array[CardData]`：洗牌、不重複抽、點牌堆 → 飛入手牌動畫 → 觸發重排。
+4. **勝負與一局收尾** — 主帥 HP／勝負條件（[§1](#1-勝負與資源)）、勝負畫面、回主選單再開一局。
+5. **卡片從卡槽取回** — `card_slot.gd` 的 `remove_card()` 已寫好，但尚未接上互動（例如再次拖出或右鍵取消）。
+6. **CardData 欄位擴充** — 技能資料層與 24 張接線已完成；剩 `attack_range` / `Sacrifice` / 卡牌類型（[§4.1](#41-攻擊範圍-數位調整)、[§7](#7-卡牌類型)）等回合系統動工時一起加（YAGNI）。
 7. **地形收尾** — meshlib 純草磚問題與空的 `Terrain` / `Cliffs` 節點；地形整修 commit（4ab417d）後需重驗哪些仍存在。
 
 ---

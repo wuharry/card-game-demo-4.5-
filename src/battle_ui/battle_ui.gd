@@ -11,6 +11,7 @@ class_name BattleUI
 signal attack_chosen
 signal skill_chosen(skill: SkillData)
 signal cancelled
+signal end_turn_pressed
 
 const FONT_TITLE: FontFile = preload(
 	"res://assets/fonts/Noto_Serif_TC/static/NotoSerifTC-Bold.ttf")
@@ -21,7 +22,7 @@ const FONT_BODY: FontFile = preload(
 const GOLD := Color("f2e3ae")
 const GOLD_DIM := Color("b8a984")
 const LINE_GOLD := Color(0.83, 0.72, 0.45, 0.85)
-const ATTACK_DESC := "普通攻擊:對一名敵方單位造成等同攻擊力的傷害(免費,每回合一次)。"
+const ATTACK_DESC := "普通攻擊:對目標造成等同攻擊力的傷害,並吃下目標的反擊(免費,每回合 1 次)。"
 
 var _panel: PanelContainer
 var _title: Label
@@ -33,29 +34,48 @@ var _hint: Label
 var _arrow_line: Line2D      # 指定目標導引箭頭(爐石式弧線)的線身
 var _arrow_head: Polygon2D   # 箭頭尖端的三角
 var _skill: SkillData = null   # 目前選單主角的主動技(null = 這隻沒有)
+var _attack_note: String = ""  # 攻擊被擋的理由("" = 可以攻擊);描述列顯示用
+var _skill_note: String = ""   # 技能被擋的理由(同上)
+
+## 戰況 HUD(常駐):右上回合+魔力、右下結束回合、畫面中下的提示訊息。
+var _hud_panel: PanelContainer
+var _hud_turn: Label
+var _hud_mana: Label
+var _end_turn_btn: Button
+var _toast: Label
+var _toast_tween: Tween
 
 
 func _ready() -> void:
 	_build_panel()
 	_build_hint()
 	_build_arrow()
+	_build_hud()
 	close()
 
 
 ## ── 公開 API(給 CardManager 呼叫)────────────────────────
 
 ## 打開指令選單,顯示這張卡的名字、數值、可用指令。
-func open(card: Card) -> void:
+## attack_note / skill_note = 該行動「被擋的理由」;空字串 = 可以做。
+## 有理由 → 按鈕灰化、描述列轉述理由(規則在 BattleManager,UI 只負責說人話)。
+func open(card: Card, attack_note: String = "", skill_note: String = "") -> void:
 	_skill = null
+	_attack_note = attack_note
+	_skill_note = skill_note
 	if card.data != null:
 		_skill = card.data.active_skill
 		_title.text = card.data.card_name
-		_stats.text = "ATK %d ／ HP %d" % [card.data.atk, card.data.hp]
+		# HP 顯示「當前/上限」:掉過血的單位一眼看得出來。
+		_stats.text = "ATK %d ／ HP %d／%d" \
+			% [card.data.atk, card.current_hp, card.data.hp]
+	_attack_btn.disabled = attack_note != ""
 	_skill_btn.visible = _skill != null
 	if _skill != null:
 		# 技能鈕直接標費用(◆),學費寫在門口,不用點進去才發現付不起。
 		_skill_btn.text = "%s  ◆%d" % [_skill.skill_name, _skill.cost]
-	_desc.text = ATTACK_DESC
+		_skill_btn.disabled = skill_note != ""
+	_show_attack_desc()
 	_hint.visible = false
 	_panel.visible = true
 	# 每次打開都重新量身、重貼左下角:建面板時內容是空的,當時量到的
@@ -109,13 +129,7 @@ func close() -> void:
 
 func _build_panel() -> void:
 	_panel = PanelContainer.new()
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.05, 0.04, 0.03, 0.86)   # 深色半透明底:壓得住亮背景
-	sb.border_color = LINE_GOLD
-	sb.set_border_width_all(1)
-	sb.set_corner_radius_all(6)
-	sb.set_content_margin_all(14.0)
-	_panel.add_theme_stylebox_override("panel", sb)
+	_panel.add_theme_stylebox_override("panel", _make_panel_style())
 	add_child(_panel)
 	# 面板貼左下角、離邊 24px;PanelContainer 會自己縮到內容大小。
 	_panel.set_anchors_and_offsets_preset(
@@ -145,8 +159,8 @@ func _build_panel() -> void:
 
 	_attack_btn = _make_option("攻擊")
 	_attack_btn.pressed.connect(func() -> void: attack_chosen.emit())
-	_attack_btn.mouse_entered.connect(func() -> void: _desc.text = ATTACK_DESC)
-	_attack_btn.focus_entered.connect(func() -> void: _desc.text = ATTACK_DESC)
+	_attack_btn.mouse_entered.connect(_show_attack_desc)
+	_attack_btn.focus_entered.connect(_show_attack_desc)
 	col.add_child(_attack_btn)
 
 	_skill_btn = _make_option("技能")
@@ -215,9 +229,116 @@ func _hide_arrow() -> void:
 	_arrow_head.visible = false
 
 
+## 描述列:能做就講效果,不能做就講「為什麼不行」(理由來自 BattleManager)。
+func _show_attack_desc() -> void:
+	_desc.text = ATTACK_DESC if _attack_note == "" else "✕ " + _attack_note
+
+
 func _show_skill_desc() -> void:
-	if _skill != null:
-		_desc.text = _skill.description
+	if _skill == null:
+		return
+	_desc.text = _skill.description if _skill_note == "" else "✕ " + _skill_note
+
+
+## 深色半透明+金邊的面板底(指令選單/HUD/結束回合鈕共用同一張皮)。
+func _make_panel_style() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.05, 0.04, 0.03, 0.86)   # 深色半透明底:壓得住亮背景
+	sb.border_color = LINE_GOLD
+	sb.set_border_width_all(1)
+	sb.set_corner_radius_all(6)
+	sb.set_content_margin_all(14.0)
+	return sb
+
+
+## ── 戰況 HUD ─────────────────────────────────────────
+## 右上:回合數+魔力(◆現有 ◇已用);右下:結束回合;中下:短暫提示。
+func _build_hud() -> void:
+	_hud_panel = PanelContainer.new()
+	_hud_panel.add_theme_stylebox_override("panel", _make_panel_style())
+	add_child(_hud_panel)
+	_hud_panel.set_anchors_and_offsets_preset(
+		Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 24)
+	_hud_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN   # 內容變寬時往左長
+	_hud_panel.grow_vertical = Control.GROW_DIRECTION_END
+
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 2)
+	_hud_panel.add_child(col)
+
+	_hud_turn = Label.new()
+	_hud_turn.add_theme_font_override("font", FONT_TITLE)
+	_hud_turn.add_theme_font_size_override("font_size", 18)
+	_hud_turn.add_theme_color_override("font_color", GOLD)
+	_hud_turn.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	col.add_child(_hud_turn)
+
+	_hud_mana = Label.new()
+	_hud_mana.add_theme_font_override("font", FONT_BODY)
+	_hud_mana.add_theme_font_size_override("font_size", 15)
+	# 魔力用冷色:和整片暮色金區隔,一眼找得到資源在哪。
+	_hud_mana.add_theme_color_override("font_color", Color("7fd9ff"))
+	_hud_mana.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	col.add_child(_hud_mana)
+
+	_end_turn_btn = Button.new()
+	_end_turn_btn.text = "結束回合"
+	_end_turn_btn.add_theme_font_override("font", FONT_TITLE)
+	_end_turn_btn.add_theme_font_size_override("font_size", 18)
+	_end_turn_btn.add_theme_color_override("font_color", GOLD_DIM)
+	_end_turn_btn.add_theme_color_override("font_hover_color", Color("fff3cf"))
+	_end_turn_btn.add_theme_stylebox_override("normal", _make_panel_style())
+	var lit := _make_panel_style()
+	lit.border_color = Color("fff3cf")
+	_end_turn_btn.add_theme_stylebox_override("hover", lit)
+	_end_turn_btn.add_theme_stylebox_override("focus", lit)
+	_end_turn_btn.add_theme_stylebox_override("pressed", lit)
+	_end_turn_btn.pressed.connect(func() -> void: end_turn_pressed.emit())
+	add_child(_end_turn_btn)
+	_end_turn_btn.set_anchors_and_offsets_preset(
+		Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE, 24)
+	_end_turn_btn.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_end_turn_btn.grow_vertical = Control.GROW_DIRECTION_BEGIN
+
+	_toast = Label.new()
+	_toast.add_theme_font_override("font", FONT_TITLE)
+	_toast.add_theme_font_size_override("font_size", 20)
+	_toast.add_theme_color_override("font_color", GOLD)
+	_toast.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.75))
+	_toast.add_theme_constant_override("outline_size", 6)
+	add_child(_toast)
+	_toast.set_anchors_and_offsets_preset(
+		Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 110)
+	_toast.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_toast.visible = false
+
+
+## HUD 刷新(BattleManager.state_changed 接進來)。
+func update_hud(turn: int, mana: int, mana_max: int) -> void:
+	_hud_turn.text = "第 %d 回合" % turn
+	# ◆=現有、◇=已用掉的上限:不讀數字也能一眼讀量。
+	_hud_mana.text = "◆".repeat(maxi(mana, 0)) \
+		+ "◇".repeat(maxi(mana_max - mana, 0)) + "  %d／%d" % [mana, mana_max]
+	# 內容變了 → 重新量身、貼回右上角(量尺寸要在內容就位之後,同 open() 的課)。
+	_hud_panel.reset_size()
+	_hud_panel.set_anchors_and_offsets_preset(
+		Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 24)
+
+
+## 短暫提示(魔力不足/回合切換…):畫面中下方停 1 秒後淡出。
+func flash_message(text_value: String) -> void:
+	_toast.text = text_value
+	_toast.visible = true
+	_toast.modulate = Color(1.0, 1.0, 1.0, 1.0)
+	_toast.reset_size()
+	_toast.set_anchors_and_offsets_preset(
+		Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 110)
+	if _toast_tween != null:
+		_toast_tween.kill()
+	_toast_tween = create_tween()
+	_toast_tween.tween_interval(1.0)
+	_toast_tween.tween_property(_toast, "modulate:a", 0.0, 0.35)
+	_toast_tween.tween_callback(func() -> void: _toast.visible = false)
 
 
 ## 歧路旅人式「文字指令」:平常沉金純文字,hover / 鍵盤焦點時亮起+金底線
@@ -233,7 +354,10 @@ func _make_option(text_value: String) -> Button:
 	btn.add_theme_color_override("font_hover_color", Color("fff3cf"))
 	btn.add_theme_color_override("font_focus_color", Color("fff3cf"))
 	btn.add_theme_color_override("font_pressed_color", GOLD)
+	# 灰化態:理由由描述列轉述,按鈕本身只要「看得出不能按」。
+	btn.add_theme_color_override("font_disabled_color", Color(0.55, 0.5, 0.42, 0.5))
 	btn.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
+	btn.add_theme_stylebox_override("disabled", StyleBoxEmpty.new())
 	var lit := StyleBoxFlat.new()
 	lit.bg_color = Color(1.0, 1.0, 1.0, 0.05)
 	lit.border_color = LINE_GOLD
