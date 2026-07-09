@@ -35,10 +35,23 @@ var _highlight_tween: Tween = null
 ## (基準值要快照、即時值才即時讀——和 card.gd 的 original_scale 是同一條原則。)
 var _base_scale: Vector3 = Vector3.ONE
 
+## 高亮膜著色器(圓角雙框+呼吸脈動,見 slot_tile.gdshader)。
+## _ready 時以程式掛上,card_slot.tscn 零改動;每個卡槽一份材質,發光才能各自獨立。
+const SLOT_SHADER: Shader = preload("res://src/card_slot/slot_tile.gdshader")
+var _tile_mat: ShaderMaterial = null
+
 
 func _ready() -> void:
 	# 把「進場時的縮放」拍下來當基準(PlayerBoard 在 add_child 前就把 scale 設好了)。
 	_base_scale = scale
+	# 用著色器膜換掉場景裡的平板材質(執行期替換,場景檔不動)。
+	_tile_mat = ShaderMaterial.new()
+	_tile_mat.shader = SLOT_SHADER
+	var tile: MeshInstance3D = $SlotTile
+	# 圓角要等比:把平面實際的「寬/深」比例告訴 shader(非等比縮放會把圓角拉成橢圓)。
+	_tile_mat.set_shader_parameter("aspect", tile.scale.x / tile.scale.z)
+	_tile_mat.set_shader_parameter("glow", 0.0)
+	tile.set_surface_override_material(0, _tile_mat)
 
 
 ## ── 公開方法：放入一張卡 ───────────────────────
@@ -91,6 +104,13 @@ func remove_card() -> void:
 	card_in_slot = null
 
 
+## ── 單位死亡:只清狀態,不播「取回」動畫(死亡演出由卡片自己負責)──
+## 由 BattleManager 在 HP 歸零時呼叫。
+func on_unit_died() -> void:
+	is_empty = true
+	card_in_slot = null
+
+
 ## ── 高亮：玩家拖著卡片懸停在這個空槽上方時 ──────────
 func highlight() -> void:
 	# 已經有卡的槽不需要提示，直接 return 結束。
@@ -101,9 +121,11 @@ func highlight() -> void:
 	if _highlight_tween:
 		_highlight_tween.kill()
 
-	# 把整個卡槽稍微放大到「基準的 1.1 倍」，產生「即將吸附」的視覺提示。
-	_highlight_tween = create_tween()
-	_highlight_tween.tween_property(self, "scale", _base_scale * 1.1, 0.1)
+	# 主角是發光:shader 的 glow 推到 1(變亮+呼吸脈動);
+	# 縮放只留 1.06 的輕微「湊上前」,別跟發光搶戲。
+	_highlight_tween = create_tween().set_parallel(true)
+	_highlight_tween.tween_property(self, "scale", _base_scale * 1.06, 0.12)
+	_highlight_tween.tween_method(_set_glow, _current_glow(), 1.0, 0.12)
 
 
 ## ── 取消高亮：滑鼠離開、或卡片已放入後 ─────────────
@@ -111,6 +133,20 @@ func unhighlight() -> void:
 	if _highlight_tween:
 		_highlight_tween.kill()
 
-	# 縮回「基準大小」(不是 Vector3.ONE——卡槽可能被 PlayerBoard 整體縮放過)。
-	_highlight_tween = create_tween()
+	# 縮回「基準大小」(不是 Vector3.ONE——卡槽可能被 PlayerBoard 整體縮放過)、熄燈。
+	_highlight_tween = create_tween().set_parallel(true)
 	_highlight_tween.tween_property(self, "scale", _base_scale, 0.1)
+	_highlight_tween.tween_method(_set_glow, _current_glow(), 0.0, 0.1)
+
+
+## ── glow 參數的 tween 介面 ─────────────────────────
+## 不用 tween_property("shader_parameter/glow"):那是 shader 解析後才存在的動態屬性,
+## 用 tween_method 直接呼叫 set_shader_parameter,不依賴算繪器狀態(headless 驗證也過)。
+func _set_glow(value: float) -> void:
+	_tile_mat.set_shader_parameter("glow", value)
+
+
+## 從「當下值」起跑而不是寫死 0/1:高亮動畫做到一半被反向 kill 時才不會跳變。
+func _current_glow() -> float:
+	var v: Variant = _tile_mat.get_shader_parameter("glow")
+	return float(v) if v != null else 0.0
