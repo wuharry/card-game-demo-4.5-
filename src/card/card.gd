@@ -49,6 +49,14 @@ const ART_WINDOW_SIZE := Vector2(1.297, 0.910)     # 窗寬高(世界單位)
 
 ## 上桌立牌(召喚時站在卡片上的像素角色;只在入槽時存在)。
 var _standee: Sprite3D = null
+## 立牌目前的動畫 tween(待機循環或一次性動畫)。換動畫前要先 kill 舊的,
+## 不然兩個 tween 同時改 frame 會抖(和 card_slot 高亮動畫的防抖同一原則)。
+var _standee_anim: Tween = null
+
+## 是否已上桌(入槽)。上桌後不再能拖曳,但碰撞要留著——
+## 點擊上桌的卡是「開指令選單」的入口(舊做法直接停用碰撞,射線打不到,
+## 選單永遠開不起來);點擊的分流由 CardManager 依這個旗標決定。
+var is_on_board: bool = false
 
 
 ## _ready() 是 Godot 的生命週期函式：節點一進入場景、準備好時自動執行一次。
@@ -94,6 +102,34 @@ func setup(card_data: CardData) -> void:
 	$CardArt.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST   # 像素圖要銳利
 	# 擺到窗中心、退到卡框後 0.01(透明物件由遠到近畫:後面的圖先畫、框蓋在上)。
 	$CardArt.position = Vector3(ART_WINDOW_CENTER.x, ART_WINDOW_CENTER.y, -0.01)
+	_update_skill_label()
+
+
+## ── 技能描述(卡框下半的文字區)────────────────────────────
+## 程式生成 Label3D,不動 card.tscn;規格對齊場景裡的數值字
+## (render_priority 1 + 貼卡面 z 0.02,躺平時才不會被卡面吃掉)。
+func _update_skill_label() -> void:
+	var lb: Label3D = get_node_or_null("SkillLabel")
+	if lb == null:
+		lb = Label3D.new()
+		lb.name = "SkillLabel"
+		add_child(lb)
+		lb.position = Vector3(0.0, -0.52, 0.02)   # 卡名(-0.1)與攻血列(-0.9)間的空檔
+		lb.font_size = 19
+		lb.width = 270.0   # 換算世界寬 ≈ 1.35(Label3D 預設 pixel_size 0.005)
+		lb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lb.render_priority = 1
+		# Label3D 預設白字+黑外框是給「壓在雜亂背景上」的字用的;
+		# 這裡底是淺色羊皮紙 → 改墨黑、關外框,像印上去的油墨字。
+		lb.modulate = Color(0.09, 0.07, 0.05)
+		lb.outline_size = 0
+	if data != null and data.active_skill != null:
+		var s := data.active_skill
+		# 【技能名】◆費用 + 換行描述;◆ 與指令選單的費用標記同一符號。
+		lb.text = "【%s】◆%d\n%s" % [s.skill_name, s.cost, s.description]
+	else:
+		lb.text = ""   # 沒有主動技的白板(骷髏弓手):留白
 
 
 ## ── 召喚立牌:像素角色站在卡片上(遊戲王式)────────────
@@ -135,11 +171,58 @@ func show_standee() -> void:
 	var pop := _standee.create_tween()
 	pop.tween_property(_standee, "scale", Vector3.ONE, 0.3)\
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	# 待機動畫:每 0.12 秒切下一格,set_loops() 無限循環 → 角色站在卡上「活著」。
-	# tween 綁在 _standee 節點上,立牌被 free 時動畫自動跟著停,不會漏。
-	var anim := _standee.create_tween().set_loops()
+	# 待機動畫:交給共用的循環播放器(見下方 _play_sheet_loop)。
+	_play_sheet_loop(frame_count)
+
+
+## ── 立牌動畫工具組 ────────────────────────────────────────
+
+## 待機循環:每 0.12 秒切下一格,set_loops() 無限循環 → 角色站在卡上「活著」。
+## tween 綁在 _standee 節點上,立牌被 free 時動畫自動跟著停,不會漏。
+func _play_sheet_loop(frame_count: int) -> void:
+	if _standee_anim != null:
+		_standee_anim.kill()
+	_standee_anim = _standee.create_tween().set_loops()
 	for f in range(frame_count):
-		anim.tween_callback(func() -> void: _standee.frame = f).set_delay(0.12)
+		_standee_anim.tween_callback(func() -> void: _standee.frame = f).set_delay(0.12)
+
+
+## 換上一張動畫表:設定貼圖、重算幀數(寬÷高,每格正方形),回傳幀數。
+func _apply_sheet(tex: Texture2D) -> int:
+	var h := maxf(1.0, float(tex.get_height()))
+	var frames := maxi(1, int(float(tex.get_width()) / h))
+	_standee.texture = tex
+	_standee.hframes = frames
+	_standee.frame = 0
+	return frames
+
+
+## 播一次性動畫(普攻 / 技能 / 受擊):換表 → 播一輪 → 自動切回待機循環。
+## suffix 是動畫表後綴(如 "Attack02"、"Hurt"),交給 CardData.get_anim_sheet 解析;
+## 找不到該表回傳 false,呼叫端可以換備案(牧師的普攻表叫 "Attack" 不是 "Attack01")。
+## 縮放沿用召喚時掃出來的 pixel_size:同一隻角色不同動作,身形大小要一致。
+func play_one_shot_anim(suffix: String) -> bool:
+	if _standee == null or data == null:
+		return false
+	var tex := data.get_anim_sheet(suffix)
+	if tex == null:
+		return false
+	var frames := _apply_sheet(tex)
+	if _standee_anim != null:
+		_standee_anim.kill()
+	_standee_anim = _standee.create_tween()
+	for f in range(frames):
+		_standee_anim.tween_callback(func() -> void: _standee.frame = f).set_delay(0.1)
+	_standee_anim.tween_callback(_restore_idle)   # 最後一格播完 → 回待機
+	return true
+
+
+## 一次性動畫收尾:換回待機表、重啟循環。
+func _restore_idle() -> void:
+	if _standee == null or data == null or data.standee == null:
+		return
+	var frames := _apply_sheet(data.standee)
+	_play_sheet_loop(frames)
 
 
 ## 收掉立牌(卡片被取出卡槽時由 CardSlot 呼叫)。
@@ -190,11 +273,13 @@ func _on_area_3d_mouse_exited() -> void:
 
 ## ── 動畫方法(由 CardManager 決定何時呼叫)──────────
 ## 把「要不要放大」的決策權交給 Manager，卡片只負責「怎麼放大」。
-func animate_hover() -> void:
+## zoom = 放大倍數:手牌瀏覽用預設值;指定目標時 CardManager 會傳更大的倍數,
+## 讓玩家看清楚目標卡面上的技能描述字。
+func animate_hover(zoom: float = 1.35) -> void:
 	# create_tween() 會建立一個補間動畫器：在一段時間內把某個屬性平滑地變化。
 	var tw := create_tween()
-	# 把 scale 在 0.15 秒內，從現在平滑變到「原始大小 × 1.2」(放大兩成)。
-	tw.tween_property(self, "scale", original_scale * 1.2, 0.15)
+	# 把 scale 在 0.15 秒內，從現在平滑變到「原始大小 × zoom」(基準用快照,見 original_scale)。
+	tw.tween_property(self, "scale", original_scale * zoom, 0.15)
 
 func animate_unhover() -> void:
 	var tw := create_tween()
@@ -202,20 +287,14 @@ func animate_unhover() -> void:
 	tw.tween_property(self, "scale", original_scale, 0.15)
 
 
-## ── 公開方法：鎖定 / 解鎖互動 ─────────────────────
-## 卡片能不能被滑鼠射線「打到」，取決於它的 CollisionShape3D 有沒有被停用。
-func lock_interaction() -> void:
-	# $Area3D/CollisionShape3D 是「節點路徑」寫法：從自己往下找這個子節點。
-	var col_shape := $Area3D/CollisionShape3D
-	if col_shape:
-		# disabled = true 等同在 Inspector 勾選 CollisionShape3D 的「Disabled」。
-		# 停用後射線打不到它 → 卡片放進卡槽後就抓不動了。
-		col_shape.disabled = true
-		print("[狀態] 卡片已鎖定，滑鼠無法拖曳")
+## ── 公開方法:上桌 / 回手 ─────────────────────────
+## 舊版在這裡直接停用 CollisionShape(射線打不到 = 不能拖)——但指令選單
+## 需要「點得到上桌的卡」,所以改成:碰撞永遠開著,用旗標讓 CardManager 分流
+## (手牌點擊=拖曳、上桌點擊=開選單)。
+func enter_board_mode() -> void:
+	is_on_board = true
+	print("[狀態] 卡片上桌:拖曳關閉,點擊改開指令選單")
 
-func unlock_interaction() -> void:
-	var col_shape := $Area3D/CollisionShape3D
-	if col_shape:
-		# 重新啟用碰撞形狀，卡片又可以被滑鼠抓取(例如從卡槽拿回手牌時)。
-		col_shape.disabled = false
-		print("[狀態] 卡片已解鎖，恢復互動能力")
+func exit_board_mode() -> void:
+	is_on_board = false
+	print("[狀態] 卡片回手:恢復拖曳")

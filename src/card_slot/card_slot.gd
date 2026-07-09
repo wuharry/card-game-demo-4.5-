@@ -69,8 +69,8 @@ func place_card(card: Card) -> void:
 	# 才呼叫 show_standee() 讓角色現身，時序上就是「卡落地 → 怪獸登場」。
 	tw.chain().tween_callback(card.show_standee)
 
-	# 鎖死這張卡 (停用它的碰撞)，玩家就不能再把它從卡槽拖走。
-	card.lock_interaction()
+	# 標記上桌:不能再拖曳,但碰撞留著——點擊會改開指令選單(分流在 CardManager)。
+	card.enter_board_mode()
 
 
 ## ── 公開方法：把卡片取出 ───────────────────────
@@ -78,8 +78,8 @@ func remove_card() -> void:
 	if card_in_slot:
 		# 先收掉站在卡上的立牌(卡要離開桌面了，怪獸跟著退場)。
 		card_in_slot.hide_standee()
-		# 解鎖，讓這張卡重新可以被滑鼠抓取。
-		card_in_slot.unlock_interaction()
+		# 回手:恢復可拖曳狀態。
+		card_in_slot.exit_board_mode()
 
 		var tw := create_tween().set_parallel(true)
 		tw.tween_property(card_in_slot, "rotation_degrees", Vector3(0, 0, 0), 0.15)
