@@ -24,14 +24,23 @@ const TILES := PACK + "/Landscape Material Tiles"
 @export var rim_spike_count: int = 18    # 湖緣冰晶數(玩家側走廊會自動留空)
 @export var god_rays: bool = true        # 體積霧光柱(太吃效能或太霧就關掉)
 
+@export_group("遠景與氣氛")
+@export var hill_count: int = 12         # 遠景雪丘(landmass 埋地露頂,圍出地平線輪廓)
+@export var torch_count: int = 5         # 湖畔火把(冷藍夜裡的暖橙對比點)
+@export var snowfall: bool = true        # 飄雪粒子(整個舞台上方慢慢落雪)
 
-## ArenaBase 在 _rebuild() 時呼叫,整個冰原分五步蓋。
+
+## ArenaBase 在 _rebuild() 時呼叫,整個冰原分八步蓋。
 func _build(rng: RandomNumberGenerator) -> void:
 	_build_environment()
 	_build_ground()
 	_build_frozen_lake()
 	_build_lake_rim(rng)
 	_build_props(rng)
+	_build_snow_hills(rng)
+	_build_torches(rng)
+	if snowfall:
+		_build_snowfall()
 
 
 ## ── 環境與主光:深藍月夜,高對比 ───────────────────────
@@ -43,7 +52,7 @@ func _build_environment() -> void:
 	# 霧改成「深藍」:霧色比場景亮 → 白牆;霧色比場景暗 → 遠景沉入夜色。
 	# 這是第一版翻車的核心教訓:霧的顏色決定畫面是「有深度」還是「被洗白」。
 	env.fog_light_color = Color(0.10, 0.16, 0.28)
-	env.fog_density = 0.01
+	env.fog_density = 0.013   # 微濃:配合加大的地板,把更遠的邊界沉進夜色
 	env.fog_sky_affect = 0.8
 	env.glow_intensity = 1.0                           # 亮部(月光反光、冰晶)暈開一點
 	env.adjustment_contrast = 1.12                     # 對比拉高:亮更亮、暗更沉
@@ -71,7 +80,9 @@ func _build_ground() -> void:
 		load(TILES + "/SnowTile_01_N.png"),
 		load(TILES + "/StoneTile_01_N.png"),
 		2.0,    # tile_size:一塊貼圖鋪 2 公尺
-		0.66)   # patch_threshold:調高 → 岩斑更少,雪原為主
+		0.66,   # patch_threshold:調高 → 岩斑更少,雪原為主
+		0.05,   # patch_freq:斑塊噪聲頻率(共用預設)
+		Vector2(80.0, 64.0))   # 地板加大:遠景雪丘站在 22~28,腳下要有雪原
 
 ## ── 冰湖:戰鬥舞台本體 ─────────────────────────────────
 ## 一面圓形冰湖蓋在牌桌正下方(lake_radius > ring_inner,整張牌桌都在湖上)。
@@ -162,16 +173,18 @@ func _build_props(rng: RandomNumberGenerator) -> void:
 	_scatter_meshes(rng, trees, solid, tree_count,
 		14, 2.8, 0.9, 1.6, 1.3, 3.0, "Trees")
 
-	# 冰晶簇:數量少、微發光,是雪地裡的藍色亮點。
+	# 冰晶簇:數量少、微發光,是雪地裡的藍色亮點(冰柱在 Landmass 資料夾,另載併入)。
 	var ice_clusters := _load_meshes(MODELS + "/Objects",
 		["SM_IceCluster_01", "SM_IceCluster_02"])
+	ice_clusters.append_array(_load_meshes(MODELS + "/Landmass", ["SM_Ice_Pillar"]))
 	_scatter_meshes(rng, ice_clusters, ice, ice_count,
 		6, 2.0, 0.9, 1.5, 1.4, 3.0, "IceClusters")
 
 	# 雜項:倒木、枯幹、雪堆…(雪人只放一種,抽中就是彩蛋)。
 	var objects := _load_meshes(MODELS + "/Objects", ["SM_FallenTree_01",
-		"SM_FallenTree_02", "SM_Trunk_01", "SM_Trunk_02", "SM_Trunk_03",
-		"SM_SnowPile_01", "SM_SnowPile_02", "SM_SnowPile_03", "SM_Snowman"])
+		"SM_FallenTree_02", "SM_FallenTreePile", "SM_Trunk_01", "SM_Trunk_02",
+		"SM_Trunk_03", "SM_Trunk_04", "SM_SnowPile_01", "SM_SnowPile_02",
+		"SM_SnowPile_03", "SM_SnowPile_04", "SM_Snowman"])
 	_scatter_meshes(rng, objects, solid, object_count,
 		9, 2.4, 0.9, 1.4, 1.4, 4.0, "Objects")
 
@@ -181,3 +194,100 @@ func _build_props(rng: RandomNumberGenerator) -> void:
 		"SM_Stone_01", "SM_Stone_02"])
 	_scatter_meshes(rng, foliage, solid, foliage_count,
 		14, 2.2, 0.8, 1.3, 0.6, 5.0, "Foliage")
+
+
+## ── 遠景雪丘:landmass 大塊放大、埋進地裡只露丘頂 ──────────
+## 手法同 forest 的土丘(AABB 頂端反推 Y):山身沉在地下、只露 1.5~3.5 的丘頂。
+## 夜色+霧裡只剩剪影,把「平直的地平線」變成有起伏的雪丘輪廓,
+## 順便擋住樹牆縫隙後面「地板的盡頭」。
+func _build_snow_hills(rng: RandomNumberGenerator) -> void:
+	if hill_count <= 0:
+		return
+	var names: Array[String] = []
+	for i in range(1, 25):   # SM_LSnow_Landmass_01 ~ _24,素材全帶走
+		names.append("SM_LSnow_Landmass_%02d" % i)
+	var hills := _load_meshes(MODELS + "/Landmass", names)
+	if hills.is_empty():
+		return
+	var sheet: Texture2D = load(PACK + "/Tilesheet/frostland_tilesheet.png")
+	var sheet_n: Texture2D = load(PACK + "/Tilesheet/frostland_N.png")
+	var mat := _make_pixel_material(sheet, sheet_n)
+	var root := Node3D.new()
+	root.name = "SnowHills"
+	add_child(root)
+	var pts: PackedVector2Array = []
+	var placed := 0
+	var attempts := 0
+	while placed < hill_count and attempts < hill_count * 20:
+		attempts += 1
+		var ang := rng.randf() * TAU
+		var rad := rng.randf_range(ring_outer + 2.0, 28.0)   # 樹牆(20)之外、地板邊之內
+		var p := Vector2(sin(ang) * rad, cos(ang) * rad)
+		var ok := true
+		for q in pts:
+			if p.distance_squared_to(q) < 36.0:   # 丘與丘至少隔 6 公尺,別黏成一坨
+				ok = false
+				break
+		if not ok:
+			continue
+		var mesh: Mesh = hills[rng.randi_range(0, hills.size() - 1)]
+		var mi := MeshInstance3D.new()
+		mi.mesh = mesh
+		mi.material_override = mat
+		root.add_child(mi)
+		var s := rng.randf_range(2.0, 3.6) * prop_scale
+		mi.scale = Vector3(s, s, s)
+		mi.rotation.y = rng.randf() * TAU
+		var peak := rng.randf_range(1.5, 3.5)   # 丘頂高出地面多少
+		mi.position = center * Vector3(1, 0, 1) + Vector3(
+			p.x, peak - mesh.get_aabb().end.y * s, p.y)
+		pts.append(p)
+		placed += 1
+
+
+## ── 湖畔火把:冷藍夜裡的暖橙對比點 ─────────────────────────
+## 整個場景是藍調的,一排小小的暖火光是「有人來過」的訊號,
+## 也是歧路旅人雪夜圖的配色公式:大面冷色 + 少量暖色點綴。
+func _build_torches(rng: RandomNumberGenerator) -> void:
+	if torch_count <= 0:
+		return
+	var torches := _load_meshes(MODELS + "/Objects", ["SM_TorchLit"])
+	if torches.is_empty():
+		return
+	var sheet: Texture2D = load(PACK + "/Tilesheet/frostland_tilesheet.png")
+	var sheet_n: Texture2D = load(PACK + "/Tilesheet/frostland_N.png")
+	var mat := _make_pixel_material(sheet, sheet_n, 1.6)   # 焰頭亮色自發光,被 glow 暈開
+	var root := Node3D.new()
+	root.name = "Torches"
+	add_child(root)
+	# 焰頭高度直接量模型 AABB 頂端,火光點就掛在那——不用猜模型多高。
+	var flame_h: float = torches[0].get_aabb().end.y
+	var base := center * Vector3(1, 0, 1)
+	for i in range(torch_count):
+		# 等角分圓偏移半格 + 抖動:圍著湖站一圈,但不像鐘面刻度。
+		var ang := TAU * (float(i) + 0.5) / float(torch_count) + rng.randf_range(-0.1, 0.1)
+		var rad := lake_radius + 1.4 + rng.randf_range(-0.3, 0.6)
+		var p := Vector2(sin(ang) * rad, cos(ang) * rad)
+		if p.y > clear_front_z and absf(p.x) < ring_inner:
+			continue   # 玩家側走廊不擋
+		var mi := MeshInstance3D.new()
+		mi.mesh = torches[0]
+		mi.material_override = mat
+		root.add_child(mi)
+		mi.position = base + Vector3(p.x, 0.0, p.y)
+		mi.rotation.y = rng.randf() * TAU
+		var s := 1.1 * prop_scale
+		mi.scale = Vector3(s, s, s)
+		_add_omni(base + Vector3(p.x, flame_h * s * 0.9, p.y),
+			Color(1.0, 0.62, 0.30), 1.5, 6.0)
+		_placed.append(p)   # 登記:道具別長進火把裡
+
+
+## ── 飄雪:舞台上方一層慢慢落下的雪點(參數見 ArenaBase 的粒子工具)──
+func _build_snowfall() -> void:
+	_add_drift_particles(center * Vector3(1, 0, 1) + Vector3(0.0, 9.0, 0.0),
+		Vector3(17.0, 1.5, 15.0),   # 生成盒:罩住整個舞台
+		480, 0.06,                  # 顆數與雪花大小
+		Color(0.92, 0.96, 1.0, 0.85),
+		Vector3(0.0, -0.7, 0.0),    # 慢慢往下(0.7 m/s;雪不是雨)
+		14.0, 0.5)                  # 壽命 14 秒剛好落地;亂流讓路徑蛇行
