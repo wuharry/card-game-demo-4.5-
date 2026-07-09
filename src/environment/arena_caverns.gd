@@ -15,6 +15,8 @@ const PACK := "res://assets/Pixel 3D Caverns Package"
 const OBJECTS := PACK + "/Objects/OBJ"
 const FOLIAGE := PACK + "/Foliage Models/OBJ"
 const TILES := PACK + "/Landscape Material Tiles"
+## 混用素材:借 Frostlands 的冰晶模型當「洞穴藍水晶」(見 _build_crystals)。
+const FROST_PACK := "res://assets/Pixel3D Frostlands Package"
 
 @export_group("道具數量")
 @export var stalagmite_count: int = 12   # 場內鐘乳石(中景點綴;洞壁另外蓋,見下)
@@ -26,15 +28,28 @@ const TILES := PACK + "/Landscape Material Tiles"
 @export_group("洞壁")
 @export var wall_enabled: bool = true    # 外圈洞壁剪影的開關(想省面數可關)
 
+@export_group("洞穴氣氛")
+@export var stalactite_count: int = 14   # 洞頂垂刺(倒吊鐘乳石:黑暗裡的天花板暗示)
+@export var crystal_count: int = 7       # 藍水晶(混用 Frostlands 冰晶,冷暖對比)
+@export var remains_count: int = 7       # 廢礦遺跡(木板/繩欄:有人來過的說故事小物)
+@export var dust_motes: bool = true      # 主光池裡漂浮的塵埃粒子
 
-## ArenaBase 在 _rebuild() 時呼叫,整個洞窟分五步蓋。
+
+## ArenaBase 在 _rebuild() 時呼叫,整個洞窟分八步蓋。
 func _build(rng: RandomNumberGenerator) -> void:
 	_build_environment()
 	_build_ground()
 	if wall_enabled:
 		_build_cave_walls(rng)
+	_build_stalactites(rng)
 	_build_props(rng)
+	_build_crystals(rng)
 	_build_mood_lights(rng)
+	if dust_motes:
+		# 塵埃:主光池裡緩緩「上飄」的微粒——光柱裡有東西在動,空氣才是活的。
+		_add_drift_particles(center * Vector3(1, 0, 1) + Vector3(0.0, 3.0, 0.0),
+			Vector3(10.0, 2.5, 10.0), 90, 0.035, Color(1.0, 0.85, 0.55, 0.45),
+			Vector3(0.0, 0.12, 0.0), 12.0, 0.8)
 
 
 ## ── 環境與主光:暖黑地底 ───────────────────────────────
@@ -154,6 +169,66 @@ func _build_props(rng: RandomNumberGenerator) -> void:
 	grass.append_array(_load_meshes(OBJECTS, ["Cavern_Shrub_01"]))
 	_scatter_meshes(rng, grass, solid, foliage_count,
 		16, 2.4, 0.8, 1.4, 0.5, 5.0, "Foliage")
+
+	# 廢礦遺跡:木板、繩欄——「曾有人在這裡採掘」的說故事小物。
+	# 傾斜給大一點(6°):廢棄的東西就該歪歪斜斜,太正像剛蓋好的。
+	var remains := _load_meshes(OBJECTS, ["Cavern_Plank_01", "Cavern_Plank_02",
+		"Cavern_Plank_03", "Cavern_Plank_04", "Cavern_Plank_05",
+		"Cavern_Rope_Fence_01", "Cavern_Rope_Fence_02", "Cavern_Rope_Fence_03",
+		"Cavern_Rope_Fence_04", "Cavern_Rope_Fence_05"])
+	_scatter_meshes(rng, remains, solid, remains_count,
+		5, 2.2, 0.9, 1.3, 1.6, 6.0, "MineRemains")
+
+
+## ── 洞頂垂刺:鐘乳石倒過來吊在高處 ─────────────────────────
+## 洞窟沒有真的天花板 mesh(蓋一整片洞頂太貴也看不清);
+## 在 8.5~11 公尺高吊一圈倒刺,鏡頭上緣看到「有東西垂下來」,
+## 大腦自己補完「上面是洞頂」——剪影策略,和洞壁同一招。
+func _build_stalactites(rng: RandomNumberGenerator) -> void:
+	if stalactite_count <= 0:
+		return
+	var pieces := _load_meshes(OBJECTS, ["Cavern_Stalagmite_01", "Cavern_Stalagmite_02",
+		"Cavern_Stalagmite_03", "Cavern_Stalagmite_04", "Cavern_Stalagmite_05"])
+	if pieces.is_empty():
+		return
+	var sheet: Texture2D = load(PACK + "/Tilesheet/Cavern_Tilesheet_C.png")
+	var sheet_n: Texture2D = load(PACK + "/Tilesheet/Cavern_Tilesheet_N.png")
+	var mat := _make_pixel_material(sheet, sheet_n)
+	var root := Node3D.new()
+	root.name = "Stalactites"
+	add_child(root)
+	for i in range(stalactite_count):
+		var ang := rng.randf() * TAU
+		var rad := rng.randf_range(9.0, ring_outer)
+		var p := Vector2(sin(ang) * rad, cos(ang) * rad)
+		var mi := MeshInstance3D.new()
+		mi.mesh = pieces[rng.randi_range(0, pieces.size() - 1)]
+		mi.material_override = mat
+		root.add_child(mi)
+		# 倒吊:繞 X 轉 180°,模型的「往上長」變成「往下垂」。
+		mi.rotation_degrees = Vector3(180.0, rng.randf() * 360.0, 0.0)
+		var s := rng.randf_range(2.0, 3.8) * prop_scale
+		mi.scale = Vector3(s, s * rng.randf_range(1.1, 1.7), s)   # 拉長:垂刺比立刺細長
+		# 吊在半空,不登記 _placed:地面道具跟天上的東西不搶位置。
+		mi.position = center * Vector3(1, 0, 1) + Vector3(
+			p.x, rng.randf_range(8.5, 11.0), p.y)
+
+
+## ── 藍水晶:混用 Frostlands 的冰晶模型(這就是跨包混搭的示範)──
+## 全場都是暖橙與螢綠,缺一個「冷」的顏色收畫面;冰晶接 frostland 總表
+## + 自發光 2.0,glow 一暈就是洞穴藍水晶——模型不知道自己換了個世界。
+func _build_crystals(rng: RandomNumberGenerator) -> void:
+	if crystal_count <= 0:
+		return
+	var crystals := _load_meshes(FROST_PACK + "/Models/Objects",
+		["SM_IceCluster_01", "SM_IceCluster_02"])
+	if crystals.is_empty():
+		return
+	var sheet: Texture2D = load(FROST_PACK + "/Tilesheet/frostland_tilesheet.png")
+	var sheet_n: Texture2D = load(FROST_PACK + "/Tilesheet/frostland_N.png")
+	var mat := _make_pixel_material(sheet, sheet_n, 2.0)
+	_scatter_meshes(rng, crystals, mat, crystal_count,
+		5, 2.0, 1.0, 1.9, 2.2, 2.0, "Crystals")
 
 
 ## ── 光池:展示圖的靈魂——暖光一灘一灘地落在洞裡 ────────

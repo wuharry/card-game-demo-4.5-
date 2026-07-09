@@ -37,6 +37,8 @@ var _mat_cache: Dictionary = {}
 # 本輪已放置的道具位置(XZ)。跨「多次」_scatter_meshes 呼叫共用,
 # 讓「石頭別疊在蘑菇上」這種跨批次的間距也成立。
 var _placed: PackedVector2Array = []
+# 環境粒子共用的小圓點貼圖(懶生成,見 _make_dot_texture)。
+var _dot_tex: GradientTexture2D = null
 
 
 func _ready() -> void:
@@ -127,18 +129,86 @@ func _add_omni(pos: Vector3, color: Color, energy: float, radius: float) -> void
 
 
 # ══════════════════════════════════════════════════════
+#  環境粒子(雪花、塵埃、孢子)
+# ══════════════════════════════════════════════════════
+
+## 粒子用的小圓點貼圖:程式生一張「中心白、邊緣透明」的放射漸層。
+## 雪花/塵埃在畫面上只有幾個像素,一顆漸層圓就夠,不必進美術資源。
+func _make_dot_texture() -> GradientTexture2D:
+	if _dot_tex != null:
+		return _dot_tex
+	var grad := Gradient.new()
+	grad.set_color(0, Color(1.0, 1.0, 1.0, 1.0))
+	grad.set_color(1, Color(1.0, 1.0, 1.0, 0.0))
+	_dot_tex = GradientTexture2D.new()
+	_dot_tex.gradient = grad
+	_dot_tex.fill = GradientTexture2D.FILL_RADIAL
+	_dot_tex.fill_from = Vector2(0.5, 0.5)
+	_dot_tex.fill_to = Vector2(0.5, 0.0)
+	_dot_tex.width = 32
+	_dot_tex.height = 32
+	return _dot_tex
+
+
+## 環境粒子:在盒形區域內持續飄動的小點(雪花往下、塵埃上飄,方向由 velocity 給)。
+## GPUParticles3D 在 GPU 上模擬,幾百顆對效能無感;preprocess = lifetime 讓粒子
+## 「開場就已經飄滿」,不會出現前十幾秒空場等雪下的空窗。velocity 不可為零向量。
+func _add_drift_particles(pos: Vector3, extents: Vector3, amount: int, size: float,
+		color: Color, velocity: Vector3, lifetime: float, turbulence: float = 0.0) -> void:
+	var p := GPUParticles3D.new()
+	p.name = "DriftParticles"
+	p.amount = amount
+	p.lifetime = lifetime
+	p.preprocess = lifetime
+	var pm := ParticleProcessMaterial.new()
+	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	pm.emission_box_extents = extents
+	pm.direction = velocity.normalized()
+	pm.spread = 12.0                                   # 方向帶一點發散,不是列隊直落
+	pm.initial_velocity_min = velocity.length() * 0.7  # 快慢不一:自然的雪不等速
+	pm.initial_velocity_max = velocity.length() * 1.3
+	pm.gravity = Vector3.ZERO   # 速度自己給、不吃重力(塵埃甚至要往上飄)
+	if turbulence > 0.0:
+		pm.turbulence_enabled = true                   # 亂流:路徑蛇行,不是直線
+		pm.turbulence_noise_strength = turbulence
+		pm.turbulence_influence_min = 0.04
+		pm.turbulence_influence_max = 0.12
+	p.process_material = pm
+	var quad := QuadMesh.new()
+	quad.size = Vector2(size, size)
+	var m := StandardMaterial3D.new()
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED   # 不受光:自帶亮度的小點
+	m.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES   # 每顆粒子面向鏡頭
+	m.albedo_color = color
+	m.albedo_texture = _make_dot_texture()
+	quad.material = m
+	p.draw_pass_1 = quad
+	p.position = pos
+	# 可視包圍盒要涵蓋「生成盒 + 整段飄行距離」:
+	# 太小的話鏡頭一轉,引擎以為粒子不在視野內,整批剔除、雪憑空消失。
+	var travel := velocity * lifetime
+	var lo := -extents - Vector3(2, 2, 2)
+	lo += Vector3(minf(travel.x, 0.0), minf(travel.y, 0.0), minf(travel.z, 0.0))
+	var hi := extents + Vector3(2, 2, 2)
+	hi += Vector3(maxf(travel.x, 0.0), maxf(travel.y, 0.0), maxf(travel.z, 0.0))
+	p.visibility_aabb = AABB(lo, hi - lo)
+	add_child(p)
+
+
+# ══════════════════════════════════════════════════════
 #  地板
 # ══════════════════════════════════════════════════════
 
 ## 地板:一大片 PlaneMesh + 雙貼圖斑塊混合 shader。
-## 尺寸與位置對齊 arena_forest 的 GridMap 覆蓋範圍(x -26..24、z -21..17),
-## 這樣三個場景在鏡頭裡的「舞台大小」一致。
+## 預設尺寸與位置對齊 arena_forest 的 GridMap 覆蓋範圍,三個場景舞台大小一致;
+## 要在更遠處擺遠景物(雪丘 landmass)的場景可傳更大的 size,別讓遠景踩出地板外。
 func _add_ground(tex_base: Texture2D, tex_patch: Texture2D,
 		normal_base: Texture2D, normal_patch: Texture2D,
 		tile_size: float, patch_threshold: float,
-		patch_freq: float = 0.05) -> void:
+		patch_freq: float = 0.05, size: Vector2 = Vector2(52.0, 40.0)) -> void:
 	var plane := PlaneMesh.new()
-	plane.size = Vector2(52.0, 40.0)
+	plane.size = size
 
 	var mat := ShaderMaterial.new()
 	mat.shader = GROUND_SHADER
