@@ -140,5 +140,36 @@
 | 觀念 | 等級 | 考題方向 |
 |---|---|---|
 | 編輯器舊緩衝蓋檔:外部改過 .gd/.tscn 後回 Godot,提示一律選 **Reload**,否則一存檔就把改動蓋回舊版 | 初階(本 session 踩過多次) | 「什麼情況會跳這個提示?選錯會發生什麼、怎麼發現?」 |
+
+### 14. 技能資料層設計(2026-07-09;[skill_data.gd](../src/card/skill_data.gd)、[skills_design.md](skills_design.md))
+
+| 觀念 | 等級 | 考題方向 |
+|---|---|---|
+| Resource 巢狀:CardData 裡掛 SkillData 子資源(.tres 會存成 sub_resource),資料樹跟場景樹是兩回事 | 初階/未驗 | 「active_skill 存在 .tres 的哪一段?跟 standee 的 ext_resource 差在哪?」 |
+| enum 當「系統合約」:Kind/Modifier/Effect 枚舉刻意壓小 = 戰鬥系統只要實作這幾種;加新招是加枚舉值+資料,不是加 if | 初階/未驗 | 「想加一招『沉默目標』,要動 skill_data.gd 的哪裡?戰鬥系統為什麼不用改架構?」 |
+| 兄弟資源路徑推導:由 standee 路徑字串切「最後一個底線」推 Attack02 等動畫表;ResourceLoader.exists 防呆 | 初階/未驗 | 「為什麼用 rfind 而不是 replace(\"_Idle\", ...)?蝙蝠(無 Idle)哪裡會踩雷?」 |
+| 動畫=能力的設計錨:先盤點素材(誰有 Attack02/Block/Summon)再配技能,有格擋動畫才有鐵壁被動 | 初階/未驗 | 「為什麼骷髏弓手沒有主動技?骷髏家族的不滅是從哪個素材事實推出來的?」 |
+
+### 15. 雪地/洞窟場景優化(2026-07-09;[arena_frostlands.gd](../src/environment/arena_frostlands.gd)、[arena_caverns.gd](../src/environment/arena_caverns.gd)、[arena_base.gd](../src/environment/arena_base.gd))
+
+| 觀念 | 等級 | 考題方向 |
+|---|---|---|
+| GPUParticles3D 三件套:ProcessMaterial(發射盒/速度/亂流)、draw_pass(QuadMesh+billboard)、`preprocess`(開場即滿不用等) | 初階/未驗 | 「為什麼開場第一秒就有雪?visibility_aabb 設太小會出什麼詭異 bug?」 |
+| 粒子貼圖可以程式生:GradientTexture2D 放射漸層 = 幾像素的小白點,不用進美術資源 | 初階/未驗 | 「雪花貼圖是哪來的?想把雪花變成六角形要換哪個環節?」 |
+| 剪影策略:倒吊鐘乳石(rotation.x 180°)+ 黑暗與霧 = 大腦自己補完「洞頂」,不用真的蓋天花板 | 初階/未驗 | 「垂刺為什麼不用登記 _placed?吊多低會穿幫?」 |
+| 跨包混材質:模型的 UV 對誰的 tilesheet 就接誰的表——冰晶到洞窟還是接 frostland 總表,不是接洞窟的 | 初階/未驗 | 「把冰晶接 Cavern_Tilesheet 會發生什麼?為什麼?」 |
+| 配色公式「大面冷色+少量暖點」(雪夜火把)/「大面暖色+少量冷點」(洞窟藍水晶):對比色是畫面的收束點 | 初階/未驗 | 「洞窟裡的藍水晶在配色上的職責是什麼?拿掉會怎樣?」 |
+
+### 16. 指令選單與技能演出(2026-07-09;[battle_ui.gd](../src/battle_ui/battle_ui.gd)、[card_manager.gd](../src/card_manager/card_manager.gd))
+
+| 觀念 | 等級 | 考題方向 |
+|---|---|---|
+| 互動狀態機:同一顆左鍵在 IDLE/DRAGGING/MENU_OPEN/TARGETING 代表不同動作,集中在一個 enum 分流,不靠散落的 bool 旗標 | 初階/未驗 | 「為什麼不用 is_dragging + is_menu_open 兩個 bool?狀態機多買到什麼?」 |
+| 「碰撞關掉=射線打不到」的反面:上桌卡片要可點擊,鎖定就不能再用停用碰撞實作,改用旗標分流 | 初階/未驗 | 「舊的 lock_interaction 為什麼會讓指令選單永遠開不起來?」 |
+| UI 問、Manager 決定:BattleUI 只發信號(attack_chosen…),狀態轉移全在 CardManager——UI 換皮不動邏輯 | 初階/未驗 | 「把選單改成寶可夢 2×2 格,要動哪支檔?CardManager 要不要改?」 |
+| 演出與規則分離:發動只播動畫+emit action_performed,結算留給未來戰鬥系統訂閱——同一條信號兩個階段用 | 初階/未驗 | 「戰鬥系統動工時要在哪裡接?_execute_action 需要改嗎?」 |
+| .tres 巢狀資源實戰:sub_resource + script = SkillData 實例;headless 批次載入當資料驗證(bad=0 才算接完) | 初階/未驗 | 「Skill_main 這個 sub_resource 是怎麼變成 SkillData 的?驗證腳本驗了哪兩件事?」 |
 | git 暫存區與工作區是兩本帳:檔案刪了但 index 還留著 A,照樣會被寫進歷史(字型 zip 事件) | 初階(2026-07-05 教過) | 「status 顯示 `AD` 是什麼狀態?怎麼把它從暫存區退掉?」 |
 | 刪資源的順序:先把所有引用(.tres/.gd)退掉 → 再走編輯器 FileSystem 刪,不用 rm | 初階(2026-07-06 教過) | 「先刪圖再改引用會出什麼事?為什麼要走編輯器刪?」 |
+| 量尺寸的時機:PRESET_MODE_MINSIZE 是「當下最小尺寸」的快照——面板還空著就定位=量到 0,內容進來後往預設方向(右下)長出螢幕外只剩標題列;修法=內容就位後重新定位+grow_vertical 往上長。與 original_scale 快照同族:基準要在資料就位後才拍 | 初階/未驗 | 「open() 裡的 reset_size+重新 set_anchors_and_offsets_preset 拿掉,選單會變怎樣?為什麼?」 |
+| 2D↔3D 座標往返:project_ray_*(螢幕→3D 射線)與 unproject_position(3D→螢幕像素)互為反運算——導引箭頭=每幀把施放者的 3D 位置投回螢幕,用 Line2D 畫二次貝茲弧線;鎖定目標時尖端吸附目標(吸附=把類比輸入折算成明確意圖的回饋) | 初階/未驗 | 「箭頭起點為什麼要每幀重算而不是進 TARGETING 時算一次?哪種情況下只算一次會出錯?」 |

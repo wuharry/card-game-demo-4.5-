@@ -45,6 +45,7 @@ main.tscn  ← 牌桌主場景 (MainScene, Node3D)  [src/main_scene/main_scene.g
     │                               噪聲程序鋪地：純草為底、泥土成簇
     ├── Props/ForestScatter         [src/environment/forest_scatter.gd]
     │                               程序散佈 PSX 樹/灌木（成簇、內圈淨空）
+    │                               ＋地景小物（草叢/石頭/枯木）＋遠景土丘
     ├── Stream (MeshInstance3D)     風格化溪流中線（stream_water.gdshader）
     ├── WorldEnvironment            ACES tonemap + bloom + SSAO + 暖色氛圍
     └── DirectionalLight3D          柔和陽光
@@ -67,18 +68,20 @@ main.tscn  ← 牌桌主場景 (MainScene, Node3D)  [src/main_scene/main_scene.g
 
 | 檔案 | 說明 |
 |------|------|
-| [src/card/card.gd](src/card/card.gd) | 一張卡片的「大腦」。發射 hover 信號；`setup(CardData)` 把資料套到 Label3D 與卡圖（卡框挖空窗定位、像素圖第 0 幀裁切）；召喚立牌（standee 待機動畫）；hover 動畫與鎖定 |
+| [src/card/card.gd](src/card/card.gd) | 一張卡片的「大腦」。發射 hover 信號；`setup(CardData)` 把資料套到 Label3D 與卡圖（卡框挖空窗定位、掃描立牌第 0 幀可見範圍裁切放大）；召喚立牌（standee 待機動畫，與卡圖共用同一套可見範圍掃描）；hover 動畫與鎖定 |
 | [src/card/card_data.gd](src/card/card_data.gd) | `CardData`（Resource）：卡名 / cost / atk / hp / 立牌動畫表。純資料不進場景樹；一份資料可生多張場上 Card；24 張 `.tres` 在 `data/cards/` |
 | [src/card_manager/card_manager.gd](src/card_manager/card_manager.gd) | 全場互動中樞。Plane 投影法拖曳；雙層射線偵測卡片(Layer 1)/卡槽(Layer 2)；出牌判定並協調 Card / CardSlot / PlayerHand 三方 |
 | [src/play_hand/player_hand.gd](src/play_hand/player_hand.gd) | 玩家手牌。`@tool` 可在編輯器預覽；`draw_starting_hand()` 起手抽牌、`_arrange_fan()` 排成圓弧扇形、`organize_hand()` 出牌後靠攏；hover 信號中繼站 |
 | [src/card_slot/card_slot.gd](src/card_slot/card_slot.gd) | 桌面卡槽 (Area3D)。記錄 `is_empty` / `card_in_slot`；`place_card()` 入槽吸附+鎖定、`remove_card()` 取回、`highlight()` / `unhighlight()` 高亮提示 |
 | [src/player_board/player_board.gd](src/player_board/player_board.gd) | 棋盤生成器。5 欄 × 2 排自動置中；依 `is_enemy` 擺位並加入群組 |
 | [src/environment/ground_generator.gd](src/environment/ground_generator.gd) | `@tool` GridMap 噪聲鋪地：純草為底、泥土依噪聲成簇、邊緣草泥過渡磚、每格隨機朝向 |
-| [src/environment/forest_scatter.gd](src/environment/forest_scatter.gd) | `@tool` 程序散佈 PSX 樹/灌木：成簇分布、內圈與前方淨空、生成時補上 alpha 鏤空雙面材質 |
+| [src/environment/forest_scatter.gd](src/environment/forest_scatter.gd) | `@tool` 程序散佈 PSX 樹/灌木：成簇分布、內圈與前方淨空、生成時補上 alpha 鏤空雙面材質；另散佈草原地景小物（草叢/石頭/枯木，薄片模型自動十字交叉）與遠景土丘（landmass 埋地只露丘頂） |
 | [src/environment/arena_base.gd](src/environment/arena_base.gd) | `@tool` 程式生成戰場的共用底盤（清場、散佈數學、材質快取、淨空區）；Caverns / Frostlands / Town 繼承它並在 `_build()` 實作各自長相 |
 | [src/environment/arena_pool.gd](src/environment/arena_pool.gd) | 戰場抽籤桶（static 純工具，不進場景樹）：主選單抽路徑 → `main_scene.gd` 讀取決定換不換環境 |
 | [src/main_scene/main_scene.gd](src/main_scene/main_scene.gd) | 牌桌環境切換器：依 ArenaPool 抽籤結果，`_ready` 時把烤死的森林換成抽到的戰場（用 `free()` 避免兩個 WorldEnvironment 並存） |
 | [src/main_menu/main_menu.gd](src/main_menu/main_menu.gd) | 主選單：3D 城鎮背景 + 固定鏡頭 + 歧路旅人式純文字選單（UI 全由程式組裝，CanvasLayer 疊在 3D 上） |
+| [src/battle_ui/battle_ui.gd](src/battle_ui/battle_ui.gd) | 指令選單（歧路旅人式）：點擊上桌單位 → 攻擊/技能/取消 + 效果描述列；指定目標時出提示字。全程式生成，由 CardManager 掛載並訂閱信號 |
+| [src/card/skill_data.gd](src/card/skill_data.gd) | `SkillData`（Resource）：主動技能的資料定義（類別/費用/動畫表/效果參數），設計明細見 [docs/skills_design.md](docs/skills_design.md) |
 
 ### 場景
 
@@ -104,8 +107,10 @@ main.tscn  ← 牌桌主場景 (MainScene, Node3D)  [src/main_scene/main_scene.g
 | `assets/ui/card_frames/` | 卡槽外框圖（card_slot.tscn 使用）|
 | `assets/mesh_libraries/grasslands/grassland_tiles.meshlib` | GridMap 地板格子（arena_forest 使用）|
 | `assets/environment/psx_trees/` | PSX 樹/灌木 FBX 模型與貼圖（forest_scatter 使用）|
+| `assets/terrain/pixel_3d_grasslands/` | 草原地景小物（草叢/石頭/枯木）與遠景土丘 landmass（forest_scatter 使用；UV 對到 `tilesheets/Updated_Sheets`）|
 | `assets/water/stream_water.gdshader` | 溪流水面 shader（波紋法線 + 反射）|
 | `assets/water/psx_ocean_surface/` | 水面貼圖 |
+| `assets/fonts/` | 思源宋體 Noto Serif TC（標題/選單）＋ Playpen Sans（英文小字），主選單使用（皆 SIL OFL 授權可商用）|
 
 ---
 
@@ -243,6 +248,23 @@ STEP 6 清算        移除陣亡從者、處理死亡觸發 → 回到 STEP 1 �
 
 > 設計理由：例「噴火（ATK+10 後攻擊）」屬【強化攻擊】，用了就是這回合的攻擊；「治療」屬【非攻擊】，治療完仍可普攻。
 
+### 6.1 動畫驅動技能（Animation-Driven Skills）`[數位調整]`
+
+> 素材包每隻角色自帶多張攻擊動畫表，技能系統直接以動畫為錨：**看得到的動作 = 用得到的招**。
+
+| 動畫表 | 對應行動 | 費用 |
+|---|---|---|
+| `Attack01` | **普通攻擊**（§4 雙向傷害交換） | **免費**，每回合 1 次 |
+| `Attack02` | **主動技能**（預設；個別單位可指定專屬表，如牧師 `Heal`、死靈法師 `Summon`） | 消耗魔力（卡面標示） |
+| `Attack03` | 保留欄位（升級技 / 進化用，暫不啟用） | — |
+| `Block` | 被動【鐵壁】/ 守護觸發的受擊動畫 | — |
+| `Summon` | 登場動畫；骷髏家族兼【不滅】復活動畫 | — |
+
+- 主動技能歸類沿用 §6 三分類（強化攻擊 / 獨立攻擊 / 非攻擊），行動經濟不變：每回合 1 攻擊 + 1 技能。
+- 沒有第二張攻擊表的單位（骷髏弓手）＝ 無主動技，靠被動與數值補（白板堆料）。
+- **24 張卡的完整技能 / 被動配置與資料層合約見 [docs/skills_design.md](docs/skills_design.md)**；
+  資料結構在 [src/card/skill_data.gd](src/card/skill_data.gd)（`CardData.active_skill` / `keywords`）。
+
 ## 7. 卡牌類型
 
 | 類型 | 說明 | 可用時機 |
@@ -268,6 +290,7 @@ STEP 6 清算        移除陣亡從者、處理死亡觸發 → 回到 STEP 1 �
 | 換位 | 可移至相鄰路線 |
 | 突進 | 可移至任意空路線 |
 | 沉默 | 無法觸發任何技能 |
+| **鐵壁** `[數位調整]` | 每回合首次受到的從者攻擊傷害 −1（觸發時播 `Block` 動畫；僅配給有格擋動畫的單位） |
 
 ### 8.1 嘲諷：守護型重定義 `[數位調整]`
 
@@ -340,12 +363,14 @@ func apply_freeze(unit, turns := 1) -> void:
 - [x] CardData 資料層：Resource + 24 張 `.tres`；DirAccess 掃卡池、發牌隨機 `setup()`（資料變、程式不變）
 - [x] 卡片數值 Label3D（爐石式四角配置；z=0.02 + render_priority 解決手牌/上桌兩態的深度浮埋）
 - [x] 卡圖嵌入卡框挖空窗 + 遊戲王式召喚立牌（像素角色第 0 幀卡圖、入槽立牌待機動畫）
+- [x] 動畫驅動技能資料層：24 卡 `active_skill` / `keywords` 全接線（[§6.1](#61-動畫驅動技能animation-driven-skills-數位調整)）；卡面顯示技能名+費用+描述
+- [x] 指令選單（純演出版）：點上桌單位 → 歧路旅人式選單 → 指定目標 → 施放/受擊動畫；結算走 `action_performed` 信號留給戰鬥系統
 
 **場景與美術**
 - [x] Forward+ 算繪 + ACES tonemap + bloom + SSAO + 暖色氛圍燈光
 - [x] 程序化地板（噪聲成簇：純草為底 + 泥土斑塊 + 草泥過渡磚）
 - [x] 風格化溪流戰場中線（波紋法線 + 反射）
-- [x] 程序化森林散佈（成簇樹叢、內圈淨空、PSX alpha 鏤空材質）+ 地形整修（溪流凹進地形、樹木落地、遠景土丘）
+- [x] 程序化森林散佈（成簇樹叢、內圈淨空、PSX alpha 鏤空材質）+ 地形整修（溪流凹進地形、樹木落地、地景小物散佈、遠景土丘、世界邊界推遠配霧）
 - [x] 牌堆視覺（玩家右側卡背堆疊）
 - [x] 主選單（歧路旅人式：3D 城鎮背景 + 固定鏡頭 + 純文字選單）
 - [x] 戰場家族：洞窟 / 冰原 / 城鎮（ArenaBase 繼承 + ArenaPool 隨機輪替）
@@ -361,7 +386,7 @@ func apply_freeze(unit, turns := 1) -> void:
 3. **卡片從卡槽取回** — `card_slot.gd` 的 `remove_card()` 已寫好，但尚未接上互動（例如再次拖出或右鍵取消）。
 4. **敵方棋盤邏輯** — `EnemyBoard` 已生成卡槽，但目前無任何 AI / 出牌行為，需要敵方出牌與目標分群運用（`enemy_front` / `enemy_back`）。
 5. **回合與戰鬥系統** — 回合切換、魔力與召喚費用檢查（`CardData.cost` 已就位）、攻擊/結算判定、狀態效果 tick。→ 完整規格見 [§5 回合流程](#5-回合流程)、[§4 攻擊與戰鬥結算](#4-攻擊與戰鬥結算)、[§9 狀態效果](#9-狀態效果)。
-6. **CardData 欄位擴充** — `attack_range` / `Sacrifice` / 卡牌類型（[§4.1](#41-攻擊範圍-數位調整)、[§7](#7-卡牌類型)）。等回合系統動工時一起加，先不預蓋（YAGNI）。
+6. **CardData 欄位擴充** — 技能資料層與 24 張接線已完成；剩 `attack_range` / `Sacrifice` / 卡牌類型（[§4.1](#41-攻擊範圍-數位調整)、[§7](#7-卡牌類型)）等回合系統動工時一起加（YAGNI）。戰鬥系統動工時訂閱 `CardManager.action_performed` 做真結算（演出流程不用改）。
 7. **地形收尾** — meshlib 純草磚問題與空的 `Terrain` / `Cliffs` 節點；地形整修 commit（4ab417d）後需重驗哪些仍存在。
 
 ---
