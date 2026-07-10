@@ -192,3 +192,16 @@
 | 規則的單一出口:合法性檢查回傳「被擋的理由字串」(""=可做),UI 拿去灰化+轉述、發動前再驗一次——按鈕永遠只是轉述,最後一道門在帳房 | 初階/未驗 | 「為什麼 _on_attack_chosen 還要再查一次 attack_block_reason?UI 已經灰化了不是嗎?」 |
 | 死亡的收尾順序:先清卡槽(位子馬上能用)→ 廣播 unit_died(讓別人清參考)→ 再播死亡演出+queue_free;拿著 freed 物件的參考=懸空參考,摸下去就炸 | 初階/未驗 | 「CardManager._on_unit_died 不清 hovered_target 會在什麼操作下炸掉?」 |
 | await + create_timer 做「演出對時」:結算延後 0.35 秒讓數字跟拳頭一起落地;await 之後世界可能已變(單位死了),恢復執行前要 is_instance_valid 再驗 | 初階/未驗 | 「on_action_performed 裡 await 後面那句 is_instance_valid(caster) 防的是什麼劇本?」 |
+| 看不見的規則=沒有的規則:反擊有算但沒演,玩家就以為對面攻擊力比較高——回饋(飄浮數字/受擊動畫)要綁在「結算事件」上,不是綁在「宣告動作」上(被治療播受傷就是綁錯邊的症狀);飄浮數字用 no_depth_test + billboard 保證讀得到 | 初階/未驗 | 「受擊動畫為什麼從 _execute_action 搬到 _resolve_attack?搬之前治療隊友會發生什麼?」 |
+
+### 19. 本體、打臉與勝負(2026-07-10;[hero.gd](../src/hero/hero.gd)、[battle_manager.gd](../src/battle_manager/battle_manager.gd))
+
+| 觀念 | 等級 | 考題方向 |
+|---|---|---|
+| class_name 的全域類別快取:新腳本的 class_name 要等編輯器掃描(或 `--headless --import`)才進 `.godot/` 快取——沒進快取前,headless 連「引用它的其他腳本」都解析失敗;IDE 的 "Could not find type" 同源 | 初階/未驗 | 「為什麼加了 hero.gd 之後,連 battle_manager.gd 都在 headless 下 parse error?怎麼修?」 |
+| 兩種型別一個介面:Card 和 Hero 都有 animate_hover/take_damage,共用變數宣告成共同祖先 Node3D,結算用 `target is Hero` 分流——先想「誰的規則不同」(反擊有無)再決定分流點,不是到處 if | 初階/未驗 | 「為什麼 hovered_target 從 Card 改宣告成 Node3D?打臉為什麼在 on_action_performed 分流而不是 _resolve_attack 裡?」 |
+| 位置對位不寫死索引:路線(lane)判定用「x 座標最近的對面前排格」,換戰場/改棋盤排法不用回來改;本體站位同理由卡槽群組實際位置推算(call_deferred 等群組生完) | 初階/未驗 | 「_lane_blocked 為什麼不用『第 i 欄對第 i 欄』?卡槽間距改了會不會壞?」 |
+| 終局閘門:game_ended 一票否決(行動合法性第一條就擋)+ UiState.GAME_OVER 鎖 3D 輸入——「遊戲結束」要同時關掉規則層和互動層,只關一層會漏(結算 await 中途分出勝負的殘餘行動) | 初階/未驗 | 「勝負已分後,為什麼 face_block_reason 和 ui_state 兩邊都要擋?只擋 UI 會發生什麼?」 |
+| 三元運算式 vs 帶型別陣列:`a if c else b` 產出的是無型別 Array,執行期指派給 Array[String] 直接炸(而且是「執行到才炸」,parse 過得了)——帶型別容器要用直述句逐一指派;headless 跑主場景 N 幀是抓這類「啟動期執行錯誤」的網 | 初階/未驗 | 「為什麼這個 bug 編輯器不會標紅字、F5 才爆?headless --quit-after 驗的是哪一類錯?」 |
+| 站位要讓鏡頭與 UI 的地盤:我方棋盤「正後方」在畫面上就是手牌扇形的位置,3D 物件站那裡必被 UI 擋——擺東西前先想「這個世界座標投影到螢幕是哪一塊」;duplicate() 可整棵複製現成節點樹做鏡射視覺(敵方牌堆),不用重刻場景 | 初階/未驗 | 「敵方牌堆的 z 為什麼是 mid_z*2 - deck.z?這條公式在做什麼幾何操作?」 |
+| 網格地形的「方齒」成因:1m 方格上跑高頻噪聲,相鄰格推擠量差超過一格就擠出單格凸齒(看起來像掉了一塊素材)——蜿蜒感靠「幅度」出、不靠高頻抖動(頻率 0.13→0.05,彎改跨 4~8 格);磚緣直線再用水線雜物(岸石/露頭石/水草)遮參差,轉場處的髒亂是藏縫的標準手法 | 初階/未驗 | 「同樣的 bank_jitter,為什麼頻率高會出方齒、頻率低就是河灣?水線石頭為什麼要兩成丟進水裡?」 |

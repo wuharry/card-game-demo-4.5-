@@ -81,7 +81,8 @@ main.tscn  ← 牌桌主場景 (MainScene, Node3D)  [src/main_scene/main_scene.g
 | [src/main_scene/main_scene.gd](src/main_scene/main_scene.gd) | 牌桌環境切換器：依 ArenaPool 抽籤結果，`_ready` 時把烤死的森林換成抽到的戰場（用 `free()` 避免兩個 WorldEnvironment 並存） |
 | [src/main_menu/main_menu.gd](src/main_menu/main_menu.gd) | 主選單：3D 城鎮背景 + 固定鏡頭 + 歧路旅人式純文字選單（UI 全由程式組裝，CanvasLayer 疊在 3D 上） |
 | [src/battle_ui/battle_ui.gd](src/battle_ui/battle_ui.gd) | 指令選單（歧路旅人式）：點擊上桌單位 → 攻擊/技能/取消 + 效果描述列；指定目標時出提示字；戰況 HUD（回合/魔力/結束回合/提示訊息）。全程式生成，由 CardManager 掛載並訂閱信號 |
-| [src/battle_manager/battle_manager.gd](src/battle_manager/battle_manager.gd) | 戰鬥帳房：魔力/回合/行動經濟（§1/§3/§6）與真結算（§4.2 雙向傷害交換、死亡清位）。訂閱 `CardManager.action_performed`；規則只寫這一份，UI 轉述 |
+| [src/battle_manager/battle_manager.gd](src/battle_manager/battle_manager.gd) | 戰鬥帳房：魔力/回合/行動經濟（§1/§3/§6）與真結算（§4.2 雙向傷害交換、死亡清位、打臉與路線阻擋 §4.1、勝負判定）。訂閱 `CardManager.action_performed`；規則只寫這一份，UI 轉述 |
+| [src/hero/hero.gd](src/hero/hero.gd) | 本體（玩家/敵方的「臉」）：像素立牌呈現（同卡牌角色、無卡槽）、HP 20、受擊/死亡動畫；程式生成、站位由卡槽群組實際位置推算 |
 | [src/card/skill_data.gd](src/card/skill_data.gd) | `SkillData`（Resource）：主動技能的資料定義（類別/費用/動畫表/效果參數），設計明細見 [docs/skills_design.md](docs/skills_design.md) |
 
 ### 場景
@@ -367,6 +368,9 @@ func apply_freeze(unit, turns := 1) -> void:
 - [x] 動畫驅動技能資料層：24 卡 `active_skill` / `keywords` 全接線（[§6.1](#61-動畫驅動技能animation-driven-skills-數位調整)）；卡面顯示技能名+費用+描述
 - [x] 指令選單（純演出版）：點上桌單位 → 歧路旅人式選單 → 指定目標 → 施放/受擊動畫；結算走 `action_performed` 信號留給戰鬥系統
 - [x] 魔力與生命值（BattleManager）：魔力回合成長/召喚與技能費用檢查（§1/§3）、行動分離+召喚暈眩+衝鋒（§6）、雙向傷害交換與治療（§4.2）、死亡演出+卡槽清位；HUD 回合/魔力/結束回合
+- [x] 戰鬥回饋：飄浮傷害/治療數字、反擊受擊動畫、受擊綁「結算」不綁「宣告」
+- [x] 本體與勝負：雙方本體（像素立牌、HP 20）、打臉需路線無阻擋（§4.1）且不吃反擊（§4.2）、本體倒下 → 勝負畫面（再戰/回主選單）；我方本體站棋盤左翼（正後方被手牌擋）
+- [x] 每回合抽 1 張（§5 抽牌階段；從牌堆位置飛入手牌。隨機卡池，真 Deck 見待辦）＋敵方牌堆視覺（玩家牌堆對角鏡射）
 
 **場景與美術**
 - [x] Forward+ 算繪 + ACES tonemap + bloom + SSAO + 暖色氛圍燈光
@@ -382,15 +386,21 @@ func apply_freeze(unit, turns := 1) -> void:
 
 ## 🚧 待辦（接下來的步驟）
 
+> 🎯 **目標(2026-07-10 定向)**:朋友從網站下載遊戲、彼此連線對戰。
+> 對手 = 真人 → 連線取代敵方 AI 成為關鍵路徑;AI 降級為之後的單人練習模式。
+> 連線選型與取捨見 [docs/adr-001-network-multiplayer.md](docs/adr-001-network-multiplayer.md)。
+
 依優先順序：
 
-1. **戰鬥系統收尾（demo 關鍵路徑）** — 魔力/HP/雙向傷害/行動經濟已完成（`battle_manager.gd`）；剩：狀態效果 tick（[§9](#9-狀態效果)）、打法修飾（橫掃/貫穿/連擊/吸血）、召喚系技能效果、不滅復活、玩家本體 HP 與 Face 攻擊（[§1](#1-勝負與資源)/[§4.1](#41-攻擊範圍-數位調整)）。
-2. **敵方棋盤邏輯** — `EnemyBoard` 已生成卡槽，但目前無任何 AI / 出牌行為，需要敵方出牌與目標分群運用（`enemy_front` / `enemy_back`）。
-3. **從牌堆抽牌** — 目前 `PlayerHand` 對卡池 `pick_random()`（同卡可重複）。做真正的 `Deck: Array[CardData]`：洗牌、不重複抽、點牌堆 → 飛入手牌動畫 → 觸發重排。
-4. **勝負與一局收尾** — 主帥 HP／勝負條件（[§1](#1-勝負與資源)）、勝負畫面、回主選單再開一局。
-5. **卡片從卡槽取回** — `card_slot.gd` 的 `remove_card()` 已寫好，但尚未接上互動（例如再次拖出或右鍵取消）。
-6. **CardData 欄位擴充** — 技能資料層與 24 張接線已完成；剩 `attack_range` / `Sacrifice` / 卡牌類型（[§4.1](#41-攻擊範圍-數位調整)、[§7](#7-卡牌類型)）等回合系統動工時一起加（YAGNI）。
-7. **地形收尾** — meshlib 純草磚問題與空的 `Terrain` / `Cliffs` 節點；地形整修 commit（4ab417d）後需重驗哪些仍存在。
+1. **戰鬥系統收尾** — 魔力/HP/雙向傷害/行動經濟/本體與勝負已完成（`battle_manager.gd`）；剩：狀態效果 tick（[§9](#9-狀態效果)）、打法修飾（橫掃/貫穿/連擊/吸血）、召喚系技能效果、不滅復活。連線前先做完：規則要先「對」，同步才有意義。
+2. **真牌堆（Deck）** — 每回合抽 1＋牌堆飛入動畫已接；剩把 `pick_random()`（同卡可重複）換成真正的 `Deck: Array[CardData]`：洗牌、不重複、抽完處理、牌堆剩量顯示（敵我兩側）。
+3. **連線對戰（host-client，見 ADR-001）** — 大廳場景（開房／輸 IP 加入）＋主選單入口；`BattleManager` 雙方魔力池分家＋回合歸屬；行動走 RPC（client 送意圖 → host 驗證結算 → 廣播結果雙方播演出）；抽牌只在 host、對手手牌只同步張數；移除「可指揮敵方單位」沙盒；斷線＝終局。
+4. **打磨與試玩** — 連線實測抓蟲、音效（出牌/攻擊/受擊至少三個）、數值平衡。
+5. **發佈** — Windows 匯出 preset（icon/版本號）＋ itch.io 或 GitHub Releases 下載頁。
+6. **敵方 AI（單人練習模式，連線後再做）** — 敵方自動出牌與攻擊（`enemy_front` / `enemy_back` 分群運用）。
+7. **卡片從卡槽取回** — `card_slot.gd` 的 `remove_card()` 已寫好，但尚未接上互動（例如再次拖出或右鍵取消）。
+8. **CardData 欄位擴充** — 技能資料層與 24 張接線已完成；剩 `attack_range` / `Sacrifice` / 卡牌類型（[§4.1](#41-攻擊範圍-數位調整)、[§7](#7-卡牌類型)）。
+9. **地形收尾** — meshlib 純草磚問題與空的 `Terrain` / `Cliffs` 節點；地形整修 commit（4ab417d）後需重驗哪些仍存在。
 
 ---
 
