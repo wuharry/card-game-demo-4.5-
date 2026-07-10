@@ -12,6 +12,9 @@ signal attack_chosen
 signal skill_chosen(skill: SkillData)
 signal cancelled
 signal end_turn_pressed
+## 勝負畫面上的兩個去向(CardManager 接手換場景/重開)。
+signal restart_pressed
+signal menu_pressed
 
 const FONT_TITLE: FontFile = preload(
 	"res://assets/fonts/Noto_Serif_TC/static/NotoSerifTC-Bold.ttf")
@@ -44,6 +47,11 @@ var _hud_mana: Label
 var _end_turn_btn: Button
 var _toast: Label
 var _toast_tween: Tween
+
+## 勝負畫面(第一次用到才組裝)。
+var _over_dim: ColorRect = null
+var _over_panel: PanelContainer = null
+var _over_title: Label = null
 
 
 func _ready() -> void:
@@ -270,7 +278,8 @@ func _build_hud() -> void:
 	_hud_turn.add_theme_font_override("font", FONT_TITLE)
 	_hud_turn.add_theme_font_size_override("font_size", 18)
 	_hud_turn.add_theme_color_override("font_color", GOLD)
-	_hud_turn.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	# 置中:面板寬度由魔力列(◆…)撐開,回合字不管魔力多長都站中線。
+	_hud_turn.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(_hud_turn)
 
 	_hud_mana = Label.new()
@@ -278,7 +287,7 @@ func _build_hud() -> void:
 	_hud_mana.add_theme_font_size_override("font_size", 15)
 	# 魔力用冷色:和整片暮色金區隔,一眼找得到資源在哪。
 	_hud_mana.add_theme_color_override("font_color", Color("7fd9ff"))
-	_hud_mana.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_hud_mana.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(_hud_mana)
 
 	_end_turn_btn = Button.new()
@@ -302,10 +311,11 @@ func _build_hud() -> void:
 
 	_toast = Label.new()
 	_toast.add_theme_font_override("font", FONT_TITLE)
-	_toast.add_theme_font_size_override("font_size", 20)
-	_toast.add_theme_color_override("font_color", GOLD)
-	_toast.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.75))
-	_toast.add_theme_constant_override("outline_size", 6)
+	# 提示是「行動被擋下」的當下回饋,要一眼看到:大字、亮色、厚黑邊。
+	_toast.add_theme_font_size_override("font_size", 32)
+	_toast.add_theme_color_override("font_color", Color("ffe08a"))
+	_toast.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.85))
+	_toast.add_theme_constant_override("outline_size", 10)
 	add_child(_toast)
 	_toast.set_anchors_and_offsets_preset(
 		Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 110)
@@ -339,6 +349,53 @@ func flash_message(text_value: String) -> void:
 	_toast_tween.tween_interval(1.0)
 	_toast_tween.tween_property(_toast, "modulate:a", 0.0, 0.35)
 	_toast_tween.tween_callback(func() -> void: _toast.visible = false)
+
+
+## ── 勝負畫面 ─────────────────────────────────────────
+## 壓暗全場 + 置中面板:勝利金字/敗北紅字,兩個去向(再戰/回主選單)。
+func show_game_over(victory: bool) -> void:
+	close()
+	if _over_dim == null:
+		_build_game_over()
+	_over_title.text = "勝 利" if victory else "敗 北"
+	_over_title.add_theme_color_override(
+		"font_color", GOLD if victory else Color(0.85, 0.35, 0.3))
+	_over_dim.visible = true
+	_over_panel.visible = true
+	# 標題字換過了 → 重新量身、貼回正中(量尺寸要在內容就位之後)。
+	_over_panel.reset_size()
+	_over_panel.set_anchors_and_offsets_preset(
+		Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
+
+
+func _build_game_over() -> void:
+	_over_dim = ColorRect.new()
+	_over_dim.color = Color(0.0, 0.0, 0.0, 0.55)   # 壓暗戰場,視線收到面板上
+	add_child(_over_dim)
+	_over_dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	_over_panel = PanelContainer.new()
+	_over_panel.add_theme_stylebox_override("panel", _make_panel_style())
+	add_child(_over_panel)
+	var col := VBoxContainer.new()
+	col.custom_minimum_size = Vector2(320, 0)
+	col.add_theme_constant_override("separation", 10)
+	_over_panel.add_child(col)
+
+	_over_title = Label.new()
+	_over_title.add_theme_font_override("font", FONT_TITLE)
+	_over_title.add_theme_font_size_override("font_size", 44)
+	_over_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(_over_title)
+
+	col.add_child(_make_gold_line())
+
+	var again := _make_option("再戰一場")
+	again.pressed.connect(func() -> void: restart_pressed.emit())
+	col.add_child(again)
+	var menu := _make_option("回到主選單")
+	menu.pressed.connect(func() -> void: menu_pressed.emit())
+	col.add_child(menu)
 
 
 ## 歧路旅人式「文字指令」:平常沉金純文字,hover / 鍵盤焦點時亮起+金底線
