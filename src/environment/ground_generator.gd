@@ -76,7 +76,10 @@ func _generate() -> void:
 	# 避免「泥斑塊」和「岸線」形狀連動(真實世界裡這兩件事無關)。
 	var bank_noise := FastNoiseLite.new()
 	bank_noise.seed = rng_seed + 77                      # 錯開種子，別跟主噪聲長一樣
-	bank_noise.frequency = 0.13                          # 岸線彎的頻率(越低彎得越緩)
+	# 頻率壓低:0.13 時相鄰兩格的推擠量差太大,會擠出「恰好一格」的方形凸齒
+	# (磚是 1m 方格,一格的犬牙看起來就是一塊素材)。0.05 讓彎跨 4~8 格,
+	# 像河道自然的緩彎——蜿蜒感靠「幅度」(bank_jitter)出,不靠高頻抖動。
+	bank_noise.frequency = 0.05
 
 	# 另開一個亂數器，專門做「機率性的小變化」(過渡磚挑選、草地點綴)。
 	var rng := RandomNumberGenerator.new()

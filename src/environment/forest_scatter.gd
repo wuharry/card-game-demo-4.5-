@@ -57,6 +57,12 @@ class_name ForestScatter
 @export var hill_radius_min: float = 23.0
 @export var hill_radius_max: float = 28.0
 
+@export_group("水線點綴(河岸不要像磚)")
+# 磚緣再怎麼修都是 1m 直線;真正把「素材感」打散的是水線上的雜物——
+# 岸邊石、水草、露出水面的石頭,把磚的直邊遮成參差的自然岸線。
+@export var waterline_count: int = 26
+@export var waterline_x_min: float = 6.5   # 牌桌左右邊緣以外才點綴,不進戰場擋視線
+
 const TREES: Array[PackedScene] = [
 	preload("res://assets/environment/psx_trees/models/tree01.fbx"),
 	preload("res://assets/environment/psx_trees/models/tree02.fbx"),
@@ -214,6 +220,7 @@ func _scatter() -> void:
 	# 3) 樹好了之後,鋪地景小物(草叢/石頭/枯木)與遠景土丘,打散大片平地的方塊感。
 	_scatter_ground_props(rng, placed_pts)
 	_scatter_hills(rng)
+	_scatter_waterline(rng)
 
 ## 判斷某個位置是不是「淨空區」，是的話回傳 true(該位置要跳過、不長樹)。
 ## p 為相對 center 的 XZ 偏移。
@@ -324,6 +331,58 @@ func _scatter_hills(rng: RandomNumberGenerator) -> void:
 		# 用 AABB 頂端反推 Y:丘頂 = 地面 + peak,其餘山身沉到地磚下面
 		var peak := rng.randf_range(1.2, 3.5)
 		mi.position = center + Vector3(p.x, y_offset + peak - mesh.get_aabb().end.y * s, p.y)
+		pts.append(p)
+		placed += 1
+
+
+## ── 水線點綴:岸邊石/水草 + 溪裡的露頭石(牌桌 x 範圍外的左右兩翼)──
+func _scatter_waterline(rng: RandomNumberGenerator) -> void:
+	if not props_enabled or waterline_count <= 0:
+		return
+	var stones := _load_gl_meshes(STONE_FILES)
+	var tufts := _load_gl_meshes(TUFT_FILES)
+	if stones.is_empty() and tufts.is_empty():
+		return
+	var pts: PackedVector2Array = []
+	var placed := 0
+	var attempts := 0
+	while placed < waterline_count and attempts < waterline_count * 20:
+		attempts += 1
+		var flip := -1.0 if rng.randf() < 0.5 else 1.0
+		var x := flip * rng.randf_range(waterline_x_min, ring_outer)
+		# 兩成丟進溪裡當露頭石,其餘貼著兩岸(離溪心 1.0~1.8)。
+		var in_water := rng.randf() < 0.2
+		var dz: float
+		if in_water:
+			dz = rng.randf_range(-0.45, 0.45)
+		else:
+			dz = rng.randf_range(1.0, 1.8)
+			if rng.randf() < 0.5:
+				dz = -dz
+		var p := Vector2(x, (stream_z + dz) - center.z)
+		if not _far_enough(p, pts, 1.0):
+			continue
+		# 水裡只放石頭(草泡在水裡很怪);岸上石頭/草各半。
+		var use_stone := in_water or rng.randf() < 0.45
+		var mesh: Mesh
+		if use_stone and not stones.is_empty():
+			mesh = stones[rng.randi_range(0, stones.size() - 1)]
+		elif not tufts.is_empty():
+			mesh = tufts[rng.randi_range(0, tufts.size() - 1)]
+		else:
+			continue
+		var prop := _make_prop(mesh)
+		add_child(prop)
+		# 露頭石坐在河床上(-0.68,微陷),石身量夠高就會探出水面(-0.62)。
+		var y := y_offset - 0.18 if in_water else y_offset
+		prop.position = center + Vector3(p.x, y, p.y)
+		prop.rotation.y = rng.randf() * TAU
+		var s: float
+		if use_stone:
+			s = rng.randf_range(1.6, 2.8)
+		else:
+			s = rng.randf_range(0.7, 1.1)
+		prop.scale = Vector3(s, s, s)
 		pts.append(p)
 		placed += 1
 
