@@ -323,9 +323,13 @@ func _build_hud() -> void:
 	_toast.visible = false
 
 
-## HUD 刷新(BattleManager.state_changed 接進來)。
-func update_hud(turn: int, mana: int, mana_max: int) -> void:
-	_hud_turn.text = "第 %d 回合" % turn
+## HUD 刷新(BattleManager.state_changed 接進來):回合+行動方+該方魔力。
+func update_hud(turn: int, side: String, mana: int, mana_max: int) -> void:
+	var side_name := "我方回合" if side == "player" else "對方回合"
+	_hud_turn.text = "第 %d 回合 ‧ %s" % [turn, side_name]
+	# 行動方用顏色再講一次:金=我方、緋=對方(熱座換邊要一眼可辨)。
+	_hud_turn.add_theme_color_override(
+		"font_color", GOLD if side == "player" else Color(0.92, 0.55, 0.5))
 	# ◆=現有、◇=已用掉的上限:不讀數字也能一眼讀量。
 	_hud_mana.text = "◆".repeat(maxi(mana, 0)) \
 		+ "◇".repeat(maxi(mana_max - mana, 0)) + "  %d／%d" % [mana, mana_max]

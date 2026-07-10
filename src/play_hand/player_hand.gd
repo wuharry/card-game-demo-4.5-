@@ -14,8 +14,7 @@ class_name PlayerHand
 ## card_scene：手牌要生成的卡片藍圖。preload() = 在遊戲啟動前就先把這個場景檔載入備用。
 @export var card_scene: PackedScene = preload("res://src/card/card.tscn")
 
-@export var hand_size: int = 5                   # 起手牌張數(對應 Inspector「Hand Size」)
-@export var max_hand_size: int = 8               # 手牌上限(§1):滿手時抽到的牌直接燒掉
+@export var hand_size: int = 5                   # 起手牌張數(編輯器預覽用;正式帳在帳房)
 @export var fan_radius: float = 7.0              # 扇形圓弧半徑，越大弧線越平緩
 @export var max_fan_spread_degrees: float = 32.0 # 手牌滿時允許的「最大」總張開角度(上限)
 @export var card_angle_gap: float = 8.0          # 相鄰兩張牌之間的固定角度間距(爐石風格核心)
@@ -37,44 +36,69 @@ signal card_unhovered(card: Card)
 
 
 func _ready() -> void:
-	# 遊戲一開始就發起手牌。
-	draw_starting_hand(hand_size)
+	# 只有「編輯器預覽」才自己發牌(方便不按播放就看扇形)。
+	# 遊戲中手牌的「帳」在 BattleManager 的 SideState,這裡是純視圖:
+	# 開局與每次換邊由 CardManager 呼叫 rebuild_from() 重建顯示。
+	if Engine.is_editor_hint():
+		draw_starting_hand(hand_size)
 
 
-## 發 count 張牌到手上(起手)。
+## 發 count 張隨機牌(僅編輯器預覽用;正式發牌走 rebuild_from)。
 func draw_starting_hand(count: int) -> void:
 	for i in range(count):
-		_spawn_card()
-	# 全部發完後排成扇形。
+		_spawn_card(null)
 	_arrange_fan()
 
 
-## 抽 1 張(每回合開始由 CardManager 呼叫,§5 抽牌階段)。
+## 把手牌視圖重建成指定的資料(開局/熱座換邊時由 CardManager 呼叫)。
+## 發牌感:整手從牌堆位置一張接一張飛進扇形(換邊=給新玩家發一手牌)。
+func rebuild_from(data_list: Array[CardData]) -> void:
+	for card in cards:
+		card.queue_free()
+	cards.clear()
+	var deck := get_node_or_null("../Deck") as Node3D
+	for cd in data_list:
+		var card := _spawn_card(cd)
+		if deck != null:
+			card.global_position = deck.global_position + Vector3(0.0, 0.4, 0.0)
+	_arrange_fan(0.06)
+
+
+## 目前手牌的資料清單(換邊前由 CardManager stash 回帳房)。
+func hand_data() -> Array[CardData]:
+	var out: Array[CardData] = []
+	for card in cards:
+		out.append((card as Card).data)
+	return out
+
+
+## 抽 1 張指定的牌(§5 抽牌階段;抽「哪張」由帳房的牌堆決定)。
 ## 新牌先擺在牌堆的位置,_arrange_fan 的補間就順便成了「從牌堆飛進手牌」。
-func draw_card() -> void:
-	var card := _spawn_card()
+func draw_card(card_data: CardData) -> void:
+	var card := _spawn_card(card_data)
 	var deck := get_node_or_null("../Deck") as Node3D
 	if deck != null and card != null:
 		card.global_position = deck.global_position + Vector3(0.0, 0.4, 0.0)
 	_arrange_fan()
 
 
-## 生一張卡進手牌(共用:起手發牌與每回合抽牌)。
-func _spawn_card() -> Card:
+## 生一張卡進手牌視圖。card_data = null 時從卡池隨機(編輯器預覽的退路)。
+func _spawn_card(card_data: CardData) -> Card:
 	# 卡池是「懶載入」:第一次要發牌才去載,而不是 _ready 就載
 	# (這支是 @tool 腳本,編輯器裡也會跑;懶載入讓載入失敗的影響縮到最小)。
-	if _card_pool.is_empty():
-		_load_card_pool()
+	if card_data == null:
+		if _card_pool.is_empty():
+			_load_card_pool()
+		if not _card_pool.is_empty():
+			card_data = _card_pool.pick_random()
 	# 依藍圖實體化一張卡。
 	var card: Card = card_scene.instantiate()
 	# 先把卡縮到手牌大小。Vector3.ONE × 0.6 = (0.6, 0.6, 0.6)。
 	card.scale = Vector3.ONE * card_uniform_scale
 	add_child(card)        # 掛進場景樹才會顯示
 	cards.append(card)     # 記進手牌陣列
-	# 從卡池隨機抽一份資料餵給這張卡:名字/費用/攻血/卡圖立刻換成該卡的。
-	# (正式的「牌堆抽牌不重複」之後做在 Deck;現在先隨機,驗證資料流打通。)
-	if not _card_pool.is_empty():
-		card.setup(_card_pool.pick_random())
+	if card_data != null:
+		card.setup(card_data)
 	# 把每張卡的 hover 信號「轉發」成 PlayerHand 自己的信號。
 	# func(c): ... 是「匿名函式(lambda)」:收到卡的信號時,立刻用自己的名義再發一次。
 	card.card_hovered.connect(func(c: Card) -> void: card_hovered.emit(c))
@@ -82,21 +106,9 @@ func _spawn_card() -> Card:
 	return card
 
 
-## 把 data/cards/ 底下所有 .tres 載進卡池。
-## 用 DirAccess 掃資料夾而不是寫死 24 個 preload:之後加新卡 = 丟一個新 .tres
-## 進資料夾就完事,這支程式一行都不用動(資料變、程式不變)。
+## 載入卡池(委給 Deck 的共用載入器:掃資料夾、資料變程式不變)。
 func _load_card_pool() -> void:
-	_card_pool.clear()
-	var dir := DirAccess.open("res://data/cards")
-	if dir == null:
-		push_warning("找不到卡池資料夾 res://data/cards,手牌會是空白佔位卡")
-		return
-	for f in dir.get_files():
-		# 匯出成正式版時,檔名清單裡可能是 xxx.tres.remap(Godot 的匯出重映射),
-		# 把 .remap 後綴剝掉再載入,編輯器/正式版兩邊都通。
-		var file_name := f.trim_suffix(".remap")
-		if file_name.ends_with(".tres"):
-			_card_pool.append(load("res://data/cards/" + file_name))
+	_card_pool = Deck.load_pool()
 
 
 ## 供 CardManager 在出牌後呼叫，讓剩下的手牌平滑靠攏重排。
@@ -113,7 +125,8 @@ func play_card(card: Node3D) -> void:
 
 ## ── 核心：把 cards 陣列裡的牌排成圓弧扇形 ──────────
 ## 開頭底線 _ 代表這是內部函式。
-func _arrange_fan() -> void:
+## stagger = 每張牌依序延遲幾秒起飛(發牌的節奏感);0 = 全部同時(平時重排)。
+func _arrange_fan(stagger: float = 0.0) -> void:
 	var count := cards.size()
 	# 沒有牌就不用排，直接結束。
 	if count == 0:
@@ -157,7 +170,11 @@ func _arrange_fan() -> void:
 
 		# 用 Tween 平滑移動到新位置，所以出牌後重排會有流暢的滑動動畫。
 		# set_parallel(true) 讓位置、旋轉、縮放三個動畫「同時」進行。
+		var delay := stagger * float(i)   # 依序起飛:第 i 張多等 i 份延遲
 		var tw := cards[i].create_tween().set_parallel(true)
-		tw.tween_property(cards[i], "position", target_pos, 0.2)                      # 0.2 秒移到定位
-		tw.tween_property(cards[i], "rotation_degrees", target_rot, 0.2)              # 同步轉到目標角度
-		tw.tween_property(cards[i], "scale", Vector3.ONE * card_uniform_scale, 0.2)   # 確保回到手牌標準大小
+		tw.tween_property(cards[i], "position", target_pos, 0.2)\
+			.set_delay(delay)                                       # 0.2 秒移到定位
+		tw.tween_property(cards[i], "rotation_degrees", target_rot, 0.2)\
+			.set_delay(delay)                                       # 同步轉到目標角度
+		tw.tween_property(cards[i], "scale", Vector3.ONE * card_uniform_scale, 0.2)\
+			.set_delay(delay)                                       # 回到手牌標準大小
