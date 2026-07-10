@@ -99,6 +99,7 @@ func _ready() -> void:
 	# 本體/敵方牌堆要等 PlayerBoard 把卡槽生完才能靠群組定位 → 延後到整棵樹 ready 後。
 	_spawn_heroes.call_deferred()
 	_spawn_enemy_deck.call_deferred()
+	_sync_hand_view.call_deferred()   # 起手牌的「帳」在帳房,視圖開局同步一次
 
 
 ## ── 收到「滑鼠移到某張卡上」事件 ──────────────────
@@ -123,7 +124,9 @@ func on_card_hovered(card: Card) -> void:
 		return
 
 	# 防呆 2：若已經有「別張」卡被放大，先把它縮回去，確保同時只有一張放大。
-	if currently_hovered_card != null and currently_hovered_card != card:
+	# is_instance_valid:換邊重建手牌後,舊參考可能指向已釋放的卡(摸了就炸)。
+	if currently_hovered_card != null and is_instance_valid(currently_hovered_card) \
+			and currently_hovered_card != card:
 		currently_hovered_card.animate_unhover()
 
 	# 記住目前放大的是這張，並播放它的放大動畫。
@@ -269,6 +272,10 @@ func _on_left_released_drag() -> void:
 		if card_being_dragged.data.card_type != CardData.CardType.MINION:
 			battle_ui.flash_message("此卡型別尚未實作(§7):目前只有從者卡能上場")
 			organize_hand()
+		elif battle_manager.slot_side(found_slot) != battle_manager.active_side:
+			# 熱座:手牌屬於行動方,只能召喚到行動方自己那側。
+			battle_ui.flash_message("只能召喚到自己這一側的卡槽")
+			organize_hand()
 		elif battle_manager.can_afford(cost):
 			battle_manager.spend(cost)
 			battle_manager.mark_summoned(card_being_dragged)  # 召喚暈眩:當回合不能攻擊
@@ -276,7 +283,7 @@ func _on_left_released_drag() -> void:
 			player_hand.play_card(card_being_dragged)     # 移除手牌+重新靠攏
 		else:
 			battle_ui.flash_message(
-				"魔力不足:召喚需要 ◆%d(現有 %d)" % [cost, battle_manager.mana])
+				"魔力不足:召喚需要 ◆%d(現有 %d)" % [cost, battle_manager.active_mana()])
 			organize_hand()
 	else:
 		# 沒對準卡槽 / 卡槽已滿 → 讓它回到手牌扇形原位。
@@ -337,9 +344,9 @@ func _enter_targeting(hint: String) -> void:
 
 ## 反悔 / 收尾共用:清掉所有指令狀態、關 UI、收高亮。
 func _cancel_command() -> void:
-	if hovered_target != null:
+	if hovered_target != null and is_instance_valid(hovered_target):
 		hovered_target.animate_unhover()
-		hovered_target = null
+	hovered_target = null
 	pending_skill = null
 	active_unit = null
 	ui_state = UiState.IDLE
@@ -435,6 +442,10 @@ func _on_hero_unhovered(hero: Hero) -> void:
 
 ## 勝負已分(BattleManager 廣播):收指令流程、鎖住 3D 互動、亮勝負畫面。
 func _on_game_over(winner: String) -> void:
+	# 正在拖的卡先放回手牌,別讓它懸在半空(GAME_OVER 後放開事件不會再處理)。
+	if ui_state == UiState.DRAGGING:
+		organize_hand()
+		card_being_dragged = null
 	_cancel_command()
 	ui_state = UiState.GAME_OVER
 	battle_ui.show_game_over(winner == "player")
@@ -444,16 +455,57 @@ func _on_game_over(winner: String) -> void:
 func _on_end_turn() -> void:
 	if ui_state == UiState.GAME_OVER:
 		return
+	# 拖曳中按結束回合:先把卡放回扇形——換邊會整批重建手牌視圖,
+	# 正被拖著的卡若被 queue_free,card_being_dragged 就成了懸空參考(摸了就炸)。
+	if ui_state == UiState.DRAGGING:
+		organize_hand()
+		card_being_dragged = null
+		ui_state = UiState.IDLE
 	if ui_state == UiState.MENU_OPEN or ui_state == UiState.TARGETING:
 		_cancel_command()
-	battle_manager.end_turn()
-	battle_ui.flash_message("第 %d 回合" % battle_manager.turn)
-	# 抽牌階段(§5):每回合抽 1;手牌滿了就燒牌(§1 上限,同爐石/暗影詩章)。
-	if player_hand.cards.size() >= player_hand.max_hand_size:
-		battle_ui.flash_message(
-			"手牌已滿(%d 張):這回合抽到的牌燒掉了!" % player_hand.max_hand_size)
-	else:
-		player_hand.draw_card()
+	# 手牌即將整批重建:指向手牌卡的 hover 參考一併清空(同樣的懸空風險)。
+	currently_hovered_card = null
+	# 熱座換邊三步:①手牌視圖現況存回行動方的帳 ②帳房換邊+抽牌(資料層)
+	# ③視圖重建成「新行動方」的手牌——視圖永遠只是帳的投影。
+	battle_manager.stash_hand(player_hand.hand_data())
+	var result: Dictionary = battle_manager.end_turn()
+	player_hand.rebuild_from(battle_manager.active_hand())
+	_update_deck_labels()
+	var side_name := "我方" if battle_manager.active_side == "player" else "對方"
+	var msg := "第 %d 回合:%s行動" % [battle_manager.turn, side_name]
+	if result.burned:
+		msg += "(手牌已滿,抽到的牌燒掉了!)"
+	battle_ui.flash_message(msg)
+
+
+## 開局同步:把行動方(玩家)的起手資料餵給手牌視圖、掛上牌堆剩量標籤。
+func _sync_hand_view() -> void:
+	player_hand.rebuild_from(battle_manager.active_hand())
+	_update_deck_labels()
+
+
+## 兩疊牌堆上方的剩量數字(帳在 BattleManager,這裡只是顯示)。
+func _update_deck_labels() -> void:
+	_set_deck_label("../Deck", battle_manager.deck_count("player"))
+	_set_deck_label("../EnemyDeck", battle_manager.deck_count("enemy"))
+
+
+func _set_deck_label(path: String, count: int) -> void:
+	var deck := get_node_or_null(path) as Node3D
+	if deck == null:
+		return   # EnemyDeck 是延後生成的,第一次呼叫時可能還沒到,下次刷新會補上
+	var lb: Label3D = deck.get_node_or_null("CountLabel")
+	if lb == null:
+		lb = Label3D.new()
+		lb.name = "CountLabel"
+		deck.add_child(lb)
+		lb.position = Vector3(0.0, 0.55, 0.0)
+		lb.font_size = 96
+		lb.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		lb.no_depth_test = true
+		lb.outline_size = 16
+		lb.modulate = Color(0.95, 0.9, 0.75)
+	lb.text = str(count)
 
 
 ## 敵方牌堆(純視覺):把玩家牌堆整組複製、對角鏡射到敵方那側。

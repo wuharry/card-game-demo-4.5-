@@ -10,8 +10,8 @@
 extends Node
 class_name BattleManager
 
-## 魔力 / 回合有變動(HUD 靠這條刷新)。
-signal state_changed(turn: int, mana: int, mana_max: int)
+## 魔力 / 回合 / 行動方有變動(HUD 靠這條刷新)。
+signal state_changed(turn: int, side: String, mana: int, mana_max: int)
 ## 有單位死亡(CardManager 靠這條清掉指向死者的參考)。
 signal unit_died(unit: Card)
 ## 勝負已分("player" = 玩家贏)。
@@ -27,9 +27,20 @@ const CARD_SCENE: PackedScene = preload("res://src/card/card.tscn")
 ## 嘲諷守護與橫掃共用這把尺;改棋盤間距時記得回來對。
 const LANE_ADJACENT_X := 2.2
 
+## 手牌上限(§1):滿手時抽到的牌直接燒掉(爆牌制)。
+const MAX_HAND := 8
+
+## 一側玩家的帳(魔力/牌堆/手牌「資料」)。熱座與連線共用這個形狀:
+## 熱座 = 一台電腦輪流看兩份帳;連線 = host 持有兩份、client 只看自己那份。
+class SideState:
+	var mana: int = 0
+	var mana_max: int = 0   # 規格§1:起始 0,每次輪到自己回合開始才 +1 回滿
+	var deck: Array[CardData] = []
+	var hand: Array[CardData] = []
+
 var turn: int = 1
-var mana_max: int = 1   # 規格§1:起始 0、回合開始 +1 → 第 1 回合開打時正是 1
-var mana: int = 1
+var active_side: String = "player"   # 現在輪到誰行動(回合歸屬)
+var sides: Dictionary = {}           # "player"/"enemy" → SideState
 
 ## 雙方本體(CardManager 生成後註冊進來);打倒對方本體 = 勝利(§1)。
 var player_hero: Hero = null
@@ -38,46 +49,107 @@ var game_ended: bool = false
 
 
 func _ready() -> void:
-	_emit_state()   # 開場先把 HUD 刷成第 1 回合的狀態
+	# 開局建帳:雙方各一副洗好的牌堆 + 起手 5 張(資料層;視圖由 CardManager 同步)。
+	for side in ["player", "enemy"]:
+		var st := SideState.new()
+		st.deck = Deck.build_shuffled()
+		for i in range(5):
+			if not st.deck.is_empty():
+				st.hand.append(st.deck.pop_back())
+		sides[side] = st
+	_begin_side_turn(_active())   # 玩家的第 1 回合:魔力 0→1 回滿
+	_emit_state()
 
 
-## ── 魔力 ──────────────────────────────────────────
+## ── 每側的帳 ───────────────────────────────────────
+func _active() -> SideState:
+	return sides[active_side]
+
+
+## 輪到某一側的回合開始:魔力上限 +1(封頂)並回滿(未用不保留,§1)。
+func _begin_side_turn(st: SideState) -> void:
+	st.mana_max = mini(MANA_CAP, st.mana_max + 1)
+	st.mana = st.mana_max
+
+
+## 行動方目前的魔力(給 UI 顯示用;帳本身是私有的,外部走這個口)。
+func active_mana() -> int:
+	return _active().mana
+
+
 func can_afford(cost: int) -> bool:
-	return mana >= cost
+	return _active().mana >= cost
 
 
 ## 召喚費由 CardManager 在出牌時呼叫;技能費在 on_action_performed 內扣。
 func spend(cost: int) -> void:
-	mana = maxi(0, mana - cost)
+	_active().mana = maxi(0, _active().mana - cost)
 	_emit_state()
+
+
+## 換邊前,把手牌「視圖」的現況存回行動方的帳(視圖是顯示,帳才是真相)。
+func stash_hand(hand_data: Array[CardData]) -> void:
+	_active().hand = hand_data
+
+
+## 目前行動方的手牌資料(CardManager 拿去重建視圖)。
+func active_hand() -> Array[CardData]:
+	return _active().hand
+
+
+func deck_count(side: String) -> int:
+	return (sides[side] as SideState).deck.size() if sides.has(side) else 0
+
+
+## 這個卡槽屬於哪一側(出牌只能放自己這側,熱座的側別檢查用)。
+func slot_side(slot: CardSlot) -> String:
+	var group := _row_group_of(slot)
+	if group == "":
+		return ""
+	return "player" if group.begins_with("player") else "enemy"
 
 
 ## ── 回合 ──────────────────────────────────────────
 ## 結束回合:回合 +1、魔力上限 +1(封頂 10)並回滿(未用魔力不保留,§1)、
 ## 全場單位的行動旗標歸零。敵方 AI 動工前,這顆按鈕就等於「下一回合」。
-func end_turn() -> void:
-	_tick_dot(false)   # 結束階段:灼燒+中毒咬一口(§5/§9)
+## 結束回合 = 換邊(熱座):行動方的結束階段 → 換邊 → 新行動方的開始階段+抽牌。
+## 回傳 {"drawn": CardData|null, "burned": bool} 給 CardManager 做提示。
+func end_turn() -> Dictionary:
+	_tick_dot_side(active_side, false)   # 行動方的結束階段:灼燒+中毒(§5/§9)
+	active_side = "enemy" if active_side == "player" else "player"
 	turn += 1
-	mana_max = mini(MANA_CAP, mana_max + 1)
-	mana = mana_max
-	# 開始階段:先 tick 再遞減——1 回合的灼燒才咬得到「結束+開始」共 2 點(§9)。
-	_tick_dot(true)
+	var st := _active()
+	_begin_side_turn(st)   # 新行動方:魔力 +1 回滿
+	# 新行動方的開始階段:先 tick 再遞減——1 回合的灼燒才咬得到「結束+開始」共 2 點。
+	_tick_dot_side(active_side, true)
 	for slot in _all_slots():
 		var u := slot.card_in_slot
-		if u != null:
+		if u != null and side_of(u) == active_side:
 			u.attacked_this_turn = false
 			u.skill_used_this_turn = false
 			u.summoned_this_turn = false
 			u.iron_wall_used_this_turn = false
 			u.decay_statuses()
+	# 抽牌階段(§5,資料層):滿手燒牌(§1 爆牌:牌照樣從牌堆消失,雙方可見)。
+	var result := {"drawn": null, "burned": false}
+	if st.hand.size() >= MAX_HAND:
+		if not st.deck.is_empty():
+			st.deck.pop_back()
+			result.burned = true
+	elif not st.deck.is_empty():
+		var drawn: CardData = st.deck.pop_back()
+		st.hand.append(drawn)
+		result.drawn = drawn
 	_emit_state()
+	return result
 
 
-## 持續傷害 tick(§9):灼燒在開始與結束各 1 點、中毒只在結束 1 點。
-func _tick_dot(phase_start: bool) -> void:
+## 持續傷害 tick(§9):只 tick「該側」的單位——狀態是在持有者自己的
+## 回合階段結算的(對手回合不會咬你);灼燒開始與結束各 1 點、中毒只在結束。
+func _tick_dot_side(side: String, phase_start: bool) -> void:
 	for slot in _all_slots():
 		var u := slot.card_in_slot
-		if u == null:
+		if u == null or side_of(u) != side:
 			continue
 		var dmg := 0
 		if u.has_status(SkillData.Status.BURN):
@@ -169,6 +241,8 @@ func _lane_blocked(attacker: Card) -> bool:
 ## ── 行動合法性(回傳「被擋的理由」;空字串 = 可以做)────────
 ## UI 拿理由灰化按鈕並顯示給玩家;規則只寫在這裡一份,按鈕永遠只是轉述。
 func attack_block_reason(unit: Card) -> String:
+	if side_of(unit) != active_side:
+		return "還沒輪到這一方行動。"
 	if unit.has_status(SkillData.Status.FREEZE):
 		return "凍結中:無法攻擊(§9)。"
 	if unit.attacked_this_turn:
@@ -182,6 +256,8 @@ func skill_block_reason(unit: Card) -> String:
 	var skill := unit.data.active_skill
 	if skill == null:
 		return "沒有主動技能。"
+	if side_of(unit) != active_side:
+		return "還沒輪到這一方行動。"
 	if unit.has_status(SkillData.Status.FREEZE):
 		return "凍結中:無法發動技能(§9)。"
 	if unit.skill_used_this_turn:
@@ -192,8 +268,8 @@ func skill_block_reason(unit: Card) -> String:
 	if skill.kind == SkillData.Kind.INDEPENDENT_ATTACK \
 			and unit.summoned_this_turn and not unit.data.keywords.has(&"衝鋒"):
 		return "召喚暈眩:獨立攻擊視同攻擊,下回合才能用。"
-	if mana < skill.cost:
-		return "魔力不足(需要 ◆%d,現有 %d)。" % [skill.cost, mana]
+	if _active().mana < skill.cost:
+		return "魔力不足(需要 ◆%d,現有 %d)。" % [skill.cost, _active().mana]
 	return ""
 
 
@@ -207,7 +283,7 @@ func on_action_performed(caster: Card, skill: SkillData, target: Node3D) -> void
 		caster.skill_used_this_turn = true
 		if skill.kind == SkillData.Kind.ENHANCED_ATTACK:
 			caster.attacked_this_turn = true   # 強化攻擊 = 用掉本回合的攻擊(§6)
-		mana = maxi(0, mana - skill.cost)
+		_active().mana = maxi(0, _active().mana - skill.cost)
 	_emit_state()
 	# 2) 等攻擊動畫揮到一半再扣血,數字跟拳頭一起落地。
 	await get_tree().create_timer(0.35).timeout
@@ -437,4 +513,4 @@ func _all_slots() -> Array[CardSlot]:
 
 
 func _emit_state() -> void:
-	state_changed.emit(turn, mana, mana_max)
+	state_changed.emit(turn, active_side, _active().mana, _active().mana_max)
