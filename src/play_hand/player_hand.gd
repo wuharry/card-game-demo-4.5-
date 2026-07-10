@@ -15,6 +15,7 @@ class_name PlayerHand
 @export var card_scene: PackedScene = preload("res://src/card/card.tscn")
 
 @export var hand_size: int = 5                   # 起手牌張數(對應 Inspector「Hand Size」)
+@export var max_hand_size: int = 8               # 手牌上限(§1):滿手時抽到的牌直接燒掉
 @export var fan_radius: float = 7.0              # 扇形圓弧半徑，越大弧線越平緩
 @export var max_fan_spread_degrees: float = 32.0 # 手牌滿時允許的「最大」總張開角度(上限)
 @export var card_angle_gap: float = 8.0          # 相鄰兩張牌之間的固定角度間距(爐石風格核心)
