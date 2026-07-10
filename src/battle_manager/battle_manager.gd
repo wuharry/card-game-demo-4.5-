@@ -6,7 +6,7 @@
 ## ——動畫照播,數值在這裡落地。
 ##
 ## 尚未實作(戰鬥系統下一階段):狀態效果(灼燒/凍結/中毒…)、打法修飾
-## (橫掃/貫穿/連擊/吸血)、召喚系效果、不滅復活、玩家本體 HP 與勝負判定。
+## (橫掃/貫穿/連擊/吸血)、召喚系效果、不滅復活。
 extends Node
 class_name BattleManager
 
@@ -14,6 +14,8 @@ class_name BattleManager
 signal state_changed(turn: int, mana: int, mana_max: int)
 ## 有單位死亡(CardManager 靠這條清掉指向死者的參考)。
 signal unit_died(unit: Card)
+## 勝負已分("player" = 玩家贏)。
+signal game_over(winner: String)
 
 const MANA_CAP := 10
 ## 卡槽群組(player_board 生成卡槽時分好的):查單位在哪個槽、站哪邊都靠它。
@@ -23,6 +25,11 @@ const SLOT_GROUPS: Array[String] = [
 var turn: int = 1
 var mana_max: int = 1   # 規格§1:起始 0、回合開始 +1 → 第 1 回合開打時正是 1
 var mana: int = 1
+
+## 雙方本體(CardManager 生成後註冊進來);打倒對方本體 = 勝利(§1)。
+var player_hero: Hero = null
+var enemy_hero: Hero = null
+var game_ended: bool = false
 
 
 func _ready() -> void:
@@ -60,6 +67,55 @@ func mark_summoned(unit: Card) -> void:
 	unit.summoned_this_turn = true
 
 
+## ── 本體與勝負 ─────────────────────────────────────
+func register_heroes(p_hero: Hero, e_hero: Hero) -> void:
+	player_hero = p_hero
+	enemy_hero = e_hero
+	p_hero.died.connect(_on_hero_died)
+	e_hero.died.connect(_on_hero_died)
+
+
+func _on_hero_died(hero: Hero) -> void:
+	if game_ended:
+		return
+	game_ended = true
+	game_over.emit("player" if hero.side == "enemy" else "enemy")
+
+
+## 打臉合法性(§4.1):路線正前方沒有敵方阻擋,才能直取本體。
+func face_block_reason(attacker: Card, hero: Hero, skill: SkillData) -> String:
+	if game_ended:
+		return "勝負已分。"
+	if skill != null and skill.effect_target == SkillData.Target.ALLY:
+		return "友軍技能不能指定本體。"
+	if skill != null and skill.kind == SkillData.Kind.NON_ATTACK:
+		return "非攻擊技能不能指定本體。"
+	if hero.side == side_of(attacker):
+		return "不能指定自己的本體。"
+	if _lane_blocked(attacker):
+		return "路線正前方有敵方單位阻擋,無法直取本體。"
+	return ""
+
+
+## 攻擊者同一直行(路線)上,對面「前排」最近的那格有人 = 被擋(§4.1 LANE_ONLY;
+## 後排是伏印區,不當阻擋)。路線對位用 x 座標找最近的對面前排格,不寫死欄號。
+func _lane_blocked(attacker: Card) -> bool:
+	var my_slot := _find_slot(attacker)
+	if my_slot == null:
+		return true   # 不在場上(不該發生):一律當被擋,安全邊
+	var opposing := "enemy_front" if side_of(attacker) == "player" else "player_front"
+	var nearest: CardSlot = null
+	var best := INF
+	for slot in get_tree().get_nodes_in_group(opposing):
+		if slot is CardSlot:
+			var dx: float = absf(
+				(slot as CardSlot).global_position.x - my_slot.global_position.x)
+			if dx < best:
+				best = dx
+				nearest = slot
+	return nearest != null and nearest.card_in_slot != null
+
+
 ## ── 行動合法性(回傳「被擋的理由」;空字串 = 可以做)────────
 ## UI 拿理由灰化按鈕並顯示給玩家;規則只寫在這裡一份,按鈕永遠只是轉述。
 func attack_block_reason(unit: Card) -> String:
@@ -88,7 +144,8 @@ func skill_block_reason(unit: Card) -> String:
 
 
 ## ── 真結算(訂閱 CardManager.action_performed)─────────
-func on_action_performed(caster: Card, skill: SkillData, target: Card) -> void:
+## target 是 Card(從者:走雙向交換)或 Hero(本體:打臉不吃反擊)。
+func on_action_performed(caster: Card, skill: SkillData, target: Node3D) -> void:
 	# 1) 行動經濟與費用先落帳(演出還在播,帳要先記,玩家馬上開選單也不會重複用)。
 	if skill == null:
 		caster.attacked_this_turn = true
@@ -100,18 +157,29 @@ func on_action_performed(caster: Card, skill: SkillData, target: Card) -> void:
 	_emit_state()
 	# 2) 等攻擊動畫揮到一半再扣血,數字跟拳頭一起落地。
 	await get_tree().create_timer(0.35).timeout
-	if not is_instance_valid(caster):
+	if not is_instance_valid(caster) or not is_instance_valid(target):
 		return
+	# 先算出這次行動的「傷害輪廓」:多少傷害、會不會吃反擊。
+	var dmg := 0
+	var retaliate := false
 	if skill == null:
-		_resolve_attack(caster, target, caster.data.atk, true)
+		dmg = caster.data.atk
+		retaliate = true
 	elif skill.kind == SkillData.Kind.ENHANCED_ATTACK:
-		_resolve_attack(caster, target, caster.data.atk + skill.power, true)
+		dmg = caster.data.atk + skill.power
+		retaliate = true
 	elif skill.kind == SkillData.Kind.INDEPENDENT_ATTACK:
-		_resolve_attack(caster, target, skill.power, false)   # 額外攻擊:不觸發反擊
+		dmg = skill.power   # 額外攻擊:不觸發反擊
 	elif skill.effect == SkillData.Effect.HEAL:
-		if is_instance_valid(target):
-			target.heal(skill.amount)
-	# 其餘效果(上狀態/召喚/打法修飾)留給戰鬥系統下一階段:目前只有演出。
+		if target is Card:
+			(target as Card).heal(skill.amount)
+		return
+	else:
+		return   # 上狀態/召喚/其餘修飾:戰鬥系統下一階段,目前只有演出
+	if target is Hero:
+		(target as Hero).take_damage(dmg)   # 打臉不吃反擊(§4.2)
+		return
+	_resolve_attack(caster, target as Card, dmg, retaliate)
 
 
 ## §4.2 雙向傷害交換:「同時結算」——反擊值用交戰前的數值先記下、再一起扣,
@@ -121,8 +189,10 @@ func _resolve_attack(attacker: Card, defender: Card, dmg: int, retaliate: bool) 
 		return
 	var counter := defender.data.atk if retaliate else 0
 	defender.take_damage(dmg)
+	defender.play_one_shot_anim("Hurt")   # 受擊與傷害數字同一刻,拳頭落地才縮
 	if retaliate and is_instance_valid(attacker):
 		attacker.take_damage(counter)
+		attacker.play_one_shot_anim("Hurt")   # 反擊的痛要看得見:攻擊者也縮一下
 	_check_death(defender)
 	if attacker != defender:
 		_check_death(attacker)

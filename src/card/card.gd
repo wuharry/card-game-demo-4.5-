@@ -96,7 +96,7 @@ func setup(card_data: CardData) -> void:
 	# 框的邊飾永遠畫在圖上面,所以不管圖放多大,卡框美術都不會被壓到。
 	if data.standee != null:
 		var cell := maxf(float(data.standee.get_height()), 1.0)
-		var bounds := _visible_bounds_of_frame0(data.standee)
+		var bounds := visible_bounds_of_frame0(data.standee)
 		# grow(2):四周留 2px 呼吸邊;再夾回格子範圍,region 才不會取樣到界外。
 		bounds = bounds.grow(2).intersection(Rect2(0.0, 0.0, cell, cell))
 		$CardArt.texture = data.standee
@@ -165,7 +165,7 @@ func show_standee() -> void:
 	# 素材每格 100×100 裡,角色本體只佔中間約 30px,其餘是透明留白;
 	# 按「整格」算大小,角色會只剩帳面的三分之一、還因置中錨定而懸空。
 	# 「可見高度」拿來算縮放,「最下列 = 腳底」拿來把腳貼到卡面。
-	var bounds := _visible_bounds_of_frame0(data.standee)
+	var bounds := visible_bounds_of_frame0(data.standee)
 	var top_row := bounds.position.y
 	var feet_row := bounds.end.y - 1.0   # end 是「界外」的下一格,最下列要 -1
 	var visible_px := maxf(1.0, feet_row - top_row + 1.0)
@@ -245,10 +245,12 @@ func hide_standee() -> void:
 
 
 ## ── 掃描動畫表第 0 幀的「可見範圍」───────────────────────
-## 回傳不透明像素的最小外接矩形(像素座標)。卡圖放大與立牌縮放/貼地共用:
+## 回傳不透明像素的最小外接矩形(像素座標)。卡圖放大、立牌縮放/貼地、
+## 本體(Hero)的身形量測共用這一把尺——所以是「公開 static」:
+## 不碰任何實例狀態,誰都能用 Card.visible_bounds_of_frame0(sheet) 呼叫。
 ## 素材格子的透明留白從此不參與任何大小計算(基準值用「量的」,別信帳面)。
 ## 掃不到東西(圖讀不出來、整格全透明)就回傳整格,行為退化成按整格算,不會炸。
-func _visible_bounds_of_frame0(sheet: Texture2D) -> Rect2:
+static func visible_bounds_of_frame0(sheet: Texture2D) -> Rect2:
 	var cell := maxi(int(sheet.get_height()), 1)   # 每格正方形:格寬 = 圖高
 	var full := Rect2(0.0, 0.0, cell, cell)
 	var img := sheet.get_image()
@@ -316,11 +318,38 @@ func exit_board_mode() -> void:
 func take_damage(amount: int) -> void:
 	current_hp = maxi(0, current_hp - amount)
 	_refresh_hp_label()
+	if amount > 0:
+		_popup_number("-%d" % amount, Color(1.0, 0.3, 0.25))
 
 
 func heal(amount: int) -> void:
-	current_hp = mini(data.hp, current_hp + amount)   # 治療不超過上限
+	# 先算「實際回了多少」(不超上限),數字報實帳,不報帳面治療量。
+	var healed := mini(data.hp, current_hp + amount) - current_hp
+	current_hp += healed
 	_refresh_hp_label()
+	if healed > 0:
+		_popup_number("+%d" % healed, Color(0.45, 1.0, 0.5))
+
+
+## 飄浮戰鬥數字:冒出 → 上飄 → 淡出 → 自毀。
+## 掉血看 HP 小字太吃力,尤其反擊是「攻擊的同時自己也掉血」,
+## 沒有這個數字,反擊看起來就像沒發生(驗收時的真實回饋)。
+func _popup_number(text_value: String, color: Color) -> void:
+	var lb := Label3D.new()
+	lb.text = text_value
+	lb.font_size = 64
+	lb.modulate = color
+	lb.outline_size = 14
+	lb.billboard = BaseMaterial3D.BILLBOARD_ENABLED   # 永遠面向鏡頭
+	lb.no_depth_test = true      # 不做深度測試 = 不會被立牌/地形擋住
+	lb.render_priority = 2
+	add_child(lb)
+	# 上桌的卡躺平,local +Z = 世界正上方(同 show_standee 的座標邏輯)。
+	lb.position = Vector3(0.0, 0.0, 1.1)
+	var tw := lb.create_tween().set_parallel(true)
+	tw.tween_property(lb, "position:z", 2.0, 0.8)
+	tw.tween_property(lb, "modulate:a", 0.0, 0.8).set_ease(Tween.EASE_IN)
+	tw.chain().tween_callback(lb.queue_free)
 
 
 func _refresh_hp_label() -> void:

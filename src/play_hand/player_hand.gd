@@ -40,30 +40,45 @@ func _ready() -> void:
 	draw_starting_hand(hand_size)
 
 
-## 發 count 張牌到手上。
+## 發 count 張牌到手上(起手)。
 func draw_starting_hand(count: int) -> void:
+	for i in range(count):
+		_spawn_card()
+	# 全部發完後排成扇形。
+	_arrange_fan()
+
+
+## 抽 1 張(每回合開始由 CardManager 呼叫,§5 抽牌階段)。
+## 新牌先擺在牌堆的位置,_arrange_fan 的補間就順便成了「從牌堆飛進手牌」。
+func draw_card() -> void:
+	var card := _spawn_card()
+	var deck := get_node_or_null("../Deck") as Node3D
+	if deck != null and card != null:
+		card.global_position = deck.global_position + Vector3(0.0, 0.4, 0.0)
+	_arrange_fan()
+
+
+## 生一張卡進手牌(共用:起手發牌與每回合抽牌)。
+func _spawn_card() -> Card:
 	# 卡池是「懶載入」:第一次要發牌才去載,而不是 _ready 就載
 	# (這支是 @tool 腳本,編輯器裡也會跑;懶載入讓載入失敗的影響縮到最小)。
 	if _card_pool.is_empty():
 		_load_card_pool()
-	for i in range(count):
-		# 依藍圖實體化一張卡。
-		var card: Card = card_scene.instantiate()
-		# 先把卡縮到手牌大小。Vector3.ONE × 0.6 = (0.6, 0.6, 0.6)。
-		card.scale = Vector3.ONE * card_uniform_scale
-		add_child(card)        # 掛進場景樹才會顯示
-		cards.append(card)     # 記進手牌陣列
-		# 從卡池隨機抽一份資料餵給這張卡:名字/費用/攻血/卡圖立刻換成該卡的。
-		# (正式的「牌堆抽牌不重複」之後做在 Deck;現在先隨機,驗證資料流打通。)
-		if not _card_pool.is_empty():
-			card.setup(_card_pool.pick_random())
-
-		# 把每張卡的 hover 信號「轉發」成 PlayerHand 自己的信號。
-		# func(c): ... 是「匿名函式(lambda)」：收到卡的信號時，立刻用自己的名義再發一次。
-		card.card_hovered.connect(func(c: Card) -> void: card_hovered.emit(c))
-		card.card_unhovered.connect(func(c: Card) -> void: card_unhovered.emit(c))
-	# 全部發完後排成扇形。
-	_arrange_fan()
+	# 依藍圖實體化一張卡。
+	var card: Card = card_scene.instantiate()
+	# 先把卡縮到手牌大小。Vector3.ONE × 0.6 = (0.6, 0.6, 0.6)。
+	card.scale = Vector3.ONE * card_uniform_scale
+	add_child(card)        # 掛進場景樹才會顯示
+	cards.append(card)     # 記進手牌陣列
+	# 從卡池隨機抽一份資料餵給這張卡:名字/費用/攻血/卡圖立刻換成該卡的。
+	# (正式的「牌堆抽牌不重複」之後做在 Deck;現在先隨機,驗證資料流打通。)
+	if not _card_pool.is_empty():
+		card.setup(_card_pool.pick_random())
+	# 把每張卡的 hover 信號「轉發」成 PlayerHand 自己的信號。
+	# func(c): ... 是「匿名函式(lambda)」:收到卡的信號時,立刻用自己的名義再發一次。
+	card.card_hovered.connect(func(c: Card) -> void: card_hovered.emit(c))
+	card.card_unhovered.connect(func(c: Card) -> void: card_unhovered.emit(c))
+	return card
 
 
 ## 把 data/cards/ 底下所有 .tres 載進卡池。

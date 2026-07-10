@@ -20,6 +20,7 @@ extends Node3D
 
 const COLLISION_MASK_CARD = 1  # 第 1 層：卡片實體(拖曳時要找的對象)
 const COLLISION_MASK_SLOT = 2  # 第 2 層：桌面卡槽(放牌時要找的對象)
+const COLLISION_MASK_HERO = 4  # 第 3 層：本體(hero.gd 生成碰撞時自掛這層)
 
 ## @onready：等節點都準備好後，才執行右邊的取值並存進變數(太早拿可能還是 null)。
 ## camera：場景目前啟用中的攝影機。把滑鼠的 2D 座標換成 3D 射線時一定要用到它。
@@ -45,7 +46,8 @@ var currently_hovered_slot: CardSlot = null
 ##   DRAGGING  拖曳中(原本的行為)
 ##   MENU_OPEN 指令選單開著:3D 場景不吃點擊,等 BattleUI 的信號
 ##   TARGETING 指定目標中:懸停合法目標會亮、左鍵=發動、右鍵/ESC=取消
-enum UiState { IDLE, DRAGGING, MENU_OPEN, TARGETING }
+##   GAME_OVER 勝負已分:3D 互動全關,只剩勝負畫面的按鈕
+enum UiState { IDLE, DRAGGING, MENU_OPEN, TARGETING, GAME_OVER }
 var ui_state: UiState = UiState.IDLE
 
 ## 指令選單(程式生成的 CanvasLayer,見 battle_ui.gd)。
@@ -56,12 +58,17 @@ var battle_manager: BattleManager = null
 var active_unit: Card = null
 ## 等待指定目標的技能;null 代表等待目標的是「普通攻擊」。
 var pending_skill: SkillData = null
-## TARGETING 狀態下目前亮起的候選目標。
-var hovered_target: Card = null
+## TARGETING 狀態下目前亮起的候選目標:Card 或 Hero
+## (兩者都有 animate_hover/unhover,所以宣告成共同祖先 Node3D)。
+var hovered_target: Node3D = null
 
-## 有行動發動了(純演出版:只播動畫)。之後的戰鬥系統訂閱這個信號做
-## 真正的結算(扣魔力、算傷害、上狀態);skill = null 代表普通攻擊。
-signal action_performed(caster: Card, skill: SkillData, target: Card)
+## 雙方本體(程式生成的像素立牌,見 hero.gd);打倒對方本體 = 勝利。
+var player_hero: Hero = null
+var enemy_hero: Hero = null
+
+## 有行動發動了(演出已起跑)。BattleManager 訂閱這個信號做真結算;
+## skill = null 代表普通攻擊;target 是 Card(從者)或 Hero(打臉)。
+signal action_performed(caster: Card, skill: SkillData, target: Node3D)
 
 
 func _ready() -> void:
@@ -81,8 +88,17 @@ func _ready() -> void:
 	battle_manager = BattleManager.new()
 	battle_manager.state_changed.connect(battle_ui.update_hud)
 	battle_manager.unit_died.connect(_on_unit_died)
+	battle_manager.game_over.connect(_on_game_over)
 	action_performed.connect(battle_manager.on_action_performed)
 	add_child(battle_manager)
+	# 勝負畫面的兩個去向:重開這局 / 回主選單(換場景是中樞的事,UI 只發信號)。
+	battle_ui.restart_pressed.connect(
+		func() -> void: get_tree().reload_current_scene())
+	battle_ui.menu_pressed.connect(
+		func() -> void: get_tree().change_scene_to_file("res://scenes/main_menu.tscn"))
+	# 本體/敵方牌堆要等 PlayerBoard 把卡槽生完才能靠群組定位 → 延後到整棵樹 ready 後。
+	_spawn_heroes.call_deferred()
+	_spawn_enemy_deck.call_deferred()
 
 
 ## ── 收到「滑鼠移到某張卡上」事件 ──────────────────
@@ -269,11 +285,21 @@ func _on_left_released_drag() -> void:
 
 
 ## 指定目標中左鍵按下:點到合法目標就發動;點到別的東西不動作(右鍵才是取消)。
+## 先找從者、再找本體——本體被擋時把理由講出來(路線有人擋、不能打自己人…)。
 func _on_left_pressed_targeting() -> void:
 	var card := raycast_check_for_card()
-	if card == null or not _is_valid_target(card):
+	if card != null:
+		if _is_valid_target(card):
+			_execute_action(card)
 		return
-	_execute_action(card)
+	var hero := raycast_check_for_hero()
+	if hero == null:
+		return
+	var reason := battle_manager.face_block_reason(active_unit, hero, pending_skill)
+	if reason == "":
+		_execute_action(hero)
+	else:
+		battle_ui.flash_message(reason)
 
 
 ## ── 指令選單的三個回應(BattleUI 的信號接進來)──────────
@@ -333,12 +359,120 @@ func _is_valid_target(card: Card) -> bool:
 ## (陣營查詢已搬進 BattleManager.side_of:帳房管規則,查詢跟著規則走。)
 
 
+## ── 本體(Hero)────────────────────────────────────
+## 造型借現成的卡資料:玩家=聖殿騎士、敵方=死靈法師(魔王感);HP 都是 20。
+func _spawn_heroes() -> void:
+	player_hero = _make_hero("player", "res://data/cards/knight_templar.tres")
+	enemy_hero = _make_hero("enemy", "res://data/cards/necromancer.tres")
+	battle_manager.register_heroes(player_hero, enemy_hero)
+
+
+func _make_hero(side: String, look_path: String) -> Hero:
+	var hero := Hero.new()
+	add_child(hero)
+	hero.setup(side, load(look_path))
+	hero.global_position = _hero_anchor(side)
+	# 本體只有兩尊、又是中樞自己生的,直接連;卡片那條中繼鏈是給「一大群」用的。
+	hero.hero_hovered.connect(_on_hero_hovered)
+	hero.hero_unhovered.connect(_on_hero_unhovered)
+	return hero
+
+
+## 本體站位:從卡槽群組的實際位置算,不寫死座標——換戰場、改排法都不用回來改。
+## 敵方=棋盤後方中線(遠景壓陣);我方=棋盤「左翼」——
+## 我方正後方是手牌扇形+鏡頭的地盤,站那裡會被手牌整個擋住(實測);
+## 右邊是牌堆,左本體右牌堆,畫面左右配重剛好平衡。
+func _hero_anchor(side: String) -> Vector3:
+	# 不能用三元運算式:它產出的是無型別 Array,執行期塞不進 Array[String] 會炸。
+	var groups: Array[String] = ["player_front", "player_back"]
+	if side != "player":
+		groups = ["enemy_front", "enemy_back"]
+	var sum := Vector3.ZERO
+	var count := 0
+	var min_x := INF
+	var far_z := 0.0   # 該側「後緣」的 z(玩家側取最大、敵方側取最小)
+	for group in groups:
+		for slot in get_tree().get_nodes_in_group(group):
+			if slot is CardSlot:
+				var p: Vector3 = (slot as CardSlot).global_position
+				sum += p
+				count += 1
+				min_x = minf(min_x, p.x)
+				if count == 1:
+					far_z = p.z
+				elif side == "player":
+					far_z = maxf(far_z, p.z)
+				else:
+					far_z = minf(far_z, p.z)
+	if count == 0:
+		return Vector3.ZERO   # 找不到卡槽(不該發生):放世界原點至少看得見
+	var center := sum / float(count)
+	if side == "enemy":
+		return Vector3(center.x, center.y, far_z - 2.2)
+	return Vector3(min_x - 2.6, center.y, center.z)
+
+
+## 指定目標中懸停本體:合法的打臉目標才亮(理由不為空就不亮,點下去才提示)。
+func _on_hero_hovered(hero: Hero) -> void:
+	if ui_state != UiState.TARGETING or active_unit == null:
+		return
+	if battle_manager.face_block_reason(active_unit, hero, pending_skill) != "":
+		return
+	if hovered_target != null and hovered_target != hero:
+		hovered_target.animate_unhover()
+	hovered_target = hero
+	hero.animate_hover()
+
+
+func _on_hero_unhovered(hero: Hero) -> void:
+	if hovered_target == hero:
+		hovered_target = null
+		hero.animate_unhover()
+
+
+## 勝負已分(BattleManager 廣播):收指令流程、鎖住 3D 互動、亮勝負畫面。
+func _on_game_over(winner: String) -> void:
+	_cancel_command()
+	ui_state = UiState.GAME_OVER
+	battle_ui.show_game_over(winner == "player")
+
+
 ## 結束回合(BattleUI 的按鈕):先收掉開著的指令流程(旗標要重算),再讓帳房翻頁。
 func _on_end_turn() -> void:
+	if ui_state == UiState.GAME_OVER:
+		return
 	if ui_state == UiState.MENU_OPEN or ui_state == UiState.TARGETING:
 		_cancel_command()
 	battle_manager.end_turn()
 	battle_ui.flash_message("第 %d 回合" % battle_manager.turn)
+	player_hand.draw_card()   # 抽牌階段:每回合開始抽 1(§5)
+
+
+## 敵方牌堆(純視覺):把玩家牌堆整組複製、對角鏡射到敵方那側。
+## main.tscn 零改動;敵方 AI 動工、有真抽牌邏輯時再回來接數量顯示。
+func _spawn_enemy_deck() -> void:
+	var deck := get_node_or_null("../Deck") as Node3D
+	if deck == null:
+		return
+	var enemy_deck := deck.duplicate() as Node3D
+	enemy_deck.name = "EnemyDeck"
+	get_parent().add_child(enemy_deck)
+	# 對角鏡射:x 取負(玩家右手邊 → 敵方右手邊),z 以雙方棋盤中線為軸翻過去。
+	var mid_z := _board_mid_z()
+	enemy_deck.position = Vector3(
+		-deck.position.x, deck.position.y, mid_z * 2.0 - deck.position.z)
+
+
+## 雙方棋盤的中線 z(全部卡槽的平均):鏡射敵方牌堆用。
+func _board_mid_z() -> float:
+	var sum := 0.0
+	var count := 0
+	for group in BattleManager.SLOT_GROUPS:
+		for slot in get_tree().get_nodes_in_group(group):
+			if slot is CardSlot:
+				sum += (slot as CardSlot).global_position.z
+				count += 1
+	return sum / float(count) if count > 0 else 0.0
 
 
 ## 有單位死了(BattleManager 廣播):把指向死者的參考清掉,
@@ -356,7 +490,7 @@ func _on_unit_died(unit: Card) -> void:
 ## 施放者播技能/攻擊動畫、目標播受擊動畫,並廣播 action_performed。
 ## 傷害、魔力、狀態的真結算屬於戰鬥系統(README 待辦 #5):它動工時訂閱這個信號,
 ## 這裡的流程一行都不用改——演出與規則分離。
-func _execute_action(target: Card) -> void:
+func _execute_action(target: Node3D) -> void:
 	var caster := active_unit
 	var skill := pending_skill
 	if skill != null:
@@ -367,8 +501,8 @@ func _execute_action(target: Card) -> void:
 		# 普攻預設 Attack01;牧師/骷髏弓手只有單張「Attack」表 → 備案。
 		if not caster.play_one_shot_anim("Attack01"):
 			caster.play_one_shot_anim("Attack")
-	if target != caster:
-		target.play_one_shot_anim("Hurt")   # 受擊回饋:所有角色都有 Hurt 表
+	# 受擊動畫改由 BattleManager 在「傷害落地」那刻播(和飄浮數字同步),
+	# 也順便修掉「被治療卻播受傷動畫」的怪象——挨打是結算的事,不是宣告的事。
 	action_performed.emit(caster, skill, target)
 	_cancel_command()
 
@@ -398,6 +532,20 @@ func raycast_check_for_card() -> Card:
 		print('點擊在卡片上', result.collider.get_parent())
 		return result.collider.get_parent() as Card
 	print('點擊在卡片外面')
+	return null
+
+
+## ── 射線:找滑鼠下方的「本體」(第 3 層)──────────────
+func raycast_check_for_hero() -> Hero:
+	var mouse_pos := get_viewport().get_mouse_position()
+	var from := camera.project_ray_origin(mouse_pos)
+	var to := from + camera.project_ray_normal(mouse_pos) * 1000.0
+	var query := PhysicsRayQueryParameters3D.create(from, to)
+	query.collide_with_areas = true   # 本體的感應區也是 Area3D
+	query.collision_mask = COLLISION_MASK_HERO
+	var result := get_world_3d().direct_space_state.intersect_ray(query)
+	if result:
+		return result.collider.get_parent() as Hero
 	return null
 
 
