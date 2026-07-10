@@ -40,6 +40,15 @@ var original_scale: Vector3 = Vector3.ONE
 const ART_WINDOW_CENTER := Vector2(0.022, 0.488)   # 窗中心(卡片本地 x/y)
 const ART_WINDOW_SIZE := Vector2(1.297, 0.910)     # 窗寬高(世界單位)
 
+## 狀態效果的顯示名(§9;卡面狀態列用)。
+const STATUS_NAMES := {
+	SkillData.Status.BURN: "灼燒",
+	SkillData.Status.FREEZE: "凍結",
+	SkillData.Status.POISON: "中毒",
+	SkillData.Status.NIGHT_VEIL: "夜幕",
+	SkillData.Status.FORGE: "鍛強",
+}
+
 ## 立牌「角色可見高度」(世界單位)。召喚時會掃描角色圖的不透明範圍,
 ## 把「看得見的身體」縮放到正好這個高度——素材格子的透明留白不參與計算,
 ## 所以不管素材留白多少、解析度多少,角色在卡上的份量都一致。
@@ -65,6 +74,11 @@ var current_hp: int = 0
 var attacked_this_turn: bool = false
 var skill_used_this_turn: bool = false
 var summoned_this_turn: bool = false
+## 場上的狀態效果:[{id: SkillData.Status, turns: int}, ...](§9)。
+## 鍛強在 atk_total() 生效;夜幕/鐵壁在 BattleManager 的傷害管線裡消耗。
+var statuses: Array[Dictionary] = []
+var iron_wall_used_this_turn: bool = false   # 【鐵壁】本回合的首傷減免用掉了?
+var revived: bool = false                    # 【不滅】每場一次的復活用掉了?
 ## HPLabel 進場時的原色(受傷變紅、補滿要變得回來——基準先快照)。
 var _hp_label_color: Color = Color.WHITE
 
@@ -359,6 +373,68 @@ func _refresh_hp_label() -> void:
 		$HPLabel.modulate = Color(1.0, 0.32, 0.28)
 	else:
 		$HPLabel.modulate = _hp_label_color
+
+
+## ── 狀態效果(§9;由 BattleManager 讀寫)──────────────
+func add_status(id: SkillData.Status, turns: int) -> void:
+	# 灼燒/凍結互斥(§9):新狀態把對立的舊狀態擠掉。
+	if id == SkillData.Status.BURN:
+		remove_status(SkillData.Status.FREEZE)
+	elif id == SkillData.Status.FREEZE:
+		remove_status(SkillData.Status.BURN)
+	for s in statuses:
+		if s.id == id:
+			s.turns = maxi(int(s.turns), turns)   # 重複上同狀態:刷新回合數,不疊加
+			_update_status_label()
+			return
+	statuses.append({"id": id, "turns": turns})
+	_update_status_label()
+
+
+func has_status(id: SkillData.Status) -> bool:
+	for s in statuses:
+		if s.id == id:
+			return true
+	return false
+
+
+func remove_status(id: SkillData.Status) -> void:
+	for i in range(statuses.size() - 1, -1, -1):
+		if statuses[i].id == id:
+			statuses.remove_at(i)
+	_update_status_label()
+
+
+## 回合開始:所有狀態剩餘回合 -1,歸零解除(§5 開始階段「解除凍結等狀態」)。
+func decay_statuses() -> void:
+	for i in range(statuses.size() - 1, -1, -1):
+		statuses[i].turns = int(statuses[i].turns) - 1
+		if int(statuses[i].turns) <= 0:
+			statuses.remove_at(i)
+	_update_status_label()
+
+
+## 目前攻擊力 = 基礎 + 鍛強(§9:ATK +2)。傷害計算一律用這個,別直接讀 data.atk。
+func atk_total() -> int:
+	return data.atk + (2 if has_status(SkillData.Status.FORGE) else 0)
+
+
+## 卡面頂緣的狀態列(程式生成 Label3D,同 SkillLabel 的規矩):「灼燒2 中毒3」。
+func _update_status_label() -> void:
+	var lb: Label3D = get_node_or_null("StatusLabel")
+	if lb == null:
+		lb = Label3D.new()
+		lb.name = "StatusLabel"
+		add_child(lb)
+		lb.position = Vector3(0.0, 1.02, 0.02)   # 卡頂中央(費用在角落,不打架)
+		lb.font_size = 22
+		lb.render_priority = 1
+		lb.modulate = Color(1.0, 0.62, 0.2)   # 橘=「有事發生中」的警示色
+		lb.outline_size = 8
+	var parts: PackedStringArray = []
+	for s in statuses:
+		parts.append("%s%d" % [STATUS_NAMES.get(s.id, "?"), int(s.turns)])
+	lb.text = " ".join(parts)
 
 
 ## ── 死亡演出:死亡表定格 → 縮小消失 → 自毀 ─────────

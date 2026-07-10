@@ -263,10 +263,13 @@ func _on_left_released_drag() -> void:
 	# 往下射線，看看放開的位置下面有沒有卡槽。
 	var found_slot := raycast_check_for_card_slot()
 
-	# 找到卡槽、而且是空的 → 再過「召喚費」這關(§3):付得起才落地。
+	# 找到卡槽、而且是空的 → 先驗卡型(§7:只有從者能進卡槽),再過「召喚費」(§3)。
 	if found_slot and found_slot.is_empty:
 		var cost := card_being_dragged.data.cost
-		if battle_manager.can_afford(cost):
+		if card_being_dragged.data.card_type != CardData.CardType.MINION:
+			battle_ui.flash_message("此卡型別尚未實作(§7):目前只有從者卡能上場")
+			organize_hand()
+		elif battle_manager.can_afford(cost):
 			battle_manager.spend(cost)
 			battle_manager.mark_summoned(card_being_dragged)  # 召喚暈眩:當回合不能攻擊
 			found_slot.place_card(card_being_dragged)     # 交給卡槽處理入槽動畫+鎖定
@@ -445,7 +448,12 @@ func _on_end_turn() -> void:
 		_cancel_command()
 	battle_manager.end_turn()
 	battle_ui.flash_message("第 %d 回合" % battle_manager.turn)
-	player_hand.draw_card()   # 抽牌階段:每回合開始抽 1(§5)
+	# 抽牌階段(§5):每回合抽 1;手牌滿了就燒牌(§1 上限,同爐石/暗影詩章)。
+	if player_hand.cards.size() >= player_hand.max_hand_size:
+		battle_ui.flash_message(
+			"手牌已滿(%d 張):這回合抽到的牌燒掉了!" % player_hand.max_hand_size)
+	else:
+		player_hand.draw_card()
 
 
 ## 敵方牌堆(純視覺):把玩家牌堆整組複製、對角鏡射到敵方那側。

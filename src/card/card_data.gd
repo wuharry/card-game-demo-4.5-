@@ -10,6 +10,19 @@
 extends Resource
 class_name CardData   # 註冊全域型別:Inspector 的「新增資源」搜尋得到、變數能寫 var d: CardData
 
+## §7 卡牌類型。目前只有從者卡有實作;其餘型別素材未到、行為未寫,
+## 但欄位先立好:新型別卡進來只是「加 .tres + 實作該型的結算」,舊卡一張不用回頭改。
+## MINION 排第 0 = 預設值,所以現有 24 張 .tres 不需要任何改動。
+enum CardType {
+	MINION,   ## 從者:場上戰鬥單位(ATK/HP),召喚進卡槽
+	EQUIP,    ## 靈裝:附著從者的裝備,宿主離場通常一併離場
+	ARCANA,   ## 秘術:主動法術,結算後離場(僅攻方、自己回合)
+	QUICK,    ## 瞬咒:反應法術,抵銷秘術/伏印(僅守方、反制窗口)
+	WARD,     ## 伏印:蓋放的陷阱,條件觸發(埋設於主要階段)
+	DOMAIN,   ## 領域:全場環境卡(§7 標注本版不使用,先佔位)
+}
+
+@export var card_type: CardType = CardType.MINION
 @export var card_name: String = "未命名"   # 卡名(顯示在 NameLabel)
 @export var cost: int = 1                  # 召喚費用(左上 CostLabel)
 @export var atk: int = 1                   # 攻擊力(左下 ATKLabel)
