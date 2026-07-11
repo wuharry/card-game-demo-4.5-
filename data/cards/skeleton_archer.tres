@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="CardData" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="CardData" load_steps=4 format=3 uid="uid://de2vh3oefwk0k"]
 
-[ext_resource type="Script" path="res://src/card/card_data.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/小小RPG角色素材包/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Skeleton Archer/Skeleton Archer/Skeleton Archer_Idle.png" id="2_sheet"]
+[ext_resource type="Script" uid="uid://cxot3rc105cul" path="res://src/card/card_data.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://pnwau85tbok" path="res://assets/小小RPG角色素材包/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Skeleton Archer/Skeleton Archer/Skeleton Archer_Idle.png" id="2_sheet"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
 atlas = ExtResource("2_sheet")

@@ -1,12 +1,8 @@
-[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3 uid="uid://c2c1n5uamv7jw"]
 
-[ext_resource type="Script" path="res://src/card/card_data.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/小小RPG角色素材包/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Soldier/Soldier/Soldier_Idle.png" id="2_sheet"]
+[ext_resource type="Script" uid="uid://cxot3rc105cul" path="res://src/card/card_data.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://mmagq40li0fu" path="res://assets/小小RPG角色素材包/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Soldier/Soldier/Soldier_Idle.png" id="2_sheet"]
 [ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
-atlas = ExtResource("2_sheet")
-region = Rect2(0, 0, 100, 100)
 
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
@@ -14,15 +10,11 @@ skill_name = "戮力突刺"
 description = "發動一次額外攻擊,造成 2 點傷害。"
 kind = 1
 cost = 2
-anim = "Attack02"
 power = 2
-modifier = 0
-effect = 0
-effect_target = 2
-amount = 0
-status = 0
-status_turns = 1
-summon_card = ""
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
+atlas = ExtResource("2_sheet")
+region = Rect2(0, 0, 100, 100)
 
 [resource]
 script = ExtResource("1_script")

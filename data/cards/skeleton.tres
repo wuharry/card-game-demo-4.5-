@@ -1,35 +1,26 @@
-[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3 uid="uid://bsotjojs0ppa5"]
 
-[ext_resource type="Script" path="res://src/card/card_data.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/小小RPG角色素材包/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Skeleton/Skeleton/Skeleton_Idle.png" id="2_sheet"]
+[ext_resource type="Script" uid="uid://cxot3rc105cul" path="res://src/card/card_data.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://vidfx63cu8an" path="res://assets/小小RPG角色素材包/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Skeleton/Skeleton/Skeleton_Idle.png" id="2_sheet"]
 [ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
-atlas = ExtResource("2_sheet")
-region = Rect2(0, 0, 100, 100)
 
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
 skill_name = "舉盾死守"
 description = "舉盾自保,獲得夜幕(下回合首次受到的傷害減半)。"
 kind = 2
-cost = 1
 anim = "Block"
-power = 0
-modifier = 0
 effect = 2
 effect_target = 0
-amount = 0
 status = 4
-status_turns = 1
-summon_card = ""
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
+atlas = ExtResource("2_sheet")
+region = Rect2(0, 0, 100, 100)
 
 [resource]
 script = ExtResource("1_script")
 card_name = "骷髏兵"
-cost = 1
-atk = 1
-hp = 1
 art = SubResource("AtlasTexture_frame")
 standee = ExtResource("2_sheet")
 active_skill = SubResource("Skill_main")
