@@ -51,17 +51,34 @@ func draw_starting_hand(count: int) -> void:
 
 
 ## 把手牌視圖重建成指定的資料(開局/熱座換邊時由 CardManager 呼叫)。
-## 發牌感:整手從牌堆位置一張接一張飛進扇形(換邊=給新玩家發一手牌)。
-func rebuild_from(data_list: Array[CardData]) -> void:
+## fly_in = true:發牌感,整手從牌堆一張接一張飛進扇形(開局用)。
+## fly_in = false:整手直接就位、零動畫——換邊時用,回合抽牌的那張
+## 另由 deal_last_from_deck() 單獨飛入(只發一張,不重演整手發牌)。
+func rebuild_from(data_list: Array[CardData], fly_in: bool = true) -> void:
 	for card in cards:
 		card.queue_free()
 	cards.clear()
 	var deck := get_node_or_null("../Deck") as Node3D
 	for cd in data_list:
 		var card := _spawn_card(cd)
-		if deck != null:
+		if fly_in and deck != null:
 			card.global_position = deck.global_position + Vector3(0.0, 0.4, 0.0)
-	_arrange_fan(0.06)
+	if fly_in:
+		_arrange_fan(0.06)
+	else:
+		_arrange_fan(0.0, true)
+
+
+## 回合抽牌的「只發一張」動畫:把手牌最後一張(帳房剛 append 的那張)
+## 擺回牌堆位置,再交給扇形補間飛入;其餘手牌只微幅挪位讓座。
+## deck_path 讓來源牌堆跟著行動方走(敵方回合從 EnemyDeck 飛出)。
+func deal_last_from_deck(deck_path: String = "../Deck") -> void:
+	if cards.is_empty():
+		return
+	var deck := get_node_or_null(deck_path) as Node3D
+	if deck != null:
+		cards[-1].global_position = deck.global_position + Vector3(0.0, 0.4, 0.0)
+	_arrange_fan()
 
 
 ## 目前手牌的資料清單(換邊前由 CardManager stash 回帳房)。
@@ -126,7 +143,7 @@ func play_card(card: Node3D) -> void:
 ## ── 核心：把 cards 陣列裡的牌排成圓弧扇形 ──────────
 ## 開頭底線 _ 代表這是內部函式。
 ## stagger = 每張牌依序延遲幾秒起飛(發牌的節奏感);0 = 全部同時(平時重排)。
-func _arrange_fan(stagger: float = 0.0) -> void:
+func _arrange_fan(stagger: float = 0.0, instant: bool = false) -> void:
 	var count := cards.size()
 	# 沒有牌就不用排，直接結束。
 	if count == 0:
@@ -167,6 +184,13 @@ func _arrange_fan(stagger: float = 0.0) -> void:
 		# 讓牌沿著圓弧切線方向稍微歪頭：Z 軸轉角 = 角度偏移的負值。
 		# X 軸固定傾斜 card_tilt_x 度(讓牌面朝向攝影機)。
 		var target_rot := Vector3(card_tilt_x, 0.0, -rad_to_deg(angle_rad))
+
+		# instant:不補間、直接就位(換邊重建用——動畫留給「新抽那張」單獨演)。
+		if instant:
+			cards[i].position = target_pos
+			cards[i].rotation_degrees = target_rot
+			cards[i].scale = Vector3.ONE * card_uniform_scale
+			continue
 
 		# 用 Tween 平滑移動到新位置，所以出牌後重排會有流暢的滑動動畫。
 		# set_parallel(true) 讓位置、旋轉、縮放三個動畫「同時」進行。
