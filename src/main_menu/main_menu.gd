@@ -32,6 +32,10 @@ const GAME_SCENE := "res://scenes/main.tscn"
 ## 主選單背景用的城鎮場景(黃昏廣場,見 src/environment/arena_town.gd)。
 const TOWN_SCENE: PackedScene = preload("res://scenes/arena_town.tscn")
 
+## 大廳的連線邏輯(src/net/net_lobby.gd)。用 preload 路徑而非 class_name 實例化:
+## 新 class_name 要等編輯器重掃才進全域快取,路徑載入沒有這個時間差(§19 的老坑)。
+const NET_LOBBY_SCRIPT: GDScript = preload("res://src/net/net_lobby.gd")
+
 ## ── 字型 ────────────────────────────────────────────
 ## 思源宋體(Noto Serif TC)= 中文襯線主角:標題與選單都用它,氣質靠它撐;
 ## Playpen Sans 只拿來排底部那行英文小字。兩套都是 SIL OFL 授權,可安心商用。
@@ -50,10 +54,25 @@ const LINE_GOLD := Color(0.83, 0.72, 0.45, 0.85)   # 裝飾細線
 var _start_button: Button    # 記住開始鈕,換場景前要鎖它防連點
 var _fade_rect: ColorRect    # 蓋在最上層的黑幕:開場淡入、換場景淡出都靠它
 
+## ── 連線大廳(2a):選單欄 ↔ 大廳欄互斥顯示,連線邏輯全在 NetLobby ──
+var _net_lobby: Node             # NetLobby 實例(連線邏輯,無 UI)
+var _menu_col: VBoxContainer     # 選單欄(開始遊戲/連線對戰/離開遊戲)
+var _lobby_col: VBoxContainer    # 大廳欄(建立房間/IP+加入/狀態字/返回)
+var _lobby_status: Label         # 大廳狀態字(等待加入/連線中/失敗原因…)
+var _ip_edit: LineEdit           # 房主 IP 輸入框
+var _host_btn: Button            # 建立房間鈕(開房成功後鎖住,返回才解鎖)
+
 
 func _ready() -> void:
 	_build_town_backdrop()
 	_build_ui()
+	# 連線邏輯節點:名字固定 "NetLobby"(RPC 要求兩端節點路徑一致,名字是合約)。
+	# 它的 _ready 會順手斷掉任何舊連線——回主選單 = 放棄上一場。
+	_net_lobby = NET_LOBBY_SCRIPT.new()
+	_net_lobby.name = "NetLobby"
+	add_child(_net_lobby)
+	_net_lobby.status_changed.connect(_on_lobby_status)
+	_net_lobby.match_ready.connect(_on_match_ready)
 	_start_button.grab_focus()   # 給鍵盤焦點:開場直接按 Enter 就能開始
 	# 開場從全黑淡入:黑幕 alpha 1 → 0。黑幕蓋得住 3D 和 UI,整個畫面一起浮現。
 	_fade_rect.color.a = 1.0
@@ -130,6 +149,7 @@ func _build_menu_column(ui: Control) -> void:
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 10)
 	center_box.add_child(col)
+	_menu_col = col   # 記住選單欄:進大廳時要把它藏起來、返回時再現身
 
 	# 標題:襯線粗體 + 往下柔影。陰影比粗描邊高級:大字配粗描邊會有「貼紙感」。
 	var title := Label.new()
@@ -156,9 +176,16 @@ func _build_menu_column(ui: Control) -> void:
 	_start_button.pressed.connect(_on_start_pressed)
 	col.add_child(_start_button)
 
+	var net_btn := _make_menu_option("連線對戰")
+	net_btn.pressed.connect(_open_lobby)
+	col.add_child(net_btn)
+
 	var quit_btn := _make_menu_option("離開遊戲")
 	quit_btn.pressed.connect(func() -> void: get_tree().quit())   # 直接關閉遊戲
 	col.add_child(quit_btn)
+
+	# 大廳欄放進同一個置中容器:兩欄重疊置中,靠 visible 互斥切換。
+	_build_lobby_column(center_box)
 
 
 ## ── 底部小字:版本行,像標題畫面角落的版權訊息 ─────────────
@@ -180,6 +207,12 @@ func _on_start_pressed() -> void:
 	# 抽這一局的牌桌環境(森林/洞窟/冰原,均等機率)。結果存在 ArenaPool 的
 	# static 變數上——static 活在類別上、不隨場景切換消失,main.tscn 載入後讀得到。
 	ArenaPool.pick_random()
+	await _enter_game()
+
+
+## 淡出到黑 → 切進牌桌。單機與連線共用同一段演出;呼叫前牌桌環境要先定案
+## (單機:自己 pick_random;連線:host 抽好、經 NetLobby 的握手 RPC 寫進 ArenaPool)。
+func _enter_game() -> void:
 	# 淡出到全黑(純手感)。await = 停在這行,等 tween 的 finished 信號發出才繼續。
 	var tw := create_tween()
 	tw.tween_property(_fade_rect, "color:a", 1.0, 0.35)
@@ -191,6 +224,115 @@ func _on_start_pressed() -> void:
 		push_error("進入牌桌失敗:%s(錯誤碼 %d)" % [GAME_SCENE, err])
 		_fade_rect.color.a = 0.0
 		_start_button.disabled = false
+
+
+## ── 大廳欄(2a):建立房間 / 輸 IP 加入 / 狀態字 / 返回 ──────────
+## UI 只負責「顯示與轉告」:按鈕轉呼叫 NetLobby,狀態字聽 status_changed 更新。
+func _build_lobby_column(parent: CenterContainer) -> void:
+	_lobby_col = VBoxContainer.new()
+	_lobby_col.add_theme_constant_override("separation", 10)
+	_lobby_col.visible = false   # 平時藏著,按「連線對戰」才現身
+	parent.add_child(_lobby_col)
+
+	var title := Label.new()
+	title.text = "連線對戰"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_override("font", FONT_TITLE)
+	title.add_theme_font_size_override("font_size", 44)
+	title.add_theme_color_override("font_color", GOLD)
+	title.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.65))
+	title.add_theme_constant_override("shadow_offset_y", 3)
+	_lobby_col.add_child(title)
+
+	var line := ColorRect.new()
+	line.color = LINE_GOLD
+	line.custom_minimum_size = Vector2(240, 2)
+	line.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_lobby_col.add_child(line)
+
+	_lobby_col.add_child(_make_spacer(30))
+
+	_host_btn = _make_menu_option("建立房間")
+	_host_btn.pressed.connect(_on_host_pressed)
+	_lobby_col.add_child(_host_btn)
+
+	# IP 輸入 + 加入:排成一橫排,整排在欄內置中。
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_lobby_col.add_child(row)
+
+	_ip_edit = LineEdit.new()
+	_ip_edit.placeholder_text = "房主 IP(同機測試 127.0.0.1)"
+	_ip_edit.custom_minimum_size = Vector2(300, 44)
+	_ip_edit.add_theme_font_override("font", FONT_MENU)
+	_ip_edit.add_theme_font_size_override("font_size", 17)
+	var edit_style := StyleBoxFlat.new()
+	edit_style.bg_color = Color(0.0, 0.0, 0.0, 0.38)
+	edit_style.border_color = LINE_GOLD
+	edit_style.set_border_width_all(1)
+	edit_style.set_corner_radius_all(4)
+	edit_style.set_content_margin_all(8)
+	_ip_edit.add_theme_stylebox_override("normal", edit_style)
+	# 在輸入框按 Enter = 按「加入」:鍵盤派不用伸手拿滑鼠。
+	_ip_edit.text_submitted.connect(func(_text: String) -> void: _on_join_pressed())
+	row.add_child(_ip_edit)
+
+	var join_btn := _make_menu_option("加入")
+	join_btn.custom_minimum_size = Vector2(96, 44)
+	join_btn.pressed.connect(_on_join_pressed)
+	row.add_child(join_btn)
+
+	_lobby_col.add_child(_make_spacer(8))
+
+	_lobby_status = Label.new()
+	_lobby_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_lobby_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_lobby_status.custom_minimum_size = Vector2(460, 0)
+	_lobby_status.add_theme_font_override("font", FONT_MENU)
+	_lobby_status.add_theme_font_size_override("font_size", 16)
+	_lobby_status.add_theme_color_override("font_color", GOLD_DIM)
+	_lobby_col.add_child(_lobby_status)
+
+	_lobby_col.add_child(_make_spacer(20))
+
+	var back_btn := _make_menu_option("返回")
+	back_btn.pressed.connect(_close_lobby)
+	_lobby_col.add_child(back_btn)
+
+
+func _open_lobby() -> void:
+	_menu_col.visible = false
+	_lobby_col.visible = true
+	_lobby_status.text = "建立房間讓朋友連你,或輸入房主的 IP 加入。"
+	_ip_edit.grab_focus()
+
+
+func _close_lobby() -> void:
+	_net_lobby.cancel()   # 返回 = 關房/斷線,回離線狀態
+	_host_btn.disabled = false
+	_lobby_col.visible = false
+	_menu_col.visible = true
+	_start_button.grab_focus()
+
+
+func _on_host_pressed() -> void:
+	if _net_lobby.host_game() == OK:
+		_host_btn.disabled = true   # 房間開著就別重開;「返回」會關房並解鎖
+
+
+func _on_join_pressed() -> void:
+	# 失敗原因會經 status_changed 顯示;連不上時再按一次「加入」就是重試。
+	_net_lobby.join_game(_ip_edit.text)
+
+
+func _on_lobby_status(text: String) -> void:
+	_lobby_status.text = text
+
+
+## 握手完成(雙方共識已寫進 NetMatch / ArenaPool),這裡只負責演出與換場景。
+func _on_match_ready() -> void:
+	await _enter_game()
 
 
 ## ── 歧路旅人式「文字選單項」────────────────────────────
