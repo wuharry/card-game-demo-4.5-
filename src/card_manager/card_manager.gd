@@ -451,36 +451,66 @@ func _on_game_over(winner: String) -> void:
 	battle_ui.show_game_over(winner == "player")
 
 
-## 結束回合(BattleUI 的按鈕):先收掉開著的指令流程(旗標要重算),再讓帳房翻頁。
+## 結束回合(BattleUI 的按鈕)。連線時只有行動方按得動;
+## 真正的換頁走 RPC 讓兩台同步翻頁(單機時 call_local 就地執行,行為不變)。
 func _on_end_turn() -> void:
 	if ui_state == UiState.GAME_OVER:
 		return
-	# 拖曳中按結束回合:先把卡放回扇形——換邊會整批重建手牌視圖,
-	# 正被拖著的卡若被 queue_free,card_being_dragged 就成了懸空參考(摸了就炸)。
+	# 連線視角鎖定(2b 第一塊):不是你的回合,按了不換頁。
+	if NetMatch.is_online and battle_manager.active_side != NetMatch.my_side:
+		battle_ui.flash_message("還在對方的回合")
+		return
+	_net_end_turn.rpc()
+
+
+## 換頁令(兩端各跑一份)。"any_peer":輪到 client 時得由它發令;
+## 發令資格由 _on_end_turn 的回合閘把關(伺服端驗證是 2b 剩餘的債,見學習債 §25)。
+@rpc("any_peer", "call_local", "reliable")
+func _net_end_turn() -> void:
+	if ui_state == UiState.GAME_OVER:
+		return
+	# 兩端各自收拾自己的互動狀態:拖到一半的卡先放回扇形——手牌視圖若重建,
+	# 被拖著的卡遭 queue_free 就成懸空參考(摸了就炸);開著的選單一併收掉。
 	if ui_state == UiState.DRAGGING:
 		organize_hand()
 		card_being_dragged = null
 		ui_state = UiState.IDLE
 	if ui_state == UiState.MENU_OPEN or ui_state == UiState.TARGETING:
 		_cancel_command()
-	# 手牌即將整批重建:指向手牌卡的 hover 參考一併清空(同樣的懸空風險)。
 	currently_hovered_card = null
-	# 熱座換邊三步:①手牌視圖現況存回行動方的帳 ②帳房換邊+抽牌(資料層)
-	# ③視圖重建成「新行動方」的手牌——視圖永遠只是帳的投影。
-	battle_manager.stash_hand(player_hand.hand_data())
+	# 換邊三步:①視圖上的手牌若正是行動方的帳,現況存回去
+	# (熱座恆真;連線只有行動方那台為真——另一台顯示的是自己的手牌,別污染對方的帳)
+	if _hand_view_shows_active_side():
+		battle_manager.stash_hand(player_hand.hand_data())
+	# ②帳房換邊+抽牌(資料層)
 	var result: Dictionary = battle_manager.end_turn()
-	player_hand.rebuild_from(battle_manager.active_hand())
+	# ③視圖:熱座跟著行動方換頁;連線鎖在自己這側——輪到對方時我的手牌原封不動
+	# (=「對方回合不會發牌到我這邊」);輪到我才就位+單獨飛入新抽那張。
+	if _hand_view_shows_active_side():
+		player_hand.rebuild_from(battle_manager.active_hand(), false)
+		if result.drawn != null:
+			var deck_path := "../Deck" if battle_manager.active_side == "player" else "../EnemyDeck"
+			player_hand.deal_last_from_deck(deck_path)
 	_update_deck_labels()
-	var side_name := "我方" if battle_manager.active_side == "player" else "對方"
+	# my_side 離線時恆為 "player",所以這行在熱座的語意跟以前一模一樣。
+	var side_name := "我方" if battle_manager.active_side == NetMatch.my_side else "對方"
 	var msg := "第 %d 回合:%s行動" % [battle_manager.turn, side_name]
-	if result.burned:
+	if result.burned and _hand_view_shows_active_side():
 		msg += "(手牌已滿,抽到的牌燒掉了!)"
 	battle_ui.flash_message(msg)
 
 
-## 開局同步:把行動方(玩家)的起手資料餵給手牌視圖、掛上牌堆剩量標籤。
+## 這台機器的手牌視圖,顯示的是不是「行動方」的帳?
+## 熱座:視圖永遠跟著行動方 → 恆真。連線:視圖鎖在 my_side → 輪到自己才真。
+func _hand_view_shows_active_side() -> bool:
+	return not NetMatch.is_online or battle_manager.active_side == NetMatch.my_side
+
+
+## 開局同步:手牌視圖餵「這台機器該看的那側」+ 掛上牌堆剩量標籤。
+## 連線:鎖自己這側(client 開局看到自己的手牌,不是 host 的);
+## 離線:my_side 恆 "player" = 開局行動方,行為不變。
 func _sync_hand_view() -> void:
-	player_hand.rebuild_from(battle_manager.active_hand())
+	player_hand.rebuild_from(battle_manager.hand_of(NetMatch.my_side))
 	_update_deck_labels()
 
 

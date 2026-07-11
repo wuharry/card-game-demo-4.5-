@@ -97,6 +97,11 @@ func active_hand() -> Array[CardData]:
 	return _active().hand
 
 
+## 指定側的手牌資料(連線視角鎖定用:各機只看自己那側的手牌)。
+func hand_of(side: String) -> Array[CardData]:
+	return (sides[side] as SideState).hand
+
+
 func deck_count(side: String) -> int:
 	return (sides[side] as SideState).deck.size() if sides.has(side) else 0
 

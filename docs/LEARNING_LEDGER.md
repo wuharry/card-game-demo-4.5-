@@ -250,3 +250,19 @@
 | static 變數的寫入路徑:透過 class_name 寫 OK(`ArenaPool.next_arena_path = x`),透過 **preload 的 const 類別引用**寫會被編譯器當「改常數」擋下(讀常數/呼叫函式都行,唯獨賦值不行)——跨檔寫 static 收進該類別自己的 static 函式(`NetMatch.start_online()`),順便把「哪些欄位一起變」封裝成一個動作 | 初階/未驗 | 「NET_MATCH.PORT 讀得到、NET_MATCH.reset() 叫得動,為什麼 NET_MATCH.is_online = true 編譯不過?修法為什麼是加 start_online() 而不是把 const 改成 var?」 |
 | 圖塞窗三策略:contain(`minf`,完整進窗**必留白**)/ cover(`maxf`,填滿**必裁切**,凸出靠遮罩吃 =§9 出血)/ fill-stretch(高度等比+`scale.x` 拉寬,填滿**必變形**)。三者只能挑一種代價,挑哪個是美術判斷不是對錯 | 初階(2026-07-11 教過+實測:留白方向答對、推出「畫大凸出」;cover 裁 30% 後**他自己打槍改要 fill**——能對策略代價做取捨了,快到中階) | 「窗改直向(0.9:1.3),cover 改裁哪邊?fill 的變形率怎麼算?什麼素材該用 contain 死也不變形?」 |
 | VSCode 的 GDScript 紅字 ≠ 引擎判決:語言伺服器沒連 Godot 編輯器時認不得 class_name 全域型別(SkillData/CardType 整排假錯);地面真相用 `godot --headless --quit` 或編輯器本身驗 | 初階(2026-07-11 親歷:改 minf→maxf 後 IDE 爆 13 個假錯,headless 零錯誤) | 「IDE 說 SkillData 找不到、遊戲卻跑得動——兩個檢查器差在哪?要信誰、怎麼驗?」 |
+
+### 24. 回合抽牌動畫:動畫跟隨資料變化量(2026-07-11;[player_hand.gd](../src/play_hand/player_hand.gd)、[card_manager.gd](../src/card_manager/card_manager.gd))
+
+| 觀念 | 等級 | 考題方向 |
+|---|---|---|
+| 動畫該演「資料變了多少」:開局=整手都是新的→整手飛入(rebuild fly_in);回合抽牌=只多 1 張→只飛那張(deal_last_from_deck);換邊=整手換人但不是「發牌」→直接就位。用錯就是這次的 bug:換邊重演整手發牌,看起來像重新發牌 | 初階/未驗(逃生艙修復,根因他沒自己追) | 「_sync_hand_view 為什麼保留整手飛入、_on_end_turn 卻關掉?之後做『對手偷走你一張牌』,動畫該演什麼、資料變化量是多少?」 |
+| 用「預設參數」擴充 API 不炸舊呼叫:_arrange_fan 加 instant、rebuild_from 加 fly_in,都給預設值 → 既有呼叫點一行不用改 | 初階/未驗 | 「如果 fly_in 不給預設值,專案裡哪一行會立刻爆?為什麼預設值要選 true 而不是 false?」 |
+
+### 25. 連線視角鎖定與回合換頁 RPC(2026-07-11;[card_manager.gd](../src/card_manager/card_manager.gd)、[battle_manager.gd](../src/battle_manager/battle_manager.gd))
+
+| 觀念 | 等級 | 考題方向 |
+|---|---|---|
+| 視角鎖定:熱座「視圖跟著行動方換頁」/連線「視圖鎖死自己那側」——同一份帳,兩種投影策略;判斷式收成一個函式(_hand_view_shows_active_side),讓「誰該看什麼」只寫一次 | 初階/未驗(逃生艙) | 「連線時輪到對方,我的手牌視圖為什麼一行都不用動?熱座為什麼反而要整手換頁?」 |
+| RPC 換頁令:`@rpc("any_peer","call_local","reliable")`——any_peer 因為 client 也要能發令;call_local 讓單機走同一條路(離線 rpc = 就地執行,行為不變);兩端各自收拾自己的拖曳/選單再翻頁(懸空參考防炸要兩端都做) | 初階/未驗 | 「為什麼這裡不能用 authority?call_local 拿掉單機會發生什麼?對面機器上被拖著的卡誰去收?」 |
+| my_side 的離線預設值 = "player" 是刻意的:所有「連線 vs 熱座」的分支寫成跟 my_side 比較,離線語意自動退回熱座——預設值選得好,分支就少一半 | 初階/未驗 | 「side_name 那行為什麼離線時不用另寫一條?如果 my_side 離線預設是空字串會炸哪裡?」 |
+| **2b 剩餘的債(還沒做,別誤以為完工)**:①兩台的牌堆各自亂洗(帳沒同步,上桌行動也還沒廣播)②發令資格只在 UI 閘把關,沒有伺服端驗證(client 可偽造換頁令)③client 的鏡頭/棋盤仍是 host 視角 | ——(待辦,非觀念) | 動工 2b 時逐項劃掉 |
