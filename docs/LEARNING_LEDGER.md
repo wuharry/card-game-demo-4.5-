@@ -228,3 +228,23 @@
 | 除錯器截停的長相:執行期錯誤發生時編輯器把你切出遊戲視窗、畫面像當機——「離開 app 且卡住」≠ 程式崩潰,是 debugger 停在錯誤行等你看;先去讀底部的錯誤訊息,別急著重開 | 初階/未驗 | 「遊戲視窗突然失焦卡住,第一件事該看哪裡?跟真的 crash 差在哪?」 |
 | 「整批重建」的懸空參考家族:視圖重建(rebuild)會 free 舊節點,凡是還指著它們的參考(拖曳中的卡、hover 中的卡)都要在重建**前**清空——is_instance_valid 是最後保險,不是第一道門;列「誰會指著這批節點」的清單來掃,別靠碰運氣 | 初階/未驗 | 「拖著卡按結束回合,舊版會發生什麼?為什麼修法是先 organize_hand 而不是只加 is_instance_valid?」 |
 | 動畫的「感」=距離×節奏:發牌感消失是因為重建把「單張從牌堆飛入」變成「原地生成」——修復=給距離(從牌堆出發)+給節奏(stagger 依序起飛);重構搬走一段流程時,附在上面的演出語彙要跟著搬 | 初階/未驗 | 「stagger 0.06 是什麼單位?為什麼平時重排用 0、只有發牌用 0.06?」 |
+
+### 22. 連線 2a:大廳與 ENet 握手(2026-07-11;[net_lobby.gd](../src/net/net_lobby.gd)、[net_match.gd](../src/net/net_match.gd)、[main_menu.gd](../src/main_menu/main_menu.gd))
+
+| 觀念 | 等級 | 考題方向 |
+|---|---|---|
+| peer 掛在樹、不掛在場景:`multiplayer.multiplayer_peer` 屬於 SceneTree 的 MultiplayerAPI——換場景(大廳→牌桌)節點全死,**連線不斷**;所以大廳能「用完就丟」,回主選單賦 `null` 就回離線(還原成 OfflineMultiplayerPeer) | 初階/未驗 | 「大廳節點在 change_scene 時被 free 了,為什麼連線還在?誰負責在回主選單時斷線?」 |
+| RPC 的路徑合約:RPC=「叫**對面同路徑節點**跑同名函式」,所以 NetLobby 的名字與掛點是合約的一部分;`@rpc("authority","call_local","reliable")` 三參數=誰有資格叫(host 權威,client 偽造被丟)/自己要不要也跑一份/掉包要不要重送 | 初階/未驗 | 「把 NetLobby 改名只改一台,握手會發生什麼?拿掉 call_local 會變成誰單獨開局?」 |
+| 亂數只在 host(ADR-001 第一次落地):牌桌抽籤由 host 抽、把「結果」(index)塞進握手 RPC 廣播,client 只寫不抽——否則兩台各抽各的,你在森林他在冰原;之後的洗牌/抽牌全比照這條 | 初階/未驗 | 「為什麼不讓兩邊用同一個亂數種子各自抽?那種同步脆在哪?」 |
+| 同進程雙分支測試:`SceneTree.set_multiplayer(api, root_path)` 能在一個進程開兩條 multiplayer 分支,host/client 走真 UDP loopback 互連——RPC 路徑以各自的 root_path 為基準解析,兩邊都叫 "NetLobby" 就對得上;連線功能因此能 headless 自動化驗證 | 初階/未驗 | 「verify 裡 host 的 NetLobby 在 /root/HostSide 下、client 的在 /root/ClientSide 下,RPC 為什麼找得到對方?」 |
+| 繞開 class_name 快取(§19 的解法):實例化/引用**同批新增**的類別用 `preload("res://路徑")` 存進 const,不用 class_name——路徑載入不查全域類別快取,沒有「等編輯器重掃」的時間差;net_lobby 引 NetMatch、main_menu 引 NetLobby 都是這樣踩過才改的 | 初階/未驗 | 「main_menu.gd 為什麼用 NET_LOBBY_SCRIPT.new() 而不是 NetLobby.new()?什麼時候兩者等價?」 |
+
+### 23. 法術卡面與素材管線(2026-07-11;[card.gd](../src/card/card.gd)、[data/cards/](../data/cards/)、assets/ui/icons/)
+
+| 觀念 | 等級 | 考題方向 |
+|---|---|---|
+| HD-2D 的特效真相:歧路旅人=2D 像素角色 × 3D 舞台 × **現代 3D 粒子特效+泛光後製**——特效不是像素圖!所以本作的法術特效有兩條路:GPUParticles3D+glow(歧路旅人感,WorldEnvironment 已開 glow)或 2D 幀動畫看板(復古感);卡面圖示是 UI 平面圖,跟場上特效是兩回事 | 初階/未驗 | 「歧路旅人的火焰魔法如果是像素幀動畫,畫面會少了什麼?我們的 glow_hdr_threshold=0.95 跟特效有什麼關係?」 |
+| 後路分支的價值:setup() 的 `elif data.art != null` 當年寫著「理論上不會走到」,今天法術卡直接踩著它上線零改動——fallback 別只寫 push_error,把行為寫完整,未來功能常常就是免費的 | 初階/未驗 | 「如果當初 elif art 只寫 push_error('不該走到'),今天要多做哪些事?」 |
+| AtlasTexture 切格子:一張大圖 + N 個 region 引用,不裁幾百個小檔——載入一次、記憶體一份、檔案系統乾淨;region 座標=格位 × 格尺寸;.tres 手寫格式三件套:ext_resource(path 引用)/sub_resource/load_steps=資源總數+1 | 初階/未驗 | 「16 顆圖示裁成 16 個 PNG 和一張大圖+16 個 AtlasTexture,差在哪?load_steps 數錯會怎樣?」 |
+| 匯入系統的邊界:res:// 的圖要有 .import 才 load 得到(headless 同樣受限),編輯器取得焦點才會掃描匯入新檔;`Image.load_from_file` 繞過匯入直接讀原始檔(驗證未匯入素材的後門);`.gdignore` 讓資料夾不被掃描(原始 zip 的隔離區) | 初階/未驗 | 「為什麼我 F5 看得到新圖、你 headless 卻 load 失敗?.gdignore 和 .gitignore 各管什麼?」 |
+| static 變數的寫入路徑:透過 class_name 寫 OK(`ArenaPool.next_arena_path = x`),透過 **preload 的 const 類別引用**寫會被編譯器當「改常數」擋下(讀常數/呼叫函式都行,唯獨賦值不行)——跨檔寫 static 收進該類別自己的 static 函式(`NetMatch.start_online()`),順便把「哪些欄位一起變」封裝成一個動作 | 初階/未驗 | 「NET_MATCH.PORT 讀得到、NET_MATCH.reset() 叫得動,為什麼 NET_MATCH.is_online = true 編譯不過?修法為什麼是加 start_online() 而不是把 const 改成 var?」 |
