@@ -1,12 +1,8 @@
-[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3 uid="uid://cqrst322f52xt"]
 
-[ext_resource type="Script" path="res://src/card/card_data.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/小小RPG角色素材包/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Armored Skeleton/Armored Skeleton/Armored Skeleton_Idle.png" id="2_sheet"]
+[ext_resource type="Script" uid="uid://cxot3rc105cul" path="res://src/card/card_data.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://c6xy4csp72tbp" path="res://assets/小小RPG角色素材包/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Armored Skeleton/Armored Skeleton/Armored Skeleton_Idle.png" id="2_sheet"]
 [ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
-atlas = ExtResource("2_sheet")
-region = Rect2(0, 0, 100, 100)
 
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
@@ -15,14 +11,13 @@ description = "白骨重組,自身回復 3 點生命。"
 kind = 2
 cost = 2
 anim = "Summon"
-power = 0
-modifier = 0
 effect = 1
 effect_target = 0
 amount = 3
-status = 0
-status_turns = 1
-summon_card = ""
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
+atlas = ExtResource("2_sheet")
+region = Rect2(0, 0, 100, 100)
 
 [resource]
 script = ExtResource("1_script")
