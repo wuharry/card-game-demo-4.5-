@@ -57,3 +57,10 @@ export_credentials.cfg
 # 如果 addons/ 是「你自己寫的外掛原始碼」→ 不要忽略
 # 如果是「安裝或產生出來的外掛」→ 可以忽略
  addons/
+
+# =========================
+# 素材原始壓縮包(zip 備份,不進版控)
+# =========================
+# 解壓後挑用的檔案已進 assets/ui/icons/ 等處;原始 zip 留本機即可
+# (資料夾內有 .gdignore,Godot 也不掃描它)
+assets/_Raw_Imports/
