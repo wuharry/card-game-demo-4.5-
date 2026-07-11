@@ -49,6 +49,16 @@ const STATUS_NAMES := {
 	SkillData.Status.FORGE: "鍛強",
 }
 
+## §7 卡型章:非從者卡的底部印「卡型名 + 印章色」(從者卡的那個位置是攻血數字)。
+## 色調刻意壓暗:要像蓋在羊皮紙上的印泥,不是螢光標籤。
+const TYPE_BADGES := {
+	CardData.CardType.EQUIP: ["靈裝", Color(0.5, 0.36, 0.1)],
+	CardData.CardType.ARCANA: ["秘術", Color(0.4, 0.18, 0.5)],
+	CardData.CardType.QUICK: ["瞬咒", Color(0.12, 0.32, 0.55)],
+	CardData.CardType.WARD: ["伏印", Color(0.16, 0.4, 0.18)],
+	CardData.CardType.DOMAIN: ["領域", Color(0.35, 0.35, 0.35)],
+}
+
 ## 立牌「角色可見高度」(世界單位)。召喚時會掃描角色圖的不透明範圍,
 ## 把「看得見的身體」縮放到正好這個高度——素材格子的透明留白不參與計算,
 ## 所以不管素材留白多少、解析度多少,角色在卡上的份量都一致。
@@ -101,6 +111,10 @@ func setup(card_data: CardData) -> void:
 	$HPLabel.text = str(data.hp)
 	current_hp = data.hp                  # 執行期血量從模板拷貝出來(見上方變數說明)
 	_hp_label_color = $HPLabel.modulate   # 原色快照:受傷變紅後要能變回來
+	# 法術卡(§7 非從者)沒有攻血:數字藏起來,底部改印卡型章(_update_type_label)。
+	var is_minion := data.card_type == CardData.CardType.MINION
+	$ATKLabel.visible = is_minion
+	$HPLabel.visible = is_minion
 	# ── 卡圖:像素角色第 0 幀「放大」塞進卡框挖空窗 ──────────────
 	# (AI 繪圖卡圖已棄用:和像素立牌風格打架。卡圖=立牌同一張動畫表,全場統一。)
 	# 100×100 的格子裡角色本體只佔中間約 30px:整格塞窗,角色會小得像圖示。
@@ -152,10 +166,37 @@ func _update_skill_label() -> void:
 		lb.outline_size = 0
 	if data != null and data.active_skill != null:
 		var s := data.active_skill
-		# 【技能名】◆費用 + 換行描述;◆ 與指令選單的費用標記同一符號。
-		lb.text = "【%s】◆%d\n%s" % [s.skill_name, s.cost, s.description]
+		if data.card_type == CardData.CardType.MINION:
+			# 【技能名】◆費用 + 換行描述;◆ 與指令選單的費用標記同一符號。
+			lb.text = "【%s】◆%d\n%s" % [s.skill_name, s.cost, s.description]
+		else:
+			# 法術卡:卡名/費用已在卡框上緣,文字區只印效果,不重複報頭。
+			lb.text = s.description
 	else:
 		lb.text = ""   # 沒有主動技的白板(骷髏弓手):留白
+	_update_type_label()
+
+
+## ── 卡型章(非從者卡):攻血列的位置改印「秘術/瞬咒/靈裝/伏印」─────
+## 從者卡不印(攻血數字本身就是身分);和技能字同一套「印上去的油墨」質感。
+func _update_type_label() -> void:
+	var lb: Label3D = get_node_or_null("TypeLabel")
+	if data == null or data.card_type == CardData.CardType.MINION:
+		if lb != null:
+			lb.queue_free()
+		return
+	if lb == null:
+		lb = Label3D.new()
+		lb.name = "TypeLabel"
+		add_child(lb)
+		lb.position = Vector3(0.0, -0.9, 0.02)   # 攻血列的位置(數字已藏,空出來)
+		lb.font_size = 26
+		lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lb.render_priority = 1
+		lb.outline_size = 0
+	var badge: Array = TYPE_BADGES.get(data.card_type, ["?", Color(0.2, 0.2, 0.2)])
+	lb.text = "‧ %s ‧" % badge[0]
+	lb.modulate = badge[1]
 
 
 ## ── 召喚立牌:像素角色站在卡片上(遊戲王式)────────────
