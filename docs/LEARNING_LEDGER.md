@@ -102,7 +102,7 @@
 | 觀念 | 等級 | 考題方向 |
 |---|---|---|
 | 透明繪製順序:卡圖擺卡框「後面」(z=-0.01)從挖空窗露出 → 怎麼縮放都壓不到框的美術 | 初階/未驗 | 「為什麼放後面反而安全?改成 +0.01 疊前面會出什麼事?」 |
-| 出血(bleed):遮罩決定形狀、內容做大藏在遮罩後——卡圖出血 6% 和水面板加寬是同一條原則 | 初階(2026-07-05 出題未答) | 「bank_jitter 調到 2.0,水面板要多寬才不露餡?公式?」 |
+| 出血(bleed):遮罩決定形狀、內容做大藏在遮罩後——卡圖出血 6% 和水面板加寬是同一條原則 | 初階(2026-07-05 出題未答;**2026-07-11 進步**:圖示 cover 題自己推出「畫大會凸出」,但「凸出被框蓋住所以沒事」仍由 agent 補完,補齊這半即可升中階) | 「bank_jitter 調到 2.0,水面板要多寬才不露餡?公式?」 |
 | 可見範圍掃描:alpha 掃出角色實佔行列,大小/腳位用「量出來的」——100×100 格子裡角色只有 ~30px,信帳面就會又小又飄 | 初階/未驗 | 「按整格算,角色為什麼只剩帳面 1/3 還懸空?掃描一次解決哪兩件事?」 |
 | Sprite3D 立牌三件套:hframes 切格(幀數=寬÷高)、tween_callback+set_loops 播待機、BILLBOARD_FIXED_Y 直立面向鏡頭 | 初階/未驗 | 「幀數 6 是誰算出來的?為什麼這批素材能用寬除以高?」 |
 | 旋轉疊加(§5 牙籤原則的旋轉版):place_card 轉 local (0,0,0) 就是躺平——父節點 PlayerHand 已 -90°X;再補 -90 卡會立起來 | 初階/未驗 | 「卡在槽裡 local rotation=0,世界裡為什麼是躺的?『躺』是誰給的?」 |
@@ -248,3 +248,5 @@
 | AtlasTexture 切格子:一張大圖 + N 個 region 引用,不裁幾百個小檔——載入一次、記憶體一份、檔案系統乾淨;region 座標=格位 × 格尺寸;.tres 手寫格式三件套:ext_resource(path 引用)/sub_resource/load_steps=資源總數+1 | 初階/未驗 | 「16 顆圖示裁成 16 個 PNG 和一張大圖+16 個 AtlasTexture,差在哪?load_steps 數錯會怎樣?」 |
 | 匯入系統的邊界:res:// 的圖要有 .import 才 load 得到(headless 同樣受限),編輯器取得焦點才會掃描匯入新檔;`Image.load_from_file` 繞過匯入直接讀原始檔(驗證未匯入素材的後門);`.gdignore` 讓資料夾不被掃描(原始 zip 的隔離區) | 初階/未驗 | 「為什麼我 F5 看得到新圖、你 headless 卻 load 失敗?.gdignore 和 .gitignore 各管什麼?」 |
 | static 變數的寫入路徑:透過 class_name 寫 OK(`ArenaPool.next_arena_path = x`),透過 **preload 的 const 類別引用**寫會被編譯器當「改常數」擋下(讀常數/呼叫函式都行,唯獨賦值不行)——跨檔寫 static 收進該類別自己的 static 函式(`NetMatch.start_online()`),順便把「哪些欄位一起變」封裝成一個動作 | 初階/未驗 | 「NET_MATCH.PORT 讀得到、NET_MATCH.reset() 叫得動,為什麼 NET_MATCH.is_online = true 編譯不過?修法為什麼是加 start_online() 而不是把 const 改成 var?」 |
+| 圖塞窗三策略:contain(`minf`,完整進窗**必留白**)/ cover(`maxf`,填滿**必裁切**,凸出靠遮罩吃 =§9 出血)/ fill-stretch(高度等比+`scale.x` 拉寬,填滿**必變形**)。三者只能挑一種代價,挑哪個是美術判斷不是對錯 | 初階(2026-07-11 教過+實測:留白方向答對、推出「畫大凸出」;cover 裁 30% 後**他自己打槍改要 fill**——能對策略代價做取捨了,快到中階) | 「窗改直向(0.9:1.3),cover 改裁哪邊?fill 的變形率怎麼算?什麼素材該用 contain 死也不變形?」 |
+| VSCode 的 GDScript 紅字 ≠ 引擎判決:語言伺服器沒連 Godot 編輯器時認不得 class_name 全域型別(SkillData/CardType 整排假錯);地面真相用 `godot --headless --quit` 或編輯器本身驗 | 初階(2026-07-11 親歷:改 minf→maxf 後 IDE 爆 13 個假錯,headless 零錯誤) | 「IDE 說 SkillData 找不到、遊戲卻跑得動——兩個檢查器差在哪?要信誰、怎麼驗?」 |

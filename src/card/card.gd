@@ -39,6 +39,7 @@ var original_scale: Vector3 = Vector3.ONE
 ## 換了卡框圖的話,這三個常數要重量(掃透明區的位置)。
 const ART_WINDOW_CENTER := Vector2(0.022, 0.488)   # 窗中心(卡片本地 x/y)
 const ART_WINDOW_SIZE := Vector2(1.297, 0.910)     # 窗寬高(世界單位)
+const ART_ICON_SIDE_MARGIN := 0.044                # 法術圖示每側留白(≈卡框 10px;Harvey 目測調參 2026-07-11)
 
 ## 狀態效果的顯示名(§9;卡面狀態列用)。
 const STATUS_NAMES := {
@@ -132,13 +133,18 @@ func setup(card_data: CardData) -> void:
 		$CardArt.region_rect = bounds
 		$CardArt.pixel_size = minf(ART_WINDOW_SIZE.x / bounds.size.x,
 			ART_WINDOW_SIZE.y / bounds.size.y)   # contain:整個本體進窗,不裁到肉
+		$CardArt.scale = Vector3.ONE   # 從者卡維持等比,別吃到法術卡分支的拉伸
 	elif data.art != null:
-		# 理論上不會走到(24 張都有立牌圖):沒有就退回直接顯示 art、不裁切。
-		var tex_w := maxf(float(data.art.get_width()), 1.0)
+		# 法術卡的主要路徑:卡圖是 1:1 圖示(AtlasTexture 從圖示表切格),窗是橫向。
+		# fill/stretch:高度等比貼齊窗高,寬度用 scale.x 拉寬到「窗寬 − 兩側呼吸邊」——
+		# 不裁圖、不凸框,兩側各留 ≤5px 留白換較小的變形率(定案 2026-07-11)。
+		var tex_w := maxf(float(data.art.get_width()), 1.0)   # maxf 是除零防呆
 		var tex_h := maxf(float(data.art.get_height()), 1.0)
 		$CardArt.texture = data.art
 		$CardArt.region_enabled = false
-		$CardArt.pixel_size = minf(ART_WINDOW_SIZE.x / tex_w, ART_WINDOW_SIZE.y / tex_h)
+		$CardArt.pixel_size = ART_WINDOW_SIZE.y / tex_h
+		var target_w := ART_WINDOW_SIZE.x - ART_ICON_SIDE_MARGIN * 2.0
+		$CardArt.scale = Vector3(target_w / (tex_w * $CardArt.pixel_size), 1.0, 1.0)
 	$CardArt.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST   # 像素圖要銳利
 	# 擺到窗中心、退到卡框後 0.01(透明物件由遠到近畫:後面的圖先畫、框蓋在上)。
 	$CardArt.position = Vector3(ART_WINDOW_CENTER.x, ART_WINDOW_CENTER.y, -0.01)
