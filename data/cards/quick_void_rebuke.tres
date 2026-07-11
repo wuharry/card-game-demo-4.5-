@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://src/card/card_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/antahonist_spells/spell_icons_32x32.png" id="2_sheet"]
+[ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_art"]
+atlas = ExtResource("2_sheet")
+region = Rect2(64, 96, 32, 32)
+
+[sub_resource type="Resource" id="Skill_main"]
+script = ExtResource("3_skill")
+skill_name = "虛空反噬"
+description = "反制:抵銷對方發動的秘術或伏印。(樣本卡,結算待實作)"
+cost = 2
+
+[resource]
+script = ExtResource("1_script")
+card_type = 3
+card_name = "虛空反噬"
+cost = 2
+atk = 0
+hp = 0
+art = SubResource("AtlasTexture_art")
+active_skill = SubResource("Skill_main")
