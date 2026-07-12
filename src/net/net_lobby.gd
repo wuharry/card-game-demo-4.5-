@@ -23,7 +23,8 @@ const NET_MATCH: GDScript = preload("res://src/net/net_match.gd")
 
 func _ready() -> void:
 	# 回到主選單 = 放棄任何舊連線(打完一場回來、或上次連到一半就按返回)。
-	# 賦 null 會還原成預設的 OfflineMultiplayerPeer(= 單機狀態)。
+	# ⚠ 賦 null ≠ 還原成 OfflineMultiplayerPeer:null 是「沒有 peer」,之後任何
+	# .rpc() 都會報錯且不執行——所以離線的換頁令在 card_manager 走本地直呼,不走 rpc。
 	multiplayer.multiplayer_peer = null
 	NET_MATCH.reset()
 	multiplayer.peer_connected.connect(_on_peer_connected)
