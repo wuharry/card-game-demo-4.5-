@@ -261,26 +261,46 @@ func _on_left_pressed_idle() -> void:
 		card.animate_unhover()
 
 
-## 拖曳中左鍵放開 = 嘗試出牌(原本的釋放邏輯)。
+## 拖曳中左鍵放開 = 嘗試出牌。依卡型分流(§7):從者進卡槽、秘術丟目標、
+## 靈裝貼我方從者、伏印蓋我方半場;瞬咒不能主動施放(只在反制窗口被詢問)。
 func _on_left_released_drag() -> void:
-	# 往下射線，看看放開的位置下面有沒有卡槽。
-	var found_slot := raycast_check_for_card_slot()
-
-	# 找到卡槽、而且是空的 → 先驗卡型(§7:只有從者能進卡槽),再過「召喚費」(§3)。
-	if found_slot and found_slot.is_empty:
-		var cost := card_being_dragged.data.cost
-		if card_being_dragged.data.card_type != CardData.CardType.MINION:
-			battle_ui.flash_message("此卡型別尚未實作(§7):目前只有從者卡能上場")
+	# 先清空拖曳狀態:秘術的反制窗口是 async(會 await),留著舊狀態會被覆寫打架。
+	var card := card_being_dragged
+	card_being_dragged = null
+	ui_state = UiState.IDLE
+	match card.data.card_type:
+		CardData.CardType.MINION:
+			_try_summon(card)
+		CardData.CardType.ARCANA:
+			_try_cast_arcana(card)
+		CardData.CardType.EQUIP:
+			_try_attach_equip(card)
+		CardData.CardType.WARD:
+			_try_set_ward(card)
+		_:
+			battle_ui.flash_message("瞬咒不能主動施放:對方施放秘術時會自動詢問反制(§7)")
 			organize_hand()
-		elif battle_manager.slot_side(found_slot) != battle_manager.active_side:
+
+
+## 從者:入槽召喚(原本的釋放邏輯,原封不動搬進來)。
+func _try_summon(card: Card) -> void:
+	# 往下射線,看看放開的位置下面有沒有卡槽。
+	var found_slot := raycast_check_for_card_slot()
+	# 找到卡槽、而且是空的 → 先驗這一側(§3),再過「召喚費」(§1)。
+	if found_slot and found_slot.is_empty:
+		var cost := card.data.cost
+		if battle_manager.slot_side(found_slot) != battle_manager.active_side:
 			# 熱座:手牌屬於行動方,只能召喚到行動方自己那側。
 			battle_ui.flash_message("只能召喚到自己這一側的卡槽")
 			organize_hand()
 		elif battle_manager.can_afford(cost):
 			battle_manager.spend(cost)
-			battle_manager.mark_summoned(card_being_dragged)  # 召喚暈眩:當回合不能攻擊
-			found_slot.place_card(card_being_dragged)     # 交給卡槽處理入槽動畫+鎖定
-			player_hand.play_card(card_being_dragged)     # 移除手牌+重新靠攏
+			# 召喚暈眩:當回合不能攻擊;若對方蓋有伏印,這裡會觸發(§7 爆裂符印)。
+			var trap_msg := battle_manager.mark_summoned(card)
+			found_slot.place_card(card)       # 交給卡槽處理入槽動畫+鎖定
+			player_hand.play_card(card)       # 移除手牌+重新靠攏
+			if trap_msg != "":
+				battle_ui.flash_message(trap_msg)
 		else:
 			battle_ui.flash_message(
 				"魔力不足:召喚需要 ◆%d(現有 %d)" % [cost, battle_manager.active_mana()])
@@ -289,9 +309,96 @@ func _on_left_released_drag() -> void:
 		# 沒對準卡槽 / 卡槽已滿 → 讓它回到手牌扇形原位。
 		organize_hand()
 
-	# 結算完畢，鬆手 → 清空「正在拖曳」的記錄。
-	card_being_dragged = null
-	ui_state = UiState.IDLE
+
+## 秘術:放開在敵方從者身上 = 指定它為目標(§7:僅攻方、自己回合)。
+func _try_cast_arcana(card: Card) -> void:
+	var target := raycast_check_for_card()
+	if target == null or not target.is_on_board:
+		battle_ui.flash_message("秘術要指定目標:把卡放到敵方從者身上")
+		organize_hand()
+		return
+	if battle_manager.side_of(target) == battle_manager.active_side:
+		battle_ui.flash_message("【%s】只能指定敵方從者" % card.data.card_name)
+		organize_hand()
+		return
+	if target.data.keywords.has(&"潛行"):
+		battle_ui.flash_message("【%s】具有潛行:無法被秘術指定(§8)" % target.data.card_name)
+		organize_hand()
+		return
+	if not battle_manager.can_afford(card.data.cost):
+		battle_ui.flash_message("魔力不足:需要 ◆%d(現有 %d)" % [
+			card.data.cost, battle_manager.active_mana()])
+		organize_hand()
+		return
+	_resolve_arcana(card, target)   # async:中間有守方反制窗口
+
+
+## 秘術結算(§5.1 的 STEP 1→2→4):宣告即付費 → 守方瞬咒窗口 → 未被抵銷才落地。
+func _resolve_arcana(card: Card, target: Card) -> void:
+	battle_manager.spend(card.data.cost)   # STEP 1:宣告就支付,被抵銷不退費
+	var defender := "enemy" if battle_manager.active_side == "player" else "player"
+	var quick: CardData = battle_manager.quick_candidate(defender)
+	var countered := false
+	if quick != null:
+		# STEP 2:熱座把螢幕轉給守方回答;await = 整條流程停在這裡等面板的信號。
+		ui_state = UiState.MENU_OPEN   # 鎖住其他 3D 互動,別讓玩家邊回答邊拖卡
+		battle_ui.show_reaction("守方反制窗口",
+			"對方施放【%s】→ 發動【%s】抵銷?(◆%d)" % [
+				card.data.card_name, quick.card_name, quick.cost])
+		countered = await battle_ui.reaction_decided
+		ui_state = UiState.IDLE
+	if countered:
+		battle_manager.consume_quick(defender, quick)
+		battle_ui.flash_message("【%s】被【%s】抵銷了!" % [
+			card.data.card_name, quick.card_name])
+	elif is_instance_valid(target):
+		# STEP 4:結算(秘術傷害不吃反擊)。
+		battle_manager.cast_arcana(card.data, target)
+		battle_ui.flash_message("【%s】對【%s】造成 %d 點傷害" % [
+			card.data.card_name, target.data.card_name, card.data.active_skill.power])
+	# 秘術結算後離場(§7):不管有沒有被抵銷,牌都用掉了。
+	player_hand.play_card(card)
+	card.queue_free()
+
+
+## 靈裝:放開在我方從者身上 = 裝備(§7:宿主離場一併離場)。
+func _try_attach_equip(card: Card) -> void:
+	var target := raycast_check_for_card()
+	if target == null or not target.is_on_board \
+			or battle_manager.side_of(target) != battle_manager.active_side:
+		battle_ui.flash_message("靈裝要放到「我方」場上從者身上")
+		organize_hand()
+		return
+	if not battle_manager.can_afford(card.data.cost):
+		battle_ui.flash_message("魔力不足:需要 ◆%d(現有 %d)" % [
+			card.data.cost, battle_manager.active_mana()])
+		organize_hand()
+		return
+	battle_manager.spend(card.data.cost)
+	battle_manager.attach_equip(card.data, target)
+	battle_ui.flash_message("【%s】裝備到【%s】:生命上限 +%d" % [
+		card.data.card_name, target.data.card_name, card.data.active_skill.amount])
+	player_hand.play_card(card)
+	card.queue_free()
+
+
+## 伏印:放開在我方半場的卡槽區 = 蓋放(不佔格,§2 後排資料層;敵方召喚時觸發)。
+func _try_set_ward(card: Card) -> void:
+	var slot := raycast_check_for_card_slot()
+	if slot == null or battle_manager.slot_side(slot) != battle_manager.active_side:
+		battle_ui.flash_message("伏印要蓋放在「我方」這側的卡槽區")
+		organize_hand()
+		return
+	if not battle_manager.can_afford(card.data.cost):
+		battle_ui.flash_message("魔力不足:需要 ◆%d(現有 %d)" % [
+			card.data.cost, battle_manager.active_mana()])
+		organize_hand()
+		return
+	battle_manager.spend(card.data.cost)
+	battle_manager.set_ward(card.data)
+	battle_ui.flash_message("【%s】已蓋放:敵方下次召喚從者時觸發" % card.data.card_name)
+	player_hand.play_card(card)
+	card.queue_free()
 
 
 ## 指定目標中左鍵按下:點到合法目標就發動;點到別的東西不動作(右鍵才是取消)。

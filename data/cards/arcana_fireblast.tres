@@ -11,7 +11,8 @@ region = Rect2(0, 0, 32, 32)
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
 skill_name = "火焰爆裂"
-description = "對一名敵方單位造成 3 點傷害。(樣本卡,結算待實作)"
+description = "對一名敵方單位造成 3 點傷害。"
+power = 3
 cost = 3
 
 [resource]

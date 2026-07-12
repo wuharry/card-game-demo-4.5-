@@ -37,6 +37,9 @@ class SideState:
 	var mana_max: int = 0   # 規格§1:起始 0,每次輪到自己回合開始才 +1 回滿
 	var deck: Array[CardData] = []
 	var hand: Array[CardData] = []
+	## 蓋放的伏印(§7):存整張卡的資料,觸發時才知道名字和效果。
+	## 依 §2 用獨立資料層表示,不佔卡槽;「敵方召喚時觸發」見 mark_summoned。
+	var wards: Array[CardData] = []
 
 var turn: int = 1
 var active_side: String = "player"   # 現在輪到誰行動(回合歸屬)
@@ -168,8 +171,65 @@ func _tick_dot_side(side: String, phase_start: bool) -> void:
 
 
 ## 召喚落地時標記(召喚暈眩:當回合不能攻擊,§3)。
-func mark_summoned(unit: Card) -> void:
+## 召喚落地:記召喚暈眩,並結算「對方蓋放的伏印」(§7 爆裂符印:敵方召喚時觸發)。
+## 回傳觸發訊息(空字串 = 沒有伏印),CardManager 拿去 flash 給玩家看。
+func mark_summoned(unit: Card) -> String:
 	unit.summoned_this_turn = true
+	var owner_side := "enemy" if active_side == "player" else "player"
+	var traps: Array[CardData] = (sides[owner_side] as SideState).wards
+	if traps.is_empty():
+		return ""
+	# §5.1 簡化原則:一次觸發一張(先蓋的先發)。
+	var trap: CardData = traps.pop_front()
+	var dmg := trap.active_skill.power if trap.active_skill != null else 0
+	_deal_damage(unit, dmg, false)
+	_check_death(unit)
+	return "伏印【%s】觸發:對召喚的【%s】造成 %d 點傷害!" % [
+		trap.card_name, unit.data.card_name, dmg]
+
+
+## ── 法術結算(§7 非從者卡;由 CardManager 的出牌流程呼叫)──────────
+## 規則只寫這一份:UI 負責選目標和問反制,數值在這裡落地。
+
+
+## 秘術(火焰爆裂):對指定敵方從者造成 skill.power 點傷害(不觸發反擊)。
+func cast_arcana(card: CardData, target: Card) -> void:
+	if not is_instance_valid(target) or card.active_skill == null:
+		return
+	_deal_damage(target, card.active_skill.power, false)
+	_check_death(target)
+
+
+## 靈裝(秘銀胸鎧):我方從者生命上限 +amount 並補等量現血;
+## 加成記在「單位節點」上(max_hp_bonus)——宿主離場,裝備自然隨節點一起消失(§7)。
+func attach_equip(card: CardData, target: Card) -> void:
+	if not is_instance_valid(target) or card.active_skill == null:
+		return
+	target.max_hp_bonus += card.active_skill.amount
+	target.heal(card.active_skill.amount)
+
+
+## 伏印(爆裂符印):蓋放進「行動方」的伏印區,等對方召喚時觸發(見 mark_summoned)。
+func set_ward(card: CardData) -> void:
+	_active().wards.append(card)
+
+
+## 守方手上第一張「付得起」的瞬咒(§5.1 反制窗口用;沒有就回 null)。
+## 守方用的是帳上的手牌(熱座時他的牌已 stash 回帳)與帳上的剩餘魔力。
+func quick_candidate(defender: String) -> CardData:
+	var st: SideState = sides[defender]
+	for cd in st.hand:
+		if cd.card_type == CardData.CardType.QUICK and st.mana >= cd.cost:
+			return cd
+	return null
+
+
+## 守方發動瞬咒:扣魔力、離手(§5.1;抵銷的效果由呼叫端決定「不結算」來實現)。
+func consume_quick(defender: String, quick: CardData) -> void:
+	var st: SideState = sides[defender]
+	st.mana = maxi(0, st.mana - quick.cost)
+	st.hand.erase(quick)
+	_emit_state()
 
 
 ## ── 本體與勝負 ─────────────────────────────────────

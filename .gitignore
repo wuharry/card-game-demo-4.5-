@@ -63,4 +63,5 @@ export_credentials.cfg
 # =========================
 # 解壓後挑用的檔案已進 assets/ui/icons/ 等處;原始 zip 留本機即可
 # (資料夾內有 .gdignore,Godot 也不掃描它)
-assets/_Raw_Imports/build/
+assets/_Raw_Imports/
+build/
