@@ -40,6 +40,8 @@ func take_damage(amount: int) -> void:
 	_refresh_hp()
 	if amount > 0:
 		_popup_number("-%d" % amount, Color(1.0, 0.3, 0.25))
+		# 命中爆點(同 card.gd:preload 引用避開 class_name 快取時序,§19)。
+		preload("res://src/fx/fx_burst.gd").spawn_at(self)
 	if hp <= 0:
 		_die()
 	else:

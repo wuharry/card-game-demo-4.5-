@@ -381,6 +381,9 @@ func take_damage(amount: int) -> void:
 	_refresh_hp_label()
 	if amount > 0:
 		_popup_number("-%d" % amount, Color(1.0, 0.3, 0.25))
+		# 命中爆點:所有傷害(普攻/反擊/技能/灼燒中毒)都經過這裡,一次接線全生效。
+		# 用 preload 引用而非裸名 FxBurst:新 class_name 未進編輯器快取前裸名會解析失敗(§19)。
+		preload("res://src/fx/fx_burst.gd").spawn_at(self)
 
 
 func heal(amount: int) -> void:

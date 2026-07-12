@@ -267,3 +267,11 @@
 | `.rpc()` 需要活著的 peer:`multiplayer_peer = null` 時 rpc **報錯且整個不執行**(call_local 也救不了);**null ≠ OfflineMultiplayerPeer**。F6 直跑(預設 Offline peer)與走主選單(lobby 把 peer 清成 null)是環境不同的兩條進場路,bug 只在後者出現——測試要把所有進場路徑都走過 | 初階(2026-07-12 逃生艙自炸自修:headless 對照兩條路徑抓到;net_lobby 舊註解也錯在同一點,已更正) | 「同一段 code,為什麼 F6 直跑正常、從主選單進來按鈕就死?『離線直呼、連線才 rpc』的分流為什麼比『永遠 rpc』穩?」 |
 | my_side 的離線預設值 = "player" 是刻意的:所有「連線 vs 熱座」的分支寫成跟 my_side 比較,離線語意自動退回熱座——預設值選得好,分支就少一半 | 初階/未驗 | 「side_name 那行為什麼離線時不用另寫一條?如果 my_side 離線預設是空字串會炸哪裡?」 |
 | **2b 剩餘的債(還沒做,別誤以為完工)**:①兩台的牌堆各自亂洗(帳沒同步,上桌行動也還沒廣播)②發令資格只在 UI 閘把關,沒有伺服端驗證(client 可偽造換頁令)③client 的鏡頭/棋盤仍是 host 視角 | ——(待辦,非觀念) | 動工 2b 時逐項劃掉 |
+
+### 26. 第一顆 3D 特效:通用命中爆點(2026-07-12;[src/fx/fx_burst.gd](../src/fx/fx_burst.gd))
+
+| 觀念 | 等級 | 考題方向 |
+|---|---|---|
+| GPUParticles3D 一次性爆點解剖:`one_shot + explosiveness=1`(爆點 vs 噴泉)、參數給 min/max 讓每顆粒子抽籤(不整齊才像火花)、`scale_curve` 要包成 CurveTexture(粒子系統只吃貼圖不吃函數)、additive blend(重疊更亮=火光感)、emission 3.0 推過 glow 門檻(泛光,和卡槽高亮同一招)、`finished → queue_free` 自毀 | 初階/未驗(逃生艙) | 「explosiveness 0 和 1 差在哪?想改成持續冒煙要動哪幾個參數?淡出為什麼用縮小而不是改 alpha?」 |
+| 特效掛在「所有傷害的必經之路」(Card/Hero 的 take_damage):一次接線,普攻/反擊/技能/灼燒中毒全生效——找 choke point,別在每個事件各接一次 | 初階/未驗 | 「之後要加『治療綠光』,掛哪個函式?為什麼不掛在攻擊指令那端?」 |
+| `current_scene` 在場景切換空窗期可能是 null;掛短命節點用 `get_tree().root` 更穩(headless 煙霧測試先抓到,沒等到玩家踩) | 初階/未驗 | 「特效掛 root 為什麼不怕跨場景殘留?什麼樣的節點反而不該掛 root?」 |
