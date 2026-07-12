@@ -31,3 +31,7 @@ import/blender/enabled=false
 
 3d_physics/layer_1="Card"
 3d_physics/layer_2="CardSlot"
+
+[rendering]
+
+textures/vram_compression/import_etc2_astc=true
