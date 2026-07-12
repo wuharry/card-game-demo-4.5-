@@ -460,7 +460,12 @@ func _on_end_turn() -> void:
 	if NetMatch.is_online and battle_manager.active_side != NetMatch.my_side:
 		battle_ui.flash_message("還在對方的回合")
 		return
-	_net_end_turn.rpc()
+	# 離線直接本地呼叫:從主選單進來時 lobby 已把 multiplayer_peer 清成 null,
+	# 此時 .rpc() 會報錯且「整個不執行」(call_local 也救不了)——rpc 只留給真連線。
+	if NetMatch.is_online:
+		_net_end_turn.rpc()
+	else:
+		_net_end_turn()
 
 
 ## 換頁令(兩端各跑一份)。"any_peer":輪到 client 時得由它發令;
