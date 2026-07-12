@@ -11,7 +11,7 @@ region = Rect2(64, 96, 32, 32)
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
 skill_name = "虛空反噬"
-description = "反制:抵銷對方發動的秘術或伏印。(樣本卡,結算待實作)"
+description = "反制:對方施放秘術時自動詢問,發動即抵銷。"
 cost = 2
 
 [resource]

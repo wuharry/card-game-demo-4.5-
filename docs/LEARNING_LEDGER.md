@@ -275,3 +275,13 @@
 | GPUParticles3D 一次性爆點解剖:`one_shot + explosiveness=1`(爆點 vs 噴泉)、參數給 min/max 讓每顆粒子抽籤(不整齊才像火花)、`scale_curve` 要包成 CurveTexture(粒子系統只吃貼圖不吃函數)、additive blend(重疊更亮=火光感)、emission 3.0 推過 glow 門檻(泛光,和卡槽高亮同一招)、`finished → queue_free` 自毀 | 初階/未驗(逃生艙) | 「explosiveness 0 和 1 差在哪?想改成持續冒煙要動哪幾個參數?淡出為什麼用縮小而不是改 alpha?」 |
 | 特效掛在「所有傷害的必經之路」(Card/Hero 的 take_damage):一次接線,普攻/反擊/技能/灼燒中毒全生效——找 choke point,別在每個事件各接一次 | 初階/未驗 | 「之後要加『治療綠光』,掛哪個函式?為什麼不掛在攻擊指令那端?」 |
 | `current_scene` 在場景切換空窗期可能是 null;掛短命節點用 `get_tree().root` 更穩(headless 煙霧測試先抓到,沒等到玩家踩) | 初階/未驗 | 「特效掛 root 為什麼不怕跨場景殘留?什麼樣的節點反而不該掛 root?」 |
+
+### 27. 法術結算層:四種卡型上線(2026-07-12;battle_manager / card_manager / battle_ui)
+
+| 觀念 | 等級 | 考題方向 |
+|---|---|---|
+| `await` 做「等玩家決定」:秘術流程走到反制窗口就 `await battle_ui.reaction_decided`,整條函式停在那行直到面板按鈕 emit——遊戲流程的「暫停點」不用狀態機硬刻,協程天生就會等 | 初階/未驗(逃生艙) | 「await 那行在等什麼?如果玩家永遠不按,函式怎麼了?為什麼進 async 前要先把 DRAGGING 狀態清掉?」 |
+| 宣告即付費(§5.1 STEP1):先 spend 再開反制窗,被抵銷不退費——付費點的位置就是規則本身,放錯位置=規則錯 | 初階/未驗 | 「把 spend 移到結算成功之後,遊戲規則變成什麼樣?哪一方變強?」 |
+| 靈裝加成記在「節點」(max_hp_bonus)不寫回共享的 CardData:寫回 data.hp 會讓全場同名卡一起變厚(=主帳 §7 Resource 共享的實戰版);宿主離場,節點亡,加成自然消失,不用寫清理 code | 初階/未驗 | 「為什麼 +2 上限不能直接 data.hp += 2?『裝備隨宿主離場』是誰保證的——有寫這段 code 嗎?」 |
+| 伏印住在「側帳」不佔卡槽(§2 後排資料層);觸發點挑在 mark_summoned=召喚的必經之路——和爆點掛 take_damage 同一招:找 choke point,一次接線全情境生效 | 初階/未驗 | 「伏印為什麼不做成一張蓋在卡槽上的卡?觸發檢查為什麼放 mark_summoned 而不是放在出牌按鈕那邊?」 |
+| 瞬咒候選查「帳」不查「視圖」:守方的手牌在熱座時已 stash 回 sides[defender].hand,視圖上根本沒有他的牌——帳/視圖分離下,規則永遠問帳 | 初階/未驗 | 「反制窗口跳出來時,守方的牌在哪個資料結構裡?為什麼不能去 player_hand.cards 找?」 |

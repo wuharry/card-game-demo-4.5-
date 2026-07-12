@@ -375,6 +375,11 @@ func exit_board_mode() -> void:
 	print("[狀態] 卡片回手:恢復拖曳")
 
 
+## 靈裝加成(§7):生命上限增量,記在「節點」不記在共享的 CardData 上——
+## 一份資料生多張卡,寫回 data.hp 會讓全場同名卡一起變厚;宿主離場加成隨節點消失。
+var max_hp_bonus: int = 0
+
+
 ## ── 血量增減(由 BattleManager 呼叫)────────────────
 func take_damage(amount: int) -> void:
 	current_hp = maxi(0, current_hp - amount)
@@ -388,7 +393,7 @@ func take_damage(amount: int) -> void:
 
 func heal(amount: int) -> void:
 	# 先算「實際回了多少」(不超上限),數字報實帳,不報帳面治療量。
-	var healed := mini(data.hp, current_hp + amount) - current_hp
+	var healed := mini(data.hp + max_hp_bonus, current_hp + amount) - current_hp
 	current_hp += healed
 	_refresh_hp_label()
 	if healed > 0:

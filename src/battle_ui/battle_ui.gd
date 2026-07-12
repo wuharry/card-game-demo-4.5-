@@ -15,6 +15,8 @@ signal end_turn_pressed
 ## 勝負畫面上的兩個去向(CardManager 接手換場景/重開)。
 signal restart_pressed
 signal menu_pressed
+## 反制窗口(§5.1 守方瞬咒)的回答:true = 發動抵銷。CardManager await 這條。
+signal reaction_decided(use_quick: bool)
 
 const FONT_TITLE: FontFile = preload(
 	"res://assets/fonts/Noto_Serif_TC/static/NotoSerifTC-Bold.ttf")
@@ -438,3 +440,67 @@ func _make_gold_line() -> ColorRect:
 	line.color = LINE_GOLD
 	line.custom_minimum_size = Vector2(0, 1)
 	return line
+
+
+## ── 反制窗口(§5.1 守方瞬咒;熱座:把螢幕轉給守方回答)─────────
+## 面板蓋全場壓暗,兩個選項:發動 / 放棄。答案用 reaction_decided 信號送回,
+## CardManager 以 await 等待——遊戲流程在這裡「暫停」到守方做出決定。
+var _react_dim: ColorRect = null
+var _react_panel: PanelContainer = null
+var _react_title: Label = null
+var _react_body: Label = null
+
+
+func show_reaction(title_text: String, body_text: String) -> void:
+	if _react_dim == null:
+		_build_reaction()
+	_react_title.text = title_text
+	_react_body.text = body_text
+	_react_dim.visible = true
+	_react_panel.visible = true
+	_react_panel.reset_size()
+	_react_panel.set_anchors_and_offsets_preset(
+		Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
+
+
+func _build_reaction() -> void:
+	_react_dim = ColorRect.new()
+	_react_dim.color = Color(0.0, 0.0, 0.0, 0.55)
+	add_child(_react_dim)
+	_react_dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	_react_panel = PanelContainer.new()
+	_react_panel.add_theme_stylebox_override("panel", _make_panel_style())
+	add_child(_react_panel)
+	var col := VBoxContainer.new()
+	col.custom_minimum_size = Vector2(360, 0)
+	col.add_theme_constant_override("separation", 10)
+	_react_panel.add_child(col)
+
+	_react_title = Label.new()
+	_react_title.add_theme_font_override("font", FONT_TITLE)
+	_react_title.add_theme_font_size_override("font_size", 26)
+	_react_title.add_theme_color_override("font_color", GOLD)
+	_react_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(_react_title)
+	col.add_child(_make_gold_line())
+
+	_react_body = Label.new()
+	_react_body.add_theme_font_override("font", FONT_BODY)
+	_react_body.add_theme_font_size_override("font_size", 17)
+	_react_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_react_body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(_react_body)
+
+	var use_btn := _make_option("發動抵銷")
+	use_btn.pressed.connect(func() -> void: _answer_reaction(true))
+	col.add_child(use_btn)
+	var pass_btn := _make_option("放棄反制")
+	pass_btn.pressed.connect(func() -> void: _answer_reaction(false))
+	col.add_child(pass_btn)
+
+
+func _answer_reaction(use_quick: bool) -> void:
+	_react_dim.visible = false
+	_react_panel.visible = false
+	reaction_decided.emit(use_quick)

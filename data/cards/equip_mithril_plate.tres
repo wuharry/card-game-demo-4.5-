@@ -11,7 +11,8 @@ region = Rect2(64, 64, 32, 32)
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
 skill_name = "秘銀胸鎧"
-description = "裝備我方從者:生命上限 +2;宿主離場時一併離場。(樣本卡,結算待實作)"
+description = "裝備我方從者:生命上限 +2;宿主離場時一併離場。"
+amount = 2
 cost = 2
 
 [resource]
