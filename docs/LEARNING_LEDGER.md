@@ -140,6 +140,7 @@
 | 觀念 | 等級 | 考題方向 |
 |---|---|---|
 | 編輯器舊緩衝蓋檔:外部改過 .gd/.tscn 後回 Godot,提示一律選 **Reload**,否則一存檔就把改動蓋回舊版 | 初階(本 session 踩過多次) | 「什麼情況會跳這個提示?選錯會發生什麼、怎麼發現?」 |
+| `echo >> .gitignore` 的黏行陷阱:原檔末行沒有換行符時,append 會黏成一行廢規則(assets/_Raw_Imports/build/)——不但新規則沒生效,舊規則也被弄壞;154MB 匯出 zip 因此差點進版控(amend 救回) | 初階(2026-07-12 AI 自踩自修) | 「為什麼 grep 得到 build/ 卻沒忽略成功?怎麼一眼檢查檔案有沒有結尾換行?git 已 commit 的大檔怎麼救?」 |
 
 ### 14. 技能資料層設計(2026-07-09;[skill_data.gd](../src/card/skill_data.gd)、[skills_design.md](skills_design.md))
 
