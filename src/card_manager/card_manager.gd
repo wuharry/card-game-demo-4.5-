@@ -86,20 +86,38 @@ func _ready() -> void:
 	# 戰鬥帳房:規則與數值都在它那裡。UI 的決定經中樞轉發給帳房、
 	# 帳的變化再流回 UI——兩端只認識中樞,互不相識(同 hover 中繼鏈的哲學)。
 	battle_manager = BattleManager.new()
+	battle_manager.hand_node = player_hand   # spawn_unit 的掛點(召喚技/連線重放生單位)
 	battle_manager.state_changed.connect(battle_ui.update_hud)
 	battle_manager.unit_died.connect(_on_unit_died)
 	battle_manager.game_over.connect(_on_game_over)
 	action_performed.connect(battle_manager.on_action_performed)
 	add_child(battle_manager)
 	# 勝負畫面的兩個去向:重開這局 / 回主選單(換場景是中樞的事,UI 只發信號)。
-	battle_ui.restart_pressed.connect(
-		func() -> void: get_tree().reload_current_scene())
-	battle_ui.menu_pressed.connect(
-		func() -> void: get_tree().change_scene_to_file("res://scenes/main_menu.tscn"))
+	# 連線時「再戰一場」單邊 reload 會讓兩台的帳分家 → 一律收線回主選單。
+	battle_ui.restart_pressed.connect(func() -> void:
+		if NetMatch.is_online:
+			_leave_online_match()
+		else:
+			get_tree().reload_current_scene())
+	battle_ui.menu_pressed.connect(func() -> void:
+		if NetMatch.is_online:
+			_leave_online_match()
+		else:
+			get_tree().change_scene_to_file("res://scenes/main_menu.tscn"))
 	# 本體/敵方牌堆要等 PlayerBoard 把卡槽生完才能靠群組定位 → 延後到整棵樹 ready 後。
 	_spawn_heroes.call_deferred()
 	_spawn_enemy_deck.call_deferred()
 	_sync_hand_view.call_deferred()   # 起手牌的「帳」在帳房,視圖開局同步一次
+	# ── 連線(2b–2e):斷線監聽、client 要開局帳、client 視角翻轉 ──
+	if NetMatch.is_online:
+		multiplayer.peer_disconnected.connect(_on_net_peer_lost)
+		multiplayer.server_disconnected.connect(_on_net_server_lost)
+		if multiplayer.is_server():
+			_accounts_synced = true   # host 的帳就是權威,天生同步
+		else:
+			_request_state_loop()
+		_apply_client_viewpoint.call_deferred()   # deferred FIFO:排在牌堆/本體生成之後
+		_refresh_opp_hud.call_deferred()
 
 
 ## ── 收到「滑鼠移到某張卡上」事件 ──────────────────
@@ -250,6 +268,14 @@ func _on_left_pressed_idle() -> void:
 			battle_manager.attack_block_reason(card),
 			battle_manager.skill_block_reason(card))
 		return
+	# 連線(2b):不是你的回合不能出牌;開局帳未同步完成前也先擋著。
+	if NetMatch.is_online:
+		if not _accounts_synced:
+			battle_ui.flash_message("開局同步中…")
+			return
+		if battle_manager.active_side != NetMatch.my_side:
+			battle_ui.flash_message("對方回合:等待對方行動…")
+			return
 	# ── 抓牌(原本的拖曳邏輯)──
 	card_being_dragged = card
 	ui_state = UiState.DRAGGING
@@ -294,13 +320,13 @@ func _try_summon(card: Card) -> void:
 			battle_ui.flash_message("只能召喚到自己這一側的卡槽")
 			organize_hand()
 		elif battle_manager.can_afford(cost):
-			battle_manager.spend(cost)
-			# 召喚暈眩:當回合不能攻擊;若對方蓋有伏印,這裡會觸發(§7 爆裂符印)。
-			var trap_msg := battle_manager.mark_summoned(card)
-			found_slot.place_card(card)       # 交給卡槽處理入槽動畫+鎖定
-			player_hand.play_card(card)       # 移除手牌+重新靠攏
-			if trap_msg != "":
-				battle_ui.flash_message(trap_msg)
+			# 連線走 RPC 兩台同步結算;單機直呼同一個函式(同 _net_end_turn 的分流)。
+			_pending_play_card = card
+			var idx := player_hand.cards.find(card)
+			if NetMatch.is_online:
+				_net_summon.rpc(idx, card.data.resource_path, get_path_to(found_slot))
+			else:
+				_net_summon(idx, card.data.resource_path, get_path_to(found_slot))
 		else:
 			battle_ui.flash_message(
 				"魔力不足:召喚需要 ◆%d(現有 %d)" % [cost, battle_manager.active_mana()])
@@ -330,7 +356,14 @@ func _try_cast_arcana(card: Card) -> void:
 			card.data.cost, battle_manager.active_mana()])
 		organize_hand()
 		return
-	_resolve_arcana(card, target)   # async:中間有守方反制窗口
+	if NetMatch.is_online:
+		# 連線:宣告廣播出去,反制窗口開在「守方那台」;結果回來前鎖操作。
+		_pending_play_card = card
+		var idx := player_hand.cards.find(card)
+		_net_arcana_declare.rpc(idx, card.data.resource_path,
+			get_path_to(battle_manager.find_slot_of(target)))
+		return
+	_resolve_arcana(card, target)   # 熱座:反制窗口就地問(async)
 
 
 ## 秘術結算(§5.1 的 STEP 1→2→4):宣告即付費 → 守方瞬咒窗口 → 未被抵銷才落地。
@@ -374,12 +407,13 @@ func _try_attach_equip(card: Card) -> void:
 			card.data.cost, battle_manager.active_mana()])
 		organize_hand()
 		return
-	battle_manager.spend(card.data.cost)
-	battle_manager.attach_equip(card.data, target)
-	battle_ui.flash_message("【%s】裝備到【%s】:生命上限 +%d" % [
-		card.data.card_name, target.data.card_name, card.data.active_skill.amount])
-	player_hand.play_card(card)
-	card.queue_free()
+	_pending_play_card = card
+	var idx := player_hand.cards.find(card)
+	var slot_np := get_path_to(battle_manager.find_slot_of(target))
+	if NetMatch.is_online:
+		_net_equip.rpc(idx, card.data.resource_path, slot_np)
+	else:
+		_net_equip(idx, card.data.resource_path, slot_np)
 
 
 ## 伏印:放開在我方半場的卡槽區 = 蓋放(不佔格,§2 後排資料層;敵方召喚時觸發)。
@@ -394,11 +428,12 @@ func _try_set_ward(card: Card) -> void:
 			card.data.cost, battle_manager.active_mana()])
 		organize_hand()
 		return
-	battle_manager.spend(card.data.cost)
-	battle_manager.set_ward(card.data)
-	battle_ui.flash_message("【%s】已蓋放:敵方下次召喚從者時觸發" % card.data.card_name)
-	player_hand.play_card(card)
-	card.queue_free()
+	_pending_play_card = card
+	var idx := player_hand.cards.find(card)
+	if NetMatch.is_online:
+		_net_ward.rpc(idx, card.data.resource_path)
+	else:
+		_net_ward(idx, card.data.resource_path)
 
 
 ## 指定目標中左鍵按下:點到合法目標就發動;點到別的東西不動作(右鍵才是取消)。
@@ -467,10 +502,13 @@ func _is_valid_target(card: Card) -> bool:
 		return false
 	var want_ally: bool = pending_skill != null \
 		and pending_skill.effect_target == SkillData.Target.ALLY
+	# 敵我用「相對施放者」判斷,別寫死 "player"/"enemy"——
+	# 連線時 client 的我方單位在 enemy 群組,寫死會敵我顛倒(2b)。
 	var side := battle_manager.side_of(card)
+	var caster_side := battle_manager.side_of(active_unit)
 	if want_ally:
-		return side == "player"
-	return side == "enemy" and card != active_unit
+		return side == caster_side
+	return side != "" and side != caster_side
 
 
 ## (陣營查詢已搬進 BattleManager.side_of:帳房管規則,查詢跟著規則走。)
@@ -555,7 +593,8 @@ func _on_game_over(winner: String) -> void:
 		card_being_dragged = null
 	_cancel_command()
 	ui_state = UiState.GAME_OVER
-	battle_ui.show_game_over(winner == "player")
+	# 勝敗以「本機視角」判定:my_side 離線恆為 "player",熱座語意不變(2b)。
+	battle_ui.show_game_over(winner == NetMatch.my_side)
 
 
 ## 結束回合(BattleUI 的按鈕)。連線時只有行動方按得動;
@@ -604,6 +643,7 @@ func _net_end_turn() -> void:
 			var deck_path := "../Deck" if battle_manager.active_side == "player" else "../EnemyDeck"
 			player_hand.deal_last_from_deck(deck_path)
 	_update_deck_labels()
+	_refresh_opp_hud()   # 抽牌讓對方手牌張數變了(2d)
 	# my_side 離線時恆為 "player",所以這行在熱座的語意跟以前一模一樣。
 	var side_name := "我方" if battle_manager.active_side == NetMatch.my_side else "對方"
 	var msg := "第 %d 回合:%s行動" % [battle_manager.turn, side_name]
@@ -695,6 +735,21 @@ func _on_unit_died(unit: Card) -> void:
 func _execute_action(target: Node3D) -> void:
 	var caster := active_unit
 	var skill := pending_skill
+	if NetMatch.is_online:
+		# 連線:把「誰、用什麼、打誰」序列化成跨機器的身分證(單位=所在卡槽的路徑,
+		# 兩台場景樹一致;本體=側別字串),廣播後兩台各自重放同一個行動。
+		var tgt_is_hero := target is Hero
+		var tgt_ref := (target as Hero).side if tgt_is_hero \
+			else str(get_path_to(battle_manager.find_slot_of(target as Card)))
+		_net_action.rpc(get_path_to(battle_manager.find_slot_of(caster)),
+			skill != null, tgt_is_hero, tgt_ref)
+	else:
+		_do_execute_action(caster, skill, target)
+	_cancel_command()
+
+
+## 行動的本地執行(單機直呼;連線由 _net_action 在兩台各跑一份)。
+func _do_execute_action(caster: Card, skill: SkillData, target: Node3D) -> void:
 	if skill != null:
 		# 技能動畫表由資料指定(skill.anim);沒有該表就退回普攻動畫。
 		if not caster.play_one_shot_anim(skill.anim):
@@ -706,7 +761,6 @@ func _execute_action(target: Node3D) -> void:
 	# 受擊動畫改由 BattleManager 在「傷害落地」那刻播(和飄浮數字同步),
 	# 也順便修掉「被治療卻播受傷動畫」的怪象——挨打是結算的事,不是宣告的事。
 	action_performed.emit(caster, skill, target)
-	_cancel_command()
 
 
 ## ── 射線：找滑鼠下方的「卡片」(第 1 層)──────────────
@@ -778,3 +832,254 @@ func raycast_check_for_card_slot() -> CardSlot:
 func organize_hand() -> void:
 	if player_hand:
 		player_hand.organize_hand()
+
+
+## ═══ 連線對戰(2b–2e):行動同步、開局帳、視角、斷線 ═══════════════
+## 架構(ADR-001 的 demo 簡化版):host 開局把雙方牌堆/起手打包給 client(帳同步),
+## 之後每個行動在「出牌端」驗證後廣播,兩台各自重放——資料一致+操作一致=狀態一致。
+## 已知債(公開上架前要還):①行動合法性只在出牌端驗(client 可作弊)
+## ②對方手牌「內容」其實在本機記憶體裡(真正的資訊隱藏 = host 只送張數)。
+
+var _accounts_synced := false        # client:開局帳收到了沒(host 天生 true)
+var _pending_play_card: Card = null  # 出牌端暫存「正被打出的手牌節點」,給重放函式取用
+var _pending_arcana_target: NodePath # 秘術宣告後、等反制結果期間的目標(兩台都記)
+var _pending_arcana_path: String = ""
+
+
+## 這台機器是不是「行動方本人」(單機恆真;連線只有輪到自己那台為真)。
+func _acting_locally() -> bool:
+	return not NetMatch.is_online or battle_manager.active_side == NetMatch.my_side
+
+
+## 取出並清空暫存的出牌節點(只有出牌端有;重放端拿到 null,走帳面路徑)。
+func _take_pending_card() -> Card:
+	var c := _pending_play_card
+	_pending_play_card = null
+	return c
+
+
+## 打出的牌離手:出牌端移視圖節點、重放端扣帳面手牌(兩台的帳保持一致)。
+func _consume_played(hand_idx: int) -> void:
+	if _acting_locally():
+		var card := _take_pending_card()
+		if card != null:
+			player_hand.play_card(card)
+			card.queue_free()
+	else:
+		battle_manager.remove_from_hand(battle_manager.active_side, hand_idx)
+	_refresh_opp_hud()
+
+
+## 用「所在卡槽的路徑」反查單位——卡槽路徑是單位的跨機器身分證(兩台場景樹一致)。
+func _unit_at(slot_np: NodePath) -> Card:
+	var slot := get_node_or_null(slot_np) as CardSlot
+	return slot.card_in_slot if slot != null else null
+
+
+## ── 召喚 ─────────────────────────────────────────
+@rpc("any_peer", "call_local", "reliable")
+func _net_summon(hand_idx: int, card_path: String, slot_np: NodePath) -> void:
+	var slot := get_node_or_null(slot_np) as CardSlot
+	var cd := load(card_path) as CardData
+	if slot == null or not slot.is_empty or cd == null:
+		return
+	battle_manager.spend(cd.cost)
+	var msg: String
+	if _acting_locally():
+		# 出牌端:用手上真的被拖過來的那張卡節點(動畫連續)。
+		var card := _take_pending_card()
+		if card == null:
+			return
+		msg = battle_manager.mark_summoned(card)   # 召喚暈眩+對方伏印觸發(§7)
+		slot.place_card(card)
+		player_hand.play_card(card)
+	else:
+		# 重放端:帳面扣牌 + 生一個新單位節點放進同一格。
+		battle_manager.remove_from_hand(battle_manager.active_side, hand_idx)
+		var unit := battle_manager.spawn_unit(cd, slot)
+		if unit == null:
+			return
+		msg = battle_manager.mark_summoned(unit)
+	if msg != "":
+		battle_ui.flash_message(msg)
+	_refresh_opp_hud()
+
+
+## ── 攻擊/技能 ─────────────────────────────────────
+@rpc("any_peer", "call_local", "reliable")
+func _net_action(caster_np: NodePath, use_skill: bool, tgt_is_hero: bool, tgt_ref: String) -> void:
+	var caster := _unit_at(caster_np)
+	if caster == null:
+		return
+	var target: Node3D
+	if tgt_is_hero:
+		target = battle_manager.player_hero if tgt_ref == "player" \
+			else battle_manager.enemy_hero
+	else:
+		target = _unit_at(NodePath(tgt_ref))
+	if target == null:
+		return
+	_do_execute_action(caster, caster.data.active_skill if use_skill else null, target)
+
+
+## ── 秘術宣告與反制(§5.1 跨機器版:反制窗口開在「守方那台」)──────
+@rpc("any_peer", "call_local", "reliable")
+func _net_arcana_declare(hand_idx: int, card_path: String, target_np: NodePath) -> void:
+	var cd := load(card_path) as CardData
+	if cd == null:
+		return
+	battle_manager.spend(cd.cost)   # STEP 1:宣告即付費,被抵銷不退(兩台同記)
+	_pending_arcana_path = card_path
+	_pending_arcana_target = target_np
+	if _acting_locally():
+		battle_ui.flash_message("等待對方反應…")
+		ui_state = UiState.MENU_OPEN   # 鎖操作,直到守方那台把結果送回來
+	else:
+		battle_manager.remove_from_hand(battle_manager.active_side, hand_idx)
+		_refresh_opp_hud()
+		_ask_reaction_and_reply(cd)
+
+
+## 守方那台:有付得起的瞬咒就開面板問玩家,沒有就直接回「不反制」。
+func _ask_reaction_and_reply(arcana: CardData) -> void:
+	var quick: CardData = battle_manager.quick_candidate(NetMatch.my_side)
+	if quick == null:
+		_net_arcana_resolve.rpc(false)
+		return
+	ui_state = UiState.MENU_OPEN
+	battle_ui.show_reaction("反制窗口",
+		"對方施放【%s】→ 發動【%s】抵銷?(◆%d)" % [
+			arcana.card_name, quick.card_name, quick.cost])
+	var used: bool = await battle_ui.reaction_decided
+	ui_state = UiState.IDLE
+	_net_arcana_resolve.rpc(used)
+
+
+@rpc("any_peer", "call_local", "reliable")
+func _net_arcana_resolve(countered: bool) -> void:
+	var cd := load(_pending_arcana_path) as CardData
+	_pending_arcana_path = ""
+	if cd == null:
+		return
+	var defender := "enemy" if battle_manager.active_side == "player" else "player"
+	if countered:
+		# 兩台的帳同步,quick_candidate 的「第一張付得起」在兩台挑到同一張。
+		var quick: CardData = battle_manager.quick_candidate(defender)
+		if quick != null:
+			battle_manager.consume_quick(defender, quick)
+		battle_ui.flash_message("【%s】被抵銷了!" % cd.card_name)
+	else:
+		var target := _unit_at(_pending_arcana_target)
+		if target != null:
+			battle_manager.cast_arcana(cd, target)
+			battle_ui.flash_message("【%s】造成 %d 點傷害" % [
+				cd.card_name, cd.active_skill.power])
+	if _acting_locally():
+		ui_state = UiState.IDLE
+		var card := _take_pending_card()
+		if card != null:
+			player_hand.play_card(card)
+			card.queue_free()
+	_refresh_opp_hud()
+
+
+## ── 靈裝/伏印 ─────────────────────────────────────
+@rpc("any_peer", "call_local", "reliable")
+func _net_equip(hand_idx: int, card_path: String, target_np: NodePath) -> void:
+	var cd := load(card_path) as CardData
+	var target := _unit_at(target_np)
+	if cd == null or target == null:
+		return
+	battle_manager.spend(cd.cost)
+	battle_manager.attach_equip(cd, target)
+	battle_ui.flash_message("【%s】裝備到【%s】:生命上限 +%d" % [
+		cd.card_name, target.data.card_name, cd.active_skill.amount])
+	_consume_played(hand_idx)
+
+
+@rpc("any_peer", "call_local", "reliable")
+func _net_ward(hand_idx: int, card_path: String) -> void:
+	var cd := load(card_path) as CardData
+	if cd == null:
+		return
+	battle_manager.spend(cd.cost)
+	battle_manager.set_ward(cd)
+	battle_ui.flash_message("【%s】已蓋放:敵方下次召喚從者時觸發" % cd.card_name)
+	_consume_played(hand_idx)
+
+
+## ── 開局帳同步(host 權威發牌;client 進場後主動來要)──────────
+@rpc("any_peer", "reliable")
+func _net_request_state() -> void:
+	if not multiplayer.is_server():
+		return
+	_net_apply_state.rpc_id(multiplayer.get_remote_sender_id(),
+		battle_manager.export_accounts())
+
+
+@rpc("authority", "reliable")
+func _net_apply_state(data: Dictionary) -> void:
+	battle_manager.import_accounts(data)
+	_accounts_synced = true
+	_sync_hand_view()
+	_refresh_opp_hud()
+
+
+## client:每 0.5 秒要一次直到拿到——host 的場景可能比我晚 ready,先發的請求會撲空。
+func _request_state_loop() -> void:
+	for i in range(20):
+		if _accounts_synced or not NetMatch.is_online:
+			return
+		_net_request_state.rpc_id(1)
+		await get_tree().create_timer(0.5).timeout
+	battle_ui.flash_message("開局同步失敗:請回主選單重新連線")
+
+
+## ── 視角(2b):client 把鏡頭/手牌/雙牌堆繞棋盤中線轉 180°,從自己那側看桌 ──
+func _apply_client_viewpoint() -> void:
+	if not NetMatch.is_online or NetMatch.my_side != "enemy":
+		return
+	var mid_z := _board_mid_z()
+	# 繞「通過棋盤中線 (0,*,mid_z) 的垂直軸」轉半圈:v → (-x, y, 2·mid_z − z)。
+	# 只轉觀察者這一掛(鏡頭/手牌/牌堆),棋盤和單位不動——世界只有一份,視角有兩個。
+	var flip := Transform3D(Basis(Vector3.UP, PI), Vector3(0.0, 0.0, 2.0 * mid_z))
+	for path in ["../CameraRig", "../PlayerHand", "../Deck", "../EnemyDeck"]:
+		var node := get_node_or_null(path) as Node3D
+		if node != null:
+			node.global_transform = flip * node.global_transform
+
+
+## ── HUD:對方手牌張數(2d 的張數版;卡背扇形之後再說)────────────
+func _refresh_opp_hud() -> void:
+	if not NetMatch.is_online:
+		return
+	var opp := "enemy" if NetMatch.my_side == "player" else "player"
+	battle_ui.update_opp_count(battle_manager.hand_of(opp).size())
+	_update_deck_labels()
+
+
+## ── 斷線(2e):任一方掉線 = 收桌回主選單 ───────────────────
+func _on_net_peer_lost(_id: int) -> void:
+	_handle_net_lost()
+
+
+func _on_net_server_lost() -> void:
+	_handle_net_lost()
+
+
+func _handle_net_lost() -> void:
+	if ui_state == UiState.GAME_OVER:
+		return
+	ui_state = UiState.GAME_OVER   # 鎖住一切互動
+	battle_ui.flash_message("對方已離線,返回主選單…")
+	await get_tree().create_timer(2.0).timeout
+	_leave_online_match()
+
+
+## 收線離場:關 peer、清 NetMatch、回主選單(勝負畫面的兩顆按鈕也走這裡)。
+func _leave_online_match() -> void:
+	if multiplayer.multiplayer_peer != null:
+		multiplayer.multiplayer_peer.close()
+	multiplayer.multiplayer_peer = null
+	NetMatch.reset()
+	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")

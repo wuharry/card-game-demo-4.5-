@@ -45,6 +45,10 @@ var turn: int = 1
 var active_side: String = "player"   # 現在輪到誰行動(回合歸屬)
 var sides: Dictionary = {}           # "player"/"enemy" → SideState
 
+## 單位節點的掛點(CardManager 在 _ready 注入 player_hand):
+## place_card 的「躺平」靠它的 -90°X 旋轉;召喚技與連線重放生單位都掛這裡。
+var hand_node: PlayerHand = null
+
 ## 雙方本體(CardManager 生成後註冊進來);打倒對方本體 = 勝利(§1)。
 var player_hero: Hero = null
 var enemy_hero: Hero = null
@@ -473,19 +477,75 @@ func _resolve_summon(caster: Card, skill: SkillData) -> void:
 	var slot := _first_empty_slot(side_of(caster))
 	if slot == null:
 		return   # 沒空位:演出照播、召喚落空(和爐石場滿同規)
+	var unit := spawn_unit(load(res_path), slot)
+	if unit != null:
+		mark_summoned(unit)
+
+
+## 生一個單位節點進指定卡槽(召喚技與連線重放共用)。
+## 掛在 hand_node(PlayerHand)底下:place_card 的「躺平」靠它的 -90°X 旋轉,
+## 掛錯父節點卡會立起來(local vs world,見 card_slot 的說明)。
+func spawn_unit(cd: CardData, slot: CardSlot) -> Card:
+	if cd == null or slot == null or hand_node == null:
+		return null
 	var card: Card = CARD_SCENE.instantiate()
-	# 掛在施放者的父節點(PlayerHand)底下:place_card 的「躺平」靠父節點的
-	# -90°X 旋轉,掛錯父節點卡會立起來(local vs world,見 card_slot 的說明)。
-	var hand := caster.get_parent()
-	hand.add_child(card)
-	card.setup(load(res_path))
-	# hover 信號接回中繼站,召喚出來的單位才能被指定成目標時亮起。
-	if hand is PlayerHand:
-		card.card_hovered.connect((hand as PlayerHand).card_hovered.emit)
-		card.card_unhovered.connect((hand as PlayerHand).card_unhovered.emit)
+	hand_node.add_child(card)
+	card.setup(cd)
+	# hover 信號接回中繼站,生出來的單位才能被指定成目標時亮起。
+	card.card_hovered.connect(hand_node.card_hovered.emit)
+	card.card_unhovered.connect(hand_node.card_unhovered.emit)
 	card.global_position = slot.global_position + Vector3(0.0, 1.5, 0.0)
 	slot.place_card(card)
-	mark_summoned(card)
+	return card
+
+
+## ── 連線同步(2c):帳的序列化/重建與手牌帳操作 ──────────────
+## host 開局把「雙方牌堆+起手」打包給 client,兩台的帳從此一致;
+## 之後每個行動走 RPC 重放,牌堆抽牌(pop_back)自然同步——資料一致+操作一致=狀態一致。
+
+
+func export_accounts() -> Dictionary:
+	return {
+		"p_deck": _paths_of(sides["player"].deck),
+		"e_deck": _paths_of(sides["enemy"].deck),
+		"p_hand": _paths_of(sides["player"].hand),
+		"e_hand": _paths_of(sides["enemy"].hand),
+	}
+
+
+func import_accounts(data: Dictionary) -> void:
+	sides["player"].deck = _cards_of(data["p_deck"])
+	sides["enemy"].deck = _cards_of(data["e_deck"])
+	sides["player"].hand = _cards_of(data["p_hand"])
+	sides["enemy"].hand = _cards_of(data["e_hand"])
+
+
+static func _paths_of(list: Array[CardData]) -> PackedStringArray:
+	var out := PackedStringArray()
+	for cd in list:
+		out.append(cd.resource_path)
+	return out
+
+
+static func _cards_of(paths: PackedStringArray) -> Array[CardData]:
+	var out: Array[CardData] = []
+	for p in paths:
+		var cd := load(p) as CardData
+		if cd != null:
+			out.append(cd)
+	return out
+
+
+## 行動方從手上打出第 idx 張(連線重放端的帳面扣牌;出牌端的視圖自己會扣)。
+func remove_from_hand(side: String, idx: int) -> void:
+	var hand: Array[CardData] = (sides[side] as SideState).hand
+	if idx >= 0 and idx < hand.size():
+		hand.remove_at(idx)
+
+
+## 單位所在的卡槽(連線用它當單位的「跨機器身分證」:兩台場景樹路徑一致)。
+func find_slot_of(unit: Card) -> CardSlot:
+	return _find_slot(unit)
 
 
 ## ── 路線幾何(橫掃/貫穿/召喚落點用)─────────────────

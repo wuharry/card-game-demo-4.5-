@@ -46,6 +46,7 @@ var _skill_note: String = ""   # 技能被擋的理由(同上)
 var _hud_panel: PanelContainer
 var _hud_turn: Label
 var _hud_mana: Label
+var _hud_opp: Label   # 對方手牌張數(2d;只在連線時顯示)
 var _end_turn_btn: Button
 var _toast: Label
 var _toast_tween: Tween
@@ -292,6 +293,15 @@ func _build_hud() -> void:
 	_hud_mana.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(_hud_mana)
 
+	# 對方手牌張數(2d):平常隱藏,連線時由 update_opp_count 開燈。
+	_hud_opp = Label.new()
+	_hud_opp.add_theme_font_override("font", FONT_BODY)
+	_hud_opp.add_theme_font_size_override("font_size", 14)
+	_hud_opp.add_theme_color_override("font_color", GOLD_DIM)
+	_hud_opp.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_hud_opp.visible = false
+	col.add_child(_hud_opp)
+
 	_end_turn_btn = Button.new()
 	_end_turn_btn.text = "結束回合"
 	_end_turn_btn.add_theme_font_override("font", FONT_TITLE)
@@ -327,11 +337,13 @@ func _build_hud() -> void:
 
 ## HUD 刷新(BattleManager.state_changed 接進來):回合+行動方+該方魔力。
 func update_hud(turn: int, side: String, mana: int, mana_max: int) -> void:
-	var side_name := "我方回合" if side == "player" else "對方回合"
+	# 「我方」以本機視角判定(2b):my_side 離線恆為 "player",熱座語意不變;
+	# 連線時 client 的我方是 "enemy" 側——別寫死字串。
+	var side_name := "我方回合" if side == NetMatch.my_side else "對方回合"
 	_hud_turn.text = "第 %d 回合 ‧ %s" % [turn, side_name]
 	# 行動方用顏色再講一次:金=我方、緋=對方(熱座換邊要一眼可辨)。
 	_hud_turn.add_theme_color_override(
-		"font_color", GOLD if side == "player" else Color(0.92, 0.55, 0.5))
+		"font_color", GOLD if side == NetMatch.my_side else Color(0.92, 0.55, 0.5))
 	# ◆=現有、◇=已用掉的上限:不讀數字也能一眼讀量。
 	_hud_mana.text = "◆".repeat(maxi(mana, 0)) \
 		+ "◇".repeat(maxi(mana_max - mana, 0)) + "  %d／%d" % [mana, mana_max]
@@ -504,3 +516,14 @@ func _answer_reaction(use_quick: bool) -> void:
 	_react_dim.visible = false
 	_react_panel.visible = false
 	reaction_decided.emit(use_quick)
+
+
+## 對方手牌張數(2d;連線時 CardManager 每次帳變動就刷新)。
+func update_opp_count(count: int) -> void:
+	if _hud_opp == null:
+		return
+	_hud_opp.visible = true
+	_hud_opp.text = "對方手牌:%d 張" % count
+	_hud_panel.reset_size()
+	_hud_panel.set_anchors_and_offsets_preset(
+		Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 24)
