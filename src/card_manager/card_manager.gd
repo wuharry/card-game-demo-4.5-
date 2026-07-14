@@ -300,6 +300,8 @@ func _on_left_pressed_idle() -> void:
 		card.animate_unhover()
 	# 殺掉 hover 的位置補間:它和「拖曳跟手」同幀都在寫 position,不殺會互搶抖動。
 	card.stop_hover_motion()
+	# 碰撞箱歸位:拖曳中判定要跟著卡走(hover 的反向補償只在扇形裡才成立)。
+	card.reset_pick_area()
 	# 右側預覽也收:拖曳中視覺焦點在投影落點,資訊卡留著只會擋畫面。
 	_previewed_card = null
 	battle_ui.hide_card_preview()

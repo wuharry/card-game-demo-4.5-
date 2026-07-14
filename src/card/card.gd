@@ -99,6 +99,7 @@ func _ready() -> void:
 	# 把「進場時的縮放」存起來當基準。
 	# scale 是每個 3D 節點都有的內建屬性，對應 Inspector 的 Transform → Scale。
 	original_scale = scale
+	_area_base_pos = $Area3D.position   # 碰撞箱原位快照(hover 補償要歸得回來)
 
 
 ## ── 套用卡片資料 ─────────────────────────────────
@@ -385,6 +386,7 @@ const HOVER_LIFT := 1.8
 var hand_base_pos := Vector3.ZERO
 var _has_hand_base := false
 var _pos_tween: Tween = null
+var _area_base_pos := Vector3.ZERO   # $Area3D 在卡片 local 的原位(_ready 快照)
 
 
 ## PlayerHand 排扇形時同步基準位,並殺掉進行中的抬升/歸位補間(別跟扇形動畫搶)。
@@ -392,6 +394,7 @@ func sync_hand_base(p: Vector3) -> void:
 	hand_base_pos = p
 	_has_hand_base = true
 	stop_hover_motion()
+	reset_pick_area()
 
 
 ## 殺掉進行中的位置補間。開始拖曳時也要呼叫:補間和拖曳跟手都在寫 position,
@@ -399,6 +402,11 @@ func sync_hand_base(p: Vector3) -> void:
 func stop_hover_motion() -> void:
 	if _pos_tween != null and _pos_tween.is_valid():
 		_pos_tween.kill()
+
+
+## 碰撞箱歸位(開始拖曳、重排扇形時呼叫,讓判定跟回視覺)。
+func reset_pick_area() -> void:
+	$Area3D.position = _area_base_pos
 
 
 func animate_hover(zoom: float = 1.35) -> void:
@@ -410,9 +418,18 @@ func animate_hover(zoom: float = 1.35) -> void:
 	# 目標是「絕對位置」(基準+固定偏移),連打多少次 hover 都收斂到同一點,不累積。
 	if not is_on_board and _has_hand_base:
 		stop_hover_motion()
-		_pos_tween = create_tween()
-		_pos_tween.tween_property(self, "position",
-			hand_base_pos + Vector3(0.0, HOVER_LIFT, 0.05), 0.15)
+		_pos_tween = create_tween().set_parallel(true)
+		var lift := Vector3(0.0, HOVER_LIFT, 0.05)
+		_pos_tween.tween_property(self, "position", hand_base_pos + lift, 0.15)
+		# 判定與演出分離:視覺抬上去,碰撞箱反向補償「釘在扇形原位」——
+		# hover 演出若把判定幾何一起搬走,游標下一幀就不再指到這張卡,
+		# exit→歸位→又 enter→又抬……enter/exit 迴圈 = 卡片閃爍。
+		# 換算:抬升是「手牌空間」向量,$Area3D.position 是「卡片 local」→
+		# 先用卡的純旋轉反轉方向,再除以 hover 結束時的等比縮放。
+		var rot := transform.basis.orthonormalized()
+		var s := original_scale.x * zoom
+		_pos_tween.tween_property($Area3D, "position",
+			_area_base_pos + (rot.inverse() * -lift) / s, 0.15)
 
 
 func animate_unhover() -> void:
@@ -421,8 +438,11 @@ func animate_unhover() -> void:
 	tw.tween_property(self, "scale", original_scale, 0.15)
 	if not is_on_board and _has_hand_base:
 		stop_hover_motion()
-		_pos_tween = create_tween()
+		_pos_tween = create_tween().set_parallel(true)
 		_pos_tween.tween_property(self, "position", hand_base_pos, 0.15)
+		# 歸位途中補償也同步收回:兩條補間淨效果 = 碰撞箱全程釘在原位,
+		# 卡片下降「掃過」游標時才不會又觸發 enter(反向的閃爍迴圈)。
+		_pos_tween.tween_property($Area3D, "position", _area_base_pos, 0.15)
 
 
 ## ── 公開方法:上桌 / 回手 ─────────────────────────
