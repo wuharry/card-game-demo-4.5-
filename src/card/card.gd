@@ -154,6 +154,30 @@ func setup(card_data: CardData) -> void:
 ## ── 技能描述(卡框下半的文字區)────────────────────────────
 ## 程式生成 Label3D,不動 card.tscn;規格對齊場景裡的數值字
 ## (render_priority 1 + 貼卡面 z 0.02,躺平時才不會被卡面吃掉)。
+
+## 文字區容量:置中 y=-0.52、每行高 19px×0.005=0.095 → 5 行佔 -0.28~-0.76,
+## 上不撞卡名(-0.1 下緣 -0.2)、下不撞攻血列(-0.9 上緣 -0.8)。第 6 行起就會撞。
+const SKILL_TEXT_MAX_LINES := 5
+const SKILL_TEXT_CHARS_PER_LINE := 14.0   # width 270px ÷ font 19px ≈ 14.2 個全形字
+
+
+## 估算截斷:超過 5 行的部分切掉、以 … 收尾(全文靠 BattleUI 的 hover 放大預覽看)。
+## 用「全形=1、半形=0.5」估寬而非真的排版量測——Label3D 沒有 max_lines 可設,
+## 量測 API 又依賴字型載入時機;卡面只要「保證不撞攻血列」,精確度夠用就好。
+func _fit_card_text(raw: String) -> String:
+	var budget := SKILL_TEXT_MAX_LINES * SKILL_TEXT_CHARS_PER_LINE
+	var used := 0.0
+	for i in raw.length():
+		var ch := raw.unicode_at(i)
+		if ch == 10:   # 手動換行:把目前這行「沒用完的容量」整行扣掉
+			used = ceilf(used / SKILL_TEXT_CHARS_PER_LINE) * SKILL_TEXT_CHARS_PER_LINE
+			continue
+		used += 1.0 if ch > 0x2E7F else 0.5   # 0x2E80 起是 CJK 區;之前的都當半形
+		if used > budget - 1.0:   # 留 1 個字位給省略號
+			return raw.substr(0, i) + "…"
+	return raw
+
+
 func _update_skill_label() -> void:
 	var lb: Label3D = get_node_or_null("SkillLabel")
 	if lb == null:
@@ -174,10 +198,10 @@ func _update_skill_label() -> void:
 		var s := data.active_skill
 		if data.card_type == CardData.CardType.MINION:
 			# 【技能名】◆費用 + 換行描述;◆ 與指令選單的費用標記同一符號。
-			lb.text = "【%s】◆%d\n%s" % [s.skill_name, s.cost, s.description]
+			lb.text = _fit_card_text("【%s】◆%d\n%s" % [s.skill_name, s.cost, s.description])
 		else:
 			# 法術卡:卡名/費用已在卡框上緣,文字區只印效果,不重複報頭。
-			lb.text = s.description
+			lb.text = _fit_card_text(s.description)
 	else:
 		lb.text = ""   # 沒有主動技的白板(骷髏弓手):留白
 	_update_type_label()
@@ -350,16 +374,36 @@ func _on_area_3d_mouse_exited() -> void:
 ## 把「要不要放大」的決策權交給 Manager，卡片只負責「怎麼放大」。
 ## zoom = 放大倍數:手牌瀏覽用預設值;指定目標時 CardManager 會傳更大的倍數,
 ## 讓玩家看清楚目標卡面上的技能描述字。
+## 手牌卡 hover 抬升距離(手牌局部座標的 +Y = 沿扇形面往畫面上方)。
+## 手牌平時縮在畫面下緣只露卡頂(爐石式),hover 要整張浮出來才讀得到。
+const HOVER_LIFT := 1.45
+
+var _hover_base_pos := Vector3.ZERO   # 抬升前的扇形位置(基準快照)
+var _hover_lifted := false            # 防重複抬:連續 hover 只快照一次,不累積
+
+
 func animate_hover(zoom: float = 1.35) -> void:
 	# create_tween() 會建立一個補間動畫器：在一段時間內把某個屬性平滑地變化。
 	var tw := create_tween()
 	# 把 scale 在 0.15 秒內，從現在平滑變到「原始大小 × zoom」(基準用快照,見 original_scale)。
 	tw.tween_property(self, "scale", original_scale * zoom, 0.15)
+	# 手牌卡同步抬升+微微向前(local +Z 朝鏡頭),蓋過鄰卡;上桌單位不抬(它們沒被遮)。
+	# 基準值要快照:抬升中再 hover 讀當下 position 會把「抬到一半」當基準,越抬越高。
+	if not is_on_board:
+		if not _hover_lifted:
+			_hover_base_pos = position
+			_hover_lifted = true
+		tw.parallel().tween_property(self, "position",
+			_hover_base_pos + Vector3(0.0, HOVER_LIFT, 0.05), 0.15)
+
 
 func animate_unhover() -> void:
 	var tw := create_tween()
 	# 0.15 秒內縮回原始大小。
 	tw.tween_property(self, "scale", original_scale, 0.15)
+	if _hover_lifted:
+		_hover_lifted = false
+		tw.parallel().tween_property(self, "position", _hover_base_pos, 0.15)
 
 
 ## ── 公開方法:上桌 / 回手 ─────────────────────────

@@ -32,6 +32,9 @@ var card_being_dragged: Card = null
 var drag_plane_height: float = 0.0
 ## 目前被滑鼠 hover(放大)的卡片。全場同時「只能有一張」被放大，避免畫面混亂。
 var currently_hovered_card: Card = null
+## 右側放大預覽面板目前顯示的卡(和 currently_hovered_card 分開記:
+## 預覽對「桌上單位」也開,而 currently_hovered_card 只管手牌的放大動畫)。
+var _previewed_card: Card = null
 ## 拖曳時，目前懸停在哪個卡槽上方(用來控制卡槽的高亮提示)。
 var currently_hovered_slot: CardSlot = null
 
@@ -126,6 +129,10 @@ func on_card_hovered(card: Card) -> void:
 	if card_being_dragged != null:
 		return
 
+	# 右側放大預覽:手牌、桌上單位都給(卡面字有截斷,全文在預覽面板看)。
+	_previewed_card = card
+	battle_ui.show_card_preview(card)
+
 	# 上桌單位不做「手牌式放大」;只有在指定目標模式、而且是合法目標時,
 	# 才亮起當「候選目標」的視覺回饋(借用同一套放大動畫)。
 	if card.is_on_board:
@@ -155,6 +162,12 @@ func on_card_hovered(card: Card) -> void:
 
 ## ── 收到「滑鼠離開某張卡」事件 ──────────────────
 func on_card_unhovered(card: Card) -> void:
+	# 收放大預覽——只有「離開的正是預覽中那張」才收:扇形手牌重疊時
+	# 事件序是 enter(B) 可能先於 exit(A),無條件收會把剛開的 B 預覽誤殺。
+	if _previewed_card == card:
+		_previewed_card = null
+		battle_ui.hide_card_preview()
+
 	# 指定目標模式:離開的是亮著的候選目標 → 收掉高亮。
 	if hovered_target == card:
 		hovered_target = null
@@ -285,6 +298,9 @@ func _on_left_pressed_idle() -> void:
 	if currently_hovered_card == card:
 		currently_hovered_card = null
 		card.animate_unhover()
+	# 右側預覽也收:拖曳中視覺焦點在投影落點,資訊卡留著只會擋畫面。
+	_previewed_card = null
+	battle_ui.hide_card_preview()
 
 
 ## 拖曳中左鍵放開 = 嘗試出牌。依卡型分流(§7):從者進卡槽、秘術丟目標、
@@ -515,9 +531,9 @@ func _is_valid_target(card: Card) -> bool:
 
 
 ## ── 本體(Hero)────────────────────────────────────
-## 造型借現成的卡資料:玩家=聖殿騎士、敵方=死靈法師(魔王感);HP 都是 20。
+## 造型借現成的卡資料:玩家=巫師、敵方=死靈法師(法師對決);HP 都是 20。
 func _spawn_heroes() -> void:
-	player_hero = _make_hero("player", "res://data/cards/knight_templar.tres")
+	player_hero = _make_hero("player", "res://data/cards/wizard.tres")
 	enemy_hero = _make_hero("enemy", "res://data/cards/necromancer.tres")
 	battle_manager.register_heroes(player_hero, enemy_hero)
 
@@ -534,9 +550,10 @@ func _make_hero(side: String, look_path: String) -> Hero:
 
 
 ## 本體站位:從卡槽群組的實際位置算,不寫死座標——換戰場、改排法都不用回來改。
-## 敵方=棋盤後方中線(遠景壓陣);我方=棋盤「左翼」——
-## 我方正後方是手牌扇形+鏡頭的地盤,站那裡會被手牌整個擋住(實測);
-## 右邊是牌堆,左本體右牌堆,畫面左右配重剛好平衡。
+## 兩側鏡像:各自站在「後排正後方」的中線上,鏡頭沿中線一眼看穿:
+## 我方本體 → 我方卡槽 → (溪流) → 敵方卡槽 → 敵方本體。
+## (舊版我方站左翼,是因為舊鏡頭壓得低、正後方會被手牌擋住;
+##  這次鏡頭拉高拉遠後限制解除,站位回歸鏡像對稱。)
 func _hero_anchor(side: String) -> Vector3:
 	# 不能用三元運算式:它產出的是無型別 Array,執行期塞不進 Array[String] 會炸。
 	var groups: Array[String] = ["player_front", "player_back"]
@@ -544,7 +561,6 @@ func _hero_anchor(side: String) -> Vector3:
 		groups = ["enemy_front", "enemy_back"]
 	var sum := Vector3.ZERO
 	var count := 0
-	var min_x := INF
 	var far_z := 0.0   # 該側「後緣」的 z(玩家側取最大、敵方側取最小)
 	for group in groups:
 		for slot in get_tree().get_nodes_in_group(group):
@@ -552,7 +568,6 @@ func _hero_anchor(side: String) -> Vector3:
 				var p: Vector3 = (slot as CardSlot).global_position
 				sum += p
 				count += 1
-				min_x = minf(min_x, p.x)
 				if count == 1:
 					far_z = p.z
 				elif side == "player":
@@ -562,9 +577,10 @@ func _hero_anchor(side: String) -> Vector3:
 	if count == 0:
 		return Vector3.ZERO   # 找不到卡槽(不該發生):放世界原點至少看得見
 	var center := sum / float(count)
+	var back_gap := 2.2   # 本體離自家後排的距離(兩側同值,維持鏡像)
 	if side == "enemy":
-		return Vector3(center.x, center.y, far_z - 2.2)
-	return Vector3(min_x - 2.6, center.y, center.z)
+		return Vector3(center.x, center.y, far_z - back_gap)
+	return Vector3(center.x, center.y, far_z + back_gap)
 
 
 ## 指定目標中懸停本體:合法的打臉目標才亮(理由不為空就不亮,點下去才提示)。

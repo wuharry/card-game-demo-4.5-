@@ -17,7 +17,7 @@ class_name ForestScatter
 			_scatter()
 
 @export_group("範圍")
-@export var center: Vector3 = Vector3(0, 0, 0.3)   # 戰場中心
+@export var center: Vector3 = Vector3(0, 0, 0)     # 戰場中心(牌桌鏡像對稱於 z=0)
 @export var ring_inner: float = 8.5                # 內圈淨空半徑（牌桌外緣 + 邊距，別小於 8）
 @export var ring_outer: float = 20.0               # 外圈半徑
 @export var clear_front_z: float = 6.0             # 保留 +Z（玩家側）這段不長樹
@@ -44,7 +44,7 @@ class_name ForestScatter
 @export var outer_bias: float = 0.65               # 半徑分布偏壓：<1 樹偏向外圈 → 遠景密成樹牆、近景稀疏有縱深
 @export var far_scale_boost: float = 0.3           # 越遠的樹越大(最多 +30%)：補償透視縮小，背景牆更厚實
 @export var edge_bush_bias: float = 1.8            # 叢緣灌木倍率：灌木偏好長在樹叢邊緣(林下植被的真實分布)
-@export var stream_z: float = 0.35                 # 溪流中心的世界 Z（對齊場景 Stream 節點）
+@export var stream_z: float = 0.0                  # 溪流中心的世界 Z（對齊場景 Stream 節點）
 @export var stream_half_width: float = 1.7         # 溪流兩側各留這麼寬不長樹：樹不該站在水裡
 
 @export_group("地景小物(打散方塊感)")
@@ -281,9 +281,10 @@ func _scatter_prop_class(rng: RandomNumberGenerator, files: Array[String], amoun
 			if not _far_enough(p, tree_pts, min_spacing):   # 大件別跟樹幹疊在一起
 				continue
 		else:
-			# 牌桌矩形(含邊距)內不放:小物可以貼得比樹的大圓近,但別上桌
+			# 牌桌矩形(含邊距)內不放:小物可以貼得比樹的大圓近,但別上桌。
+			# z 範圍蓋到 ±8.6:兩尊本體現在鏡像站在 z=±6.9 的中線上,腳邊別長東西。
 			var wz := p.y + center.z
-			if absf(p.x) < 5.5 and wz > -9.8 and wz < 5.6:
+			if absf(p.x) < 5.5 and wz > -8.6 and wz < 8.6:
 				continue
 			if absf(wz - stream_z) < 1.2:   # 別長在水裡(可比樹更貼近岸:1.2 < 1.7)
 				continue

@@ -77,7 +77,7 @@ subdivide_depth = 8
 script = ExtResource("2_scatter")
 
 [node name="Stream" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.62, 0.35)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.62, 0)
 mesh = SubResource("PlaneMesh_stream")
 surface_material_override/0 = SubResource("ShaderMaterial_stream")
 
