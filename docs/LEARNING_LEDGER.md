@@ -1,7 +1,7 @@
 # 學習債清單(Learning Ledger)
 
 > **這是什麼**:逃生艙 / AI 代工做出來、但 Harvey(Godot 新手)未必理解的觀念總帳。
-> 建帳日 2026-07-06;主帳範圍 = commit `d49c7fb`…`3f97f17`(Harvey 指定的逃生艙區間)。
+> 建帳日 2026-07-06;主帳範圍 = commit `cbb80f4`…`f11931d`(Harvey 指定的逃生艙區間)。
 >
 > **給 agent 的使用規則**:
 > 1. **出題時機**:只在 Harvey 主動說「我要複習 / 考我 / 學以前的東西」時啟動,平常別轟炸。
@@ -21,9 +21,9 @@
 
 ---
 
-## 主帳(d49c7fb…3f97f17)
+## 主帳(cbb80f4…f11931d)
 
-### 1. 溪流水面 shader(`d49c7fb`;[assets/water/stream_water.gdshader](../assets/water/stream_water.gdshader))
+### 1. 溪流水面 shader(`cbb80f4`;[assets/water/stream_water.gdshader](../assets/water/stream_water.gdshader))
 
 | 觀念 | 等級 | 考題方向 |
 |---|---|---|
@@ -32,14 +32,14 @@
 | `TIME` 驅動 UV 捲動(動畫的來源) | 初階/未驗 | 「波紋為什麼會流?TIME 乘 2 畫面變什麼樣?」 |
 | SSR 螢幕空間反射:只能反射「當前畫面裡有的東西」 | 初階/未驗 | 「為什麼樹一被鏡頭切出畫面,水裡倒影就消失?」 |
 
-### 2. 程序化地板(`b5b0696`、`acf46c5`;[src/environment/ground_generator.gd](../src/environment/ground_generator.gd))
+### 2. 程序化地板(`785c975`、`598cd03`;[src/environment/ground_generator.gd](../src/environment/ground_generator.gd))
 
 | 觀念 | 等級 | 考題方向 |
 |---|---|---|
 | 噪聲 vs 純隨機:FastNoiseLite「相鄰值相近」所以成簇;`randi` 是雪花點 | 初階/未驗 | 「想要泥巴斑塊更大顆,調 frequency 還是 threshold?兩者各控制什麼?」 |
 | 閾值切分:連續噪聲值 → 離散磚種(草 / 泥 / 過渡磚) | 初階/未驗 | 「過渡磚是怎麼被選中的?畫出噪聲值軸上三個區間」 |
 | GridMap + MeshLibrary 的分工(棋盤格 vs 磚的字典) | 初階/未驗 | 「新增一種磚要動哪邊?鋪磚邏輯要改嗎?」 |
-| `acf46c5` 的 bug 根因:磚隨機朝向 → 部分磚光照/UV 方向錯 → 深色斑塊 | 初階/未驗 | 「為什麼『轉一下磚』會讓它變深色?跟法線的關係?」 |
+| `598cd03` 的 bug 根因:磚隨機朝向 → 部分磚光照/UV 方向錯 → 深色斑塊 | 初階/未驗 | 「為什麼『轉一下磚』會讓它變深色?跟法線的關係?」 |
 
 ### 3. 森林散佈([src/environment/forest_scatter.gd](../src/environment/forest_scatter.gd))
 
@@ -49,7 +49,7 @@
 | alpha scissor(鏤空)vs alpha blend:樹葉用 scissor 是為了躲透明排序問題 | 初階/未驗 | 「樹葉改用 alpha blend 會出什麼視覺 bug?為什麼 scissor 沒這問題?」 |
 | 生成的節點不設 owner → 不會存進 .tscn(場景檔保持薄,內容由 code 重建) | 初階/未驗 | 「編輯器裡看得到幾百棵樹,.tscn 檔裡卻沒有它們——為什麼?這樣的好處?」 |
 
-### 4. 卡牌互動 code review 清理(`0a5ca1a`)
+### 4. 卡牌互動 code review 清理(`80b6ed8`)
 
 | 觀念 | 等級 | 考題方向 |
 |---|---|---|
@@ -57,7 +57,7 @@
 | `@export` 節點注入 vs `$` 字串路徑(`node_paths` 的意義;場景樹搬家誰會壞) | 初階/未驗 | 「把 PlayerHand 在場景樹搬到別層,@export 注入和 `$../PlayerHand` 誰活誰死?」 |
 | 靜態型別標註的好處(自動補全、錯誤提早在編輯期爆) | 初階/未驗 | 「`var card: Card` 比 `var card` 多買到哪兩件事?」 |
 
-### 5. Label3D 深度與數值顯示(`9fa9096`、`c860c60`)——已教學
+### 5. Label3D 深度與數值顯示(`493de31`、`57499e0`)——已教學
 
 | 觀念 | 等級 | 考題方向 |
 |---|---|---|
@@ -82,12 +82,12 @@
 
 ---
 
-## 續帳(3f97f17…HEAD,本機 session;2026-07-06 依 session 全記錄補齊)
+## 續帳(f11931d…HEAD,本機 session;2026-07-06 依 session 全記錄補齊)
 
 > 原「待分類」五條全部展開移入。等級照規則預設「初階/未驗」;
 > 有實際問答依據的兩處已標註(§12 河道根因 = 中階、§9 出血 / §11 錨點 = 出過題未答)。
 
-### 8. CardData 資料層實作(`d959cb7`;[src/card/card_data.gd](../src/card/card_data.gd)、[data/cards/](../data/cards/))
+### 8. CardData 資料層實作(`dda702a`;[src/card/card_data.gd](../src/card/card_data.gd)、[data/cards/](../data/cards/))
 
 > 觀念層(資料/視覺分離)在主帳 §7,這裡是實作層。
 
@@ -97,7 +97,7 @@
 | AtlasTexture:在大圖上「框一格」當獨立貼圖(卡圖佔位 = 動畫表第 0 幀) | 初階/未驗 | 「region = Rect2(0,0,100,100) 在說什麼?想改用第 3 幀改哪個數字?」 |
 | DirAccess 掃資料夾 + 懶載入(卡池第一次要用才載);`.remap` 後綴剝除 | 初階/未驗 | 「卡池是開遊戲瞬間載入,還是第一次發牌才載?懶載入買到什麼?」 |
 
-### 9. 卡圖挖空窗與召喚立牌(`09f8b40`、`8ddf5a5`;[src/card/card.gd](../src/card/card.gd))
+### 9. 卡圖挖空窗與召喚立牌(`016cb9a`、`42e4dfc`;[src/card/card.gd](../src/card/card.gd))
 
 | 觀念 | 等級 | 考題方向 |
 |---|---|---|
@@ -107,7 +107,7 @@
 | Sprite3D 立牌三件套:hframes 切格(幀數=寬÷高)、tween_callback+set_loops 播待機、BILLBOARD_FIXED_Y 直立面向鏡頭 | 初階/未驗 | 「幀數 6 是誰算出來的?為什麼這批素材能用寬除以高?」 |
 | 旋轉疊加(§5 牙籤原則的旋轉版):place_card 轉 local (0,0,0) 就是躺平——父節點 PlayerHand 已 -90°X;再補 -90 卡會立起來 | 初階/未驗 | 「卡在槽裡 local rotation=0,世界裡為什麼是躺的?『躺』是誰給的?」 |
 
-### 10. 戰場家族與輪替(`9385150`;[src/environment/arena_base.gd](../src/environment/arena_base.gd)、[arena_pool.gd](../src/environment/arena_pool.gd))
+### 10. 戰場家族與輪替(`3d9d5da`;[src/environment/arena_base.gd](../src/environment/arena_base.gd)、[arena_pool.gd](../src/environment/arena_pool.gd))
 
 | 觀念 | 等級 | 考題方向 |
 |---|---|---|
@@ -115,7 +115,7 @@
 | static 類別變數跨場景傳值:static 活在類別上,change_scene 清不掉(ArenaPool 不用 autoload 的原因) | 初階/未驗 | 「換場景後 main.tscn 為什麼還讀得到抽籤結果?什麼時候該升級成 autoload?」 |
 | free() vs queue_free():queue_free 等幀尾才刪;換 WorldEnvironment 必須立刻 free,兩環境並存一幀會打架 | 初階/未驗 | 「哪種情境不能等幀尾?main_scene.gd 那行為什麼用 free()?」 |
 
-### 11. 主選單(`2fb80f8`;[src/main_menu/main_menu.gd](../src/main_menu/main_menu.gd))
+### 11. 主選單(`d36e167`;[src/main_menu/main_menu.gd](../src/main_menu/main_menu.gd))
 
 | 觀念 | 等級 | 考題方向 |
 |---|---|---|
@@ -124,7 +124,7 @@
 | 主題覆寫做文字選單:normal 給 StyleBoxEmpty、hover/focus 共用「只開下邊框」的 StyleBoxFlat → 滑鼠/鍵盤回饋一致 | 初階/未驗 | 「為什麼 focus 也要接樣式?只接 hover 冷落了誰?」 |
 | 轉場模式:鎖按鈕 → tween 黑幕 → `await tw.finished` → change_scene_to_file,失敗要還原 | 初階/未驗 | 「await 那行在等什麼信號?不鎖按鈕連點兩下會怎樣?」 |
 
-### 12. 森林地形整修(`4ab417d`;[ground_generator.gd](../src/environment/ground_generator.gd)、[forest_scatter.gd](../src/environment/forest_scatter.gd))
+### 12. 森林地形整修(`04f8bbf`;[ground_generator.gd](../src/environment/ground_generator.gd)、[forest_scatter.gd](../src/environment/forest_scatter.gd))
 
 | 觀念 | 等級 | 考題方向 |
 |---|---|---|

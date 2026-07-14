@@ -421,7 +421,7 @@ func apply_freeze(unit, turns := 1) -> void:
 5. **敵方 AI（單人練習模式，連線後再做）** — 敵方自動出牌與攻擊（`enemy_front` / `enemy_back` 分群運用）。
 6. **卡片從卡槽取回** — `card_slot.gd` 的 `remove_card()` 已寫好，但尚未接上互動（例如再次拖出或右鍵取消）。
 7. **CardData 欄位擴充** — 技能資料層與 24 張接線已完成；剩 `attack_range` / `Sacrifice`（[§4.1](#41-攻擊範圍-數位調整)、[§3](#3-召喚)）。
-8. **地形收尾** — meshlib 純草磚問題與空的 `Terrain` / `Cliffs` 節點；地形整修 commit（4ab417d）後需重驗哪些仍存在。
+8. **地形收尾** — meshlib 純草磚問題與空的 `Terrain` / `Cliffs` 節點；地形整修 commit（04f8bbf）後需重驗哪些仍存在。
 
 ---
 
