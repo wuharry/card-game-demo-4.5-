@@ -185,6 +185,10 @@ func _arrange_fan(stagger: float = 0.0, instant: bool = false) -> void:
 		# X 軸固定傾斜 card_tilt_x 度(讓牌面朝向攝影機)。
 		var target_rot := Vector3(card_tilt_x, 0.0, -rad_to_deg(angle_rad))
 
+		# 同步 hover 抬升的基準位:扇形位是卡片「真位置」的唯一權威,
+		# 抬升/歸位都以它為準(細節見 card.gd 的 sync_hand_base)。
+		cards[i].sync_hand_base(target_pos)
+
 		# instant:不補間、直接就位(換邊重建用——動畫留給「新抽那張」單獨演)。
 		if instant:
 			cards[i].position = target_pos

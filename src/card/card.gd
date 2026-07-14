@@ -376,10 +376,29 @@ func _on_area_3d_mouse_exited() -> void:
 ## 讓玩家看清楚目標卡面上的技能描述字。
 ## 手牌卡 hover 抬升距離(手牌局部座標的 +Y = 沿扇形面往畫面上方)。
 ## 手牌平時縮在畫面下緣只露卡頂(爐石式),hover 要整張浮出來才讀得到。
-const HOVER_LIFT := 1.45
+const HOVER_LIFT := 1.8
 
-var _hover_base_pos := Vector3.ZERO   # 抬升前的扇形位置(基準快照)
-var _hover_lifted := false            # 防重複抬:連續 hover 只快照一次,不累積
+## 扇形基準位:由 PlayerHand 的 _arrange_fan 寫入,是抬升/歸位唯一的「真位置」。
+## 第一版曾在 hover 當下快照 position 當基準——hover/unhover 快速交錯時,
+## 歸位補間還在飛就重新快照,「抬到一半」被當成新基準 → 卡越 hover 越往前不歸位。
+## 教訓:基準值要快照「沒錯」,但快照點必須是資料源頭(排扇形),不是動畫中途。
+var hand_base_pos := Vector3.ZERO
+var _has_hand_base := false
+var _pos_tween: Tween = null
+
+
+## PlayerHand 排扇形時同步基準位,並殺掉進行中的抬升/歸位補間(別跟扇形動畫搶)。
+func sync_hand_base(p: Vector3) -> void:
+	hand_base_pos = p
+	_has_hand_base = true
+	stop_hover_motion()
+
+
+## 殺掉進行中的位置補間。開始拖曳時也要呼叫:補間和拖曳跟手都在寫 position,
+## 兩者同幀互搶會抖動,而且補間結束瞬間會把卡拉回舊位。
+func stop_hover_motion() -> void:
+	if _pos_tween != null and _pos_tween.is_valid():
+		_pos_tween.kill()
 
 
 func animate_hover(zoom: float = 1.35) -> void:
@@ -388,22 +407,22 @@ func animate_hover(zoom: float = 1.35) -> void:
 	# 把 scale 在 0.15 秒內，從現在平滑變到「原始大小 × zoom」(基準用快照,見 original_scale)。
 	tw.tween_property(self, "scale", original_scale * zoom, 0.15)
 	# 手牌卡同步抬升+微微向前(local +Z 朝鏡頭),蓋過鄰卡;上桌單位不抬(它們沒被遮)。
-	# 基準值要快照:抬升中再 hover 讀當下 position 會把「抬到一半」當基準,越抬越高。
-	if not is_on_board:
-		if not _hover_lifted:
-			_hover_base_pos = position
-			_hover_lifted = true
-		tw.parallel().tween_property(self, "position",
-			_hover_base_pos + Vector3(0.0, HOVER_LIFT, 0.05), 0.15)
+	# 目標是「絕對位置」(基準+固定偏移),連打多少次 hover 都收斂到同一點,不累積。
+	if not is_on_board and _has_hand_base:
+		stop_hover_motion()
+		_pos_tween = create_tween()
+		_pos_tween.tween_property(self, "position",
+			hand_base_pos + Vector3(0.0, HOVER_LIFT, 0.05), 0.15)
 
 
 func animate_unhover() -> void:
 	var tw := create_tween()
 	# 0.15 秒內縮回原始大小。
 	tw.tween_property(self, "scale", original_scale, 0.15)
-	if _hover_lifted:
-		_hover_lifted = false
-		tw.parallel().tween_property(self, "position", _hover_base_pos, 0.15)
+	if not is_on_board and _has_hand_base:
+		stop_hover_motion()
+		_pos_tween = create_tween()
+		_pos_tween.tween_property(self, "position", hand_base_pos, 0.15)
 
 
 ## ── 公開方法:上桌 / 回手 ─────────────────────────
