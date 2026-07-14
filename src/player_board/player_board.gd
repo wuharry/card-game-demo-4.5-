@@ -39,7 +39,11 @@ func generate_board() -> void:
 	var row_gap := 2.5 * slot_scale # 排與排的前後間距(Z 方向)
 
 	# 玩家棋盤往近端(Z 正方向)偏，敵人棋盤往遠端(Z 負方向)偏，兩邊才不會重疊。
-	var z_offset := 0.7 if not is_enemy else -8.5
+	# 兩側鏡像對稱於世界 z=0(溪流中線):前排(row 0)永遠貼中線、後排退向各自本體。
+	# 舊版敵方兩排是「照玩家方向平移」,造成敵方前排反而離玩家更遠——視覺與語意打架。
+	var z_offset := 0.7 if not is_enemy else -6.7
+	# 敵方的「往後」是 -Z(退向敵方本體),玩家是 +Z:兩側各自背向中線生長。
+	var z_dir := -1.0 if is_enemy else 1.0
 	# 棋盤原點：Y 抬高 0.01 避免卡槽和地板「穿模」(疊在同一高度互相閃爍)。
 	var board_origin := Vector3(0.0, 0.01, z_offset)
 
@@ -68,7 +72,7 @@ func generate_board() -> void:
 			slot.position = start_point + Vector3(
 				col * col_gap,
 				0.0,
-				row * row_gap
+				row * row_gap * z_dir
 			)
 
 			# 給每個卡槽取個好認的名字，例如 Slot_R0_C3 (第0排第3欄)。

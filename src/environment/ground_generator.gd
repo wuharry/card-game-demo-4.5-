@@ -44,10 +44,12 @@ extends GridMap   # GridMap = 3D 版磚塊地圖：把 meshlib 裡的格子 mesh
 # 「草皮頂」和「河床頂」之間(草皮 -0.5、河床 -0.7,水目前 -0.62),
 # 水才是局部最低點、不會浮在草上。
 @export var bank_enabled: bool = true                   # 開關：要不要鋪河岸
-@export var stream_z: float = 0.35                      # 溪流中心的世界 Z（要對齊場景裡 Stream 節點的 z）
+# 溪流居中 z=0:牌桌自 2026-07 起鏡像對稱於中線,溪流就是「兩軍之間的無人地帶」。
+# 前排卡槽中心在 |z|=2.7、槽面南北緣約 |z|=1.74——水帶最寬(core+jitter=1.7)剛好不上槽。
+@export var stream_z: float = 0.0                       # 溪流中心的世界 Z（要對齊場景裡 Stream 節點的 z）
 @export var bank_core_width: float = 1.3                # 離溪流中心這距離內 → 純泥河床（大約蓋住水面下方＋兩側waterline）
 @export var bank_edge_width: float = 2.6                # 這距離內 → 草泥過渡帶（河岸往草地的漸層）
-@export var bank_jitter: float = 0.9                    # 岸線蜿蜒幅度：用噪聲沿 X 推擠岸線，0 = 兩條筆直平行線
+@export var bank_jitter: float = 0.4                    # 岸線蜿蜒幅度：0.9 時最寬水帶會伸進前排卡槽底下,收到 0.4
 
 # GridMap 用 0~23 的數字代表 24 種正交旋轉。這四個是繞 Y 軸 0/90/180/270 度。
 const Y_ORIENT: Array[int] = [0, 22, 10, 16]           # 四個 Y 軸 90° 正交朝向

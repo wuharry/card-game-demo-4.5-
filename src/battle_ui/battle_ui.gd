@@ -518,6 +518,142 @@ func _answer_reaction(use_quick: bool) -> void:
 	reaction_decided.emit(use_quick)
 
 
+## ── hover 卡片放大預覽(畫面右側的資訊卡)──────────────────────
+## 卡面空間小、描述超過 5 行會截斷(card.gd 的 _fit_card_text);
+## hover 任何卡(手牌或桌上單位)時,右側顯示完整資訊:
+## 卡圖/名稱/費用/卡型/攻血(桌上單位含當前血與靈裝加成)/關鍵字/技能全文。
+## 純顯示、mouse_filter 全設 IGNORE——面板絕不攔截滑鼠,不干擾拖曳與點擊。
+var _prev_panel: PanelContainer = null
+var _prev_art: TextureRect = null
+var _prev_name: Label = null
+var _prev_type: Label = null
+var _prev_stats: Label = null
+var _prev_body: Label = null
+var _prev_source: Card = null   # 來源卡:被釋放(換手牌/陣亡)時面板要自動收起
+
+const TYPE_NAMES := {
+	CardData.CardType.MINION: "從者",
+	CardData.CardType.EQUIP: "靈裝",
+	CardData.CardType.ARCANA: "秘術",
+	CardData.CardType.QUICK: "瞬咒",
+	CardData.CardType.WARD: "伏印",
+	CardData.CardType.DOMAIN: "領域",
+}
+
+
+func show_card_preview(card: Card) -> void:
+	if card == null or card.data == null:
+		return
+	if _prev_panel == null:
+		_build_preview()
+	_prev_source = card
+	var d := card.data
+	_prev_name.text = "%s  ◆%d" % [d.card_name, d.cost]
+	_prev_type.text = TYPE_NAMES.get(d.card_type, "?")
+	if d.card_type == CardData.CardType.MINION:
+		# 桌上單位印當前血/上限(含靈裝加成);手牌印模板值(setup 時 current_hp = hp)。
+		var lines: PackedStringArray = ["攻 %d    血 %d/%d" % [
+			d.atk, card.current_hp, d.hp + card.max_hp_bonus]]
+		if not d.keywords.is_empty():
+			var words: PackedStringArray = []
+			for w in d.keywords:
+				words.append(String(w))
+			lines.append("關鍵字:" + "、".join(words))
+		_prev_stats.text = "\n".join(lines)
+		_prev_stats.visible = true
+	else:
+		_prev_stats.visible = false
+	if d.active_skill != null:
+		var s := d.active_skill
+		if d.card_type == CardData.CardType.MINION:
+			_prev_body.text = "【%s】◆%d\n%s" % [s.skill_name, s.cost, s.description]
+		else:
+			_prev_body.text = s.description
+		_prev_body.visible = true
+	else:
+		_prev_body.visible = false
+	# 卡圖:從者=立牌動畫第 0 幀(只裁本體可見範圍,和卡面同一把尺);法術=圖示。
+	if d.standee != null:
+		var atlas := AtlasTexture.new()
+		atlas.atlas = d.standee
+		atlas.region = Card.visible_bounds_of_frame0(d.standee)
+		_prev_art.texture = atlas
+		_prev_art.visible = true
+	elif d.art != null:
+		_prev_art.texture = d.art
+		_prev_art.visible = true
+	else:
+		_prev_art.visible = false
+	_prev_panel.visible = true
+	_prev_panel.reset_size()
+	_prev_panel.set_anchors_and_offsets_preset(
+		Control.PRESET_CENTER_RIGHT, Control.PRESET_MODE_MINSIZE, 24)
+
+
+func hide_card_preview() -> void:
+	_prev_source = null
+	if _prev_panel != null:
+		_prev_panel.visible = false
+
+
+func _build_preview() -> void:
+	_prev_panel = PanelContainer.new()
+	_prev_panel.add_theme_stylebox_override("panel", _make_panel_style())
+	_prev_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_prev_panel)
+
+	var col := VBoxContainer.new()
+	col.custom_minimum_size = Vector2(250, 0)
+	col.add_theme_constant_override("separation", 8)
+	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_prev_panel.add_child(col)
+
+	_prev_art = TextureRect.new()
+	_prev_art.custom_minimum_size = Vector2(0, 110)
+	_prev_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_prev_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_prev_art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST   # 像素圖放大要銳利
+	_prev_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(_prev_art)
+
+	_prev_name = Label.new()
+	_prev_name.add_theme_font_override("font", FONT_TITLE)
+	_prev_name.add_theme_font_size_override("font_size", 22)
+	_prev_name.add_theme_color_override("font_color", GOLD)
+	_prev_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(_prev_name)
+
+	_prev_type = Label.new()
+	_prev_type.add_theme_font_override("font", FONT_BODY)
+	_prev_type.add_theme_font_size_override("font_size", 14)
+	_prev_type.add_theme_color_override("font_color", GOLD_DIM)
+	_prev_type.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(_prev_type)
+	col.add_child(_make_gold_line())
+
+	_prev_stats = Label.new()
+	_prev_stats.add_theme_font_override("font", FONT_BODY)
+	_prev_stats.add_theme_font_size_override("font_size", 16)
+	_prev_stats.add_theme_color_override("font_color", Color("e8ddc4"))
+	_prev_stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(_prev_stats)
+
+	_prev_body = Label.new()
+	_prev_body.add_theme_font_override("font", FONT_BODY)
+	_prev_body.add_theme_font_size_override("font_size", 15)
+	_prev_body.add_theme_color_override("font_color", Color("cfc4a6"))
+	_prev_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_prev_body.custom_minimum_size = Vector2(250, 0)
+	col.add_child(_prev_body)
+
+
+func _process(_delta: float) -> void:
+	# 防呆:hover 中的卡被釋放(換邊重建手牌、單位陣亡)不會發 unhover 信號,
+	# 面板會永遠卡在畫面上——來源卡死了就自動收起。
+	if _prev_panel != null and _prev_panel.visible and not is_instance_valid(_prev_source):
+		hide_card_preview()
+
+
 ## 對方手牌張數(2d;連線時 CardManager 每次帳變動就刷新)。
 func update_opp_count(count: int) -> void:
 	if _hud_opp == null:
