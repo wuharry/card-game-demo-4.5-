@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://ox8w81co5b5i"
 path.s3tc="res://.godot/imported/card_border.png-2b87ea49800842f781f4b6653b805dc7.s3tc.ctex"
+path.etc2="res://.godot/imported/card_border.png-2b87ea49800842f781f4b6653b805dc7.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/ui/textures/card_border.png"
-dest_files=["res://.godot/imported/card_border.png-2b87ea49800842f781f4b6653b805dc7.s3tc.ctex"]
+dest_files=["res://.godot/imported/card_border.png-2b87ea49800842f781f4b6653b805dc7.s3tc.ctex", "res://.godot/imported/card_border.png-2b87ea49800842f781f4b6653b805dc7.etc2.ctex"]
 
 [params]
 

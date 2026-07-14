@@ -298,6 +298,8 @@ func _on_left_pressed_idle() -> void:
 	if currently_hovered_card == card:
 		currently_hovered_card = null
 		card.animate_unhover()
+	# 殺掉 hover 的位置補間:它和「拖曳跟手」同幀都在寫 position,不殺會互搶抖動。
+	card.stop_hover_motion()
 	# 右側預覽也收:拖曳中視覺焦點在投影落點,資訊卡留著只會擋畫面。
 	_previewed_card = null
 	battle_ui.hide_card_preview()
@@ -577,7 +579,9 @@ func _hero_anchor(side: String) -> Vector3:
 	if count == 0:
 		return Vector3.ZERO   # 找不到卡槽(不該發生):放世界原點至少看得見
 	var center := sum / float(count)
-	var back_gap := 2.2   # 本體離自家後排的距離(兩側同值,維持鏡像)
+	# 貼近後排:本體站得越遠越貼畫面邊緣——我方會被手牌整個蓋住、敵方頂到上緣;
+	# 但貼太近(1.3)會站進後排卡槽裡,1.8 是「分得開又看得全」的折中。
+	var back_gap := 1.8   # 本體離自家後排的距離(兩側同值,維持鏡像)
 	if side == "enemy":
 		return Vector3(center.x, center.y, far_z - back_gap)
 	return Vector3(center.x, center.y, far_z + back_gap)
