@@ -11,7 +11,7 @@ signal hero_hovered(hero: Hero)
 signal hero_unhovered(hero: Hero)
 signal died(hero: Hero)
 
-const CHAR_HEIGHT := 1.7   # 從者立牌 1.3;本體高一截,一眼認得出
+const CHAR_HEIGHT := 1.45   # 從者立牌 1.3;本體略高一點(1.7 在新構圖裡太佔畫面,2026-07-14 縮)
 
 var side: String = "player"
 var max_hp: int = 20   # §1:玩家初始 HP 20
