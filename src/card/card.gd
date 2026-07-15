@@ -247,6 +247,8 @@ func show_standee() -> void:
 	# billboard FIXED_Y:永遠面向鏡頭、但只繞垂直軸轉(保持直立)——
 	# 歧路旅人立牌的核心;素材只有單一朝向、沒有背面,靠這招四面八方都好看。
 	_standee.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+	# 寫深度:不然 DOF 讀到立牌「身後地形」的深度,站在對焦區也會被糊(hero.gd 同款)。
+	_standee.alpha_cut = SpriteBase3D.ALPHA_CUT_OPAQUE_PREPASS
 	# ── 量出角色的「可見範圍」:大小與腳位都以它為準 ──────────
 	# 素材每格 100×100 裡,角色本體只佔中間約 30px,其餘是透明留白;
 	# 按「整格」算大小,角色會只剩帳面的三分之一、還因置中錨定而懸空。

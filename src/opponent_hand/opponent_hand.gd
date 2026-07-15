@@ -46,6 +46,7 @@ func _make_back(order: int) -> Sprite3D:
 	s.texture = BACK_TEXTURE
 	s.pixel_size = BACK_WIDTH / maxf(float(BACK_TEXTURE.get_width()), 1.0)
 	s.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+	s.alpha_cut = SpriteBase3D.ALPHA_CUT_OPAQUE_PREPASS   # 寫深度,DOF 才不會拿背後森林糊它
 	# 透明排序防閃:右邊的牌固定畫在左邊的上面(和玩家手牌扇形同一個疊法)
 	s.render_priority = order
 	add_child(s)

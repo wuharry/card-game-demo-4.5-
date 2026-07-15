@@ -86,6 +86,9 @@ func _build_sprite() -> void:
 	_sprite = Sprite3D.new()
 	_sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 	_sprite.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y   # 立牌:面向鏡頭、保持直立
+	# 透明物件預設不寫深度緩衝,DOF 後製會拿「身後森林」的深度來糊它——
+	# OPAQUE_PREPASS 讓不透明像素寫深度,立牌在對焦區就保持銳利(像素硬邊零損失)。
+	_sprite.alpha_cut = SpriteBase3D.ALPHA_CUT_OPAQUE_PREPASS
 	add_child(_sprite)
 	# 大小與腳位用「可見範圍」量(借 Card 的靜態掃描器,同一把尺):
 	# 本體是站直的,腳底抬到節點原點走 +Y——卡上立牌躺平走 +Z,只差軸向。
@@ -100,6 +103,23 @@ func _build_sprite() -> void:
 
 
 func _build_hp_label() -> void:
+	# 深度錨定板:HP 字浮在半空、背景是遠景森林——透明的字不寫深度,
+	# DOF 會拿森林的深度把字糊掉;字自己掛 alpha_cut 又會讓外框蓋掉字身
+	# (字身/外框共面,靠 render_priority 排序,而 priority 只在透明管線有效)。
+	# 所以墊一塊「會寫深度」的不透明底板:字的像素被釘在本體的對焦距離,
+	# 順便解決白字壓在雜亂背景上的可讀性。
+	var plate := MeshInstance3D.new()
+	var quad := QuadMesh.new()
+	quad.size = Vector2(1.3, 0.48)
+	plate.mesh = quad
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = Color(0.09, 0.08, 0.11)
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	plate.material_override = mat
+	plate.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF   # 半空的板子別在地上投影
+	plate.position = Vector3(0.0, CHAR_HEIGHT + 0.5, 0.0)
+	add_child(plate)
 	_hp_label = Label3D.new()
 	_hp_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_hp_label.font_size = 72

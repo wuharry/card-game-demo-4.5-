@@ -736,6 +736,8 @@ func _set_deck_label(path: String, count: int) -> void:
 		lb.font_size = 96
 		lb.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		lb.no_depth_test = true
+		# 想過才不做:不掛 alpha_cut(Label3D 掛了會讓外框蓋掉字身,見 hero.gd);
+		# 敵方牌堆在景深過渡帶、數字會微糊——和周圍地景同深度同糊法,視覺上是一致的。
 		lb.outline_size = 16
 		lb.modulate = Color(0.95, 0.9, 0.75)
 	lb.text = str(count)

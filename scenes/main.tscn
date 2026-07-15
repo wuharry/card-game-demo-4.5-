@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://bhehoq0hgmn0w"]
+[gd_scene load_steps=10 format=3 uid="uid://bhehoq0hgmn0w"]
 
 [ext_resource type="Script" path="res://src/main_scene/main_scene.gd" id="0_swap"]
 [ext_resource type="Script" uid="uid://fq1anfl5s3w2" path="res://src/card_manager/card_manager.gd" id="1_uu6xs"]
@@ -10,6 +10,12 @@
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_jyhfs"]
 size = Vector3(1.6, 0.18, 2.4)
+
+[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_dof01"]
+dof_blur_far_enabled = true
+dof_blur_far_distance = 20.0
+dof_blur_far_transition = 5.0
+dof_blur_amount = 0.08
 
 [node name="MainScene" type="Node3D"]
 script = ExtResource("0_swap")
@@ -24,6 +30,7 @@ player_hand = NodePath("../PlayerHand")
 transform = Transform3D(1, 0, 0, 0, 0.809017, 0.5877853, 0, -0.5877853, 0.809017, 0, 7, 11.7)
 current = true
 fov = 50.0
+attributes = SubResource("CameraAttributesPractical_dof01")
 
 [node name="Arena_Forest" parent="." instance=ExtResource("3_r0du0")]
 
