@@ -64,6 +64,10 @@ var battle_manager: BattleManager = null
 var active_unit: Card = null
 ## 等待指定目標的技能;null 代表等待目標的是「普通攻擊」。
 var pending_skill: SkillData = null
+## 等待指定目標的秘術(從手牌點選、還沒選到目標的那張);
+## 非 null = 現在是「秘術瞄準」模式:箭頭改由玩家本體出發、目標限敵方從者。
+## 用它和「單位攻擊瞄準」(active_unit != null)區分同一個 TARGETING 狀態。
+var pending_spell_card: Card = null
 ## TARGETING 狀態下目前亮起的候選目標:Card 或 Hero
 ## (兩者都有 animate_hover/unhover,所以宣告成共同祖先 Node3D)。
 var hovered_target: Node3D = null
@@ -146,7 +150,7 @@ func on_card_hovered(card: Card) -> void:
 	# 上桌單位不做「手牌式放大」;只有在指定目標模式、而且是合法目標時,
 	# 才亮起當「候選目標」的視覺回饋(借用同一套放大動畫)。
 	if card.is_on_board:
-		if ui_state == UiState.TARGETING and _is_valid_target(card):
+		if ui_state == UiState.TARGETING and _is_valid_targeting_target(card):
 			if hovered_target != null and hovered_target != card:
 				hovered_target.animate_unhover()
 			hovered_target = card
@@ -236,15 +240,21 @@ func _process(_delta: float) -> void:
 
 	# 指定目標中:每幀把「施放者 → 游標」的螢幕座標餵給 BattleUI 畫導引箭頭。
 	# unproject_position 是射線的反運算:3D 世界座標 → 螢幕像素座標。
-	elif ui_state == UiState.TARGETING and active_unit != null:
+	elif ui_state == UiState.TARGETING \
+			and (active_unit != null or pending_spell_card != null):
 		var aim := get_viewport().get_mouse_position()
 		var locked := hovered_target != null
 		if locked:
 			# 鎖定合法目標時,箭頭尖端吸附到目標身上,不再跟著游標抖。
 			aim = camera.unproject_position(
 				hovered_target.global_position + Vector3.UP * 0.5)
+		# 施放者起點:單位攻擊 = 該單位;秘術 = 行動方的本體(§7 箭頭由玩家出發)。
+		var caster_node: Node3D = active_unit
+		if caster_node == null:
+			caster_node = player_hero if battle_manager.active_side == "player" \
+				else enemy_hero
 		var from_px := camera.unproject_position(
-			active_unit.global_position + Vector3.UP * 0.5)
+			caster_node.global_position + Vector3.UP * 0.5)
 		battle_ui.update_arrow(from_px, aim, locked)
 
 
@@ -303,6 +313,16 @@ func _on_left_pressed_idle() -> void:
 	if MatchMode.is_vs_ai() and battle_manager.active_side != "player":
 		battle_ui.flash_message("對方回合:AI 行動中…")
 		return
+	# ── 秘術:改走「爐石式箭頭瞄準」而非拖放(§7 施放手感)──
+	# 點手牌的秘術 = 選定要施放的卡並進 TARGETING;箭頭由玩家本體射向游標,
+	# 再點敵方從者結算。其餘卡型(從者/靈裝/伏印)仍走原本的拖放。
+	if card.data.card_type == CardData.CardType.ARCANA:
+		if not battle_manager.can_afford(card.data.cost):
+			battle_ui.flash_message("魔力不足:需要 ◆%d(現有 %d)" % [
+				card.data.cost, battle_manager.active_mana()])
+			return
+		_begin_spell_targeting(card)
+		return
 	# ── 抓牌(原本的拖曳邏輯)──
 	card_being_dragged = card
 	ui_state = UiState.DRAGGING
@@ -332,7 +352,9 @@ func _on_left_released_drag() -> void:
 		CardData.CardType.MINION:
 			_try_summon(card)
 		CardData.CardType.ARCANA:
-			_try_cast_arcana(card)
+			# 秘術改走點選+箭頭瞄準(見 _begin_spell_targeting),照理不會走到拖放;
+			# 保險:萬一狀態機漏接,把卡放回扇形,不讓它懸在半空。
+			organize_hand()
 		CardData.CardType.EQUIP:
 			_try_attach_equip(card)
 		CardData.CardType.WARD:
@@ -370,25 +392,78 @@ func _try_summon(card: Card) -> void:
 		organize_hand()
 
 
-## 秘術:放開在敵方從者身上 = 指定它為目標(§7:僅攻方、自己回合)。
-func _try_cast_arcana(card: Card) -> void:
+## 秘術瞄準開始(§7 爐石式):選定手牌那張秘術、進 TARGETING、亮提示。
+## 卡不離手(留在扇形裡),由 _process 每幀從玩家本體畫箭頭到游標;
+## 目標與付費的最終驗證在點目標時(_on_left_pressed_spell_target → _cast_arcana_at)。
+func _begin_spell_targeting(card: Card) -> void:
+	pending_spell_card = card
+	pending_skill = null
+	active_unit = null
+	ui_state = UiState.TARGETING
+	# 收掉這張卡在扇形裡的 hover 放大與右側預覽,瞄準時畫面別再有一張浮著。
+	if currently_hovered_card == card:
+		currently_hovered_card = null
+		card.animate_unhover()
+	_previewed_card = null
+	battle_ui.hide_card_preview()
+	battle_ui.show_targeting("選擇【%s】的目標:敵方從者(右鍵取消)" % card.data.card_name)
+
+
+## TARGETING 中「懸停高亮」用的合法性:秘術走秘術規則,其餘走單位攻擊規則。
+## (兩者不能共用 _is_valid_target:後者靠 active_unit 判敵我,秘術時它是 null。)
+func _is_valid_targeting_target(card: Card) -> bool:
+	if pending_spell_card != null:
+		return _is_valid_spell_target(card)
+	return _is_valid_target(card)
+
+
+## 秘術的合法目標:在場上、敵方(相對行動方)、且非潛行(§8)。
+func _is_valid_spell_target(card: Card) -> bool:
+	if card == null or not card.is_on_board:
+		return false
+	if card.data.keywords.has(&"潛行"):
+		return false
+	return battle_manager.side_of(card) != battle_manager.active_side
+
+
+## 秘術瞄準中左鍵:點到合法敵方從者 = 施放結算;
+## 點本體/自己人/潛行 = 提示且留在瞄準中(右鍵才是取消)。
+func _on_left_pressed_spell_target() -> void:
 	var target := raycast_check_for_card()
-	if target == null or not target.is_on_board:
-		battle_ui.flash_message("秘術要指定目標:把卡放到敵方從者身上")
-		organize_hand()
-		return
-	if battle_manager.side_of(target) == battle_manager.active_side:
-		battle_ui.flash_message("【%s】只能指定敵方從者" % card.data.card_name)
-		organize_hand()
+	if target == null:
+		# 點到本體或空白:秘術不能打臉(§7 只指定從者),給提示、續留瞄準。
+		if raycast_check_for_hero() != null:
+			battle_ui.flash_message("秘術只能指定敵方從者,不能打本體")
 		return
 	if target.data.keywords.has(&"潛行"):
 		battle_ui.flash_message("【%s】具有潛行:無法被秘術指定(§8)" % target.data.card_name)
-		organize_hand()
 		return
+	if battle_manager.side_of(target) == battle_manager.active_side:
+		battle_ui.flash_message("【%s】只能指定敵方從者" % pending_spell_card.data.card_name)
+		return
+	# 合法目標:先收瞄準的視覺與狀態,再交給既有結算(反制窗口/連線宣告都在裡面)。
+	var card := pending_spell_card
+	_clear_spell_targeting()
+	_cast_arcana_at(card, target)
+
+
+## 收掉秘術瞄準的視覺與狀態(成功施放前呼叫;取消改走 _cancel_command)。
+## 回到 IDLE 讓後續 _resolve_arcana / 連線宣告自己去設它要的狀態(反制時 MENU_OPEN)。
+func _clear_spell_targeting() -> void:
+	if hovered_target != null and is_instance_valid(hovered_target):
+		hovered_target.animate_unhover()
+	hovered_target = null
+	pending_spell_card = null
+	ui_state = UiState.IDLE
+	battle_ui.close()
+
+
+## 秘術結算入口(目標已由瞄準流程驗過):付費宣告 → 反制窗口 → 落地。
+## 連線走宣告 RPC(反制開在守方那台);單機就地問反制(async)。
+func _cast_arcana_at(card: Card, target: Card) -> void:
 	if not battle_manager.can_afford(card.data.cost):
 		battle_ui.flash_message("魔力不足:需要 ◆%d(現有 %d)" % [
 			card.data.cost, battle_manager.active_mana()])
-		organize_hand()
 		return
 	if NetMatch.is_online:
 		# 連線:宣告廣播出去,反制窗口開在「守方那台」;結果回來前鎖操作。
@@ -478,6 +553,10 @@ func _try_set_ward(card: Card) -> void:
 ## 指定目標中左鍵按下:點到合法目標就發動;點到別的東西不動作(右鍵才是取消)。
 ## 先找從者、再找本體——本體被擋時把理由講出來(路線有人擋、不能打自己人…)。
 func _on_left_pressed_targeting() -> void:
+	# 秘術瞄準:目標限敵方從者、不能打臉,獨立一條處理(見該函式)。
+	if pending_spell_card != null:
+		_on_left_pressed_spell_target()
+		return
 	var card := raycast_check_for_card()
 	if card != null:
 		if _is_valid_target(card):
@@ -529,6 +608,7 @@ func _cancel_command() -> void:
 		hovered_target.animate_unhover()
 	hovered_target = null
 	pending_skill = null
+	pending_spell_card = null   # 秘術瞄準中途取消:卡沒離手,清狀態+收箭頭即可
 	active_unit = null
 	ui_state = UiState.IDLE
 	battle_ui.close()

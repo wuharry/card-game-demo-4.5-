@@ -320,3 +320,12 @@
 | 介面與決策者分離:反制窗口的面板是「問人類」的介面——守方是 AI 時開面板等於(a)把 AI 手牌攤給玩家(b)要玩家替 AI 按鈕,所以 VS_AI 直接自動決策不開面板 | 初階/未驗 | 「單人模式玩家丟秘術,反制窗口會出現在誰面前?為什麼一個都不該出現?」 |
 | class_name 全域註冊表的雷:`.godot/global_script_class_cache.cfg` 由**編輯器掃描**生成——編輯器外新建帶 class_name 的檔,headless 直接跑會報 "Identifier not declared";`--headless --editor --quit` 跑一次重掃即解 | 初階(AI 自踩自修) | 「為什麼同一份 code 在編輯器裡跑得動、headless 卻說 MatchMode 未宣告?這個 cache 是誰在維護?」 |
 | 回歸測試資產要落籍版控:系統暫存目錄會清檔(本專案兩度弄丟測試腳本),tests/ 進 repo 後「重跑驗收」才是零成本動作;測試斷言要挑「不受隨機性影響的不變量」(認召喚暈眩標記,不認卡名/場上總數——起手隨機、反擊會抵銷數量) | 初階/未驗 | 「為什麼『AI 召喚了』不能用場上單位數+1 驗?summoned_this_turn 為什麼在 AI 回合結束後還留著?」 |
+
+### 31. 秘術施放改爐石式箭頭瞄準:重用狀態機分支(2026-07-15;[card_manager.gd](../src/card_manager/card_manager.gd))
+
+| 觀念 | 等級 | 考題方向 |
+|---|---|---|
+| **旗標區分共用狀態 vs 開新狀態**:秘術瞄準沒新增 `UiState.SPELL_TARGETING`,而是複用既有 `TARGETING`,靠 `pending_spell_card` 旗標分流(active_unit=單位攻擊、pending_spell_card=秘術)。因為 `_input`/`_process`/`_cancel_command`/`_on_game_over`/換頁 全都認 `ui_state` 分派——多開一個狀態就得在每個分派點各加一條分支;用旗標則所有共通清理(右鍵取消、換頁、勝負)自動涵蓋,不會漏 | 初階/未驗(逃生艙) | 「如果當初開 SPELL_TARGETING 新狀態,右鍵取消秘術瞄準要多改哪幾個地方才不會卡死?」 |
+| **改互動不動結算**:只換了「怎麼選到目標」(拖放放開→點卡+箭頭+點目標),下游 `_resolve_arcana`/連線宣告 `_net_arcana_declare`/守方反制窗口一行沒改——目標一旦選定,結算跟「當初怎麼選的」無關。同一條「演出/輸入 vs 規則/結算」分離線,跟 §27 是同一招 | 初階/未驗 | 「把秘術從拖放改成箭頭,為什麼反制窗口與連線同步的 code 完全不用動?這條分界線畫在哪?」 |
+| **箭頭起點是「施放者」的抽象**:`update_arrow` 本來就吃任意 `from_px`;把起點從「攻擊單位 active_unit」一般化成「施放者節點」(單位 or 本體),同一條箭頭渲染兩用。秘術的施放者=行動方本體(`active_side` 對應的 hero),不寫死 player_hero——熱座/連線 client 時行動方會換邊 | 初階/未驗 | 「秘術箭頭起點為什麼用 `active_side` 挑 hero,而不是永遠用 player_hero?哪種模式會露餡?」 |
+| **秘術瞄準不能共用 `_is_valid_target`**:後者靠 `side_of(active_unit)` 判敵我,秘術時 active_unit=null 會炸;所以拆出 `_is_valid_spell_target`(敵方+非潛行)並用 `_is_valid_targeting_target` 依模式分派。**基準值(施放者)換了來源,判定函式就得跟著換** | 初階/未驗 | 「秘術瞄準時 active_unit 是什麼?若硬套舊的 _is_valid_target 會在哪一行爆、為什麼?」 |
