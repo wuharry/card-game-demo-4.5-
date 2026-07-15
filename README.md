@@ -413,12 +413,12 @@ func apply_freeze(unit, turns := 1) -> void:
    - ~~**2a. 大廳與連線骨架**~~ ✅（`src/net/net_lobby.gd` + `net_match.gd` + 主選單大廳欄）
    - ~~**2b. 回合與視角**~~ ✅ client 視角翻轉（鏡頭/手牌/牌堆繞棋盤中線轉 180°，從自己那側看桌）；HUD 我方/對方與勝負判定改**本機視角**（比對 `NetMatch.my_side`）；非自己回合鎖出牌；`_is_valid_target` 改相對敵我（寫死 "player"/"enemy" 在 client 上會顛倒）。
    - ~~**2c. 行動同步**~~ ✅（**demo 簡化版**）：host 開局把雙方牌堆/起手打包給 client（帳同步），之後召喚/攻擊/技能/法術/換回合全走 RPC 兩台重放——資料一致＋操作一致＝狀態一致。單位跨機器身分證＝所在卡槽的場景樹路徑。**債**：行動合法性只在出牌端驗（client 可作弊）,正式版要改 host 權威驗證。
-   - **2d. 對手手牌同步** — 張數 HUD ✅（右上「對方手牌:N 張」）；**債**：對方手牌「內容」仍在本機記憶體（真隱藏＝host 只送張數）;卡背扇形視覺未做。
+   - **2d. 對手手牌同步** — 張數 HUD ✅（右上「對方手牌:N 張」）＋卡背扇形 ✅（2026-07-15 隨單人模式一起做，`OpponentHand` 連線/單人共用）；**債**：對方手牌「內容」仍在本機記憶體（真隱藏＝host 只送張數）。
    - ~~**2e. 斷線與收尾**~~ ✅ 任一方掉線→「對方已離線」→ 收線回主選單；連線時勝負畫面兩顆按鈕都改走收線（單邊 reload 會讓帳分家）。
    - **實機驗收待做**：本機開兩個遊戲視窗走大廳連 `127.0.0.1` 對打一局（headless 已驗邏輯,UI/視角要人眼）。
 3. **打磨與試玩** — 連線實測抓蟲、音效（出牌/攻擊/受擊至少三個）、數值平衡。
 4. **發佈** — Windows 匯出 preset（icon/版本號）＋ itch.io 或 GitHub Releases 下載頁。
-5. **敵方 AI（單人練習模式，連線後再做）** — 敵方自動出牌與攻擊（`enemy_front` / `enemy_back` 分群運用）。
+5. ~~**敵方 AI（單人練習模式）**~~ ✅ 完成（2026-07-15）：主選單「單人練習」→ `MatchMode.VS_AI`（static 旗標，仿 ArenaPool）；`EnemyAI` 設計成「另一個會按按鈕的玩家」——走連線重放同一條結算路（`_acting_locally()` 在 AI 回合回 false → `_net_summon`/`_net_action` 帳面路徑），召喚付得起的從者（前排優先）→ 每隻能動的單位普攻（先清場、路線無阻打臉）→ 自己結束回合；視圖鎖玩家側（AI 回合不攤牌、鎖操作）；守方瞬咒反制自動決策（不開人類面板）；對手手牌=卡背小扇形（本體身後）＋張數 HUD。headless 驗收 9 斷言全過。**殘留**：AI 不施放法術牌/不用主動技（握著當死牌）、無策略權重（無腦鋪場+順序攻擊）、丟牌回魔不用。
 6. **卡片從卡槽取回** — `card_slot.gd` 的 `remove_card()` 已寫好，但尚未接上互動（例如再次拖出或右鍵取消）。
 7. **CardData 欄位擴充** — 技能資料層與 24 張接線已完成；剩 `attack_range` / `Sacrifice`（[§4.1](#41-攻擊範圍-數位調整)、[§3](#3-召喚)）。
 8. **地形收尾** — meshlib 純草磚問題與空的 `Terrain` / `Cliffs` 節點；地形整修 commit（04f8bbf）後需重驗哪些仍存在。
@@ -427,6 +427,9 @@ func apply_freeze(unit, turns := 1) -> void:
 
 ## 開發備註
 
+- **回歸測試在 [tests/](tests/)**（headless SceneTree 腳本，曾放系統暫存被清掉兩次，故落籍版控）：
+  `Godot --headless --path . -s tests/spell_smoke.gd`（法術結算 14 斷言）、`tests/ai_turn_test.gd`（單人 vs AI 9 斷言）、`tests/hover_spam_test.gd`（手牌 hover 漂移/碰撞箱釘位）、`tests/net_battle_test.gd`（雙進程連線 loopback：先開 host，再帶 `-- client` 開第二個進程，比對兩端簽名）。
+- 在編輯器**外**新建帶 `class_name` 的腳本後，headless 跑會報「Identifier not declared」——全域類別註冊表（`.godot/global_script_class_cache.cfg`）由編輯器掃描生成，跑一次 `Godot --headless --editor --quit` 重掃即可。
 - `ground_generator.gd` 與 `forest_scatter.gd` 皆為 `@tool` 腳本：在編輯器調整 `@export` 後勾選 `regenerate` 即可即時重新生成，不必執行遊戲。
 - 刪除無用資源時，建議在 Godot 編輯器「FileSystem → 右鍵 → Delete」，讓引擎同步清除 `.import` 快取與 UID 記錄，避免 Finder/Terminal 直接刪除留下殘留。
 - **規則同步提醒**：本 README 的 [Gameplay Spec](#-遊戲規則設計規格-gameplay-spec) 已調整灼燒 / 中毒 / 嘲諷 / 丟牌回魔，與既有桌遊說明書（docx）不一致。若要更新桌遊說明書請以本檔為準。

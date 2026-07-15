@@ -35,6 +35,9 @@ var currently_hovered_card: Card = null
 ## 右側放大預覽面板目前顯示的卡(和 currently_hovered_card 分開記:
 ## 預覽對「桌上單位」也開,而 currently_hovered_card 只管手牌的放大動畫)。
 var _previewed_card: Card = null
+## 單人模式的兩個配件(VS_AI 才生;卡背扇形連線模式也用)。
+var _enemy_ai: EnemyAI = null
+var _opp_hand: OpponentHand = null
 ## 拖曳時，目前懸停在哪個卡槽上方(用來控制卡槽的高亮提示)。
 var currently_hovered_slot: CardSlot = null
 
@@ -121,6 +124,13 @@ func _ready() -> void:
 			_request_state_loop()
 		_apply_client_viewpoint.call_deferred()   # deferred FIFO:排在牌堆/本體生成之後
 		_refresh_opp_hud.call_deferred()
+	# ── 單人 vs AI:AI 玩家上桌;對手卡背扇形(單人+連線共用)──
+	if MatchMode.is_vs_ai():
+		_enemy_ai = EnemyAI.new()
+		add_child(_enemy_ai)
+		_enemy_ai.setup(self)
+	if MatchMode.is_vs_ai() or NetMatch.is_online:
+		_spawn_opp_hand.call_deferred()   # 等卡槽/本體就位後才能靠群組定位
 
 
 ## ── 收到「滑鼠移到某張卡上」事件 ──────────────────
@@ -289,6 +299,10 @@ func _on_left_pressed_idle() -> void:
 		if battle_manager.active_side != NetMatch.my_side:
 			battle_ui.flash_message("對方回合:等待對方行動…")
 			return
+	# 單人模式:AI 的回合不能出牌(和連線「非己回合鎖操作」同一個閘的兄弟)。
+	if MatchMode.is_vs_ai() and battle_manager.active_side != "player":
+		battle_ui.flash_message("對方回合:AI 行動中…")
+		return
 	# ── 抓牌(原本的拖曳邏輯)──
 	card_being_dragged = card
 	ui_state = UiState.DRAGGING
@@ -393,13 +407,18 @@ func _resolve_arcana(card: Card, target: Card) -> void:
 	var quick: CardData = battle_manager.quick_candidate(defender)
 	var countered := false
 	if quick != null:
-		# STEP 2:熱座把螢幕轉給守方回答;await = 整條流程停在這裡等面板的信號。
-		ui_state = UiState.MENU_OPEN   # 鎖住其他 3D 互動,別讓玩家邊回答邊拖卡
-		battle_ui.show_reaction("守方反制窗口",
-			"對方施放【%s】→ 發動【%s】抵銷?(◆%d)" % [
-				card.data.card_name, quick.card_name, quick.cost])
-		countered = await battle_ui.reaction_decided
-		ui_state = UiState.IDLE
+		if MatchMode.is_vs_ai():
+			# 單人:守方是 AI,自動決策(有付得起的瞬咒就抵銷),不開人類面板——
+			# 面板一開等於把 AI 的手牌資訊攤給玩家,還得由玩家替 AI 按鈕。
+			countered = true
+		else:
+			# STEP 2:熱座把螢幕轉給守方回答;await = 整條流程停在這裡等面板的信號。
+			ui_state = UiState.MENU_OPEN   # 鎖住其他 3D 互動,別讓玩家邊回答邊拖卡
+			battle_ui.show_reaction("守方反制窗口",
+				"對方施放【%s】→ 發動【%s】抵銷?(◆%d)" % [
+					card.data.card_name, quick.card_name, quick.cost])
+			countered = await battle_ui.reaction_decided
+			ui_state = UiState.IDLE
 	if countered:
 		battle_manager.consume_quick(defender, quick)
 		battle_ui.flash_message("【%s】被【%s】抵銷了!" % [
@@ -628,6 +647,10 @@ func _on_end_turn() -> void:
 	if NetMatch.is_online and battle_manager.active_side != NetMatch.my_side:
 		battle_ui.flash_message("還在對方的回合")
 		return
+	# 單人模式:AI 的回合它自己會結束,人類按了不算數。
+	if MatchMode.is_vs_ai() and battle_manager.active_side != "player":
+		battle_ui.flash_message("AI 行動中…")
+		return
 	# 離線直接本地呼叫:從主選單進來時 lobby 已把 multiplayer_peer 清成 null,
 	# 此時 .rpc() 會報錯且「整個不執行」(call_local 也救不了)——rpc 只留給真連線。
 	if NetMatch.is_online:
@@ -672,11 +695,17 @@ func _net_end_turn() -> void:
 	if result.burned and _hand_view_shows_active_side():
 		msg += "(手牌已滿,抽到的牌燒掉了!)"
 	battle_ui.flash_message(msg)
+	# 單人模式:輪到 enemy = AI 上工(deferred:讓換頁流程先收乾淨再開始演)。
+	if _enemy_ai != null and battle_manager.active_side == "enemy":
+		_enemy_ai.take_turn.call_deferred()
 
 
 ## 這台機器的手牌視圖,顯示的是不是「行動方」的帳?
 ## 熱座:視圖永遠跟著行動方 → 恆真。連線:視圖鎖在 my_side → 輪到自己才真。
+## 單人 vs AI:視圖鎖死玩家那側——AI 的回合你的手牌原封不動,對面的牌不攤給你看。
 func _hand_view_shows_active_side() -> bool:
+	if MatchMode.is_vs_ai():
+		return battle_manager.active_side == "player"
 	return not NetMatch.is_online or battle_manager.active_side == NetMatch.my_side
 
 
@@ -869,7 +898,12 @@ var _pending_arcana_path: String = ""
 
 
 ## 這台機器是不是「行動方本人」(單機恆真;連線只有輪到自己那台為真)。
+## 單人 vs AI 的 enemy 回合:行動方是 AI 不是這台的人類 → false。
+## 這讓 AI 自動走 _net_summon/_consume_played 的「重放端」分支(帳面路徑)——
+## AI 和連線重放端處境相同:沒有被拖過來的卡節點,只有帳和索引。
 func _acting_locally() -> bool:
+	if MatchMode.is_vs_ai():
+		return battle_manager.active_side == "player"
 	return not NetMatch.is_online or battle_manager.active_side == NetMatch.my_side
 
 
@@ -1073,11 +1107,24 @@ func _apply_client_viewpoint() -> void:
 
 ## ── HUD:對方手牌張數(2d 的張數版;卡背扇形之後再說)────────────
 func _refresh_opp_hud() -> void:
-	if not NetMatch.is_online:
+	if not (NetMatch.is_online or MatchMode.is_vs_ai()):
 		return
 	var opp := "enemy" if NetMatch.my_side == "player" else "player"
-	battle_ui.update_opp_count(battle_manager.hand_of(opp).size())
+	var n: int = battle_manager.hand_of(opp).size()
+	battle_ui.update_opp_count(n)
+	if _opp_hand != null:
+		_opp_hand.update_count(n)
 	_update_deck_labels()
+
+
+## 對手卡背扇形:錨在「對手本體」後上方(離線對手=enemy;連線 client 的對手=player,
+## 世界座標在 +Z 側,而 client 的鏡頭已翻轉,看過去一樣是畫面頂端)。
+func _spawn_opp_hand() -> void:
+	var opp := "enemy" if NetMatch.my_side == "player" else "player"
+	_opp_hand = OpponentHand.new()
+	get_parent().add_child(_opp_hand)
+	_opp_hand.setup_at(_hero_anchor(opp), opp)
+	_refresh_opp_hud()
 
 
 ## ── 斷線(2e):任一方掉線 = 收桌回主選單 ───────────────────

@@ -52,6 +52,7 @@ const GOLD_DIM := Color("b8a984")   # 沉金:未選中的選單文字
 const LINE_GOLD := Color(0.83, 0.72, 0.45, 0.85)   # 裝飾細線
 
 var _start_button: Button    # 記住開始鈕,換場景前要鎖它防連點
+var _practice_button: Button # 單人練習鈕(和開始鈕一起鎖,兩顆都能進牌桌)
 var _fade_rect: ColorRect    # 蓋在最上層的黑幕:開場淡入、換場景淡出都靠它
 
 ## ── 連線大廳(2a):選單欄 ↔ 大廳欄互斥顯示,連線邏輯全在 NetLobby ──
@@ -176,6 +177,10 @@ func _build_menu_column(ui: Control) -> void:
 	_start_button.pressed.connect(_on_start_pressed)
 	col.add_child(_start_button)
 
+	_practice_button = _make_menu_option("單人練習")
+	_practice_button.pressed.connect(_on_practice_pressed)
+	col.add_child(_practice_button)
+
 	var net_btn := _make_menu_option("連線對戰")
 	net_btn.pressed.connect(_open_lobby)
 	col.add_child(net_btn)
@@ -203,11 +208,26 @@ func _build_footer(ui: Control) -> void:
 
 ## ── 按下「開始遊戲」:抽牌桌環境,淡出後進入遊戲 ──
 func _on_start_pressed() -> void:
-	_start_button.disabled = true   # 先鎖按鈕:淡出期間連點也不會觸發第二次
+	_lock_entry_buttons()   # 先鎖按鈕:淡出期間連點也不會觸發第二次
+	# MatchMode 是 static:上一局若玩過單人練習,值會留著——每個入口都明確設定。
+	MatchMode.mode = MatchMode.Mode.HOTSEAT
 	# 抽這一局的牌桌環境(森林/洞窟/冰原,均等機率)。結果存在 ArenaPool 的
 	# static 變數上——static 活在類別上、不隨場景切換消失,main.tscn 載入後讀得到。
 	ArenaPool.pick_random()
 	await _enter_game()
+
+
+## ── 按下「單人練習」:同一條進場路,只差把玩法設成 vs AI ──
+func _on_practice_pressed() -> void:
+	_lock_entry_buttons()
+	MatchMode.mode = MatchMode.Mode.VS_AI
+	ArenaPool.pick_random()
+	await _enter_game()
+
+
+func _lock_entry_buttons() -> void:
+	_start_button.disabled = true
+	_practice_button.disabled = true
 
 
 ## 淡出到黑 → 切進牌桌。單機與連線共用同一段演出;呼叫前牌桌環境要先定案
