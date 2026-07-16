@@ -416,7 +416,8 @@ func apply_freeze(unit, turns := 1) -> void:
    - ~~**2c. 行動同步**~~ ✅（**demo 簡化版**）：host 開局把雙方牌堆/起手打包給 client（帳同步），之後召喚/攻擊/技能/法術/換回合全走 RPC 兩台重放——資料一致＋操作一致＝狀態一致。單位跨機器身分證＝所在卡槽的場景樹路徑。**債**：行動合法性只在出牌端驗（client 可作弊）,正式版要改 host 權威驗證。
    - **2d. 對手手牌同步** — 張數 HUD ✅（右上「對方手牌:N 張」）＋卡背扇形 ✅（2026-07-15 隨單人模式一起做，`OpponentHand` 連線/單人共用）；**債**：對方手牌「內容」仍在本機記憶體（真隱藏＝host 只送張數）。
    - ~~**2e. 斷線與收尾**~~ ✅ 任一方掉線→「對方已離線」→ 收線回主選單；連線時勝負畫面兩顆按鈕都改走收線（單邊 reload 會讓帳分家）。
-   - **實機驗收待做**：本機開兩個遊戲視窗走大廳連 `127.0.0.1` 對打一局（headless 已驗邏輯,UI/視角要人眼）。
+   - **2f. 異地連線（UPnP 自動打洞）** ✅（2026-07-16）：開房時背景執行緒向路由器申請「UDP 8910 轉發」（`src/net/net_upnp.gd`，static 列管——洞是路由器的狀態，跨場景不消失，回主選單收殘洞），成功後狀態字顯示「同網路朋友連:區網 IP／異地朋友連:對外 IP」；失敗（路由器不支援 UPnP、CGNAT）顯示原因＋備案（手動轉發／Tailscale）。`discover()` 標稱 2 秒實測可拖 ~10 秒 → Thread ＋主執行緒輪詢 `take_result()`（官方 Thread 模式）。**注意**：開發機所在網路不支援 UPnP，fallback 路徑已實測；**成功路徑（真的顯示對外 IP＋異地連入）待有 UPnP 的網路實測**（`tests/upnp_probe.gd` 是換網路先跑的體檢工具）。
+   - **實機驗收待做**：本機開兩個遊戲視窗走大廳連 `127.0.0.1` 對打一局（headless 已驗邏輯,UI/視角要人眼）；家用網路跑 `upnp_probe` 驗 UPnP 成功路徑＋真異地連入一局。
 3. **打磨與試玩** — 連線實測抓蟲、音效（出牌/攻擊/受擊至少三個）、數值平衡。
 4. **發佈** — Windows 匯出 preset（icon/版本號）＋ itch.io 或 GitHub Releases 下載頁。
 5. ~~**敵方 AI（單人練習模式）**~~ ✅ 完成（2026-07-15）：主選單「單人練習」→ `MatchMode.VS_AI`（static 旗標，仿 ArenaPool）；`EnemyAI` 設計成「另一個會按按鈕的玩家」——走連線重放同一條結算路（`_acting_locally()` 在 AI 回合回 false → `_net_summon`/`_net_action` 帳面路徑），召喚付得起的從者（前排優先）→ 每隻能動的單位普攻（先清場、路線無阻打臉）→ 自己結束回合；視圖鎖玩家側（AI 回合不攤牌、鎖操作）；守方瞬咒反制自動決策（不開人類面板）；對手手牌=卡背小扇形（本體身後）＋張數 HUD。headless 驗收 9 斷言全過。**殘留**：AI 不施放法術牌/不用主動技（握著當死牌）、無策略權重（無腦鋪場+順序攻擊）、丟牌回魔不用。
@@ -430,6 +431,7 @@ func apply_freeze(unit, turns := 1) -> void:
 
 - **回歸測試在 [tests/](tests/)**（headless SceneTree 腳本，曾放系統暫存被清掉兩次，故落籍版控）：
   `Godot --headless --path . -s tests/spell_smoke.gd`（法術結算 14 斷言）、`tests/ai_turn_test.gd`（單人 vs AI 9 斷言）、`tests/hover_spam_test.gd`（手牌 hover 漂移/碰撞箱釘位）、`tests/net_battle_test.gd`（雙進程連線 loopback：先開 host，再帶 `-- client` 開第二個進程，比對兩端簽名）。
+  另有兩支**非 CI 的工具腳本**：`tests/screenshot.gd` / `tests/screenshot_summon.gd`（非 headless 跑遊戲存 PNG，驗純視覺改動）、`tests/upnp_probe.gd`（實測目前網路的 UPnP 打洞，結果依環境而異）。
 - 在編輯器**外**新建帶 `class_name` 的腳本後，headless 跑會報「Identifier not declared」——全域類別註冊表（`.godot/global_script_class_cache.cfg`）由編輯器掃描生成，跑一次 `Godot --headless --editor --quit` 重掃即可。
 - `ground_generator.gd` 與 `forest_scatter.gd` 皆為 `@tool` 腳本：在編輯器調整 `@export` 後勾選 `regenerate` 即可即時重新生成，不必執行遊戲。
 - 刪除無用資源時，建議在 Godot 編輯器「FileSystem → 右鍵 → Delete」，讓引擎同步清除 `.import` 快取與 UID 記錄，避免 Finder/Terminal 直接刪除留下殘留。

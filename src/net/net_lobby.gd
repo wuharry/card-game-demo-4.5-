@@ -19,6 +19,7 @@ signal match_ready                    # 握手完成,雙方可以進牌桌了
 ## NetMatch 和本檔是同批新檔:用 preload 路徑引用、不用 class_name——
 ## 新 class_name 要等編輯器重掃才進全域快取,沒進快取前連引用它的腳本都解析失敗(§19)。
 const NET_MATCH: GDScript = preload("res://src/net/net_match.gd")
+const NET_UPNP: GDScript = preload("res://src/net/net_upnp.gd")
 
 
 func _ready() -> void:
@@ -27,6 +28,9 @@ func _ready() -> void:
 	# .rpc() 都會報錯且不執行——所以離線的換頁令在 card_manager 走本地直呼,不走 rpc。
 	multiplayer.multiplayer_peer = null
 	NET_MATCH.reset()
+	# 上一局若開過 UPnP 洞,對局中大廳早死了沒人拆——回到主選單由新大廳收殘局。
+	NET_UPNP.close(NET_MATCH.PORT)
+	set_process(false)   # 輪詢只在「開房後等打洞結果」期間打開
 	multiplayer.peer_connected.connect(_on_peer_connected)
 	multiplayer.connected_to_server.connect(_on_connected_to_server)
 	multiplayer.connection_failed.connect(_on_connection_failed)
@@ -43,8 +47,36 @@ func host_game() -> Error:
 		return err
 	multiplayer.multiplayer_peer = peer
 	status_changed.emit(
-		"房間已開,等朋友加入…\n你的 IP:%s(埠 %d)" % [local_ipv4(), NET_MATCH.PORT])
+		"房間已開,等朋友加入…(埠 %d)\n同網路朋友連:%s\n正在向路由器申請異地通道…"
+		% [NET_MATCH.PORT, local_ipv4()])
+	# 異地連線:非同步向路由器打洞(discover 會阻塞 1~2 秒,不能凍住選單),
+	# 結果用 _process 輪詢取回(執行緒裡 call_deferred 到不了主執行緒,見 net_upnp.gd)。
+	NET_UPNP.open(NET_MATCH.PORT)
+	set_process(true)
 	return OK
+
+
+## 輪詢打洞結果:有結果的那一幀關掉輪詢、轉交 _on_upnp_done。
+func _process(_delta: float) -> void:
+	var r: Array = NET_UPNP.take_result()
+	if r.is_empty():
+		return
+	set_process(false)
+	_on_upnp_done(r[0], r[1])
+
+
+## UPnP 打洞結果(慢半拍回來,可能已時過境遷——先驗自己還在開房)。
+func _on_upnp_done(ok: bool, message: String) -> void:
+	if multiplayer.multiplayer_peer == null or not multiplayer.is_server():
+		NET_UPNP.close(NET_MATCH.PORT)   # 洞開好時人已取消開房:直接拆掉
+		return
+	var head := "房間已開,等朋友加入…(埠 %d)\n同網路朋友連:%s\n" % [
+		NET_MATCH.PORT, local_ipv4()]
+	if ok:
+		status_changed.emit(head + "異地朋友連:%s(已自動打洞)" % message)
+	else:
+		status_changed.emit(head + "異地通道失敗:%s\n→ 備案:路由器手動轉發 UDP %d,或雙方裝 Tailscale 組虛擬區網"
+			% [message, NET_MATCH.PORT])
 
 
 ## 加入:向房主發起連線。成功只代表「開始連」,結果看 connected/failed 信號。
@@ -69,6 +101,8 @@ func cancel() -> void:
 		multiplayer.multiplayer_peer.close()
 	multiplayer.multiplayer_peer = null
 	NET_MATCH.reset()
+	NET_UPNP.close(NET_MATCH.PORT)   # 不當房主了,把路由器上的洞拆掉
+	set_process(false)
 
 
 ## 找一個能念給朋友的區網 IPv4(192.168.* / 10.* 優先);找不到就回 127.0.0.1。
@@ -105,7 +139,7 @@ func _on_connected_to_server() -> void:
 
 func _on_connection_failed() -> void:
 	cancel()
-	status_changed.emit("連不上:確認房主已開房、IP 沒打錯、雙方在同一個(虛擬)區網。")
+	status_changed.emit("連不上:確認房主已開房、IP 沒打錯;同網路用「同網路」那個 IP、異地用「異地」那個(房主畫面上有)。")
 
 
 func _on_server_disconnected() -> void:
