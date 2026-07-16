@@ -64,6 +64,8 @@ func rebuild_from(data_list: Array[CardData], fly_in: bool = true) -> void:
 		if fly_in and deck != null:
 			card.global_position = deck.global_position + Vector3(0.0, 0.4, 0.0)
 	if fly_in:
+		if not cards.is_empty():
+			Sfx.play(Sfx.CARD_SHUFFLE, -4.0)   # 開局發牌:整手飛入配一次洗牌聲,不逐張響
 		_arrange_fan(0.06)
 	else:
 		_arrange_fan(0.0, true)
@@ -93,6 +95,7 @@ func hand_data() -> Array[CardData]:
 ## 新牌先擺在牌堆的位置,_arrange_fan 的補間就順便成了「從牌堆飛進手牌」。
 func draw_card(card_data: CardData) -> void:
 	var card := _spawn_card(card_data)
+	Sfx.play(Sfx.CARD_DRAW, -4.0)
 	var deck := get_node_or_null("../Deck") as Node3D
 	if deck != null and card != null:
 		card.global_position = deck.global_position + Vector3(0.0, 0.4, 0.0)

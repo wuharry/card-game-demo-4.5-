@@ -11,7 +11,7 @@ extends Node
 class_name BattleManager
 
 ## 魔力 / 回合 / 行動方有變動(HUD 靠這條刷新)。
-signal state_changed(turn: int, side: String, mana: int, mana_max: int)
+signal state_changed(turn: int, side: String, mana: int, mana_max: int, temp_mana: int)
 ## 有單位死亡(CardManager 靠這條清掉指向死者的參考)。
 signal unit_died(unit: Card)
 ## 有牌入土(CardManager 靠這條刷新墓地視覺)。
@@ -37,6 +37,9 @@ const MAX_HAND := 8
 class SideState:
 	var mana: int = 0
 	var mana_max: int = 0   # 規格§1:起始 0,每次輪到自己回合開始才 +1 回滿
+	## 丟牌回魔的暫時魔力(§1.1):mana 裡有幾點是「自己下回合開始就蒸發」的錢。
+	## 顯示用的帳中帳(HUD 畫黃◆):增減永遠跟著 mana 走,不變量 temp_mana ≤ mana。
+	var temp_mana: int = 0
 	var deck: Array[CardData] = []
 	var hand: Array[CardData] = []
 	## 蓋放的伏印(§7):存整張卡的資料,觸發時才知道名字和效果。
@@ -84,6 +87,7 @@ func _active() -> SideState:
 func _begin_side_turn(st: SideState) -> void:
 	st.mana_max = mini(MANA_CAP, st.mana_max + 1)
 	st.mana = st.mana_max
+	st.temp_mana = 0   # 暫時魔力被「回滿」洗掉:帳中帳跟著歸零(§1.1)
 	st.discard_cd = maxi(0, st.discard_cd - 1)   # 丟牌回魔冷卻:自己回合開始 -1(§1.1)
 
 
@@ -98,8 +102,16 @@ func can_afford(cost: int) -> bool:
 
 ## 召喚費由 CardManager 在出牌時呼叫;技能費在 on_action_performed 內扣。
 func spend(cost: int) -> void:
-	_active().mana = maxi(0, _active().mana - cost)
+	_pay(_active(), cost)
 	_emit_state()
+
+
+## 扣費的唯一出口:暫時魔力先被吃掉,順手維持不變量 temp_mana ≤ mana。
+## 機制上先扣誰都一樣(下回合全洗掉),挑「暫時的先走」是讓視覺語意成立:
+## 黃◆疊在魔力列最右,花費從右邊扣 → 黃色=最先消失的錢。
+func _pay(st: SideState, cost: int) -> void:
+	st.mana = maxi(0, st.mana - cost)
+	st.temp_mana = clampi(st.temp_mana - cost, 0, st.mana)
 
 
 ## 換邊前,把手牌「視圖」的現況存回行動方的帳(視圖是顯示,帳才是真相)。
@@ -154,7 +166,8 @@ func can_discard_for_mana(side: String) -> bool:
 func apply_discard_for_mana(side: String, cd: CardData) -> int:
 	var st: SideState = sides[side]
 	var gained := floori(cd.cost / 2.0)
-	st.mana += gained   # 暫時魔力:下回合開始會被「回滿至上限」洗掉,天生不留存(§1)
+	st.mana += gained        # 暫時魔力:下回合開始會被「回滿至上限」洗掉,天生不留存(§1)
+	st.temp_mana += gained   # 帳中帳:讓 HUD 知道這幾點是黃色的(顯示用,不另立規則)
 	st.discard_cd = 2
 	bury(side, cd)
 	_emit_state()
@@ -281,7 +294,7 @@ func quick_candidate(defender: String) -> CardData:
 ## 守方發動瞬咒:扣魔力、離手(§5.1;抵銷的效果由呼叫端決定「不結算」來實現)。
 func consume_quick(defender: String, quick: CardData) -> void:
 	var st: SideState = sides[defender]
-	st.mana = maxi(0, st.mana - quick.cost)
+	_pay(st, quick.cost)   # 瞬咒在「對方回合」付費:自己上回合剩的暫時魔力也花得到
 	st.hand.erase(quick)
 	bury(defender, quick)   # 瞬咒用掉即入土(§7);熱座/連線都經過這裡,埋一次就好
 	_emit_state()
@@ -403,7 +416,7 @@ func on_action_performed(caster: Card, skill: SkillData, target: Node3D) -> void
 		caster.skill_used_this_turn = true
 		if skill.kind == SkillData.Kind.ENHANCED_ATTACK:
 			caster.attacked_this_turn = true   # 強化攻擊 = 用掉本回合的攻擊(§6)
-		_active().mana = maxi(0, _active().mana - skill.cost)
+		_pay(_active(), skill.cost)
 	_emit_state()
 	# 2) 等攻擊動畫揮到一半再扣血,數字跟拳頭一起落地。
 	await get_tree().create_timer(0.35).timeout
@@ -702,4 +715,5 @@ func _all_slots() -> Array[CardSlot]:
 
 
 func _emit_state() -> void:
-	state_changed.emit(turn, active_side, _active().mana, _active().mana_max)
+	state_changed.emit(turn, active_side,
+		_active().mana, _active().mana_max, _active().temp_mana)

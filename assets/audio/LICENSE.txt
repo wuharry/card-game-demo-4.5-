@@ -1,0 +1,20 @@
+assets/audio/sfx 全部音效取自 Kenney(kenney.nl)素材包:
+Casino Audio 1.1 / Impact Sounds / Interface Sounds / RPG Audio
+
+授權:Creative Commons Zero (CC0) — 可自由商用、修改、散佈,無須掛名。
+全文:https://creativecommons.org/publicdomain/zero/1.0/
+原始壓縮包(含各包 License.txt)備存於 assets/_Raw_Imports/。
+
+對照表(落地檔名 ← 原始檔名 @ 來源包):
+  card_pickup.ogg  ← card-slide-5.ogg        @ Casino Audio
+  card_draw.ogg    ← card-slide-1.ogg        @ Casino Audio
+  card_place.ogg   ← card-place-1.ogg        @ Casino Audio
+  card_shuffle.ogg ← card-shuffle.ogg        @ Casino Audio
+  card_bury.ogg    ← card-shove-1.ogg        @ Casino Audio
+  hit.ogg          ← impactSoft_heavy_000.ogg @ Impact Sounds
+  spell_cast.ogg   ← glass_002.ogg           @ Interface Sounds
+  click.ogg        ← click_001.ogg           @ Interface Sounds
+  victory.ogg      ← confirmation_001.ogg    @ Interface Sounds
+  defeat.ogg       ← bong_001.ogg            @ Interface Sounds
+  mana_gain.ogg    ← handleCoins.ogg         @ RPG Audio
+  turn_flip.ogg    ← bookFlip2.ogg           @ RPG Audio

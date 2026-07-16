@@ -62,6 +62,8 @@ func place_card(card: Card) -> void:
 
 	# 卡片入槽了，把高亮(放大提示)收掉，視覺回到正常。
 	unhighlight()
+	# 入槽聲掛在這裡=單一入口:本機出牌、連線重放、AI 召喚全會經過 place_card。
+	Sfx.play(Sfx.CARD_PLACE, -2.0)
 
 	# set_parallel(true)：底下幾個 tween_property 會「同時」播放，而不是排隊。
 	var tw := create_tween().set_parallel(true)

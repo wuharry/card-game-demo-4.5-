@@ -45,7 +45,14 @@ var _skill_note: String = ""   # 技能被擋的理由(同上)
 ## 戰況 HUD(常駐):右上回合+魔力、右下結束回合、畫面中下的提示訊息。
 var _hud_panel: PanelContainer
 var _hud_turn: Label
-var _hud_mana: Label
+# 魔力列拆四段 Label 排一列(藍◆正常/黃◆暫時/藍◇+數字/黃「+n」):
+# 一個 Label 只有一種顏色;不用 RichTextLabel 是它不會用內容撐開最小寬度,
+# 而 HUD 面板的寬度正是靠魔力列撐的(見 _build_hud 的置中註解)。
+var _hud_mana_row: HBoxContainer
+var _hud_mana_norm: Label
+var _hud_mana_temp: Label
+var _hud_mana_rest: Label
+var _hud_mana_bonus: Label
 var _hud_opp: Label   # 對方手牌張數(2d;只在連線時顯示)
 var _end_turn_btn: Button
 var _toast: Label
@@ -285,13 +292,16 @@ func _build_hud() -> void:
 	_hud_turn.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(_hud_turn)
 
-	_hud_mana = Label.new()
-	_hud_mana.add_theme_font_override("font", FONT_BODY)
-	_hud_mana.add_theme_font_size_override("font_size", 15)
 	# 魔力用冷色:和整片暮色金區隔,一眼找得到資源在哪。
-	_hud_mana.add_theme_color_override("font_color", Color("7fd9ff"))
-	_hud_mana.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(_hud_mana)
+	# 暫時魔力(丟牌回魔 §1.1)用暖黃:回合末就蒸發的錢,顏色先說。
+	_hud_mana_row = HBoxContainer.new()
+	_hud_mana_row.add_theme_constant_override("separation", 0)
+	_hud_mana_row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	col.add_child(_hud_mana_row)
+	_hud_mana_norm = _make_mana_label(Color("7fd9ff"))
+	_hud_mana_temp = _make_mana_label(Color("ffd75e"))
+	_hud_mana_rest = _make_mana_label(Color("7fd9ff"))
+	_hud_mana_bonus = _make_mana_label(Color("ffd75e"))
 
 	# 對方手牌張數(2d):平常隱藏,連線時由 update_opp_count 開燈。
 	_hud_opp = Label.new()
@@ -314,7 +324,9 @@ func _build_hud() -> void:
 	_end_turn_btn.add_theme_stylebox_override("hover", lit)
 	_end_turn_btn.add_theme_stylebox_override("focus", lit)
 	_end_turn_btn.add_theme_stylebox_override("pressed", lit)
-	_end_turn_btn.pressed.connect(func() -> void: end_turn_pressed.emit())
+	_end_turn_btn.pressed.connect(func() -> void:
+		Sfx.play(Sfx.CLICK, -8.0)
+		end_turn_pressed.emit())
 	add_child(_end_turn_btn)
 	_end_turn_btn.set_anchors_and_offsets_preset(
 		Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE, 24)
@@ -335,8 +347,18 @@ func _build_hud() -> void:
 	_toast.visible = false
 
 
+## 魔力列的一段:字型/字級一致,只有顏色不同。
+func _make_mana_label(color: Color) -> Label:
+	var lb := Label.new()
+	lb.add_theme_font_override("font", FONT_BODY)
+	lb.add_theme_font_size_override("font_size", 15)
+	lb.add_theme_color_override("font_color", color)
+	_hud_mana_row.add_child(lb)
+	return lb
+
+
 ## HUD 刷新(BattleManager.state_changed 接進來):回合+行動方+該方魔力。
-func update_hud(turn: int, side: String, mana: int, mana_max: int) -> void:
+func update_hud(turn: int, side: String, mana: int, mana_max: int, temp_mana: int) -> void:
 	# 「我方」以本機視角判定(2b):my_side 離線恆為 "player",熱座語意不變;
 	# 連線時 client 的我方是 "enemy" 側——別寫死字串。
 	var side_name := "我方回合" if side == NetMatch.my_side else "對方回合"
@@ -345,8 +367,14 @@ func update_hud(turn: int, side: String, mana: int, mana_max: int) -> void:
 	_hud_turn.add_theme_color_override(
 		"font_color", GOLD if side == NetMatch.my_side else Color(0.92, 0.55, 0.5))
 	# ◆=現有、◇=已用掉的上限:不讀數字也能一眼讀量。
-	_hud_mana.text = "◆".repeat(maxi(mana, 0)) \
-		+ "◇".repeat(maxi(mana_max - mana, 0)) + "  %d／%d" % [mana, mana_max]
+	# 黃◆=暫時魔力,疊在最右(付費從右邊扣,見 battle_manager._pay);
+	# 回收可能把 mana 推超過上限(5/5 再棄牌),◇ 用 maxi 兜住別變負。
+	var temp := clampi(temp_mana, 0, maxi(mana, 0))
+	_hud_mana_norm.text = "◆".repeat(maxi(mana - temp, 0))
+	_hud_mana_temp.text = "◆".repeat(temp)
+	_hud_mana_rest.text = "◇".repeat(maxi(mana_max - mana, 0)) + "  %d／%d" % [mana, mana_max]
+	_hud_mana_bonus.text = "(+%d)" % temp
+	_hud_mana_bonus.visible = temp > 0
 	# 內容變了 → 重新量身、貼回右上角(量尺寸要在內容就位之後,同 open() 的課)。
 	_hud_panel.reset_size()
 	_hud_panel.set_anchors_and_offsets_preset(
@@ -372,6 +400,7 @@ func flash_message(text_value: String) -> void:
 ## ── 勝負畫面 ─────────────────────────────────────────
 ## 壓暗全場 + 置中面板:勝利金字/敗北紅字,兩個去向(再戰/回主選單)。
 func show_game_over(victory: bool) -> void:
+	Sfx.play(Sfx.VICTORY if victory else Sfx.DEFEAT)
 	close()
 	if _over_dim == null:
 		_build_game_over()
@@ -421,6 +450,8 @@ func _build_game_over() -> void:
 func _make_option(text_value: String) -> Button:
 	var btn := Button.new()
 	btn.text = text_value
+	# 點擊聲掛在「建構器」:指令選單/反制窗口/勝負畫面的選項一次全接上。
+	btn.pressed.connect(func() -> void: Sfx.play(Sfx.CLICK, -8.0))
 	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	btn.custom_minimum_size = Vector2(0, 34)
 	btn.add_theme_font_override("font", FONT_BODY)

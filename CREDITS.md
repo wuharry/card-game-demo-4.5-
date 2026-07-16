@@ -21,6 +21,12 @@
 | PSX 樹木/灌木包 | assets/environment/psx_trees | 同上 |
 | ocean-shader(psx_ocean_surface,水面 shader 基底) | assets/water/psx_ocean_surface | 找到原 GitHub repo 確認授權(資料夾內 README 無授權聲明) |
 
+## 無須掛名(CC0,授權已確認)
+
+| 素材 | 作者/出處 | 授權 |
+|---|---|---|
+| 音效(assets/audio/sfx) | Kenney(kenney.nl):Casino / Impact / Interface / RPG Audio 包 | CC0,可商用免掛名;對照表見 assets/audio/LICENSE.txt |
+
 ## 引擎
 
 - Godot Engine 4.5 — MIT License(發佈時依官方指引附上 https://godotengine.org/license)

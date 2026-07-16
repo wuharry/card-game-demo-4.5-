@@ -361,6 +361,7 @@ func _on_match_ready() -> void:
 func _make_menu_option(text_value: String) -> Button:
 	var btn := Button.new()
 	btn.text = text_value
+	btn.pressed.connect(func() -> void: Sfx.play(Sfx.CLICK, -8.0))
 	btn.custom_minimum_size = Vector2(280, 48)
 	btn.add_theme_font_override("font", FONT_MENU)
 	btn.add_theme_font_size_override("font_size", 26)

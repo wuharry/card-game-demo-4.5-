@@ -329,6 +329,7 @@ func _on_left_pressed_idle() -> void:
 	# ── 抓牌(原本的拖曳邏輯)──
 	card_being_dragged = card
 	ui_state = UiState.DRAGGING
+	Sfx.play(Sfx.CARD_PICKUP, -6.0)
 	# 記住卡片當下的高度，拖曳時就維持在這個高度水平移動。
 	drag_plane_height = card.global_position.y
 	# 抓起來的瞬間取消它的放大狀態，避免邊拖邊放大的怪畫面。
@@ -413,7 +414,7 @@ func _begin_spell_targeting(card: Card) -> void:
 		card.animate_unhover()
 	_previewed_card = null
 	battle_ui.hide_card_preview()
-	battle_ui.show_targeting("選擇【%s】的目標:敵方從者(右鍵取消)" % card.data.card_name)
+	battle_ui.show_targeting("選擇【%s】的目標:敵方從者(點其他地方取消)" % card.data.card_name)
 
 
 ## TARGETING 中「懸停高亮」用的合法性:秘術走秘術規則,其餘走單位攻擊規則。
@@ -434,19 +435,29 @@ func _is_valid_spell_target(card: Card) -> bool:
 
 
 ## 秘術瞄準中左鍵:點到合法敵方從者 = 施放結算;
-## 點本體/自己人/潛行 = 提示且留在瞄準中(右鍵才是取消)。
+## 點到其他任何地方 = 取消施放(爐石/暗影詩章式:沒指定目標就是反悔,
+## 不必特地按右鍵;右鍵/ESC 照舊可用)。點錯「東西」先講原因再收,
+## 點空地/手牌就是想收手,安靜取消不彈訊息。
 func _on_left_pressed_spell_target() -> void:
 	var target := raycast_check_for_card()
 	if target == null:
-		# 點到本體或空白:秘術不能打臉(§7 只指定從者),給提示、續留瞄準。
+		# 點到本體或空白:秘術不能打臉(§7 只指定從者)→ 講原因,一樣取消。
 		if raycast_check_for_hero() != null:
-			battle_ui.flash_message("秘術只能指定敵方從者,不能打本體")
+			battle_ui.flash_message("已取消:秘術只能指定敵方從者,不能打本體")
+		_cancel_command()
+		return
+	if not target.is_on_board:
+		# 射線也打得到手牌卡(同一層):side_of 對無槽卡回 "",不擋會被
+		# 誤判成「敵方」而把秘術砸在手牌上——視同點空地,取消。
+		_cancel_command()
 		return
 	if target.data.keywords.has(&"潛行"):
-		battle_ui.flash_message("【%s】具有潛行:無法被秘術指定(§8)" % target.data.card_name)
+		battle_ui.flash_message("已取消:【%s】具有潛行,無法被秘術指定(§8)" % target.data.card_name)
+		_cancel_command()
 		return
 	if battle_manager.side_of(target) == battle_manager.active_side:
-		battle_ui.flash_message("【%s】只能指定敵方從者" % pending_spell_card.data.card_name)
+		battle_ui.flash_message("已取消:【%s】只能指定敵方從者" % pending_spell_card.data.card_name)
+		_cancel_command()
 		return
 	# 合法目標:先收瞄準的視覺與狀態,再交給既有結算(反制窗口/連線宣告都在裡面)。
 	var card := pending_spell_card
@@ -485,6 +496,7 @@ func _cast_arcana_at(card: Card, target: Card) -> void:
 ## 秘術結算(§5.1 的 STEP 1→2→4):宣告即付費 → 守方瞬咒窗口 → 未被抵銷才落地。
 func _resolve_arcana(card: Card, target: Card) -> void:
 	battle_manager.spend(card.data.cost)   # STEP 1:宣告就支付,被抵銷不退費
+	Sfx.play(Sfx.SPELL_CAST, -2.0)
 	var defender := "enemy" if battle_manager.active_side == "player" else "player"
 	var quick: CardData = battle_manager.quick_candidate(defender)
 	var countered := false
@@ -581,10 +593,13 @@ func _net_discard(hand_idx: int, card_path: String) -> void:
 		return
 	var gained: int = battle_manager.apply_discard_for_mana(battle_manager.active_side, cd)
 	_consume_played(hand_idx)   # 出牌端移視圖節點、重放端扣帳(同召喚的不對稱)
-	battle_ui.flash_message("捨棄【%s】回魔 ◆%d(下回合不可再用)" % [cd.card_name, gained])
+	Sfx.play(Sfx.MANA_GAIN, -4.0)   # 數錢聲:回魔的「入帳感」
+	battle_ui.flash_message(
+		"捨棄【%s】回暫時魔力 ◆%d(用不完不保留;丟牌下回合不可再用)" % [cd.card_name, gained])
 
 
-## 指定目標中左鍵按下:點到合法目標就發動;點到別的東西不動作(右鍵才是取消)。
+## 指定目標中左鍵按下:點到合法目標就發動;點到其他任何地方 = 取消
+## (和秘術同一套手感:點空地/非法目標都是反悔;右鍵/ESC 照舊可用)。
 ## 先找從者、再找本體——本體被擋時把理由講出來(路線有人擋、不能打自己人…)。
 func _on_left_pressed_targeting() -> void:
 	# 秘術瞄準:目標限敵方從者、不能打臉,獨立一條處理(見該函式)。
@@ -595,15 +610,21 @@ func _on_left_pressed_targeting() -> void:
 	if card != null:
 		if _is_valid_target(card):
 			_execute_action(card)
+		else:
+			# 非法目標(自己人/手牌/潛行…):爐石式=點錯即反悔。
+			battle_ui.flash_message("已取消行動")
+			_cancel_command()
 		return
 	var hero := raycast_check_for_hero()
 	if hero == null:
+		_cancel_command()   # 點空地=想收手,安靜取消
 		return
 	var reason := battle_manager.face_block_reason(active_unit, hero, pending_skill)
 	if reason == "":
 		_execute_action(hero)
 	else:
-		battle_ui.flash_message(reason)
+		battle_ui.flash_message("已取消:" + reason)
+		_cancel_command()
 
 
 ## ── 指令選單的三個回應(BattleUI 的信號接進來)──────────
@@ -615,7 +636,7 @@ func _on_attack_chosen() -> void:
 		battle_ui.flash_message(reason)
 		return
 	pending_skill = null   # null = 這次等目標的是普通攻擊
-	_enter_targeting("選擇攻擊目標(右鍵取消)")
+	_enter_targeting("選擇攻擊目標(點其他地方取消)")
 
 
 func _on_skill_chosen(skill: SkillData) -> void:
@@ -628,7 +649,7 @@ func _on_skill_chosen(skill: SkillData) -> void:
 	if skill.effect_target == SkillData.Target.SELF:
 		_execute_action(active_unit)
 		return
-	_enter_targeting("選擇「%s」的目標(右鍵取消)" % skill.skill_name)
+	_enter_targeting("選擇「%s」的目標(點其他地方取消)" % skill.skill_name)
 
 
 func _enter_targeting(hint: String) -> void:
@@ -779,6 +800,7 @@ func _on_end_turn() -> void:
 func _net_end_turn() -> void:
 	if ui_state == UiState.GAME_OVER:
 		return
+	Sfx.play(Sfx.TURN_FLIP, -2.0)   # 翻頁聲:回合交替(兩端各響各的)
 	# 兩端各自收拾自己的互動狀態:拖到一半的卡先放回扇形——手牌視圖若重建,
 	# 被拖著的卡遭 queue_free 就成懸空參考(摸了就炸);開著的選單一併收掉。
 	if ui_state == UiState.DRAGGING:
@@ -1179,6 +1201,7 @@ func _net_arcana_resolve(countered: bool) -> void:
 	if cd == null:
 		return
 	var defender := "enemy" if battle_manager.active_side == "player" else "player"
+	Sfx.play(Sfx.SPELL_CAST, -2.0)   # 連線/AI 的結算端也要出聲(熱座走 _resolve_arcana)
 	battle_manager.bury(battle_manager.active_side, cd)   # 秘術用掉即入土(兩台各埋各的帳)
 	if countered:
 		# 兩台的帳同步,quick_candidate 的「第一張付得起」在兩台挑到同一張。
