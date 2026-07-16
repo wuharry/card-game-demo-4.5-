@@ -21,6 +21,7 @@ extends Node3D
 const COLLISION_MASK_CARD = 1  # 第 1 層：卡片實體(拖曳時要找的對象)
 const COLLISION_MASK_SLOT = 2  # 第 2 層：桌面卡槽(放牌時要找的對象)
 const COLLISION_MASK_HERO = 4  # 第 3 層：本體(hero.gd 生成碰撞時自掛這層)
+const COLLISION_MASK_GRAVE = 8  # 第 4 層：墓地投放區(grave_pile.gd 自掛;丟牌回魔 §1.1)
 
 ## @onready：等節點都準備好後，才執行右邊的取值並存進變數(太早拿可能還是 null)。
 ## camera：場景目前啟用中的攝影機。把滑鼠的 2D 座標換成 3D 射線時一定要用到它。
@@ -99,6 +100,7 @@ func _ready() -> void:
 	battle_manager.hand_node = player_hand   # spawn_unit 的掛點(召喚技/連線重放生單位)
 	battle_manager.state_changed.connect(battle_ui.update_hud)
 	battle_manager.unit_died.connect(_on_unit_died)
+	battle_manager.card_buried.connect(_on_card_buried)
 	battle_manager.game_over.connect(_on_game_over)
 	action_performed.connect(battle_manager.on_action_performed)
 	add_child(battle_manager)
@@ -117,6 +119,7 @@ func _ready() -> void:
 	# 本體/敵方牌堆要等 PlayerBoard 把卡槽生完才能靠群組定位 → 延後到整棵樹 ready 後。
 	_spawn_heroes.call_deferred()
 	_spawn_enemy_deck.call_deferred()
+	_spawn_grave_piles.call_deferred()
 	_sync_hand_view.call_deferred()   # 起手牌的「帳」在帳房,視圖開局同步一次
 	# ── 連線(2b–2e):斷線監聽、client 要開局帳、client 視角翻轉 ──
 	if NetMatch.is_online:
@@ -348,6 +351,10 @@ func _on_left_released_drag() -> void:
 	var card := card_being_dragged
 	card_being_dragged = null
 	ui_state = UiState.IDLE
+	# 丟牌回魔(§1.1):放到墓地投放區 = 棄牌換魔,任何卡型都可棄——比卡型分流優先。
+	if raycast_check_for_grave() != null:
+		_try_discard(card)
+		return
 	match card.data.card_type:
 		CardData.CardType.MINION:
 			_try_summon(card)
@@ -503,7 +510,9 @@ func _resolve_arcana(card: Card, target: Card) -> void:
 		battle_manager.cast_arcana(card.data, target)
 		battle_ui.flash_message("【%s】對【%s】造成 %d 點傷害" % [
 			card.data.card_name, target.data.card_name, card.data.active_skill.power])
-	# 秘術結算後離場(§7):不管有沒有被抵銷,牌都用掉了。
+	# 秘術結算後離場(§7):不管有沒有被抵銷,牌都用掉了 → 入土。
+	# (queue_free 掉的是「節點」,card.data 是 Resource、進墓地照樣活著。)
+	battle_manager.bury(battle_manager.active_side, card.data)
 	player_hand.play_card(card)
 	card.queue_free()
 
@@ -548,6 +557,31 @@ func _try_set_ward(card: Card) -> void:
 		_net_ward.rpc(idx, card.data.resource_path)
 	else:
 		_net_ward(idx, card.data.resource_path)
+
+
+## 丟牌回魔(§1.1):把手牌拖到墓地放開。回魔 = Cost÷2 捨去;最多隔回合一次。
+## 出牌端先驗冷卻(給人話的拒絕理由),真正的帳在 _net_discard 兩台重放。
+func _try_discard(card: Card) -> void:
+	if not battle_manager.can_discard_for_mana(battle_manager.active_side):
+		battle_ui.flash_message("丟牌回魔冷卻中:要隔一回合才能再用(§1.1)")
+		organize_hand()
+		return
+	_pending_play_card = card
+	var idx := player_hand.cards.find(card)
+	if NetMatch.is_online:
+		_net_discard.rpc(idx, card.data.resource_path)
+	else:
+		_net_discard(idx, card.data.resource_path)
+
+
+@rpc("any_peer", "call_local", "reliable")
+func _net_discard(hand_idx: int, card_path: String) -> void:
+	var cd := load(card_path) as CardData
+	if cd == null or not battle_manager.can_discard_for_mana(battle_manager.active_side):
+		return
+	var gained: int = battle_manager.apply_discard_for_mana(battle_manager.active_side, cd)
+	_consume_played(hand_idx)   # 出牌端移視圖節點、重放端扣帳(同召喚的不對稱)
+	battle_ui.flash_message("捨棄【%s】回魔 ◆%d(下回合不可再用)" % [cd.card_name, gained])
 
 
 ## 指定目標中左鍵按下:點到合法目標就發動;點到別的東西不動作(右鍵才是取消)。
@@ -838,6 +872,35 @@ func _spawn_enemy_deck() -> void:
 		-deck.position.x, deck.position.y, mid_z * 2.0 - deck.position.z)
 
 
+var _grave_piles: Dictionary = {}   # "player"/"enemy" → GravePile(純視覺,帳在 BattleManager)
+
+
+## 墓地雙座:玩家墓在牌堆旁、靠場中央那側(挪 x 不挪 z——往中線挪會踩進
+## 溪流的水帶 ±1.7,見 §29 的岸線保證),敵方對角鏡射(同 EnemyDeck)。
+## 位置對稱於中線 → client 翻轉視角免特別處理(鏡像紅利)。
+func _spawn_grave_piles() -> void:
+	var deck := get_node_or_null("../Deck") as Node3D
+	if deck == null:
+		return
+	var mid_z := _board_mid_z()
+	var p_pos := deck.position + Vector3(-1.9, 0.0, 0.0)
+	for side in ["player", "enemy"]:
+		var pile := GravePile.new()
+		pile.name = "GravePlayer" if side == "player" else "GraveEnemy"
+		get_parent().add_child(pile)
+		pile.setup(side)
+		pile.position = p_pos if side == "player" \
+			else Vector3(-p_pos.x, p_pos.y, mid_z * 2.0 - p_pos.z)
+		_grave_piles[side] = pile
+
+
+## 有牌入土(帳房廣播):刷新那一側的墓地視覺(張數+最上面那張)。
+func _on_card_buried(side: String, _cd: CardData) -> void:
+	var pile: GravePile = _grave_piles.get(side)
+	if pile != null:
+		pile.refresh(battle_manager.grave_count(side), battle_manager.grave_top(side))
+
+
 ## 雙方棋盤的中線 z(全部卡槽的平均):鏡射敵方牌堆用。
 func _board_mid_z() -> float:
 	var sum := 0.0
@@ -958,6 +1021,22 @@ func raycast_check_for_card_slot() -> CardSlot:
 		# as CardSlot：把打中的東西「當作」CardSlot 型別回傳(方便後續取用它的方法)。
 		return result.collider as CardSlot
 
+	return null
+
+
+## ── 射線:找滑鼠下方的「墓地投放區」(第 4 層;丟牌回魔 §1.1)──────
+func raycast_check_for_grave() -> GravePile:
+	var space_state := get_world_3d().direct_space_state
+	var mouse_pos := get_viewport().get_mouse_position()
+	var ray_origin := camera.project_ray_origin(mouse_pos)
+	var ray_end := ray_origin + camera.project_ray_normal(mouse_pos) * 1000.0
+	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_end)
+	query.collision_mask = COLLISION_MASK_GRAVE
+	query.collide_with_areas = true
+	var result := space_state.intersect_ray(query)
+	if result:
+		# 打中的是墓座底下的 Area3D,它的父節點才是 GravePile 本體。
+		return (result.collider as Area3D).get_parent() as GravePile
 	return null
 
 
@@ -1100,6 +1179,7 @@ func _net_arcana_resolve(countered: bool) -> void:
 	if cd == null:
 		return
 	var defender := "enemy" if battle_manager.active_side == "player" else "player"
+	battle_manager.bury(battle_manager.active_side, cd)   # 秘術用掉即入土(兩台各埋各的帳)
 	if countered:
 		# 兩台的帳同步,quick_candidate 的「第一張付得起」在兩台挑到同一張。
 		var quick: CardData = battle_manager.quick_candidate(defender)

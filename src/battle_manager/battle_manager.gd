@@ -14,6 +14,8 @@ class_name BattleManager
 signal state_changed(turn: int, side: String, mana: int, mana_max: int)
 ## 有單位死亡(CardManager 靠這條清掉指向死者的參考)。
 signal unit_died(unit: Card)
+## 有牌入土(CardManager 靠這條刷新墓地視覺)。
+signal card_buried(side: String, cd: CardData)
 ## 勝負已分("player" = 玩家贏)。
 signal game_over(winner: String)
 
@@ -40,6 +42,11 @@ class SideState:
 	## 蓋放的伏印(§7):存整張卡的資料,觸發時才知道名字和效果。
 	## 依 §2 用獨立資料層表示,不佔卡槽;「敵方召喚時觸發」見 mark_summoned。
 	var wards: Array[CardData] = []
+	## 墓地:所有離場的牌統一收這裡(死亡從者+隨葬靈裝、用畢的秘術/瞬咒、
+	## 觸發過的伏印、爆牌、丟牌回魔)——入口只有一個 bury()。
+	var grave: Array[CardData] = []
+	## 丟牌回魔冷卻(§1.1):0=可用;使用設 2、自己回合開始 -1 → 隔回合一次。
+	var discard_cd: int = 0
 
 var turn: int = 1
 var active_side: String = "player"   # 現在輪到誰行動(回合歸屬)
@@ -77,6 +84,7 @@ func _active() -> SideState:
 func _begin_side_turn(st: SideState) -> void:
 	st.mana_max = mini(MANA_CAP, st.mana_max + 1)
 	st.mana = st.mana_max
+	st.discard_cd = maxi(0, st.discard_cd - 1)   # 丟牌回魔冷卻:自己回合開始 -1(§1.1)
 
 
 ## 行動方目前的魔力(給 UI 顯示用;帳本身是私有的,外部走這個口)。
@@ -113,6 +121,46 @@ func deck_count(side: String) -> int:
 	return (sides[side] as SideState).deck.size() if sides.has(side) else 0
 
 
+## ── 墓地(§7 收尾/§1 爆牌/§1.1 棄牌的共同去處)──────────────
+## 所有「離場的牌」統一從這裡入土。埋點全都在兩台會重放的函式裡
+## (死亡結算/consume_quick/mark_summoned/end_turn/丟牌 RPC),
+## 所以連線不需要任何新的同步——資料一致+操作一致=墓地一致。
+func bury(side: String, cd: CardData) -> void:
+	if cd == null or not sides.has(side):
+		return
+	(sides[side] as SideState).grave.append(cd)
+	card_buried.emit(side, cd)
+
+
+func grave_count(side: String) -> int:
+	return (sides[side] as SideState).grave.size() if sides.has(side) else 0
+
+
+## 最後入土的那張(墓地視覺讓它躺在最上面;空墓回 null)。
+func grave_top(side: String) -> CardData:
+	var g: Array[CardData] = (sides[side] as SideState).grave
+	return g.back() if not g.is_empty() else null
+
+
+## ── 丟牌回魔(§1.1)───────────────────────────────
+func can_discard_for_mana(side: String) -> bool:
+	return (sides[side] as SideState).discard_cd == 0
+
+
+## 帳面結算:回魔 = Cost÷2 無條件捨去;冷卻設 2(自己回合開始 -1 →
+## 下一個自己的回合仍是 1 被擋、再下一回合歸 0 = 規格「最多隔回合一次」)。
+## 手牌的「移除」不在這裡:出牌端走視圖、重放端走 remove_from_hand,
+## 和召喚同一套不對稱(見 card_manager._consume_played)。
+func apply_discard_for_mana(side: String, cd: CardData) -> int:
+	var st: SideState = sides[side]
+	var gained := floori(cd.cost / 2.0)
+	st.mana += gained   # 暫時魔力:下回合開始會被「回滿至上限」洗掉,天生不留存(§1)
+	st.discard_cd = 2
+	bury(side, cd)
+	_emit_state()
+	return gained
+
+
 ## 這個卡槽屬於哪一側(出牌只能放自己這側,熱座的側別檢查用)。
 func slot_side(slot: CardSlot) -> String:
 	var group := _row_group_of(slot)
@@ -146,7 +194,7 @@ func end_turn() -> Dictionary:
 	var result := {"drawn": null, "burned": false}
 	if st.hand.size() >= MAX_HAND:
 		if not st.deck.is_empty():
-			st.deck.pop_back()
+			bury(active_side, st.deck.pop_back())   # 爆牌(§1):「銷毀」=進墓地,雙方看得見
 			result.burned = true
 	elif not st.deck.is_empty():
 		var drawn: CardData = st.deck.pop_back()
@@ -185,6 +233,7 @@ func mark_summoned(unit: Card) -> String:
 		return ""
 	# §5.1 簡化原則:一次觸發一張(先蓋的先發)。
 	var trap: CardData = traps.pop_front()
+	bury(owner_side, trap)   # 伏印用掉即入土(§7)
 	var dmg := trap.active_skill.power if trap.active_skill != null else 0
 	_deal_damage(unit, dmg, false)
 	_check_death(unit)
@@ -211,6 +260,7 @@ func attach_equip(card: CardData, target: Card) -> void:
 		return
 	target.max_hp_bonus += card.active_skill.amount
 	target.heal(card.active_skill.amount)
+	target.equipped_cards.append(card)   # 記在宿主身上:宿主陣亡時靈裝隨葬(§7)
 
 
 ## 伏印(爆裂符印):蓋放進「行動方」的伏印區,等對方召喚時觸發(見 mark_summoned)。
@@ -233,6 +283,7 @@ func consume_quick(defender: String, quick: CardData) -> void:
 	var st: SideState = sides[defender]
 	st.mana = maxi(0, st.mana - quick.cost)
 	st.hand.erase(quick)
+	bury(defender, quick)   # 瞬咒用掉即入土(§7);熱座/連線都經過這裡,埋一次就好
 	_emit_state()
 
 
@@ -462,9 +513,13 @@ func _check_death(unit: Card) -> void:
 		if not unit.play_one_shot_anim("Summon"):
 			unit.play_one_shot_anim("Summon(With magic effects)")
 		return
+	var side := side_of(unit)   # 要在清位「前」問:side_of 靠所在卡槽的群組反查
 	var slot := _find_slot(unit)
 	if slot != null:
 		slot.on_unit_died()   # 先清位:死亡演出期間這格就能再放牌
+	bury(side, unit.data)
+	for eq in unit.equipped_cards:
+		bury(side, eq)   # 宿主離場,靈裝一併離場(§7):隨葬進同一座墓
 	unit_died.emit(unit)
 	unit.die()
 
@@ -510,6 +565,10 @@ func export_accounts() -> Dictionary:
 		"e_deck": _paths_of(sides["enemy"].deck),
 		"p_hand": _paths_of(sides["player"].hand),
 		"e_hand": _paths_of(sides["enemy"].hand),
+		"p_grave": _paths_of(sides["player"].grave),
+		"e_grave": _paths_of(sides["enemy"].grave),
+		"p_dcd": sides["player"].discard_cd,
+		"e_dcd": sides["enemy"].discard_cd,
 	}
 
 
@@ -518,6 +577,11 @@ func import_accounts(data: Dictionary) -> void:
 	sides["enemy"].deck = _cards_of(data["e_deck"])
 	sides["player"].hand = _cards_of(data["p_hand"])
 	sides["enemy"].hand = _cards_of(data["e_hand"])
+	# .get 給預設:開局同步都在空墓時發生,但帳的形狀要完整(中途重連也對得上)
+	sides["player"].grave = _cards_of(data.get("p_grave", PackedStringArray()))
+	sides["enemy"].grave = _cards_of(data.get("e_grave", PackedStringArray()))
+	sides["player"].discard_cd = int(data.get("p_dcd", 0))
+	sides["enemy"].discard_cd = int(data.get("e_dcd", 0))
 
 
 static func _paths_of(list: Array[CardData]) -> PackedStringArray:

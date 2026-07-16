@@ -84,6 +84,7 @@ main.tscn  ← 牌桌主場景 (MainScene, Node3D)  [src/main_scene/main_scene.g
 | [src/battle_manager/battle_manager.gd](src/battle_manager/battle_manager.gd) | 戰鬥帳房：魔力/回合/行動經濟（§1/§3/§6）與真結算（§4.2 雙向傷害交換、死亡清位、打臉與路線阻擋 §4.1、勝負判定）。訂閱 `CardManager.action_performed`；規則只寫這一份，UI 轉述 |
 | [src/hero/hero.gd](src/hero/hero.gd) | 本體（玩家/敵方的「臉」）：像素立牌呈現（同卡牌角色、無卡槽）、HP 20、受擊/死亡動畫；程式生成、站位由卡槽群組實際位置推算 |
 | [src/card/skill_data.gd](src/card/skill_data.gd) | `SkillData`（Resource）：主動技能的資料定義（類別/費用/動畫表/效果參數），設計明細見 [docs/skills_design.md](docs/skills_design.md) |
+| [src/grave_pile/grave_pile.gd](src/grave_pile/grave_pile.gd) | 墓地/棄牌堆（一側一座，純視覺）：底座＋張數＋最後入土那張卡；投放區掛第 4 層，拖手牌到上面＝丟牌回魔（§1.1）；帳在 BattleManager 的 `SideState.grave` |
 
 ### 場景
 
@@ -145,24 +146,8 @@ main.tscn  ← 牌桌主場景 (MainScene, Node3D)  [src/main_scene/main_scene.g
 
 - 抽牌後，可捨棄 1 張手牌，獲得「該牌 Cost ÷ 2（無條件捨去）」的**暫時魔力**。
 - **冷卻：使用後下一回合不可再用**（最多隔回合一次）。
-- 實作建議：在玩家狀態上維護 `discard_mana_cooldown: int`。使用時設為 `1`；每回合開始 `max(0, cooldown - 1)`；`cooldown == 0` 才允許使用。
-
-```gdscript
-# PlayerState 內
-var discard_mana_cooldown: int = 0
-
-func can_discard_for_mana() -> bool:
-    return discard_mana_cooldown == 0
-
-func discard_for_mana(card: CardData) -> int:
-    var gained := card.cost / 2          # int 除法自動捨去
-    temp_mana += gained
-    discard_mana_cooldown = 1            # 進入冷卻
-    return gained
-
-func on_turn_start() -> void:
-    discard_mana_cooldown = max(0, discard_mana_cooldown - 1)
-```
+- ✅ **已實作（2026-07-16）**：把手牌**拖到墓地**放開＝棄牌（任何卡型皆可）；帳在 `battle_manager.gd` 的 `apply_discard_for_mana()`，UX 與同步在 `card_manager.gd` 的 `_try_discard` / `_net_discard`（連線/單人 AI 走同一條重放路）。
+- 實作註記：`SideState.discard_cd` 使用時設 **2**、**自己**回合開始 `max(0, cd - 1)`、`cd == 0` 才允許——設 1 會在下一個自己回合就歸零，變成「每回合都能用」，違反「下一回合不可再用」。（早期草稿的 `=1` 寫法是 off-by-one，勿沿用。）
 
 ## 2. 戰場與路線
 
@@ -397,6 +382,7 @@ func apply_freeze(unit, turns := 1) -> void:
 - [x] 卡槽高亮著色器（鈴蘭之劍式：圓角雙框 SDF + 內緣漸層 + 拖曳懸停呼吸脈動發光；執行期掛材質、場景檔零改動）
 - [x] **牌桌構圖改版（2026-07-14）**：鏡頭沿中線一眼看穿「我方本體→我方卡槽→溪流→敵方卡槽→敵方本體」，歧路旅人式斜視角（俯角 36°、fov 50，截圖 harness 迭代定案後烘進 main.tscn）；手牌壓在畫面下緣只露卡頂、面向鏡頭攤開（hand 傾 -108° 與每張卡自帶 +55° 合成後法線對準視線），hover 抬升整張浮出（爐石式，`HOVER_LIFT`）；敵方卡槽改**鏡像**（前排貼中線——修正舊版「敵方前排反而離玩家更遠」的語意顛倒，全場 mid_z 歸 0）；本體改巫師 vs 死靈法師、鏡像站各自後排正後方 2.2；溪流置中 z=0（Stream 節點/ground_generator/forest_scatter 三處同步）、岸線蜿蜒收斂（bank_jitter 0.9→0.4）保證水帶最寬 ±1.7 不進前排卡槽（槽緣 ±1.74）；forest/caverns/frostlands 與 client 翻轉視角構圖皆截圖驗證
 - [x] **hover 卡片放大預覽＋卡面截斷**：hover 任何卡（手牌/桌上單位）→ 右側資訊卡（卡圖第 0 幀/名稱/費用/卡型/攻血含靈裝加成/關鍵字/技能全文，mouse_filter 全 IGNORE 不擋操作，來源卡被釋放自動收起）；卡面描述超過 5 行估算截斷加 …（全形 1/半形 0.5 字寬估算——不再壓到攻血列），全文交給預覽面板
+- [x] **墓地＋丟牌回魔（2026-07-16）**：所有離場的牌統一走 `BattleManager.bury()` 入土（死亡從者＋隨葬靈裝、用畢秘術/瞬咒、觸發的伏印、爆牌、棄牌）——埋點全在兩台會重放的函式裡，連線零新增同步；`GravePile` 雙墓視覺（牌堆旁、對角鏡射、躺著最後入土那張＋張數），拖手牌到墓地＝丟牌回魔（§1.1：Cost÷2 捨去、隔回合冷卻）；`tests/grave_test.gd` 14 斷言＋loopback 簽名一致。**殘留**：AI 不用丟牌回魔（既有債）、墓地內容查看面板未做（現只顯示最上張與張數）
 - [x] **素材整理（2026-07-16）**：第三方素材包統一收 `assets/packs/`（snake_case、包內保留原結構）；清 ~82M 死重（未用字重 73M、構圖參考圖 8M→docs/、殘留複本與孤兒檔——匯出預設打包全部資源，死重會進 zip）；`docs/` 加 `.gdignore` 不被引擎掃描；驗證＝重掃＋三測試全綠＋洞窟/冰原/主選單截圖
 - [x] **景深 DOF（2026-07-15）**：HD-2D 微縮感——Camera3D 掛 `CameraAttributesPractical`（僅 far blur：20/5/0.08，遊戲資訊沿視線 4.8~18.5 全在對焦內；near 刻意不開，否則最先糊的是手牌）；透明物件（本體/召喚立牌、對手卡背）加 `ALPHA_CUT_OPAQUE_PREPASS` 寫深度，免被 DOF 拿背景深度當遠景糊；本體 HP 標籤改墊**深度錨定板**（Label3D 直接掛 alpha_cut 會黑字——字身/外框共面、render_priority 在深度管線失效）；截圖對比＋spell/hover/AI 三回歸驗證；純視覺驗證工具 `tests/screenshot.gd` 落籍
 
@@ -431,7 +417,7 @@ func apply_freeze(unit, turns := 1) -> void:
 ## 開發備註
 
 - **回歸測試在 [tests/](tests/)**（headless SceneTree 腳本，曾放系統暫存被清掉兩次，故落籍版控）：
-  `Godot --headless --path . -s tests/spell_smoke.gd`（法術結算 14 斷言）、`tests/ai_turn_test.gd`（單人 vs AI 9 斷言）、`tests/hover_spam_test.gd`（手牌 hover 漂移/碰撞箱釘位）、`tests/net_battle_test.gd`（雙進程連線 loopback：先開 host，再帶 `-- client` 開第二個進程，比對兩端簽名）。
+  `Godot --headless --path . -s tests/spell_smoke.gd`（法術結算 14 斷言）、`tests/ai_turn_test.gd`（單人 vs AI 9 斷言）、`tests/hover_spam_test.gd`（手牌 hover 漂移/碰撞箱釘位）、`tests/grave_test.gd`（墓地＋丟牌回魔 14 斷言）、`tests/net_battle_test.gd`（雙進程連線 loopback：先開 host，再帶 `-- client` 開第二個進程，比對兩端簽名）。
   另有兩支**非 CI 的工具腳本**：`tests/screenshot.gd` / `tests/screenshot_summon.gd`（非 headless 跑遊戲存 PNG，驗純視覺改動）、`tests/upnp_probe.gd`（實測目前網路的 UPnP 打洞，結果依環境而異）。
 - 在編輯器**外**新建帶 `class_name` 的腳本後，headless 跑會報「Identifier not declared」——全域類別註冊表（`.godot/global_script_class_cache.cfg`）由編輯器掃描生成，跑一次 `Godot --headless --editor --quit` 重掃即可。
 - `ground_generator.gd` 與 `forest_scatter.gd` 皆為 `@tool` 腳本：在編輯器調整 `@export` 後勾選 `regenerate` 即可即時重新生成，不必執行遊戲。

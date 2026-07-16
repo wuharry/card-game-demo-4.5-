@@ -464,6 +464,10 @@ func exit_board_mode() -> void:
 ## 一份資料生多張卡,寫回 data.hp 會讓全場同名卡一起變厚;宿主離場加成隨節點消失。
 var max_hp_bonus: int = 0
 
+## 裝備中的靈裝「卡」(§7):加成數值在上面,這裡記的是卡本身——
+## 宿主陣亡時要知道「哪幾張」跟著入墓(BattleManager._check_death 隨葬用)。
+var equipped_cards: Array[CardData] = []
+
 
 ## ── 血量增減(由 BattleManager 呼叫)────────────────
 func take_damage(amount: int) -> void:
