@@ -11,12 +11,12 @@ extends ArenaBase
 #   第一版翻車教訓:霧/環境光調成藍青色 → 整個像海底。地底的黑要「帶暖」。
 # 素材:Pixel 3D Caverns Package——OBJ 的 UV 都對到 Cavern_Tilesheet_C/N 總表。
 
-const PACK := "res://assets/Pixel 3D Caverns Package"
+const PACK := "res://assets/packs/pixel3d_caverns"
 const OBJECTS := PACK + "/Objects/OBJ"
 const FOLIAGE := PACK + "/Foliage Models/OBJ"
 const TILES := PACK + "/Landscape Material Tiles"
 ## 混用素材:借 Frostlands 的冰晶模型當「洞穴藍水晶」(見 _build_crystals)。
-const FROST_PACK := "res://assets/Pixel3D Frostlands Package"
+const FROST_PACK := "res://assets/packs/pixel3d_frostlands"
 
 @export_group("道具數量")
 @export var stalagmite_count: int = 12   # 場內鐘乳石(中景點綴;洞壁另外蓋,見下)

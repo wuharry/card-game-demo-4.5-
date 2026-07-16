@@ -104,8 +104,8 @@ main.tscn  ← 牌桌主場景 (MainScene, Node3D)  [src/main_scene/main_scene.g
 |------|------|
 | `NewCard.png` | 卡框圖（上半有透明挖空窗，CardArt 嵌入其中）|
 | `data/cards/*.tres` | 24 張 CardData 卡片資料（名稱 / 費用 / 攻血 / 立牌動畫表）|
-| `assets/小小RPG角色素材包`、`assets/characters` | 像素角色動畫表（卡圖取第 0 幀、召喚立牌播待機動畫）|
-| `assets/Pixel 3D Caverns / Frostlands / RPG_Town` | 洞窟 / 冰原 / 城鎮 像素 3D 環境素材包 |
+| `assets/packs/tiny_rpg_characters` | 像素角色動畫表（卡圖取第 0 幀、召喚立牌播待機動畫）|
+| `assets/packs/pixel3d_{caverns,frostlands,town}` | 洞窟 / 冰原 / 城鎮 像素 3D 環境素材包（第三方素材包統一收 `assets/packs/`，資料夾 snake_case、包內保留原始結構利於對照授權） |
 | `assets/ui/card_frames/` | 卡槽外框圖（card_slot.tscn 使用）|
 | `assets/mesh_libraries/grasslands/grassland_tiles.meshlib` | GridMap 地板格子（arena_forest 使用）|
 | `assets/environment/psx_trees/` | PSX 樹/灌木 FBX 模型與貼圖（forest_scatter 使用）|
@@ -397,6 +397,7 @@ func apply_freeze(unit, turns := 1) -> void:
 - [x] 卡槽高亮著色器（鈴蘭之劍式：圓角雙框 SDF + 內緣漸層 + 拖曳懸停呼吸脈動發光；執行期掛材質、場景檔零改動）
 - [x] **牌桌構圖改版（2026-07-14）**：鏡頭沿中線一眼看穿「我方本體→我方卡槽→溪流→敵方卡槽→敵方本體」，歧路旅人式斜視角（俯角 36°、fov 50，截圖 harness 迭代定案後烘進 main.tscn）；手牌壓在畫面下緣只露卡頂、面向鏡頭攤開（hand 傾 -108° 與每張卡自帶 +55° 合成後法線對準視線），hover 抬升整張浮出（爐石式，`HOVER_LIFT`）；敵方卡槽改**鏡像**（前排貼中線——修正舊版「敵方前排反而離玩家更遠」的語意顛倒，全場 mid_z 歸 0）；本體改巫師 vs 死靈法師、鏡像站各自後排正後方 2.2；溪流置中 z=0（Stream 節點/ground_generator/forest_scatter 三處同步）、岸線蜿蜒收斂（bank_jitter 0.9→0.4）保證水帶最寬 ±1.7 不進前排卡槽（槽緣 ±1.74）；forest/caverns/frostlands 與 client 翻轉視角構圖皆截圖驗證
 - [x] **hover 卡片放大預覽＋卡面截斷**：hover 任何卡（手牌/桌上單位）→ 右側資訊卡（卡圖第 0 幀/名稱/費用/卡型/攻血含靈裝加成/關鍵字/技能全文，mouse_filter 全 IGNORE 不擋操作，來源卡被釋放自動收起）；卡面描述超過 5 行估算截斷加 …（全形 1/半形 0.5 字寬估算——不再壓到攻血列），全文交給預覽面板
+- [x] **素材整理（2026-07-16）**：第三方素材包統一收 `assets/packs/`（snake_case、包內保留原結構）；清 ~82M 死重（未用字重 73M、構圖參考圖 8M→docs/、殘留複本與孤兒檔——匯出預設打包全部資源，死重會進 zip）；`docs/` 加 `.gdignore` 不被引擎掃描；驗證＝重掃＋三測試全綠＋洞窟/冰原/主選單截圖
 - [x] **景深 DOF（2026-07-15）**：HD-2D 微縮感——Camera3D 掛 `CameraAttributesPractical`（僅 far blur：20/5/0.08，遊戲資訊沿視線 4.8~18.5 全在對焦內；near 刻意不開，否則最先糊的是手牌）；透明物件（本體/召喚立牌、對手卡背）加 `ALPHA_CUT_OPAQUE_PREPASS` 寫深度，免被 DOF 拿背景深度當遠景糊；本體 HP 標籤改墊**深度錨定板**（Label3D 直接掛 alpha_cut 會黑字——字身/外框共面、render_priority 在深度管線失效）；截圖對比＋spell/hover/AI 三回歸驗證；純視覺驗證工具 `tests/screenshot.gd` 落籍
 
 ---

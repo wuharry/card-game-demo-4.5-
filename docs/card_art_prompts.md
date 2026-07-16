@@ -7,7 +7,7 @@
 ## 使用方式(每張卡重複這三步)
 
 1. 開 Gemini,**貼上該角色的像素圖**當參考:
-   `assets/小小RPG角色素材包/.../Characters(100x100 split)/<角色>/<角色>/<角色>_Idle.png`
+   `assets/packs/tiny_rpg_characters/.../Characters(100x100 split)/<角色>/<角色>/<角色>_Idle.png`
    (用「無陰影」資料夾那張 600×100 六格圖;**只有 Bat 例外,用 `Bat_Flying.png`**)
 2. 複製下面該角色**那一整行** prompt 貼上送出。
 3. 存檔命名照「`slug 中文.png`」(例:`knight 騎士.png`),放進 `assets/ui/card_art/`

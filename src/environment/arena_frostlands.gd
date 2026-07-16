@@ -9,7 +9,7 @@ extends ArenaBase
 #   ‧ 體積霧讓月光切出可見的光柱(god rays),是參考圖裡最有記憶點的元素。
 # 素材:Pixel3D Frostlands Package——OBJ 的 UV 都對到 frostland_tilesheet 總表。
 
-const PACK := "res://assets/Pixel3D Frostlands Package"
+const PACK := "res://assets/packs/pixel3d_frostlands"
 const MODELS := PACK + "/Models"
 const TILES := PACK + "/Landscape Material Tiles"
 

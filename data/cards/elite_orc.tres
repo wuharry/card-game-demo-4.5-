@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="CardData" load_steps=6 format=3 uid="uid://dc3c6jjgfwhrd"]
 
 [ext_resource type="Script" uid="uid://cxot3rc105cul" path="res://src/card/card_data.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://cmdpsfm3ytxmq" path="res://assets/小小RPG角色素材包/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Elite Orc/Elite Orc/Elite Orc_Idle.png" id="2_sheet"]
+[ext_resource type="Texture2D" uid="uid://cmdpsfm3ytxmq" path="res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Elite Orc/Elite Orc/Elite Orc_Idle.png" id="2_sheet"]
 [ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
 
 [sub_resource type="Resource" id="Skill_main"]

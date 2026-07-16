@@ -16,7 +16,7 @@
 
 | 素材 | 位置 | 待辦 |
 |---|---|---|
-| Tiny RPG Character Asset Pack 01(付費完整版)/ 02 | assets/小小RPG角色素材包 | 回 itch.io 下載頁確認作者名與授權條款(付費版通常可商用免掛名,仍要留存證明) |
+| Tiny RPG Character Asset Pack 01(付費完整版)/ 02 | assets/packs/tiny_rpg_characters | 回 itch.io 下載頁確認作者名與授權條款(付費版通常可商用免掛名,仍要留存證明) |
 | Pixel 3D Caverns / Frostlands / RPG Town 2.0 | assets/Pixel* | 同上 |
 | PSX 樹木/灌木包 | assets/environment/psx_trees | 同上 |
 | ocean-shader(psx_ocean_surface,水面 shader 基底) | assets/water/psx_ocean_surface | 找到原 GitHub repo 確認授權(資料夾內 README 無授權聲明) |

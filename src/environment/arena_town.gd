@@ -11,7 +11,7 @@ extends ArenaBase
 #   ‧ 廣場上有市集攤位,街燈掛暖色點光
 # 素材:Pixel_3D_RPG_Town_2.0——UV 都對到 T_RPGTown_TileSheet_01(D 色/N 法線/E 發光)。
 
-const PACK := "res://assets/Pixel_3D_RPG_Town_2.0"
+const PACK := "res://assets/packs/pixel3d_town"
 const SHEET_D := PACK + "/TileSheet/T_RPGTown_TileSheet_01_D.png"
 const SHEET_N := PACK + "/TileSheet/T_RPGTown_TileSheet_01_N.png"
 const SHEET_E := PACK + "/TileSheet/T_RPGTown_TileSheet_01_E.png"
