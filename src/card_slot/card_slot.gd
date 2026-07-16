@@ -70,11 +70,17 @@ func place_card(card: Card) -> void:
 	# global_position 是「世界座標」(整個場景的絕對位置)。
 	var target_position := global_position + Vector3(0, 0.09, 0)
 	tw.tween_property(card, "global_position", target_position, 0.15)  # 0.15 秒滑到定位
-	# 「轉正」= local (0,0,0)。注意這是「相對 PlayerHand」的旋轉：卡片上桌後仍掛在
-	# PlayerHand 底下，而 PlayerHand 自己就轉了 -90°X —— 所以 local (0,0,0) 疊上
-	# 父節點的旋轉，世界結果正是「躺平、卡面朝上、卡頂朝敵方」(遊戲王式擺法)。
-	# ⚠ 別在這裡再補 -90°：兩個旋轉會疊加，卡片就立起來了(local vs world，同 §B)。
-	tw.tween_property(card, "rotation_degrees", Vector3(0, 0, 0), 0.15)
+	# 「躺平」= 世界座標繞 X 轉 -90°(卡面朝上、卡頂朝敵方，遊戲王式擺法)。
+	# 卡片上桌後仍掛在 PlayerHand 底下，而 PlayerHand 為了讓手牌面向玩家帶了傾角
+	# (構圖改版後是 +108°X，不再是當初的 -90°X)。所以 local 目標**不能寫死 (0,0,0)**：
+	# 那會連父傾角一起繼承、卡片上桌就歪成近乎立起(這正是舊 bug 的成因——兩個角度
+	# 手動對齊卻沒連動)。改成**反解父旋轉**：local = 父旋轉的逆 × 目標世界旋轉，
+	# PlayerHand 之後再怎麼調角度都自動壓平，不會再壞。用 quaternion 而非 euler：
+	# 避開 108° 在 YXZ 分解下被拆成怪值，且 Tween 對 quaternion 走最短弧、轉正不翻滾。
+	var flat_world := Basis.from_euler(Vector3(-PI / 2.0, 0.0, 0.0))
+	var parent_basis: Basis = card.get_parent().global_transform.basis
+	var flat_local := (parent_basis.inverse() * flat_world).get_rotation_quaternion()
+	tw.tween_property(card, "quaternion", flat_local, 0.15)
 	# 卡片大小「跟著卡槽走」:兩者原生同為 1.6×2.4;卡槽被 PlayerBoard 縮放過,
 	# 卡片就乘上同一個倍率,入槽後才會剛好蓋住卡槽。
 	tw.tween_property(card, "scale", Vector3.ONE * _base_scale.x, 0.15)
