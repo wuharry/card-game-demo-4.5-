@@ -198,8 +198,10 @@ func _update_skill_label() -> void:
 	if data != null and data.active_skill != null:
 		var s := data.active_skill
 		if data.card_type == CardData.CardType.MINION:
-			# 【技能名】◆費用 + 換行描述;◆ 與指令選單的費用標記同一符號。
-			lb.text = _fit_card_text("【%s】◆%d\n%s" % [s.skill_name, s.cost, s.description])
+			# 【技能名】◆費用·三分類 + 換行描述;◆ 與指令選單同符號。
+			# 三分類(強化/獨立/非攻擊)決定行動經濟,桌遊試玩回饋:卡面要標出來。
+			lb.text = _fit_card_text("【%s】◆%d·%s\n%s" % [
+				s.skill_name, s.cost, SkillData.KIND_NAMES[s.kind], s.description])
 		else:
 			# 法術卡:卡名/費用已在卡框上緣,文字區只印效果,不重複報頭。
 			lb.text = _fit_card_text(s.description)
@@ -509,6 +511,12 @@ func _popup_number(text_value: String, color: Color) -> void:
 	tw.tween_property(lb, "position:z", 2.0, 0.8)
 	tw.tween_property(lb, "modulate:a", 0.0, 0.8).set_ease(Tween.EASE_IN)
 	tw.chain().tween_callback(lb.queue_free)
+
+
+## 上限變動後把現血夾回上限(裝備替換:舊裝拆走、bonus 縮水時由帳房呼叫)。
+func clamp_hp() -> void:
+	current_hp = mini(current_hp, data.hp + max_hp_bonus)
+	_refresh_hp_label()
 
 
 func _refresh_hp_label() -> void:

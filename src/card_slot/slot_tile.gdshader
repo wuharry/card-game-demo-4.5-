@@ -12,6 +12,9 @@ uniform vec3 tile_color : source_color = vec3(0.35, 0.9, 1.0);
 // 卡槽平面被非等比縮放(寬≠深),圓角會被拉成橢圓;先把 x 依「寬/深」壓回等比空間。
 uniform float aspect = 0.571;
 uniform float glow : hint_range(0.0, 1.0) = 0.0;
+// 伏印警戒(§7 威懾):這一側場上有伏印時整排泛紅慢脈動——對手只知道
+// 「有陷阱」,不知道埋在誰底下。呼吸在 shader 裡用 TIME 做,card_slot 只推開關。
+uniform float ward_alert : hint_range(0.0, 1.0) = 0.0;
 
 // 圓角矩形 SDF:回傳點 p 到「半尺寸 b、圓角半徑 r 的矩形」邊緣的有號距離
 // (負=在裡面、正=在外面、0=正好在邊上)。SDF 是程序化 UI 形狀的標準武器。
@@ -38,7 +41,12 @@ void fragment() {
 	float shape = clamp(frame + inner_line + fill, 0.0, 1.0);
 	float energy = mix(0.55, 2.3, glow) * breath;   // 高亮時 >1 → 交給 bloom 暈開
 
-	ALBEDO = tile_color;
-	EMISSION = tile_color * energy * shape;
-	ALPHA = shape * mix(0.38, 0.85, glow);
+	// 伏印警戒:顏色「定紅」(不跟呼吸走)、呼吸只做亮度——
+	// 顏色也乘呼吸的話,青紅各半混出灰粉色,讀不出「警戒」(第一版翻車點)。
+	vec3 color = mix(tile_color, vec3(1.0, 0.16, 0.12), ward_alert);
+	float alert_pulse = ward_alert * (0.55 + 0.45 * sin(TIME * 2.2));
+
+	ALBEDO = color;
+	EMISSION = color * (energy + alert_pulse * 1.6) * shape;
+	ALPHA = shape * clamp(mix(0.38, 0.85, glow) + ward_alert * 0.25, 0.0, 1.0);
 }

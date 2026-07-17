@@ -147,6 +147,28 @@ func unhighlight() -> void:
 	_highlight_tween.tween_method(_set_glow, _current_glow(), 0.0, 0.1)
 
 
+## ── 伏印警戒(§7 威懾):這一側場上有伏印時整排泛紅 ──────────
+## 呼吸脈動在 shader 裡用 TIME 做(週期恆定,不怕 tween 疊加);
+## 這裡只負責開/關之間的淡入淡出。由 CardManager 聽 wards_changed 統一推整排。
+var _alert_tween: Tween = null
+
+
+func set_ward_alert(on: bool) -> void:
+	if _alert_tween != null:
+		_alert_tween.kill()
+	_alert_tween = create_tween()
+	_alert_tween.tween_method(_set_alert, _current_alert(), 1.0 if on else 0.0, 0.4)
+
+
+func _set_alert(value: float) -> void:
+	_tile_mat.set_shader_parameter("ward_alert", value)
+
+
+func _current_alert() -> float:
+	var v: Variant = _tile_mat.get_shader_parameter("ward_alert")
+	return float(v) if v != null else 0.0
+
+
 ## ── glow 參數的 tween 介面 ─────────────────────────
 ## 不用 tween_property("shader_parameter/glow"):那是 shader 解析後才存在的動態屬性,
 ## 用 tween_method 直接呼叫 set_shader_parameter,不依賴算繪器狀態(headless 驗證也過)。

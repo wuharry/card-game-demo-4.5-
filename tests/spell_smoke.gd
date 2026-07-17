@@ -65,7 +65,8 @@ func _run() -> void:
 
 	# ── (a) spawn_unit + mark_summoned:對面(敵方)有伏印 → 觸發傷害 ──
 	# active_side = "player" → mark_summoned 會去掏 enemy 側的 wards。
-	bm.sides["enemy"].wards.append(ward_cd)
+	# 直塞帳(宿主制的 dict 形狀;host=null 不影響觸發,只有宿主隨葬會比對它)。
+	bm.sides["enemy"].wards.append({"cd": ward_cd, "host": null})
 	var slot1 := _first_empty_in("player_front")
 	if slot1 == null:
 		print("FAIL: 找不到空的 player_front 卡槽")
@@ -102,9 +103,10 @@ func _run() -> void:
 	_check(unit1.max_hp_bonus == 2, "(c) max_hp_bonus == 2(實際 %d)" % unit1.max_hp_bonus)
 	_check(unit1.current_hp == 6, "(c) 現血 4+2=6(實際 %d)" % unit1.current_hp)
 
-	# ── (d) set_ward:蓋放進「行動方」的伏印帳 ──
-	bm.set_ward(ward_cd)
+	# ── (d) set_ward(宿主制):埋在我方場上從者(unit1)底下 ──
+	bm.set_ward(ward_cd, unit1)
 	_check(bm.sides["player"].wards.size() == 1, "(d) set_ward 進玩家伏印帳")
+	_check(bm.host_has_ward(unit1), "(d) 宿主身上查得到伏印")
 
 	# ── 加碼:quick_candidate(守方手上第一張付得起的瞬咒)──
 	bm.sides["enemy"].hand.append(quick_cd)

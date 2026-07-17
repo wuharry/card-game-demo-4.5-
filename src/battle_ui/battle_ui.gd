@@ -90,8 +90,9 @@ func open(card: Card, attack_note: String = "", skill_note: String = "") -> void
 	_attack_btn.disabled = attack_note != ""
 	_skill_btn.visible = _skill != null
 	if _skill != null:
-		# 技能鈕直接標費用(◆),學費寫在門口,不用點進去才發現付不起。
-		_skill_btn.text = "%s  ◆%d" % [_skill.skill_name, _skill.cost]
+		# 技能鈕直接標費用(◆)+三分類:學費和「佔不佔攻擊機會」都寫在門口。
+		_skill_btn.text = "%s  ◆%d·%s" % [
+			_skill.skill_name, _skill.cost, SkillData.KIND_NAMES[_skill.kind]]
 		_skill_btn.disabled = skill_note != ""
 	_show_attack_desc()
 	_hint.visible = false
@@ -597,7 +598,9 @@ func show_card_preview(card: Card) -> void:
 	if d.active_skill != null:
 		var s := d.active_skill
 		if d.card_type == CardData.CardType.MINION:
-			_prev_body.text = "【%s】◆%d\n%s" % [s.skill_name, s.cost, s.description]
+			# 三分類跟著標(強化=用掉攻擊機會/獨立=額外一刀/非攻擊=登場回合也能用)。
+			_prev_body.text = "【%s】◆%d·%s\n%s" % [
+				s.skill_name, s.cost, SkillData.KIND_NAMES[s.kind], s.description]
 		else:
 			_prev_body.text = s.description
 		_prev_body.visible = true

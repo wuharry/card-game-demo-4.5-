@@ -16,6 +16,8 @@ signal state_changed(turn: int, side: String, mana: int, mana_max: int, temp_man
 signal unit_died(unit: Card)
 ## 有牌入土(CardManager 靠這條刷新墓地視覺)。
 signal card_buried(side: String, cd: CardData)
+## 伏印帳有變(CardManager 靠這條開關整排卡槽的紅色警戒)。
+signal wards_changed(side: String, count: int)
 ## 勝負已分("player" = 玩家贏)。
 signal game_over(winner: String)
 
@@ -42,9 +44,10 @@ class SideState:
 	var temp_mana: int = 0
 	var deck: Array[CardData] = []
 	var hand: Array[CardData] = []
-	## 蓋放的伏印(§7):存整張卡的資料,觸發時才知道名字和效果。
-	## 依 §2 用獨立資料層表示,不佔卡槽;「敵方召喚時觸發」見 mark_summoned。
-	var wards: Array[CardData] = []
+	## 蓋放的伏印(§7 宿主制,對齊桌遊):每筆 {"cd": CardData, "host": Card}——
+	## 伏印必須埋在「我方場上從者」底下,宿主離場時未觸發的伏印隨葬。
+	## 不佔卡槽;順序=蓋放順序(先蓋先發);「敵方召喚時觸發」見 mark_summoned。
+	var wards: Array[Dictionary] = []
 	## 墓地:所有離場的牌統一收這裡(死亡從者+隨葬靈裝、用畢的秘術/瞬咒、
 	## 觸發過的伏印、爆牌、丟牌回魔)——入口只有一個 bury()。
 	var grave: Array[CardData] = []
@@ -241,12 +244,14 @@ func _tick_dot_side(side: String, phase_start: bool) -> void:
 func mark_summoned(unit: Card) -> String:
 	unit.summoned_this_turn = true
 	var owner_side := "enemy" if active_side == "player" else "player"
-	var traps: Array[CardData] = (sides[owner_side] as SideState).wards
+	var traps: Array[Dictionary] = (sides[owner_side] as SideState).wards
 	if traps.is_empty():
 		return ""
 	# §5.1 簡化原則:一次觸發一張(先蓋的先發)。
-	var trap: CardData = traps.pop_front()
+	var entry: Dictionary = traps.pop_front()
+	var trap: CardData = entry.cd
 	bury(owner_side, trap)   # 伏印用掉即入土(§7)
+	wards_changed.emit(owner_side, traps.size())
 	var dmg := trap.active_skill.power if trap.active_skill != null else 0
 	_deal_damage(unit, dmg, false)
 	_check_death(unit)
@@ -268,17 +273,43 @@ func cast_arcana(card: CardData, target: Card) -> void:
 
 ## 靈裝(秘銀胸鎧):我方從者生命上限 +amount 並補等量現血;
 ## 加成記在「單位節點」上(max_hp_bonus)——宿主離場,裝備自然隨節點一起消失(§7)。
-func attach_equip(card: CardData, target: Card) -> void:
+## 一次一件(桌遊試玩回饋):新裝蓋舊裝——舊裝的加成收回、卡進墓地。
+## 回傳被替換的舊裝名("" = 本來沒穿),CardManager 拿去組提示訊息。
+func attach_equip(card: CardData, target: Card) -> String:
 	if not is_instance_valid(target) or card.active_skill == null:
-		return
+		return ""
+	var replaced := ""
+	for old in target.equipped_cards:
+		if old.active_skill != null:
+			target.max_hp_bonus -= old.active_skill.amount
+		bury(side_of(target), old)
+		replaced = old.card_name
+	target.equipped_cards.clear()
+	target.clamp_hp()   # 舊裝拆了上限縮水,現血夾回上限(6/6+2 拆裝 → 4/4)
 	target.max_hp_bonus += card.active_skill.amount
 	target.heal(card.active_skill.amount)
 	target.equipped_cards.append(card)   # 記在宿主身上:宿主陣亡時靈裝隨葬(§7)
+	return replaced
 
 
-## 伏印(爆裂符印):蓋放進「行動方」的伏印區,等對方召喚時觸發(見 mark_summoned)。
-func set_ward(card: CardData) -> void:
-	_active().wards.append(card)
+## 伏印(§7 宿主制):埋設在「我方場上從者」底下,等對方召喚時觸發(mark_summoned)。
+## 側別由宿主推,不看 active_side——帳跟著宿主走,呼叫端不用想現在輪到誰。
+func set_ward(card: CardData, host: Card) -> void:
+	var side := side_of(host)
+	(sides[side] as SideState).wards.append({"cd": card, "host": host})
+	wards_changed.emit(side, ward_count(side))
+
+
+func ward_count(side: String) -> int:
+	return (sides[side] as SideState).wards.size() if sides.has(side) else 0
+
+
+## 這隻從者底下有沒有埋著伏印(一格一張,§7 擺放規則)。
+func host_has_ward(unit: Card) -> bool:
+	for entry in (sides[side_of(unit)] as SideState).wards:
+		if entry.host == unit:
+			return true
+	return false
 
 
 ## 守方手上第一張「付得起」的瞬咒(§5.1 反制窗口用;沒有就回 null)。
@@ -533,6 +564,16 @@ func _check_death(unit: Card) -> void:
 	bury(side, unit.data)
 	for eq in unit.equipped_cards:
 		bury(side, eq)   # 宿主離場,靈裝一併離場(§7):隨葬進同一座墓
+	# 宿主底下未觸發的伏印一併進墓地(§7 FAQ);拆完廣播讓紅色警戒跟著熄。
+	var side_wards: Array[Dictionary] = (sides[side] as SideState).wards
+	var ward_removed := false
+	for i in range(side_wards.size() - 1, -1, -1):
+		if side_wards[i].host == unit:
+			bury(side, side_wards[i].cd)
+			side_wards.remove_at(i)
+			ward_removed = true
+	if ward_removed:
+		wards_changed.emit(side, side_wards.size())
 	unit_died.emit(unit)
 	unit.die()
 

@@ -101,6 +101,7 @@ func _ready() -> void:
 	battle_manager.state_changed.connect(battle_ui.update_hud)
 	battle_manager.unit_died.connect(_on_unit_died)
 	battle_manager.card_buried.connect(_on_card_buried)
+	battle_manager.wards_changed.connect(_on_wards_changed)
 	battle_manager.game_over.connect(_on_game_over)
 	action_performed.connect(battle_manager.on_action_performed)
 	add_child(battle_manager)
@@ -551,11 +552,17 @@ func _try_attach_equip(card: Card) -> void:
 		_net_equip(idx, card.data.resource_path, slot_np)
 
 
-## 伏印:放開在我方半場的卡槽區 = 蓋放(不佔格,§2 後排資料層;敵方召喚時觸發)。
+## 伏印(§7 宿主制):放開在「我方場上從者」身上 = 埋設在它底下。
+## 埋好後我方整排卡槽泛紅警戒——對手知道「有陷阱」,但不知道埋在誰底下(威懾)。
 func _try_set_ward(card: Card) -> void:
-	var slot := raycast_check_for_card_slot()
-	if slot == null or battle_manager.slot_side(slot) != battle_manager.active_side:
-		battle_ui.flash_message("伏印要蓋放在「我方」這側的卡槽區")
+	var host := raycast_check_for_card()
+	if host == null or not host.is_on_board \
+			or battle_manager.side_of(host) != battle_manager.active_side:
+		battle_ui.flash_message("伏印要埋設在「我方」場上從者底下(宿主制)")
+		organize_hand()
+		return
+	if battle_manager.host_has_ward(host):
+		battle_ui.flash_message("【%s】底下已經埋著一張伏印(一格一張)" % host.data.card_name)
 		organize_hand()
 		return
 	if not battle_manager.can_afford(card.data.cost):
@@ -565,10 +572,11 @@ func _try_set_ward(card: Card) -> void:
 		return
 	_pending_play_card = card
 	var idx := player_hand.cards.find(card)
+	var host_np := get_path_to(battle_manager.find_slot_of(host))
 	if NetMatch.is_online:
-		_net_ward.rpc(idx, card.data.resource_path)
+		_net_ward.rpc(idx, card.data.resource_path, host_np)
 	else:
-		_net_ward(idx, card.data.resource_path)
+		_net_ward(idx, card.data.resource_path, host_np)
 
 
 ## 丟牌回魔(§1.1):把手牌拖到墓地放開。回魔 = Cost÷2 捨去;最多隔回合一次。
@@ -916,6 +924,15 @@ func _spawn_grave_piles() -> void:
 		_grave_piles[side] = pile
 
 
+## 伏印帳有變(帳房廣播):整排卡槽的紅色警戒跟著開/關。
+## 推「整排」而不是宿主那格——威懾要成立,對手就不能從視覺定位宿主(§7)。
+func _on_wards_changed(side: String, count: int) -> void:
+	for group in [side + "_front", side + "_back"]:
+		for slot in get_tree().get_nodes_in_group(group):
+			if slot is CardSlot:
+				(slot as CardSlot).set_ward_alert(count > 0)
+
+
 ## 有牌入土(帳房廣播):刷新那一側的墓地視覺(張數+最上面那張)。
 func _on_card_buried(side: String, _cd: CardData) -> void:
 	var pile: GravePile = _grave_piles.get(side)
@@ -1232,20 +1249,26 @@ func _net_equip(hand_idx: int, card_path: String, target_np: NodePath) -> void:
 	if cd == null or target == null:
 		return
 	battle_manager.spend(cd.cost)
-	battle_manager.attach_equip(cd, target)
-	battle_ui.flash_message("【%s】裝備到【%s】:生命上限 +%d" % [
-		cd.card_name, target.data.card_name, cd.active_skill.amount])
+	var replaced: String = battle_manager.attach_equip(cd, target)
+	if replaced != "":
+		battle_ui.flash_message("【%s】替換了【%s】(舊裝進墓地):生命上限 +%d" % [
+			cd.card_name, replaced, cd.active_skill.amount])
+	else:
+		battle_ui.flash_message("【%s】裝備到【%s】:生命上限 +%d" % [
+			cd.card_name, target.data.card_name, cd.active_skill.amount])
 	_consume_played(hand_idx)
 
 
 @rpc("any_peer", "call_local", "reliable")
-func _net_ward(hand_idx: int, card_path: String) -> void:
+func _net_ward(hand_idx: int, card_path: String, host_slot: NodePath) -> void:
 	var cd := load(card_path) as CardData
-	if cd == null:
+	var host := _unit_at(host_slot)
+	if cd == null or host == null or battle_manager.host_has_ward(host):
 		return
 	battle_manager.spend(cd.cost)
-	battle_manager.set_ward(cd)
-	battle_ui.flash_message("【%s】已蓋放:敵方下次召喚從者時觸發" % cd.card_name)
+	battle_manager.set_ward(cd, host)
+	# ⚠ 訊息不能報宿主名字:這行兩台都會 flash,說了就把陷阱位置洩給對手。
+	battle_ui.flash_message("伏印已埋設(敵方召喚從者時觸發)")
 	_consume_played(hand_idx)
 
 

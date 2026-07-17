@@ -14,6 +14,13 @@ enum Kind {
 	NON_ATTACK,          ## 非攻擊:治療/增益/控場,與攻擊無關、可自由加用
 }
 
+## 三分類的顯示名(卡面/指令選單/hover 預覽的標示;桌遊試玩回饋:要標出來)。
+const KIND_NAMES := {
+	Kind.ENHANCED_ATTACK: "強化攻擊",
+	Kind.INDEPENDENT_ATTACK: "獨立攻擊",
+	Kind.NON_ATTACK: "非攻擊",
+}
+
 ## 攻擊型技能的「打法修飾」(強化/獨立攻擊限定)。
 enum Modifier {
 	NONE,       ## 一般單體

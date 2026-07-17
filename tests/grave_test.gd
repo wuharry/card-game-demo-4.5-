@@ -48,7 +48,7 @@ func _run() -> void:
 
 	# ── 2) 伏印觸發入土(敵方的伏印,埋進敵方的墓)──
 	var ward := load("res://data/cards/ward_blast_sigil.tres") as CardData
-	bm.sides["enemy"].wards.append(ward)
+	bm.sides["enemy"].wards.append({"cd": ward, "host": null})   # 宿主制的帳形
 	var unit2 = bm.spawn_unit(soldier, _first_empty("player_front"))
 	await create_timer(0.4).timeout
 	var base_e: int = bm.grave_count("enemy")
