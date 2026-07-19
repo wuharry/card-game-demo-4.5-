@@ -29,6 +29,7 @@ const COLLISION_MASK_GRAVE = 8  # 第 4 層：墓地投放區(grave_pile.gd 自�
 
 ## 目前「被滑鼠抓著拖曳」的卡片。沒有在拖任何卡時是 null。
 var card_being_dragged: Card = null
+var _hint_pile: GravePile = null   # 目前亮著回魔提示的墓(拖曳懸停中)
 ## 拖曳時把卡片鎖在這個高度(Y 軸)，避免它忽高忽低或穿進地板。
 var drag_plane_height: float = 0.0
 ## 目前被滑鼠 hover(放大)的卡片。全場同時「只能有一張」被放大，避免畫面混亂。
@@ -208,6 +209,11 @@ func on_card_unhovered(card: Card) -> void:
 ## ── 每一幀都會執行：負責「拖曳中」的即時跟手 ──────────
 ## _process(delta) 是 Godot 的逐幀回呼。delta 是距離上一幀的秒數(這裡用不到，故加底線)。
 func _process(_delta: float) -> void:
+	# 拖曳結束(出牌/棄牌/取消,不管走哪條路)= 在這個單一收斂點清回魔提示。
+	# 比在每條退出路徑各補一刀可靠:之後新增退出路徑也不會漏。
+	if card_being_dragged == null and _hint_pile != null:
+		_hint_pile.hide_recycle_hint()
+		_hint_pile = null
 	# 只有真的抓著卡時才需要處理。
 	if card_being_dragged:
 		# 1. 想像桌面是一個「數學平面」：法線朝上(Vector3.UP)、高度為 drag_plane_height。
@@ -241,6 +247,18 @@ func _process(_delta: float) -> void:
 					found_slot.highlight()
 				# 更新記錄。
 				currently_hovered_slot = found_slot
+
+			# ── 拖曳時的回魔提示:懸停墓地 = 光環轉金 + 「+n ◆」(§1.1)──
+			var pile := raycast_check_for_grave()
+			if not battle_manager.can_discard_for_mana(battle_manager.active_side):
+				pile = null   # 冷卻中不亮提示;真丟下去 _try_discard 會用人話拒絕
+			if pile != _hint_pile:
+				if _hint_pile != null:
+					_hint_pile.hide_recycle_hint()
+				_hint_pile = pile
+				if _hint_pile != null:
+					_hint_pile.show_recycle_hint(
+						floori(card_being_dragged.data.cost / 2.0))
 
 	# 指定目標中:每幀把「施放者 → 游標」的螢幕座標餵給 BattleUI 畫導引箭頭。
 	# unproject_position 是射線的反運算:3D 世界座標 → 螢幕像素座標。
@@ -599,6 +617,9 @@ func _net_discard(hand_idx: int, card_path: String) -> void:
 	var cd := load(card_path) as CardData
 	if cd == null or not battle_manager.can_discard_for_mana(battle_manager.active_side):
 		return
+	var pile := _grave_piles.get(battle_manager.active_side) as GravePile
+	if pile != null:
+		pile.arm_recycle()   # 先上膛再結算:這次入土演出走回魔金,不跟陣亡的紫混
 	var gained: int = battle_manager.apply_discard_for_mana(battle_manager.active_side, cd)
 	_consume_played(hand_idx)   # 出牌端移視圖節點、重放端扣帳(同召喚的不對稱)
 	Sfx.play(Sfx.MANA_GAIN, -4.0)   # 數錢聲:回魔的「入帳感」
