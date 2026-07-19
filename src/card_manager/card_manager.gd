@@ -30,6 +30,7 @@ const COLLISION_MASK_GRAVE = 8  # 第 4 層：墓地投放區(grave_pile.gd 自�
 ## 目前「被滑鼠抓著拖曳」的卡片。沒有在拖任何卡時是 null。
 var card_being_dragged: Card = null
 var _hint_pile: GravePile = null   # 目前亮著回魔提示的墓(拖曳懸停中)
+var _picking := false   # 選牌面板開著:費用已付、選擇是義務(擋取消/結束回合)
 ## 拖曳時把卡片鎖在這個高度(Y 軸)，避免它忽高忽低或穿進地板。
 var drag_plane_height: float = 0.0
 ## 目前被滑鼠 hover(放大)的卡片。全場同時「只能有一張」被放大，避免畫面混亂。
@@ -288,7 +289,7 @@ func _input(event: InputEvent) -> void:
 		and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed
 	var is_esc: bool = event is InputEventKey and event.pressed \
 		and event.keycode == KEY_ESCAPE
-	if (is_rmb or is_esc) \
+	if (is_rmb or is_esc) and not _picking \
 			and (ui_state == UiState.MENU_OPEN or ui_state == UiState.TARGETING):
 		_cancel_command()
 		return
@@ -342,6 +343,18 @@ func _on_left_pressed_idle() -> void:
 		if not battle_manager.can_afford(card.data.cost):
 			battle_ui.flash_message("魔力不足:需要 ◆%d(現有 %d)" % [
 				card.data.cost, battle_manager.active_mana()])
+			return
+		# 抽濾系秘術(§抽濾)沒有場上目標:點卡即施放,不走箭頭瞄準。
+		if _is_effect_spell(card.data):
+			if battle_manager.deck_count(battle_manager.active_side) == 0:
+				battle_ui.flash_message("牌堆已空,無牌可抽")
+				return
+			if NetMatch.is_online:
+				_pending_play_card = card
+				var idx := player_hand.cards.find(card)
+				_net_arcana_declare.rpc(idx, card.data.resource_path, NodePath())
+			else:
+				_resolve_effect_arcana(card)
 			return
 		_begin_spell_targeting(card)
 		return
@@ -516,27 +529,8 @@ func _cast_arcana_at(card: Card, target: Card) -> void:
 func _resolve_arcana(card: Card, target: Card) -> void:
 	battle_manager.spend(card.data.cost)   # STEP 1:宣告就支付,被抵銷不退費
 	Sfx.play(Sfx.SPELL_CAST, -2.0)
-	var defender := "enemy" if battle_manager.active_side == "player" else "player"
-	var quick: CardData = battle_manager.quick_candidate(defender)
-	var countered := false
-	if quick != null:
-		if MatchMode.is_vs_ai():
-			# 單人:守方是 AI,自動決策(有付得起的瞬咒就抵銷),不開人類面板——
-			# 面板一開等於把 AI 的手牌資訊攤給玩家,還得由玩家替 AI 按鈕。
-			countered = true
-		else:
-			# STEP 2:熱座把螢幕轉給守方回答;await = 整條流程停在這裡等面板的信號。
-			ui_state = UiState.MENU_OPEN   # 鎖住其他 3D 互動,別讓玩家邊回答邊拖卡
-			battle_ui.show_reaction("守方反制窗口",
-				"對方施放【%s】→ 發動【%s】抵銷?(◆%d)" % [
-					card.data.card_name, quick.card_name, quick.cost])
-			countered = await battle_ui.reaction_decided
-			ui_state = UiState.IDLE
-	if countered:
-		battle_manager.consume_quick(defender, quick)
-		battle_ui.flash_message("【%s】被【%s】抵銷了!" % [
-			card.data.card_name, quick.card_name])
-	elif is_instance_valid(target):
+	var countered: bool = await _ask_counter_hotseat(card.data.card_name)
+	if not countered and is_instance_valid(target):
 		# STEP 4:結算(秘術傷害不吃反擊)。
 		battle_manager.cast_arcana(card.data, target)
 		battle_ui.flash_message("【%s】對【%s】造成 %d 點傷害" % [
@@ -546,6 +540,170 @@ func _resolve_arcana(card: Card, target: Card) -> void:
 	battle_manager.bury(battle_manager.active_side, card.data)
 	player_hand.play_card(card)
 	card.queue_free()
+
+
+## 守方反制窗口(§5.1 STEP 2;熱座/單機共用,傷害秘術與抽濾秘術同一個口):
+## 有付得起的瞬咒就問,AI 自動抵銷。抵銷成立時瞬咒消耗與提示都在這裡做完。
+func _ask_counter_hotseat(spell_name: String) -> bool:
+	var defender := "enemy" if battle_manager.active_side == "player" else "player"
+	var quick: CardData = battle_manager.quick_candidate(defender)
+	if quick == null:
+		return false
+	var used := false
+	if MatchMode.is_vs_ai():
+		# 單人:守方是 AI,自動決策(有付得起的瞬咒就抵銷),不開人類面板——
+		# 面板一開等於把 AI 的手牌資訊攤給玩家,還得由玩家替 AI 按鈕。
+		used = true
+	else:
+		# 熱座把螢幕轉給守方回答;await = 整條流程停在這裡等面板的信號。
+		ui_state = UiState.MENU_OPEN   # 鎖住其他 3D 互動,別讓玩家邊回答邊拖卡
+		battle_ui.show_reaction("守方反制窗口",
+			"對方施放【%s】→ 發動【%s】抵銷?(◆%d)" % [
+				spell_name, quick.card_name, quick.cost])
+		used = await battle_ui.reaction_decided
+		ui_state = UiState.IDLE
+	if used:
+		battle_manager.consume_quick(defender, quick)
+		battle_ui.flash_message("【%s】被【%s】抵銷了!" % [spell_name, quick.card_name])
+	return used
+
+
+## 抽濾系秘術的熱座/單機結算:付費 → 反制窗口 → 牌離手入墓 → 效果落地。
+## 和 _resolve_arcana 的差別:無場上目標,且效果(可能開選牌面板)在牌離手「後」跑。
+func _resolve_effect_arcana(card: Card) -> void:
+	battle_manager.spend(card.data.cost)
+	Sfx.play(Sfx.SPELL_CAST, -2.0)
+	var cd := card.data
+	var countered: bool = await _ask_counter_hotseat(cd.card_name)
+	battle_manager.bury(battle_manager.active_side, cd)   # 用掉即入土(被抵銷也一樣)
+	player_hand.play_card(card)
+	card.queue_free()
+	if not countered:
+		_dispatch_spell_effect(cd)
+
+
+## 抽濾系秘術判定:效果掛在 active_skill.effect 上、無場上目標。
+func _is_effect_spell(cd: CardData) -> bool:
+	return cd.active_skill != null and cd.active_skill.effect in [
+		SkillData.Effect.DRAW, SkillData.Effect.SCRY, SkillData.Effect.DISCARD_DRAW]
+
+
+## 效果分流(熱座與連線結算端共用的出口;SCRY/換牌會再開選牌面板)。
+func _dispatch_spell_effect(cd: CardData) -> void:
+	match cd.active_skill.effect:
+		SkillData.Effect.DRAW:
+			_apply_draw(cd.active_skill.amount)
+			battle_ui.flash_message("【%s】:抽 %d 張" % [
+				cd.card_name, cd.active_skill.amount])
+		SkillData.Effect.SCRY:
+			if _acting_locally():
+				_begin_scry_flow(cd)
+			else:
+				battle_ui.flash_message("對方正在檢視牌堆頂的牌…")
+		SkillData.Effect.DISCARD_DRAW:
+			if _acting_locally():
+				_begin_swap_flow(cd)
+			else:
+				battle_ui.flash_message("對方正在抉擇要換掉哪張牌…")
+
+
+## 抽 n 張的「帳+視圖」一次做完(兩台各自跑;牌堆同步 → 抽到同一批)。
+## 動帳前先 stash 對帳:行動方那台的手牌帳在回合中是舊的(出過的牌還掛在帳上),
+## 不對帳就抽,滿手燒牌判定會兩台不一致——一台燒、一台入手,帳就散了(§28 同款地雷)。
+func _apply_draw(n: int) -> void:
+	if _hand_view_shows_active_side():
+		battle_manager.stash_hand(player_hand.hand_data())
+	var res: Dictionary = battle_manager.draw_cards(battle_manager.active_side, n)
+	if _hand_view_shows_active_side():
+		for cd in res.drawn:
+			player_hand.draw_card(cd)   # 逐張從牌堆飛入,自帶抽牌聲
+	_update_deck_labels()
+	_refresh_opp_hud()
+	if res.burned > 0:
+		battle_ui.flash_message("手牌已滿,%d 張牌燒掉了!" % res.burned)
+
+
+## 命運窺視:行動方那台開選牌面板(牌堆兩台同步,選完只廣播「第幾張」)。
+func _begin_scry_flow(cd: CardData) -> void:
+	var look_n: int = cd.active_skill.amount
+	var opts: Array[CardData] = battle_manager.peek_deck_top(
+		battle_manager.active_side, look_n)
+	if opts.is_empty():
+		return
+	ui_state = UiState.MENU_OPEN
+	_picking = true
+	battle_ui.show_card_picker("命運窺視",
+		"選 1 張加入手牌,其餘 %d 張放回牌堆底" % maxi(opts.size() - 1, 0), opts)
+	var pick_i: int = await battle_ui.card_picked
+	_picking = false
+	ui_state = UiState.IDLE
+	if NetMatch.is_online:
+		_net_scry_pick.rpc(look_n, pick_i)
+	else:
+		_net_scry_pick(look_n, pick_i)
+
+
+@rpc("any_peer", "call_local", "reliable")
+func _net_scry_pick(look_n: int, pick_i: int) -> void:
+	if _hand_view_shows_active_side():
+		battle_manager.stash_hand(player_hand.hand_data())   # 動手牌帳前先對帳
+	var res: Dictionary = battle_manager.scry_pick(
+		battle_manager.active_side, look_n, pick_i)
+	var picked: CardData = res.picked
+	if picked == null:
+		return
+	if res.burned:
+		battle_ui.flash_message("手牌已滿,拿取的牌燒掉了!")
+	elif _hand_view_shows_active_side():
+		player_hand.draw_card(picked)
+	# 拿了哪張是手牌隱私:自己看名字,對面只看到「拿走 1 張」。
+	if _acting_locally():
+		battle_ui.flash_message("將【%s】收入手中" % picked.card_name)
+	else:
+		battle_ui.flash_message("對方檢視牌堆後拿取了 1 張牌")
+	_update_deck_labels()
+	_refresh_opp_hud()
+
+
+## 以血換識:選一張手牌棄掉(手牌在自己機器上,視圖即真相;廣播手牌位置)。
+func _begin_swap_flow(cd: CardData) -> void:
+	var draw_n: int = cd.active_skill.amount
+	var hand_cards := player_hand.hand_data()
+	if hand_cards.is_empty():
+		# 沒有其他手牌:不棄,直接抽(卡面寫明;別讓玩家卡死在選不了的面板)
+		if NetMatch.is_online:
+			_net_swap_pick.rpc(-1, draw_n)
+		else:
+			_net_swap_pick(-1, draw_n)
+		return
+	ui_state = UiState.MENU_OPEN
+	_picking = true
+	battle_ui.show_card_picker("以血換識",
+		"選 1 張棄掉(入墓),然後抽 %d 張" % draw_n, hand_cards)
+	var idx: int = await battle_ui.card_picked
+	_picking = false
+	ui_state = UiState.IDLE
+	if NetMatch.is_online:
+		_net_swap_pick.rpc(idx, draw_n)
+	else:
+		_net_swap_pick(idx, draw_n)
+
+
+@rpc("any_peer", "call_local", "reliable")
+func _net_swap_pick(hand_idx: int, draw_n: int) -> void:
+	if hand_idx >= 0:
+		if _hand_view_shows_active_side():
+			battle_manager.stash_hand(player_hand.hand_data())   # 先對帳,idx 才對得上
+			if hand_idx < player_hand.cards.size():
+				var node: Card = player_hand.cards[hand_idx]
+				player_hand.play_card(node)   # 視圖:棄那張的節點收掉(帳在下一行棄)
+				node.queue_free()
+		var dumped: CardData = battle_manager.discard_from_hand(
+			battle_manager.active_side, hand_idx)
+		if dumped != null:
+			Sfx.play(Sfx.CARD_BURY, -6.0)
+			battle_ui.flash_message("換掉【%s】" % dumped.card_name)   # 入墓=公開資訊
+	_apply_draw(draw_n)
 
 
 ## 靈裝:放開在我方從者身上 = 裝備(§7:宿主離場一併離場)。
@@ -806,6 +964,9 @@ func _on_game_over(winner: String) -> void:
 ## 真正的換頁走 RPC 讓兩台同步翻頁(單機時 call_local 就地執行,行為不變)。
 func _on_end_turn() -> void:
 	if ui_state == UiState.GAME_OVER:
+		return
+	if _picking:
+		battle_ui.flash_message("請先完成選牌")
 		return
 	# 連線視角鎖定(2b 第一塊):不是你的回合,按了不換頁。
 	if NetMatch.is_online and battle_manager.active_side != NetMatch.my_side:
@@ -1247,7 +1408,7 @@ func _net_arcana_resolve(countered: bool) -> void:
 		if quick != null:
 			battle_manager.consume_quick(defender, quick)
 		battle_ui.flash_message("【%s】被抵銷了!" % cd.card_name)
-	else:
+	elif not _is_effect_spell(cd):
 		var target := _unit_at(_pending_arcana_target)
 		if target != null:
 			battle_manager.cast_arcana(cd, target)
@@ -1259,6 +1420,8 @@ func _net_arcana_resolve(countered: bool) -> void:
 		if card != null:
 			player_hand.play_card(card)
 			card.queue_free()
+	if not countered and _is_effect_spell(cd):
+		_dispatch_spell_effect(cd)   # 效果在牌離手後落地(SCRY/換牌會開選牌面板)
 	_refresh_opp_hud()
 
 

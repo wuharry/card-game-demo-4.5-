@@ -31,7 +31,9 @@ enum Modifier {
 }
 
 ## 附加效果(非攻擊技的主體;攻擊型技能則是「命中後」附帶觸發)。
-enum Effect { NONE, HEAL, APPLY_STATUS, SUMMON }
+## 抽濾系(§抽濾):DRAW=抽 amount 張;SCRY=看頂 amount 張選 1 入手、餘放堆底;
+## DISCARD_DRAW=自選棄 1 張再抽 amount 張。只能往尾巴加(.tres 存 int,§21)。
+enum Effect { NONE, HEAL, APPLY_STATUS, SUMMON, DRAW, SCRY, DISCARD_DRAW }
 
 ## 效果作用對象。
 enum Target { SELF, ALLY, LANE_ENEMY }
@@ -54,7 +56,7 @@ enum Status { NONE, BURN, FREEZE, POISON, NIGHT_VEIL, FORGE }
 @export_group("效果參數")
 @export var effect: Effect = Effect.NONE
 @export var effect_target: Target = Target.LANE_ENEMY
-@export var amount: int = 0              # HEAL 的治療量
+@export var amount: int = 0              # HEAL 治療量;DRAW/DISCARD_DRAW 抽幾張;SCRY 看幾張
 @export var status: Status = Status.NONE          # APPLY_STATUS 施加哪種狀態
 @export var status_turns: int = 1                 # 狀態持續回合(§9 上限:灼燒 ≤ 2)
 @export var summon_card: String = ""     # SUMMON 要生誰(data/cards 檔名,如 "skeleton")

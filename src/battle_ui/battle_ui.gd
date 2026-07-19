@@ -17,6 +17,8 @@ signal restart_pressed
 signal menu_pressed
 ## 反制窗口(§5.1 守方瞬咒)的回答:true = 發動抵銷。CardManager await 這條。
 signal reaction_decided(use_quick: bool)
+## 選牌面板(§抽濾)的回答:選了第幾張(索引對齊 show_card_picker 傳入的陣列)。
+signal card_picked(idx: int)
 
 const FONT_TITLE: FontFile = preload(
 	"res://assets/fonts/Noto_Serif_TC/static/NotoSerifTC-Bold.ttf")
@@ -62,6 +64,13 @@ var _toast_tween: Tween
 var _over_dim: ColorRect = null
 var _over_panel: PanelContainer = null
 var _over_title: Label = null
+
+## 選牌面板(§抽濾:看頂選一/換牌共用;第一次用到才組裝)。
+var _pick_dim: ColorRect = null
+var _pick_panel: PanelContainer = null
+var _pick_title: Label = null
+var _pick_hint: Label = null
+var _pick_row: HBoxContainer = null
 
 
 func _ready() -> void:
@@ -695,5 +704,129 @@ func update_opp_count(count: int) -> void:
 	_hud_opp.visible = true
 	_hud_opp.text = "對方手牌:%d 張" % count
 	_hud_panel.reset_size()
+
+
+## ── 選牌面板(§抽濾:看頂選一/換牌共用)──────────────────
+## 沒有取消鈕:費用在宣告時已付,選擇是義務(同爐石「發現」,防免費偷看)。
+## 開著時 CardManager 用 _picking 旗標擋掉取消/結束回合。
+func show_card_picker(title_text: String, hint_text: String,
+		cards: Array[CardData]) -> void:
+	if _pick_panel == null:
+		_build_picker()
+	_pick_title.text = title_text
+	_pick_hint.text = hint_text
+	for child in _pick_row.get_children():
+		_pick_row.remove_child(child)   # 先摘再 free:queue_free 的殘影會撐壞本幀排版
+		child.queue_free()
+	for i in range(cards.size()):
+		_pick_row.add_child(_make_pick_tile(cards[i], i))
+	_pick_dim.visible = true
+	_pick_panel.visible = true
+	Sfx.play(Sfx.CARD_FAN, -4.0)
+	_pick_panel.reset_size()
+	_pick_panel.set_anchors_and_offsets_preset(
+		Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
+
+
+func _build_picker() -> void:
+	_pick_dim = ColorRect.new()
+	_pick_dim.color = Color(0.0, 0.0, 0.0, 0.62)
+	add_child(_pick_dim)
+	_pick_dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	_pick_panel = PanelContainer.new()
+	_pick_panel.add_theme_stylebox_override("panel", _make_panel_style())
+	add_child(_pick_panel)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 10)
+	_pick_panel.add_child(col)
+
+	_pick_title = Label.new()
+	_pick_title.add_theme_font_override("font", FONT_TITLE)
+	_pick_title.add_theme_font_size_override("font_size", 26)
+	_pick_title.add_theme_color_override("font_color", GOLD)
+	_pick_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(_pick_title)
+	col.add_child(_make_gold_line())
+
+	_pick_hint = Label.new()
+	_pick_hint.add_theme_font_override("font", FONT_BODY)
+	_pick_hint.add_theme_font_size_override("font_size", 16)
+	_pick_hint.add_theme_color_override("font_color", GOLD_DIM)
+	_pick_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(_pick_hint)
+
+	_pick_row = HBoxContainer.new()
+	_pick_row.add_theme_constant_override("separation", 14)
+	_pick_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_child(_pick_row)
+
+
+## 一張可點選的卡面磚:圖+名+費+一句話。整塊都是按鈕(hover 微亮)。
+func _make_pick_tile(d: CardData, idx: int) -> Control:
+	var tile := PanelContainer.new()
+	tile.add_theme_stylebox_override("panel", _make_panel_style())
+	tile.custom_minimum_size = Vector2(190, 0)
+	tile.mouse_filter = Control.MOUSE_FILTER_STOP
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 6)
+	tile.add_child(col)
+
+	var art := TextureRect.new()
+	art.custom_minimum_size = Vector2(0, 96)
+	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST   # 像素圖放大要銳利
+	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	art.texture = _cardface_art(d)
+	col.add_child(art)
+
+	var name_l := Label.new()
+	name_l.add_theme_font_override("font", FONT_TITLE)
+	name_l.add_theme_font_size_override("font_size", 18)
+	name_l.add_theme_color_override("font_color", GOLD)
+	name_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_l.text = "%s ◆%d" % [d.card_name, d.cost]
+	col.add_child(name_l)
+
+	var info := Label.new()
+	info.add_theme_font_override("font", FONT_BODY)
+	info.add_theme_font_size_override("font_size", 13)
+	info.add_theme_color_override("font_color", GOLD_DIM)
+	info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	info.custom_minimum_size = Vector2(170, 0)
+	if d.card_type == CardData.CardType.MINION:
+		info.text = "從者  攻 %d / 血 %d" % [d.atk, d.hp]
+	elif d.active_skill != null:
+		info.text = d.active_skill.description
+	else:
+		info.text = TYPE_NAMES.get(d.card_type, "")
+	col.add_child(info)
+
+	tile.mouse_entered.connect(func() -> void: tile.modulate = Color(1.25, 1.2, 1.0))
+	tile.mouse_exited.connect(func() -> void: tile.modulate = Color.WHITE)
+	tile.gui_input.connect(func(ev: InputEvent) -> void:
+		if ev is InputEventMouseButton \
+				and ev.button_index == MOUSE_BUTTON_LEFT and ev.pressed:
+			_answer_pick(idx))
+	return tile
+
+
+## 卡面圖:從者=立牌第 0 幀裁可見範圍;法術=圖示(和 hover 預覽同一把尺)。
+func _cardface_art(d: CardData) -> Texture2D:
+	if d.standee != null:
+		var atlas := AtlasTexture.new()
+		atlas.atlas = d.standee
+		atlas.region = Card.visible_bounds_of_frame0(d.standee)
+		return atlas
+	return d.art
+
+
+func _answer_pick(idx: int) -> void:
+	_pick_dim.visible = false
+	_pick_panel.visible = false
+	Sfx.play(Sfx.CLICK, -6.0)
+	card_picked.emit(idx)
 	_hud_panel.set_anchors_and_offsets_preset(
 		Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 24)

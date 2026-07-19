@@ -18,3 +18,4 @@ Casino Audio 1.1 / Impact Sounds / Interface Sounds / RPG Audio
   defeat.ogg       ← bong_001.ogg            @ Interface Sounds
   mana_gain.ogg    ← handleCoins.ogg         @ RPG Audio
   turn_flip.ogg    ← bookFlip2.ogg           @ RPG Audio
+  card_fan.ogg     ← card-fan-1.ogg           @ Casino Audio

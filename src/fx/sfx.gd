@@ -18,6 +18,7 @@ const SPELL_CAST := preload("res://assets/audio/sfx/spell_cast.ogg")     # 秘�
 const MANA_GAIN := preload("res://assets/audio/sfx/mana_gain.ogg")       # 丟牌回魔(數錢)
 const TURN_FLIP := preload("res://assets/audio/sfx/turn_flip.ogg")       # 換回合(翻頁)
 const CLICK := preload("res://assets/audio/sfx/click.ogg")               # UI 按鈕
+const CARD_FAN := preload("res://assets/audio/sfx/card_fan.ogg")         # 選牌面板攤牌
 const VICTORY := preload("res://assets/audio/sfx/victory.ogg")
 const DEFEAT := preload("res://assets/audio/sfx/defeat.ogg")
 

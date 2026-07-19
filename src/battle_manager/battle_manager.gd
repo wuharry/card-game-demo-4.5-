@@ -206,18 +206,82 @@ func end_turn() -> Dictionary:
 			u.summoned_this_turn = false
 			u.iron_wall_used_this_turn = false
 			u.decay_statuses()
-	# 抽牌階段(§5,資料層):滿手燒牌(§1 爆牌:牌照樣從牌堆消失,雙方可見)。
-	var result := {"drawn": null, "burned": false}
-	if st.hand.size() >= MAX_HAND:
-		if not st.deck.is_empty():
-			bury(active_side, st.deck.pop_back())   # 爆牌(§1):「銷毀」=進墓地,雙方看得見
-			result.burned = true
-	elif not st.deck.is_empty():
-		var drawn: CardData = st.deck.pop_back()
-		st.hand.append(drawn)
-		result.drawn = drawn
+	# 抽牌階段(§5):走 draw_cards 單一入口——爆牌規則只寫一份,法術抽牌同款。
+	var d := draw_cards(active_side, 1)
+	var result := {"drawn": null, "burned": d.burned > 0}
+	if not d.drawn.is_empty():
+		result.drawn = d.drawn[0]
 	_emit_state()
 	return result
+
+
+## ── 抽牌/濾牌(§抽濾;法術與回合抽共用的單一入口)──────────
+
+
+## 抽 n 張:滿手燒牌(§1 爆牌:牌照樣從牌堆消失,雙方可見)、
+## 牌堆空了就抽不到(本作無疲勞傷害)。
+## 回傳 {"drawn": Array[CardData] 實際入手, "burned": int 燒掉幾張}。
+func draw_cards(side: String, n: int) -> Dictionary:
+	var st := sides[side] as SideState
+	var drawn: Array[CardData] = []
+	var burned := 0
+	for i in range(n):
+		if st.deck.is_empty():
+			break
+		if st.hand.size() >= MAX_HAND:
+			bury(side, st.deck.pop_back())
+			burned += 1
+		else:
+			var cd: CardData = st.deck.pop_back()
+			st.hand.append(cd)
+			drawn.append(cd)
+	_emit_state()
+	return {"drawn": drawn, "burned": burned}
+
+
+## 看牌堆頂 n 張(不動帳,只讀;回傳 [0] = 最頂)。
+func peek_deck_top(side: String, n: int) -> Array[CardData]:
+	var deck: Array[CardData] = (sides[side] as SideState).deck
+	var out: Array[CardData] = []
+	for i in range(mini(n, deck.size())):
+		out.append(deck[deck.size() - 1 - i])
+	return out
+
+
+## 濾牌結算(命運窺視):頂 look_n 張取第 pick_i 張入手,其餘放回牌堆底。
+## pick_i 對齊 peek_deck_top 的順序([0]=最頂)。兩台各自重放同款參數,結果一致。
+func scry_pick(side: String, look_n: int, pick_i: int) -> Dictionary:
+	var st := sides[side] as SideState
+	var popped: Array[CardData] = []
+	for i in range(mini(look_n, st.deck.size())):
+		popped.append(st.deck.pop_back())
+	if popped.is_empty():
+		return {"picked": null, "burned": false}
+	pick_i = clampi(pick_i, 0, popped.size() - 1)
+	var picked: CardData = popped[pick_i]
+	popped.remove_at(pick_i)
+	for cd in popped:
+		st.deck.insert(0, cd)   # 其餘放牌堆底(對手只知道張數沒變,不知內容)
+	var burned := false
+	if st.hand.size() >= MAX_HAND:   # 防呆:施法後手牌 ≤7,正常流程到不了這
+		bury(side, picked)
+		burned = true
+	else:
+		st.hand.append(picked)
+	_emit_state()
+	return {"picked": picked, "burned": burned}
+
+
+## 棄掉手牌第 idx 張入墓(以血換識的「換」;不觸發丟牌回魔、不吃冷卻)。
+func discard_from_hand(side: String, idx: int) -> CardData:
+	var st := sides[side] as SideState
+	if idx < 0 or idx >= st.hand.size():
+		return null
+	var cd: CardData = st.hand[idx]
+	st.hand.remove_at(idx)
+	bury(side, cd)
+	_emit_state()
+	return cd
 
 
 ## 持續傷害 tick(§9):只 tick「該側」的單位——狀態是在持有者自己的
