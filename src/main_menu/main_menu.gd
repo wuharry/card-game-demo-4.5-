@@ -36,6 +36,9 @@ const TOWN_SCENE: PackedScene = preload("res://scenes/arena_town.tscn")
 ## 新 class_name 要等編輯器重掃才進全域快取,路徑載入沒有這個時間差(§19 的老坑)。
 const NET_LOBBY_SCRIPT: GDScript = preload("res://src/net/net_lobby.gd")
 
+## 牌庫圖鑑(src/card_gallery/card_gallery.gd)。同樣走 preload 路徑實例化(§19)。
+const CARD_GALLERY_SCRIPT: GDScript = preload("res://src/card_gallery/card_gallery.gd")
+
 ## ── 字型 ────────────────────────────────────────────
 ## 思源宋體(Noto Serif TC)= 中文襯線主角:標題與選單都用它,氣質靠它撐;
 ## Playpen Sans 只拿來排底部那行英文小字。兩套都是 SIL OFL 授權,可安心商用。
@@ -63,6 +66,9 @@ var _lobby_status: Label         # 大廳狀態字(等待加入/連線中/失敗
 var _ip_edit: LineEdit           # 房主 IP 輸入框
 var _host_btn: Button            # 建立房間鈕(開房成功後鎖住,返回才解鎖)
 
+## 牌庫圖鑑(全螢幕疊層,自成 CanvasLayer):平時藏著,按「牌庫圖鑑」才 open。
+var _card_gallery: CanvasLayer
+
 
 func _ready() -> void:
 	_build_town_backdrop()
@@ -74,6 +80,11 @@ func _ready() -> void:
 	add_child(_net_lobby)
 	_net_lobby.status_changed.connect(_on_lobby_status)
 	_net_lobby.match_ready.connect(_on_match_ready)
+	# 牌庫圖鑑:自成 CanvasLayer,生成後掛著、平時藏著,按鈕才 open()。
+	_card_gallery = CARD_GALLERY_SCRIPT.new()
+	_card_gallery.name = "CardGallery"
+	add_child(_card_gallery)
+	_card_gallery.closed.connect(_on_gallery_closed)
 	_start_button.grab_focus()   # 給鍵盤焦點:開場直接按 Enter 就能開始
 	# 開場從全黑淡入:黑幕 alpha 1 → 0。黑幕蓋得住 3D 和 UI,整個畫面一起浮現。
 	_fade_rect.color.a = 1.0
@@ -184,6 +195,10 @@ func _build_menu_column(ui: Control) -> void:
 	var net_btn := _make_menu_option("連線對戰")
 	net_btn.pressed.connect(_open_lobby)
 	col.add_child(net_btn)
+
+	var gallery_btn := _make_menu_option("牌庫圖鑑")
+	gallery_btn.pressed.connect(_open_gallery)
+	col.add_child(gallery_btn)
 
 	var quit_btn := _make_menu_option("離開遊戲")
 	quit_btn.pressed.connect(func() -> void: get_tree().quit())   # 直接關閉遊戲
@@ -319,6 +334,18 @@ func _build_lobby_column(parent: CenterContainer) -> void:
 	var back_btn := _make_menu_option("返回")
 	back_btn.pressed.connect(_close_lobby)
 	_lobby_col.add_child(back_btn)
+
+
+## 牌庫圖鑑:藏選單欄(避免鍵盤焦點漏到選單按鈕)、開全螢幕圖鑑疊層。
+## 圖鑑自帶暗幕蓋住城鎮,選單欄藏不藏視覺上看不出,但焦點要收乾淨。
+func _open_gallery() -> void:
+	_menu_col.visible = false
+	_card_gallery.open()
+
+
+func _on_gallery_closed() -> void:
+	_menu_col.visible = true
+	_start_button.grab_focus()
 
 
 func _open_lobby() -> void:
