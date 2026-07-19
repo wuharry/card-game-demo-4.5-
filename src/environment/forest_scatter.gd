@@ -63,38 +63,29 @@ class_name ForestScatter
 @export var waterline_count: int = 26
 @export var waterline_x_min: float = 6.5   # 牌桌左右邊緣以外才點綴,不進戰場擋視線
 
-const TREES: Array[PackedScene] = [
-	preload("res://assets/environment/psx_trees/models/tree01.fbx"),
-	preload("res://assets/environment/psx_trees/models/tree02.fbx"),
-	preload("res://assets/environment/psx_trees/models/tree03.fbx"),
-	preload("res://assets/environment/psx_trees/models/tree04.fbx"),
-	preload("res://assets/environment/psx_trees/models/tree05.fbx"),
-	preload("res://assets/environment/psx_trees/models/tree06.fbx"),
-	preload("res://assets/environment/psx_trees/models/tree07.fbx"),
-	preload("res://assets/environment/psx_trees/models/tree08.fbx"),
-]
-const TREE_TEX: Array[Texture2D] = [
-	preload("res://assets/environment/psx_trees/textures/tree01.png"),
-	preload("res://assets/environment/psx_trees/textures/tree02.png"),
-	preload("res://assets/environment/psx_trees/textures/tree03.png"),
-	preload("res://assets/environment/psx_trees/textures/tree04.png"),
-	preload("res://assets/environment/psx_trees/textures/tree05.png"),
-	preload("res://assets/environment/psx_trees/textures/tree06.png"),
-	preload("res://assets/environment/psx_trees/textures/tree07.png"),
-	preload("res://assets/environment/psx_trees/textures/tree08.png"),
-]
-const BUSHES: Array[PackedScene] = [
-	preload("res://assets/environment/psx_trees/models/bush01.fbx"),
-	preload("res://assets/environment/psx_trees/models/bush02.fbx"),
-	preload("res://assets/environment/psx_trees/models/bush03.fbx"),
-	preload("res://assets/environment/psx_trees/models/bush04.fbx"),
-]
-const BUSH_TEX: Array[Texture2D] = [
-	preload("res://assets/environment/psx_trees/textures/bush01.png"),
-	preload("res://assets/environment/psx_trees/textures/bush02.png"),
-	preload("res://assets/environment/psx_trees/textures/bush03.png"),
-	preload("res://assets/environment/psx_trees/textures/bush04.png"),
-]
+## ── 樹/灌木素材池:檔名有規律(tree01~36、bush01~08),用迴圈組池 ──
+## preload 只吃「字面路徑」、且在腳本載入時就發生;要用字串組路徑只能用 load()。
+## _scatter 只在進場和按 regenerate 時跑,一次 load 44 個小模型的量級無感。
+const PSX_DIR := "res://assets/environment/psx_trees/"
+const TREE_VARIANTS := 36
+const BUSH_VARIANTS := 8
+
+var _trees: Array[PackedScene] = []
+var _tree_tex: Array[Texture2D] = []
+var _bushes: Array[PackedScene] = []
+var _bush_tex: Array[Texture2D] = []
+
+
+## 第一次要用時才把池子載滿(懶載入:編輯器一開檔不必先扛 44 個資源)。
+func _ensure_pools() -> void:
+	if not _trees.is_empty():
+		return
+	for i in range(1, TREE_VARIANTS + 1):
+		_trees.append(load(PSX_DIR + "models/tree%02d.fbx" % i))
+		_tree_tex.append(load(PSX_DIR + "textures/tree%02d.png" % i))
+	for i in range(1, BUSH_VARIANTS + 1):
+		_bushes.append(load(PSX_DIR + "models/bush%02d.fbx" % i))
+		_bush_tex.append(load(PSX_DIR + "textures/bush%02d.png" % i))
 
 ## ── 草原素材包的地景小物 ─────────────────────────────
 ## 注意:這包的小物多數是「單片紙片」模型(AABB 的 X 向厚度 0.00001,面朝 ±X),
@@ -134,6 +125,7 @@ func _ready() -> void:
 
 ## ── 核心：把樹和灌木「成簇」地散佈在戰場四周 ──
 func _scatter() -> void:
+	_ensure_pools()   # 素材池懶載入:第一次散佈時才載
 	# 先清掉上一次生成的所有子節點，避免按重生成時越疊越多。
 	# queue_free() = 「等這一幀結束後安全地刪除」這個節點。
 	for child in get_children():
@@ -190,13 +182,13 @@ func _scatter() -> void:
 		var src: PackedScene
 		var tex: Texture2D
 		if rng.randf() < p_bush:
-			var bi := rng.randi_range(0, BUSHES.size() - 1)
-			src = BUSHES[bi]
-			tex = BUSH_TEX[bi]
+			var bi := rng.randi_range(0, _bushes.size() - 1)
+			src = _bushes[bi]
+			tex = _bush_tex[bi]
 		else:
-			var ti := rng.randi_range(0, TREES.size() - 1)
-			src = TREES[ti]
-			tex = TREE_TEX[ti]
+			var ti := rng.randi_range(0, _trees.size() - 1)
+			src = _trees[ti]
+			tex = _tree_tex[ti]
 
 		var inst := src.instantiate()                                     # 依模型藍圖實體化一棵
 		add_child(inst)                                                   # 掛進場景樹才會顯示
