@@ -1,0 +1,19 @@
+{
+  "$comment": "CLAUDE.md §2 的機械保證層。散文只能靠注意力,這裡靠 harness。ask 而非 deny:逃生艙必須留著——每次改 .gd 都跳確認,那個確認就是 §5 說的『被看見的、有意識的選擇』。",
+  "permissions": {
+    "ask": [
+      "Edit(src/**/*.gd)",
+      "Write(src/**/*.gd)",
+      "Edit(**/*.tscn)",
+      "Write(**/*.tscn)"
+    ],
+    "deny": [
+      "Edit(**/*.uid)",
+      "Write(**/*.uid)",
+      "Edit(**/*.import)",
+      "Write(**/*.import)",
+      "Edit(.godot/**)",
+      "Write(.godot/**)"
+    ]
+  }
+}
