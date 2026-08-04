@@ -124,14 +124,25 @@ func _ready() -> void:
 	_spawn_enemy_deck.call_deferred()
 	_spawn_grave_piles.call_deferred()
 	_sync_hand_view.call_deferred()   # 起手牌的「帳」在帳房,視圖開局同步一次
+	# ── 專用伺服器(ADR-002):只算帳,不做任何視圖工作 ──
+	if _is_srv():
+		_accounts_synced = true   # 伺服器的帳就是權威,天生同步
+		return                    # 不接斷線信號(MatchRoom 管)、不翻視角、不生對手手牌
 	# ── 連線(2b–2e):斷線監聽、client 要開局帳、client 視角翻轉 ──
 	if NetMatch.is_online:
-		multiplayer.peer_disconnected.connect(_on_net_peer_lost)
-		multiplayer.server_disconnected.connect(_on_net_server_lost)
-		if multiplayer.is_server():
-			_accounts_synced = true   # host 的帳就是權威,天生同步
+		if NetMatch.room_port > 0:
+			# ADR-002:配對來的一局——牌桌已就位,現在才連房間埠並出示入場券。
+			# 為什麼不在大廳就連?玩家 → 伺服器的意圖收件人是 CardManager,
+			# 它得先存在於 /root/MainScene 底下,路徑合約才成立(見 match_room.gd)。
+			_connect_room.call_deferred()
 		else:
-			_request_state_loop()
+			# 舊的區網/loopback 路徑(net_battle_test.gd 還在用):peer 已在外面建好。
+			multiplayer.peer_disconnected.connect(_on_net_peer_lost)
+			multiplayer.server_disconnected.connect(_on_net_server_lost)
+			if multiplayer.is_server():
+				_accounts_synced = true
+			else:
+				_request_state_loop()
 		_apply_client_viewpoint.call_deferred()   # deferred FIFO:排在牌堆/本體生成之後
 		_refresh_opp_hud.call_deferred()
 	# ── 單人 vs AI:AI 玩家上桌;對手卡背扇形(單人+連線共用)──
@@ -979,18 +990,20 @@ func _on_end_turn() -> void:
 	# 離線直接本地呼叫:從主選單進來時 lobby 已把 multiplayer_peer 清成 null,
 	# 此時 .rpc() 會報錯且「整個不執行」(call_local 也救不了)——rpc 只留給真連線。
 	if NetMatch.is_online:
-		_net_end_turn.rpc()
+		req_end_turn.rpc_id(1)   # ADR-002:送意圖給伺服器,由它驗證後才廣播結果
 	else:
 		_net_end_turn()
 
 
-## 換頁令(兩端各跑一份)。"any_peer":輪到 client 時得由它發令;
-## 發令資格由 _on_end_turn 的回合閘把關(伺服端驗證是 2b 剩餘的債,見學習債 §25)。
-@rpc("any_peer", "call_local", "reliable")
+## 換頁結果(伺服器廣播,兩端各跑一份)。
+## "authority" = 只有伺服器有資格發:改過的 client 直接呼叫這條會被引擎丟棄
+## ——§25 那筆「發令資格只在 UI 閘把關,沒有伺服端驗證」的舊債,在這裡還掉。
+@rpc("authority", "call_local", "reliable")
 func _net_end_turn() -> void:
 	if ui_state == UiState.GAME_OVER:
 		return
-	Sfx.play(Sfx.TURN_FLIP, -2.0)   # 翻頁聲:回合交替(兩端各響各的)
+	if not _is_srv():
+		Sfx.play(Sfx.TURN_FLIP, -2.0)   # 翻頁聲(伺服器沒有音效裝置,別放)
 	# 兩端各自收拾自己的互動狀態:拖到一半的卡先放回扇形——手牌視圖若重建,
 	# 被拖著的卡遭 queue_free 就成懸空參考(摸了就炸);開著的選單一併收掉。
 	if ui_state == UiState.DRAGGING:
@@ -1039,6 +1052,10 @@ func _hand_view_shows_active_side() -> bool:
 ## 連線:鎖自己這側(client 開局看到自己的手牌,不是 host 的);
 ## 離線:my_side 恆 "player" = 開局行動方,行為不變。
 func _sync_hand_view() -> void:
+	# 伺服器不屬於任何一側(my_side = ""),沒有「該看哪側手牌」這件事——
+	# 而且 hand_of("") 會查不到帳而報錯。它只算帳,視圖留給兩位玩家。
+	if _is_srv():
+		return
 	player_hand.rebuild_from(battle_manager.hand_of(NetMatch.my_side))
 	_update_deck_labels()
 
@@ -1273,7 +1290,19 @@ func organize_hand() -> void:
 ## 已知債(公開上架前要還):①行動合法性只在出牌端驗(client 可作弊)
 ## ②對方手牌「內容」其實在本機記憶體裡(真正的資訊隱藏 = host 只送張數)。
 
-var _accounts_synced := false        # client:開局帳收到了沒(host 天生 true)
+var _accounts_synced := false        # client:開局帳收到了沒(權威天生 true)
+
+## ── ADR-002 專用伺服器 ────────────────────────────
+## 這局所屬的 MatchRoom(只有伺服器進程有;由 match_room.gd 注入)。
+var net_room: Node = null
+## 伺服器端:peer id → 那位玩家執的側別。所有「是不是你的回合」的驗證都查這張表。
+## 為什麼不信 client 自己說?那就等於沒有驗證——權威的定義是「只認自己記的帳」。
+var _peer_side: Dictionary = {}
+
+
+## 這個進程是不是專用伺服器(是 → 只算帳、不做任何視圖工作)。
+func _is_srv() -> bool:
+	return NetMatch.is_dedicated_server
 var _pending_play_card: Card = null  # 出牌端暫存「正被打出的手牌節點」,給重放函式取用
 var _pending_arcana_target: NodePath # 秘術宣告後、等反制結果期間的目標(兩台都記)
 var _pending_arcana_path: String = ""
@@ -1456,7 +1485,61 @@ func _net_ward(hand_idx: int, card_path: String, host_slot: NodePath) -> void:
 	_consume_played(hand_idx)
 
 
-## ── 開局帳同步(host 權威發牌;client 進場後主動來要)──────────
+## ── ADR-002:連房間 + 玩家送意圖、伺服器驗證 ─────────────────
+##
+## 玩家端:牌桌已就位,現在連房間埠。房間分支的 root_path 設 /root——
+## 伺服器那邊是房間節點,兩邊的牌桌都解析成 "MainScene/…",路徑合約成立。
+func _connect_room() -> void:
+	var peer := ENetMultiplayerPeer.new()
+	var err := peer.create_client(NetMatch.server_host, NetMatch.room_port)
+	if err != OK:
+		push_error("[NET] 連房間埠 %d 失敗(錯誤碼 %d)" % [NetMatch.room_port, err])
+		return
+	var api := SceneMultiplayer.new()
+	api.multiplayer_peer = peer
+	get_tree().set_multiplayer(api, ^"/root")
+	api.connected_to_server.connect(_on_room_connected)
+	api.server_disconnected.connect(_on_net_server_lost)
+
+
+func _on_room_connected() -> void:
+	req_join_room.rpc_id(1, NetMatch.join_token)   # 1 = 伺服器
+	_request_state_loop()                          # 入座後才來要開局帳
+
+
+## 玩家 → 伺服器:出示入場券入座。
+## 伺服器驗完才記下「這個 peer 執哪一側」——之後所有回合驗證都查這張表。
+@rpc("any_peer", "reliable")
+func req_join_room(token: String) -> void:
+	if not _is_srv() or net_room == null:
+		return   # 玩家端收到這則一定是偽造的(伺服器不會發),丟棄
+	var sender := multiplayer.get_remote_sender_id()
+	var side: String = net_room.claim_side(token, sender)
+	if side.is_empty():
+		return   # token 不對:拒絕入座(它之後送的任何意圖都會因查不到側別被丟)
+	_peer_side[sender] = side
+
+
+## 玩家 → 伺服器:我要結束回合。
+## 這是「client 送意圖 → 伺服器驗證 → 伺服器廣播結果」的第一條完整管線。
+## 注意 _on_end_turn 那邊也有一道回合閘:兩道的職責不同,不是重複——
+##   UI 閘(玩家端)= 體驗,按了立刻有話說,省一趟往返;
+##   這道閘(伺服器)= 安全,改過的 client 繞過 UI 直接發也擋得住。
+## 只留 UI 閘 = 沒有驗證(§25 的舊債);只留伺服器閘 = 體驗差。兩道都要。
+@rpc("any_peer", "reliable")
+func req_end_turn() -> void:
+	if not _is_srv():
+		return
+	var sender := multiplayer.get_remote_sender_id()
+	var side: String = _peer_side.get(sender, "")
+	if side.is_empty():
+		return                        # 沒入座過的 peer:丟棄
+	if side != battle_manager.active_side:
+		return                        # 不是你的回合:丟棄
+	_net_end_turn.rpc()               # 驗過了,才以權威身分廣播結果
+
+
+## ── 開局帳同步(權威發牌;client 進場後主動來要)──────────
 @rpc("any_peer", "reliable")
 func _net_request_state() -> void:
 	if not multiplayer.is_server():
@@ -1499,6 +1582,8 @@ func _apply_client_viewpoint() -> void:
 
 ## ── HUD:對方手牌張數(2d 的張數版;卡背扇形之後再說)────────────
 func _refresh_opp_hud() -> void:
+	if _is_srv():
+		return   # 伺服器沒有 HUD 也沒有對手卡背扇形
 	if not (NetMatch.is_online or MatchMode.is_vs_ai()):
 		return
 	var opp := "enemy" if NetMatch.my_side == "player" else "player"

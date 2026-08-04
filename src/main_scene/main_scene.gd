@@ -10,6 +10,10 @@ extends Node3D
 #   「一份玩法 + 可抽換的環境」才是對的切法。
 
 func _ready() -> void:
+	# 專用伺服器(ADR-002)只算帳不畫畫面:換戰場是純視覺決定,規則完全無關。
+	# 早退省下的是森林散佈幾百棵樹 + 換 WorldEnvironment——每間房都省一次。
+	if NetMatch.is_dedicated_server:
+		return
 	var path := ArenaPool.next_arena_path
 	if path.is_empty():
 		# 沒經過主選單(開發時直接 F6 跑 main.tscn)→ 自己抽一次,順便測隨機。
