@@ -22,6 +22,10 @@ const NET_MATCH: GDScript = preload("res://src/net/net_match.gd")
 
 var _peer: ENetMultiplayerPeer = null
 var _api: SceneMultiplayer = null
+## 配對已成立?成立之後我們會**主動**關掉大廳連線,而關閉會觸發
+## server_disconnected——若那時還照「斷線 = 收攤」處理,cancel() 的 reset()
+## 會把剛拿到的側別/房間埠/入場券清成零。這個旗標讓那條路徑閉嘴。
+var _paired := false
 
 
 func _ready() -> void:
@@ -48,12 +52,13 @@ func connect_to_lobby(host: String = "") -> Error:
 	_api.connected_to_server.connect(_on_connected)
 	_api.connection_failed.connect(_on_failed)
 	_api.server_disconnected.connect(_on_server_lost)
-	NET_MATCH.server_host = target
+	NET_MATCH.set_server_host(target)   # 經 const 引用寫 static 要走函式(§23)
 	status_changed.emit("連線中:%s…" % target)
 	return OK
 
 
 func cancel() -> void:
+	_paired = false
 	if _peer != null:
 		_peer.close()
 	_peer = null
@@ -77,10 +82,11 @@ func on_room_assigned(room_port: int, side: String, arena_idx: int, token: Strin
 	var safe_idx := clampi(arena_idx, 0, ArenaPool.ARENAS.size() - 1)
 	ArenaPool.next_arena_path = ArenaPool.ARENAS[safe_idx]
 	NET_MATCH.start_online(side)
-	NET_MATCH.room_port = room_port
-	NET_MATCH.join_token = token
+	NET_MATCH.enter_room(room_port, token)   # 同上:寫 static 走函式(§23)
 	# 大廳的活到這裡結束:斷開大廳連線,房間連線由 CardManager 進牌桌後自己建
 	# (它才是意圖 RPC 的收件人,路徑合約見 match_room.gd 檔頭)。
+	# 先立旗標再關:關閉會回頭觸發 server_disconnected,不能讓它當成「掉線收攤」。
+	_paired = true
 	if _peer != null:
 		_peer.close()
 	_peer = null
@@ -105,6 +111,8 @@ func _on_failed() -> void:
 
 
 func _on_server_lost() -> void:
+	if _paired:
+		return   # 是我們自己關的(配對成功後主動收攤),不是掉線
 	cancel()
 	status_changed.emit("與伺服器的連線中斷了。")
 

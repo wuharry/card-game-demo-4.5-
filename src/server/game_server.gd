@@ -101,7 +101,10 @@ func _try_pair() -> void:
 	room.arena_idx = arena_idx
 	room.expected = {token_a: "player", token_b: "enemy"}
 	room.finished.connect(_on_room_finished.bind(idx))
-	add_child(room)
+	# ⚠ 房間掛在 /root 底下,**不能**掛在自己底下:Godot 不允許在「已配置
+	# MultiplayerAPI 的節點」的子路徑再設一條分支(大廳的分支就設在本節點上),
+	# 掛成子節點會得到 "Multiplayer is already configured for a parent of this path"。
+	get_tree().root.add_child(room)
 	if not room.is_listening():
 		room.queue_free()
 		print("[SERVER] 房間 %d 開埠 %d 失敗,兩人留在佇列" % [idx, port])

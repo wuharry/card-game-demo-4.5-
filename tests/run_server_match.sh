@@ -60,9 +60,13 @@ elif [[ "$SIG_A" != "$SIG_B" ]]; then
 else
   echo "✓ 兩台帳簽名一致:$SIG_A"
 fi
-grep -q '伺服器丟棄了越權的意圖' "$OUT/a.log" "$OUT/b.log" \
-  && echo "✓ 伺服器擋下了越權的換回合意圖" \
-  || { echo "✗ 沒看到「伺服器丟棄越權意圖」這行(權威驗證沒被測到)"; RC=1; }
+# 權威驗證的判決在**伺服器**日誌:玩家端看不出「被擋住」和「訊息沒送到」的差別。
+if grep -q '丟棄越權的換回合意圖' "$OUT/server.log"; then
+  echo "✓ 伺服器擋下了越權的換回合意圖:"
+  grep '丟棄越權的換回合意圖' "$OUT/server.log" | sed 's/^/    /'
+else
+  echo "✗ 伺服器日誌裡沒有「丟棄越權的換回合意圖」——權威驗證沒被測到"; RC=1
+fi
 
 [[ $RC -eq 0 ]] && echo "全部通過。" || echo "沒過。"
 exit $RC

@@ -51,6 +51,21 @@ static func start_online(side: String) -> void:
 	is_online = true
 
 
+## 記下要連的伺服器位址。
+## 為什麼是函式不是直接賦值?經 preload 的 const 類別引用「寫」static 變數會被
+## 編譯器當成「改常數」擋下(讀和呼叫函式都行,唯獨賦值不行)——§23 記過這個坑,
+## 這次又踩了一次。跨檔寫 static 一律收進該類別自己的 static 函式。
+static func set_server_host(host: String) -> void:
+	server_host = host
+
+
+## 配對成功:記下房間埠與入場券。
+## 兩個值一起變,所以包成一個動作——順便讓「哪些欄位是一組的」看得出來。
+static func enter_room(port: int, token: String) -> void:
+	room_port = port
+	join_token = token
+
+
 ## 進入專用伺服器狀態(server_main.gd 開機時呼叫一次)。
 ## side 留空 = 不屬於任何一側,是刻意的(見 my_side 的註解)。
 static func start_dedicated_server() -> void:

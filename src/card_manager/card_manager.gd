@@ -1533,9 +1533,14 @@ func req_end_turn() -> void:
 	var sender := multiplayer.get_remote_sender_id()
 	var side: String = _peer_side.get(sender, "")
 	if side.is_empty():
-		return                        # 沒入座過的 peer:丟棄
+		print("[ROOM] 丟棄意圖:peer %d 沒入座過(入場券沒驗過)" % sender)
+		return
 	if side != battle_manager.active_side:
-		return                        # 不是你的回合:丟棄
+		# 拒絕要留下痕跡:不然「伺服器擋住了」和「訊息根本沒送到」在日誌上長得一樣,
+		# 驗收時分不出是真的擋住還是根本沒測到(§32「測試的綠要誠實」)。
+		print("[ROOM] 丟棄越權的換回合意圖:peer %d 執 %s,現在是 %s 的回合"
+			% [sender, side, battle_manager.active_side])
+		return
 	_net_end_turn.rpc()               # 驗過了,才以權威身分廣播結果
 
 

@@ -32,9 +32,11 @@ const GAME_SCENE := "res://scenes/main.tscn"
 ## 主選單背景用的城鎮場景(黃昏廣場,見 src/environment/arena_town.gd)。
 const TOWN_SCENE: PackedScene = preload("res://scenes/arena_town.tscn")
 
-## 大廳的連線邏輯(src/net/net_lobby.gd)。用 preload 路徑而非 class_name 實例化:
+## 連線邏輯(src/net/net_client.gd)。用 preload 路徑而非 class_name 實例化:
 ## 新 class_name 要等編輯器重掃才進全域快取,路徑載入沒有這個時間差(§19 的老坑)。
-const NET_LOBBY_SCRIPT: GDScript = preload("res://src/net/net_lobby.gd")
+## ADR-002:從 net_lobby.gd(玩家開房)換成 net_client.gd(連專用伺服器)——
+## 沒有開房、沒有 UPnP,兩位玩家都是 client 往外連,NAT 不必打洞。
+const NET_CLIENT_SCRIPT: GDScript = preload("res://src/net/net_client.gd")
 
 ## 牌庫圖鑑(src/card_gallery/card_gallery.gd)。同樣走 preload 路徑實例化(§19)。
 const CARD_GALLERY_SCRIPT: GDScript = preload("res://src/card_gallery/card_gallery.gd")
@@ -58,13 +60,13 @@ var _start_button: Button    # 記住開始鈕,換場景前要鎖它防連點
 var _practice_button: Button # 單人練習鈕(和開始鈕一起鎖,兩顆都能進牌桌)
 var _fade_rect: ColorRect    # 蓋在最上層的黑幕:開場淡入、換場景淡出都靠它
 
-## ── 連線大廳(2a):選單欄 ↔ 大廳欄互斥顯示,連線邏輯全在 NetLobby ──
-var _net_lobby: Node             # NetLobby 實例(連線邏輯,無 UI)
+## ── 連線大廳(ADR-002):選單欄 ↔ 大廳欄互斥顯示,連線邏輯全在 NetClient ──
+var _net_client: Node            # NetClient 實例(連線邏輯,無 UI)
 var _menu_col: VBoxContainer     # 選單欄(開始遊戲/連線對戰/離開遊戲)
-var _lobby_col: VBoxContainer    # 大廳欄(建立房間/IP+加入/狀態字/返回)
-var _lobby_status: Label         # 大廳狀態字(等待加入/連線中/失敗原因…)
-var _ip_edit: LineEdit           # 房主 IP 輸入框
-var _host_btn: Button            # 建立房間鈕(開房成功後鎖住,返回才解鎖)
+var _lobby_col: VBoxContainer    # 大廳欄(伺服器位址+尋找對手/狀態字/返回)
+var _lobby_status: Label         # 大廳狀態字(排隊中/配對成功/失敗原因…)
+var _ip_edit: LineEdit           # 伺服器位址(正式版會填死網域並隱藏這格)
+var _host_btn: Button            # 尋找對手鈕(排隊中鎖住,返回才解鎖)
 
 ## 牌庫圖鑑(全螢幕疊層,自成 CanvasLayer):平時藏著,按「牌庫圖鑑」才 open。
 var _card_gallery: CanvasLayer
@@ -73,13 +75,13 @@ var _card_gallery: CanvasLayer
 func _ready() -> void:
 	_build_town_backdrop()
 	_build_ui()
-	# 連線邏輯節點:名字固定 "NetLobby"(RPC 要求兩端節點路徑一致,名字是合約)。
+	# 連線邏輯節點:名字固定 "NetClient"(RPC 路徑合約的一部分,見 net_client.gd 檔頭)。
 	# 它的 _ready 會順手斷掉任何舊連線——回主選單 = 放棄上一場。
-	_net_lobby = NET_LOBBY_SCRIPT.new()
-	_net_lobby.name = "NetLobby"
-	add_child(_net_lobby)
-	_net_lobby.status_changed.connect(_on_lobby_status)
-	_net_lobby.match_ready.connect(_on_match_ready)
+	_net_client = NET_CLIENT_SCRIPT.new()
+	_net_client.name = "NetClient"
+	add_child(_net_client)
+	_net_client.status_changed.connect(_on_lobby_status)
+	_net_client.match_ready.connect(_on_match_ready)
 	# 牌庫圖鑑:自成 CanvasLayer,生成後掛著、平時藏著,按鈕才 open()。
 	_card_gallery = CARD_GALLERY_SCRIPT.new()
 	_card_gallery.name = "CardGallery"
@@ -246,7 +248,7 @@ func _lock_entry_buttons() -> void:
 
 
 ## 淡出到黑 → 切進牌桌。單機與連線共用同一段演出;呼叫前牌桌環境要先定案
-## (單機:自己 pick_random;連線:host 抽好、經 NetLobby 的握手 RPC 寫進 ArenaPool)。
+## (單機:自己 pick_random;連線:伺服器抽好、經 NetClient 的配對 RPC 寫進 ArenaPool)。
 func _enter_game() -> void:
 	# 淡出到全黑(純手感)。await = 停在這行,等 tween 的 finished 信號發出才繼續。
 	var tw := create_tween()
@@ -287,18 +289,16 @@ func _build_lobby_column(parent: CenterContainer) -> void:
 
 	_lobby_col.add_child(_make_spacer(30))
 
-	_host_btn = _make_menu_option("建立房間")
-	_host_btn.pressed.connect(_on_host_pressed)
-	_lobby_col.add_child(_host_btn)
-
-	# IP 輸入 + 加入:排成一橫排,整排在欄內置中。
+	# 伺服器位址:正式版會填死網域(NetMatch.server_host 的預設值)並把這格藏起來。
+	# 現在留著是為了本機測試(127.0.0.1),以及換 VPS 時不必重新匯出執行檔。
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_lobby_col.add_child(row)
 
 	_ip_edit = LineEdit.new()
-	_ip_edit.placeholder_text = "房主 IP(同機測試 127.0.0.1)"
+	_ip_edit.placeholder_text = "伺服器位址(本機測試 127.0.0.1)"
+	_ip_edit.text = NetMatch.server_host
 	_ip_edit.custom_minimum_size = Vector2(300, 44)
 	_ip_edit.add_theme_font_override("font", FONT_MENU)
 	_ip_edit.add_theme_font_size_override("font_size", 17)
@@ -309,14 +309,17 @@ func _build_lobby_column(parent: CenterContainer) -> void:
 	edit_style.set_corner_radius_all(4)
 	edit_style.set_content_margin_all(8)
 	_ip_edit.add_theme_stylebox_override("normal", edit_style)
-	# 在輸入框按 Enter = 按「加入」:鍵盤派不用伸手拿滑鼠。
-	_ip_edit.text_submitted.connect(func(_text: String) -> void: _on_join_pressed())
+	# 在輸入框按 Enter = 按「尋找對手」:鍵盤派不用伸手拿滑鼠。
+	_ip_edit.text_submitted.connect(func(_text: String) -> void: _on_find_match_pressed())
 	row.add_child(_ip_edit)
 
-	var join_btn := _make_menu_option("加入")
-	join_btn.custom_minimum_size = Vector2(96, 44)
-	join_btn.pressed.connect(_on_join_pressed)
-	row.add_child(join_btn)
+	_lobby_col.add_child(_make_spacer(14))
+
+	# 只剩一顆按鈕:ADR-002 之後玩家不再需要決定「當房主還是加入」——
+	# 兩邊都是 client,伺服器負責配對與指派先後手。
+	_host_btn = _make_menu_option("尋找對手")
+	_host_btn.pressed.connect(_on_find_match_pressed)
+	_lobby_col.add_child(_host_btn)
 
 	_lobby_col.add_child(_make_spacer(8))
 
@@ -351,26 +354,22 @@ func _on_gallery_closed() -> void:
 func _open_lobby() -> void:
 	_menu_col.visible = false
 	_lobby_col.visible = true
-	_lobby_status.text = "建立房間讓朋友連你,或輸入房主的 IP 加入。"
+	_lobby_status.text = "按「尋找對手」連上伺服器排配對,湊到兩人就自動開局。"
 	_ip_edit.grab_focus()
 
 
 func _close_lobby() -> void:
-	_net_lobby.cancel()   # 返回 = 關房/斷線,回離線狀態
+	_net_client.cancel()   # 返回 = 斷線退出佇列,回離線狀態
 	_host_btn.disabled = false
 	_lobby_col.visible = false
 	_menu_col.visible = true
 	_start_button.grab_focus()
 
 
-func _on_host_pressed() -> void:
-	if _net_lobby.host_game() == OK:
-		_host_btn.disabled = true   # 房間開著就別重開;「返回」會關房並解鎖
-
-
-func _on_join_pressed() -> void:
-	# 失敗原因會經 status_changed 顯示;連不上時再按一次「加入」就是重試。
-	_net_lobby.join_game(_ip_edit.text)
+## 排配對。失敗原因會經 status_changed 顯示;「返回」退出佇列並解鎖按鈕。
+func _on_find_match_pressed() -> void:
+	if _net_client.connect_to_lobby(_ip_edit.text) == OK:
+		_host_btn.disabled = true   # 排隊中就別重複送(伺服器會丟棄重複意圖,但別讓 UI 說謊)
 
 
 func _on_lobby_status(text: String) -> void:
