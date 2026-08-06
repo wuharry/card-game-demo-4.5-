@@ -419,7 +419,7 @@ func apply_freeze(unit, turns := 1) -> void:
 
 - **回歸測試在 [tests/](tests/)**（headless SceneTree 腳本，曾放系統暫存被清掉兩次，故落籍版控）：
   `Godot --headless --path . -s tests/spell_smoke.gd`（法術結算 14 斷言）、`tests/ai_turn_test.gd`（單人 vs AI 9 斷言）、`tests/hover_spam_test.gd`（手牌 hover 漂移/碰撞箱釘位）、`tests/grave_test.gd`（墓地＋丟牌回魔 14 斷言）、`tests/net_battle_test.gd`（雙進程連線 loopback：先開 host，再帶 `-- client` 開第二個進程，比對兩端簽名）。
-  另有兩支**非 CI 的工具腳本**：`tests/screenshot.gd` / `tests/screenshot_summon.gd`（非 headless 跑遊戲存 PNG，驗純視覺改動）、`tests/upnp_probe.gd`（實測目前網路的 UPnP 打洞，結果依環境而異）。
+  另有幾支**非 CI 的工具腳本**：`tests/screenshot.gd` / `tests/screenshot_summon.gd`（非 headless 跑遊戲存 PNG，驗純視覺改動）、`tests/screenshot_leave.gd`（拍「離開對戰」確認窗，並印出面板實際尺寸；加 `-- <png> online` 拍連線版的長文案）、`tests/upnp_probe.gd`（實測目前網路的 UPnP 打洞，結果依環境而異）。
 - 在編輯器**外**新建帶 `class_name` 的腳本後，headless 跑會報「Identifier not declared」——全域類別註冊表（`.godot/global_script_class_cache.cfg`）由編輯器掃描生成，跑一次 `Godot --headless --editor --quit` 重掃即可。
 - `ground_generator.gd` 與 `forest_scatter.gd` 皆為 `@tool` 腳本：在編輯器調整 `@export` 後勾選 `regenerate` 即可即時重新生成，不必執行遊戲。
 - 刪除無用資源時，建議在 Godot 編輯器「FileSystem → 右鍵 → Delete」，讓引擎同步清除 `.import` 快取與 UID 記錄，避免 Finder/Terminal 直接刪除留下殘留。

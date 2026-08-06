@@ -119,6 +119,9 @@ func _ready() -> void:
 			_leave_online_match()
 		else:
 			get_tree().change_scene_to_file("res://scenes/main_menu.tscn"))
+	# 中途離開(左上角按鈕 / IDLE 時按 ESC):UI 只發請求,後果由這裡說、由這裡執行。
+	battle_ui.leave_requested.connect(_on_leave_requested)
+	battle_ui.leave_decided.connect(_on_leave_decided)
 	# 本體/敵方牌堆要等 PlayerBoard 把卡槽生完才能靠群組定位 → 延後到整棵樹 ready 後。
 	_spawn_heroes.call_deferred()
 	_spawn_enemy_deck.call_deferred()
@@ -300,9 +303,27 @@ func _input(event: InputEvent) -> void:
 		and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed
 	var is_esc: bool = event is InputEventKey and event.pressed \
 		and event.keycode == KEY_ESCAPE
+	# 離開確認窗開著:ESC/右鍵 = 反悔,走和按「繼續遊戲」同一條路。
+	# 這條必須排在下面那條之前——那條會把此刻的 MENU_OPEN 當成指令選單去
+	# _cancel_command(),結果面板收不掉、_leave_pending 也沒清(狀態分家)。
+	if (is_rmb or is_esc) and _leave_pending:
+		battle_ui.dismiss_leave_confirm()
+		return
 	if (is_rmb or is_esc) and not _picking \
 			and (ui_state == UiState.MENU_OPEN or ui_state == UiState.TARGETING):
 		_cancel_command()
+		return
+	# 平時(沒選單、沒瞄準、沒拖卡)按 ESC = 想離開,和左上角按鈕同一個入口。
+	# 右鍵刻意不綁:右鍵在這個遊戲一直是「反悔」的手勢,不該變成「退出」。
+	if is_esc and not _picking and ui_state == UiState.IDLE:
+		_on_leave_requested()
+		return
+
+	# 離開確認窗開著 → 3D 一律不吃滑鼠。不能只靠 ui_state 擋:_input 比 Control 的
+	# GUI 事件「早」拿到事件(順序是 _input → GUI → _unhandled_input),所以蓋全屏的
+	# 壓暗層攔不住這裡;而對手的 RPC(例如換回合會 _cancel_command)可能在窗開著時
+	# 把 ui_state 改回 IDLE,鎖就漏了。旗標才是這扇窗的真相。
+	if _leave_pending and event is InputEventMouseButton:
 		return
 
 	# 只關心「滑鼠左鍵」事件。
@@ -1607,6 +1628,53 @@ func _spawn_opp_hand() -> void:
 	get_parent().add_child(_opp_hand)
 	_opp_hand.setup_at(_hero_anchor(opp), opp)
 	_refresh_opp_hud()
+
+
+## ── 中途離開(玩家主動退出這一局)────────────────────────
+## 攔一次再走:離開的後果不可逆(連線=對手被判你斷線、單機=進度不留),
+## 而按鈕就在畫面角落——手滑一次就沒了這局,所以中間插一道確認窗。
+## 確認窗開著時把 ui_state 鎖成 MENU_OPEN(同反制窗口):不能邊看警告邊出牌。
+var _leave_pending := false
+
+
+func _on_leave_requested() -> void:
+	if ui_state == UiState.GAME_OVER or _picking or _leave_pending:
+		return   # 勝負畫面自己有去向;選牌是義務(費用已付),不讓離開窗插隊
+	# 桌面先收乾淨:拖到一半的卡放回扇形、開著的選單/瞄準取消——
+	# 免得警告窗蓋上來時,底下還懸著一張跟手的卡(同 _net_end_turn 的收拾順序)。
+	if ui_state == UiState.DRAGGING:
+		organize_hand()
+		card_being_dragged = null
+		ui_state = UiState.IDLE
+	elif ui_state == UiState.MENU_OPEN or ui_state == UiState.TARGETING:
+		_cancel_command()
+	_leave_pending = true
+	ui_state = UiState.MENU_OPEN
+	battle_ui.show_leave_confirm(_leave_warning_text())
+
+
+## 離開的代價因模式而異,文案就得不同——連線那條最重(對手會被踢回主選單)。
+## 判斷模式的知識在這裡(中樞),UI 只負責把話印出來。
+func _leave_warning_text() -> String:
+	if NetMatch.is_online:
+		return "離開連線對戰等同認輸:對手會立刻看到「對方已離線」並被送回主選單,這一局無法回來。"
+	if MatchMode.is_vs_ai():
+		return "這一局的進度不會保留(單人練習沒有存檔),離開後回到主選單。"
+	return "這一局的進度不會保留(雙人熱座沒有存檔),離開後回到主選單。"
+
+
+func _on_leave_decided(confirmed: bool) -> void:
+	_leave_pending = false
+	if not confirmed:
+		# 若確認期間剛好分出勝負,別把鎖解開——那時 GAME_OVER 才是對的狀態。
+		if ui_state != UiState.GAME_OVER:
+			ui_state = UiState.IDLE
+		return
+	ui_state = UiState.GAME_OVER   # 換場景的這幾幀鎖死互動
+	if NetMatch.is_online:
+		_leave_online_match()   # 關 peer:對手那台會收到斷線,自行收桌(2e)
+	else:
+		get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
 
 
 ## ── 斷線(2e):任一方掉線 = 收桌回主選單 ───────────────────

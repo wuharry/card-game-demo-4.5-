@@ -17,6 +17,10 @@ signal restart_pressed
 signal menu_pressed
 ## 反制窗口(§5.1 守方瞬咒)的回答:true = 發動抵銷。CardManager await 這條。
 signal reaction_decided(use_quick: bool)
+## 中途離開:按鈕只發出「請求」,是否真的走由確認窗回覆(leave_decided)。
+## 拆成兩條的理由:攔截窗要說什麼(連線=認輸/單人=進度不留)只有 CardManager 知道。
+signal leave_requested
+signal leave_decided(confirmed: bool)
 ## 選牌面板(§抽濾)的回答:選了第幾張(索引對齊 show_card_picker 傳入的陣列)。
 signal card_picked(idx: int)
 
@@ -57,6 +61,7 @@ var _hud_mana_rest: Label
 var _hud_mana_bonus: Label
 var _hud_opp: Label   # 對方手牌張數(2d;只在連線時顯示)
 var _end_turn_btn: Button
+var _leave_btn: Button   # 中途離開(左上角;真正的攔截在確認窗)
 var _toast: Label
 var _toast_tween: Tween
 
@@ -343,6 +348,27 @@ func _build_hud() -> void:
 	_end_turn_btn.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_end_turn_btn.grow_vertical = Control.GROW_DIRECTION_BEGIN
 
+	# 中途離開:擺左上角,和右側的「結束回合/魔力」隔一整個畫面寬——
+	# 誤點的代價是「退出整局」,所以位置先隔開,再由確認窗攔一次(show_leave_confirm)。
+	_leave_btn = Button.new()
+	_leave_btn.text = "離開對戰"
+	_leave_btn.add_theme_font_override("font", FONT_BODY)
+	_leave_btn.add_theme_font_size_override("font_size", 15)
+	_leave_btn.add_theme_color_override("font_color", GOLD_DIM)
+	_leave_btn.add_theme_color_override("font_hover_color", Color("fff3cf"))
+	_leave_btn.add_theme_stylebox_override("normal", _make_panel_style())
+	var leave_lit := _make_panel_style()
+	leave_lit.border_color = Color("fff3cf")
+	_leave_btn.add_theme_stylebox_override("hover", leave_lit)
+	_leave_btn.add_theme_stylebox_override("focus", leave_lit)
+	_leave_btn.add_theme_stylebox_override("pressed", leave_lit)
+	_leave_btn.pressed.connect(func() -> void:
+		Sfx.play(Sfx.CLICK, -8.0)
+		leave_requested.emit())
+	add_child(_leave_btn)
+	_leave_btn.set_anchors_and_offsets_preset(
+		Control.PRESET_TOP_LEFT, Control.PRESET_MODE_MINSIZE, 24)
+
 	_toast = Label.new()
 	_toast.add_theme_font_override("font", FONT_TITLE)
 	# 提示是「行動被擋下」的當下回饋,要一眼看到:大字、亮色、厚黑邊。
@@ -412,6 +438,13 @@ func flash_message(text_value: String) -> void:
 func show_game_over(victory: bool) -> void:
 	Sfx.play(Sfx.VICTORY if victory else Sfx.DEFEAT)
 	close()
+	# 勝負已分 → 收掉中途離開的入口:去向改由勝負畫面的兩顆按鈕提供。
+	# 這裡只做「視覺收窗」而不呼叫 dismiss_leave_confirm()——後者會 emit
+	# leave_decided(false),把 CardManager 剛鎖上的 GAME_OVER 互動鎖解開。
+	_leave_btn.visible = false
+	if _leave_dim != null:
+		_leave_dim.visible = false
+		_leave_panel.visible = false
 	if _over_dim == null:
 		_build_game_over()
 	_over_title.text = "勝 利" if victory else "敗 北"
@@ -542,6 +575,9 @@ func _build_reaction() -> void:
 	_react_body.add_theme_font_override("font", FONT_BODY)
 	_react_body.add_theme_font_size_override("font_size", 17)
 	_react_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	# 同 _leave_body 那顆地雷(2026-08-06 修):這裡的文字短才一直沒炸,
+	# 但卡名一長(「對方施放【XXXXX】→ 發動【YYYYY】抵銷?」)就會踩到。
+	_react_body.custom_minimum_size = Vector2(360, 0)
 	_react_body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(_react_body)
 
@@ -557,6 +593,88 @@ func _answer_reaction(use_quick: bool) -> void:
 	_react_dim.visible = false
 	_react_panel.visible = false
 	reaction_decided.emit(use_quick)
+
+
+## ── 中途離開的確認窗 ─────────────────────────────────
+## 和反制窗口同一套語彙(壓暗全場+置中面板),但選項順序刻意相反:
+## 安全選項(繼續遊戲)在上、破壞性選項(離開)在下並染成緋色——
+## 誤點第一顆的代價要是「什麼都沒發生」,不是「整局沒了」。
+var _leave_dim: ColorRect = null
+var _leave_panel: PanelContainer = null
+var _leave_body: Label = null
+
+
+## warning_text 由 CardManager 依連線/單人/熱座組好傳進來:
+## UI 不判斷模式,只負責把後果說清楚(同 open() 的 note 參數,規則在別處、UI 轉述)。
+func show_leave_confirm(warning_text: String) -> void:
+	if _leave_dim == null:
+		_build_leave_confirm()
+	_leave_body.text = warning_text
+	_leave_dim.visible = true
+	_leave_panel.visible = true
+	_leave_panel.reset_size()
+	_leave_panel.set_anchors_and_offsets_preset(
+		Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
+
+
+## 外部收窗(ESC / 右鍵反悔):走和按「繼續遊戲」同一條路,
+## 免得面板收了、CardManager 那邊的鎖沒解(狀態分家)。
+func dismiss_leave_confirm() -> void:
+	if _leave_dim != null and _leave_dim.visible:
+		_answer_leave(false)
+
+
+func _build_leave_confirm() -> void:
+	_leave_dim = ColorRect.new()
+	_leave_dim.color = Color(0.0, 0.0, 0.0, 0.6)
+	add_child(_leave_dim)
+	_leave_dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	_leave_panel = PanelContainer.new()
+	_leave_panel.add_theme_stylebox_override("panel", _make_panel_style())
+	add_child(_leave_panel)
+	var col := VBoxContainer.new()
+	col.custom_minimum_size = Vector2(400, 0)
+	col.add_theme_constant_override("separation", 10)
+	_leave_panel.add_child(col)
+
+	var title := Label.new()
+	title.text = "離開對戰?"
+	title.add_theme_font_override("font", FONT_TITLE)
+	title.add_theme_font_size_override("font_size", 28)
+	title.add_theme_color_override("font_color", GOLD)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(title)
+	col.add_child(_make_gold_line())
+
+	_leave_body = Label.new()
+	_leave_body.add_theme_font_override("font", FONT_BODY)
+	_leave_body.add_theme_font_size_override("font_size", 17)
+	_leave_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	# 自動換行的 Label 一定要自己知道寬度上限:少了這行,reset_size() 會在 layout
+	# 之前問它最小尺寸,而它只能按「每個字一行」回報(45 個中文字 → 高 1700+),
+	# 這個錯值會被 PRESET_MODE_MINSIZE 烤進面板 offsets,之後換行算對了也回不來。
+	# 父容器的 custom_minimum_size 救不了——那是父的下限,不是子的上限。
+	_leave_body.custom_minimum_size = Vector2(400, 0)
+	_leave_body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(_leave_body)
+
+	var stay := _make_option("繼續遊戲")
+	stay.pressed.connect(func() -> void: _answer_leave(false))
+	col.add_child(stay)
+	var quit := _make_option("確定離開,回到主選單")
+	# 緋色 = 這一顆會毀掉這局(和敗北標題同一個色系,玩家早就學過這個顏色)。
+	quit.add_theme_color_override("font_color", Color(0.8, 0.42, 0.36))
+	quit.add_theme_color_override("font_hover_color", Color(0.97, 0.56, 0.46))
+	quit.add_theme_color_override("font_focus_color", Color(0.97, 0.56, 0.46))
+	quit.pressed.connect(func() -> void: _answer_leave(true))
+	col.add_child(quit)
+
+
+func _answer_leave(confirmed: bool) -> void:
+	_leave_dim.visible = false
+	_leave_panel.visible = false
+	leave_decided.emit(confirmed)
 
 
 ## ── hover 卡片放大預覽(畫面右側的資訊卡)──────────────────────
