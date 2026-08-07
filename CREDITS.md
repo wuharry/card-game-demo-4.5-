@@ -20,6 +20,8 @@
 | Pixel 3D Caverns / Frostlands / RPG Town 2.0 | assets/Pixel* | 同上 |
 | PSX 樹木/灌木包 | assets/environment/psx_trees | 同上 |
 | ocean-shader(psx_ocean_surface,水面 shader 基底) | assets/water/psx_ocean_surface | 找到原 GitHub repo 確認授權(資料夾內 README 無授權聲明) |
+| 像素卡框組(Card Frame Images) | assets/ui/card_frames/pixel_kit | **zip 內完全沒有授權檔或作者名**(2026-08-07 檢查)。回購買/下載頁補作者與授權,否則不得上架 |
+| 像素卡片模板(Card Template) | assets/ui/card_frames/pixel_template | 附的 ReadMe 只寫條款(可商用、不可轉售為素材包、掛名非必要),**沒寫作者是誰**。回下載頁補來源 |
 
 ## 無須掛名(CC0,授權已確認)
 
