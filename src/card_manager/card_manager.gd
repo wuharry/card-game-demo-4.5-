@@ -1146,12 +1146,31 @@ func _set_deck_label(path: String, count: int) -> void:
 	lb.text = str(count)
 
 
+## 牌堆的卡背換成和卡面同一套美術(main.tscn 裡烤的是舊卡背圖,而 .tscn 是雷區
+## 不手改 → 在 code 裡換,同 BattleUI/SkillLabel 的「場景檔保持薄」慣例)。
+## ⚠ 卡背世界尺寸要維持 1.6×2.4:節點本身有 scale=5,所以 pixel_size 得除回去
+## ——只換 texture 不換 pixel_size,64px 寬的新圖會縮成原本的 1/25。
+func _apply_deck_backs(deck: Node3D) -> void:
+	var stack := deck.get_node_or_null("CardStack") as Node3D
+	if stack == null:
+		return
+	var back: AtlasTexture = Card.make_back_texture()
+	for child in stack.get_children():
+		var s := child as Sprite3D
+		if s == null:
+			continue
+		s.texture = back
+		s.pixel_size = 1.6 / (Card.FRAME_CELL.x * maxf(s.scale.x, 0.001))
+		s.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+
+
 ## 敵方牌堆(純視覺):把玩家牌堆整組複製、對角鏡射到敵方那側。
 ## main.tscn 零改動;敵方 AI 動工、有真抽牌邏輯時再回來接數量顯示。
 func _spawn_enemy_deck() -> void:
 	var deck := get_node_or_null("../Deck") as Node3D
 	if deck == null:
 		return
+	_apply_deck_backs(deck)   # 先換卡背再複製,敵方牌堆就一起繼承(少寫一次同樣的迴圈)
 	var enemy_deck := deck.duplicate() as Node3D
 	enemy_deck.name = "EnemyDeck"
 	get_parent().add_child(enemy_deck)

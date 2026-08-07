@@ -8,7 +8,9 @@
 class_name OpponentHand
 extends Node3D
 
-const BACK_TEXTURE: Texture2D = preload("res://assets/ui/textures/card_back.png")
+## 卡背由 Card 供應(和卡面同一張圖集),別各自 preload 各自的圖——
+## 兩邊分開拿的下場就是換了卡面沒換卡背,正面像素風、背面手繪風。
+static var BACK_TEXTURE: Texture2D = Card.make_back_texture()
 const MAX_SHOWN := 8          # 手牌上限 8(§1),卡背最多也就 8 張
 const BACK_WIDTH := 0.62      # 每張卡背的世界寬度(縮小版,別跟本體搶戲)
 const SPACING := 0.34         # 相鄰卡背的水平間距(疊出「一手牌」的密度)

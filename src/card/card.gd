@@ -33,13 +33,41 @@ var original_scale: Vector3 = Vector3.ONE
 ## CardData = 純資料的 Resource(見 card_data.gd)；Card 只負責把它「顯示出來」。
 @export var data: CardData
 
-## ── 卡框挖空窗(卡圖要塞進去的那塊)──────────────
-## 卡框 NewCard.png 上半部有一塊「透明挖空」的卡圖窗,以下常數是用 alpha 掃描
-## 量出來的實際範圍(像素 x 40..334、y 59..265),換算成卡片本地座標。
-## 換了卡框圖的話,這三個常數要重量(掃透明區的位置)。
-const ART_WINDOW_CENTER := Vector2(0.022, 0.488)   # 窗中心(卡片本地 x/y)
-const ART_WINDOW_SIZE := Vector2(1.297, 0.910)     # 窗寬高(世界單位)
-const ART_ICON_SIDE_MARGIN := 0.044                # 法術圖示每側留白(≈卡框 10px;Harvey 目測調參 2026-07-11)
+## ── 卡框圖集(像素風,四色一張圖)───────────────────
+## cards_sheet.png:4 排 × 4 色卡面 + 第 5 欄卡背,每格 64×96。
+## 格子公式與各區座標都是量出來的,不是目測——量法見 tests/probe_sheet_alpha.gd
+## 與 tests/probe_frame_bands.gd,換素材時重跑那兩支就會吐出新座標。
+const FRAME_SHEET: Texture2D = preload(
+	"res://assets/ui/card_frames/pixel_template/cards_sheet.png")
+const FRAME_CELL := Vector2(64.0, 96.0)
+const FRAME_ORIGIN := Vector2(16.0, 16.0)
+const FRAME_STEP := Vector2(80.0, 112.0)
+## 卡片世界尺寸固定 1.6 × 2.4;圖從 364px 寬換成 64px,pixel_size 要跟著換算。
+const FRAME_PIXEL_SIZE := 1.6 / 64.0
+## 用排 1:有卡圖窗、下半留白。排 0 的圖上畫死了三條文字線,會和 SkillLabel 打架。
+const FRAME_ROW := 1
+## 卡型 → 欄(0=藍 1=綠 2=紫 3=紅)。刻意對齊 TYPE_BADGES 既有的印章配色,
+## 讓「卡框色」和「卡型章色」講同一件事;四色不夠分五型 → 靈裝與從者共用紅。
+const FRAME_COL := {
+	CardData.CardType.MINION: 3,
+	CardData.CardType.EQUIP: 3,
+	CardData.CardType.ARCANA: 2,
+	CardData.CardType.QUICK: 0,
+	CardData.CardType.WARD: 1,
+	CardData.CardType.DOMAIN: 1,
+}
+## 卡背:第 5 欄排 0(牌堆與對手手牌用得到)。
+const FRAME_BACK_REGION := Rect2(336.0, 16.0, 64.0, 96.0)
+
+## ── 卡框各區的本地座標(逐列掃描量出來的;換卡框圖就要重量)──────
+## 卡圖窗:相對格子 上 0.177 / 高 0.354 → 本地中心 y = 1.2 − 0.177×2.4 − 0.850/2
+const ART_WINDOW_CENTER := Vector2(0.0, 0.35)      # 窗中心(卡片本地 x/y)
+const ART_WINDOW_SIZE := Vector2(1.600, 0.850)     # 窗寬高(世界單位)
+const ART_ICON_SIDE_MARGIN := 0.040                # 法術圖示每側留白
+const FRAME_COST_Y := 0.975      # 卡頂裝飾帶
+const FRAME_NAME_Y := -0.262     # 卡名木牌中心
+const FRAME_DESC_Y := -0.762     # 描述木框中心(高 0.425、寬 1.05)
+const FRAME_STAT_Y := -1.030     # 卡底:ATK/HP 與卡型章
 
 ## 狀態效果的顯示名(§9;卡面狀態列用)。
 const STATUS_NAMES := {
@@ -102,11 +130,45 @@ func _ready() -> void:
 	_area_base_pos = $Area3D.position   # 碰撞箱原位快照(hover 補償要歸得回來)
 
 
+## 卡背貼圖(同一張圖集的第 5 欄排 0)。牌堆、對手手牌都跟卡面同一套美術,
+## 才不會出現「正面像素風、背面手繪風」。static:誰都能拿,不必先有一張卡。
+static func make_back_texture() -> AtlasTexture:
+	var atlas := AtlasTexture.new()
+	atlas.atlas = FRAME_SHEET
+	atlas.region = FRAME_BACK_REGION
+	return atlas
+
+
+## ── 卡框:依卡型換色 ───────────────────────────────
+## 為什麼在 code 裡設而不是存進 card.tscn?
+##   一、.tscn 由編輯器維護,是本專案的操作雷區(手改會讓 UID/路徑默默斷掉);
+##   二、卡框要**依卡型換色**,場景檔只存得下一個預設值,分色本來就得寫在這裡。
+## 同 BattleUI / SkillLabel 的做法:場景檔保持薄,內容由 code 重建。
+func _apply_frame() -> void:
+	var frame: Sprite3D = $CardFrame
+	var col: int = FRAME_COL.get(data.card_type, 3)
+	var atlas := AtlasTexture.new()
+	atlas.atlas = FRAME_SHEET
+	atlas.region = Rect2(
+		FRAME_ORIGIN.x + col * FRAME_STEP.x,
+		FRAME_ORIGIN.y + FRAME_ROW * FRAME_STEP.y,
+		FRAME_CELL.x, FRAME_CELL.y)
+	frame.texture = atlas
+	frame.pixel_size = FRAME_PIXEL_SIZE
+	frame.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST   # 像素圖要銳利
+	# 場景檔裡的字擺在舊卡框的版面上,新版面的區塊位置不同 → 一起搬。
+	$CostLabel.position.y = FRAME_COST_Y
+	$NameLabel.position.y = FRAME_NAME_Y
+	$ATKLabel.position.y = FRAME_STAT_Y
+	$HPLabel.position.y = FRAME_STAT_Y
+
+
 ## ── 套用卡片資料 ─────────────────────────────────
 ## 由發牌端呼叫：PlayerHand 抽到一份 CardData → card.setup(data) → 卡面顯示該卡。
 ## 一份資料可以餵給很多張卡(資料與場上物件分離，見 card_data.gd 開頭的說明)。
 func setup(card_data: CardData) -> void:
 	data = card_data
+	_apply_frame()          # 卡框先換:下面擺卡圖與文字都以新版面的座標為準
 	$NameLabel.text = data.card_name
 	$CostLabel.text = str(data.cost)   # Label3D 的 text 只吃字串，int 要用 str() 轉
 	$ATKLabel.text = str(data.atk)
@@ -156,10 +218,11 @@ func setup(card_data: CardData) -> void:
 ## 程式生成 Label3D,不動 card.tscn;規格對齊場景裡的數值字
 ## (render_priority 1 + 貼卡面 z 0.02,躺平時才不會被卡面吃掉)。
 
-## 文字區容量:置中 y=-0.52、每行高 19px×0.005=0.095 → 5 行佔 -0.28~-0.76,
-## 上不撞卡名(-0.1 下緣 -0.2)、下不撞攻血列(-0.9 上緣 -0.8)。第 6 行起就會撞。
-const SKILL_TEXT_MAX_LINES := 5
-const SKILL_TEXT_CHARS_PER_LINE := 14.0   # width 270px ÷ font 19px ≈ 14.2 個全形字
+## 文字區容量(新卡框的描述木框:中心 -0.762、高 0.425、寬 1.05):
+## 每行高 15px×0.005=0.075 → 4 行佔 -0.61~-0.91,上不撞卡名木牌(-0.262 下緣 ≈ -0.40)、
+## 下不撞卡底那列(-1.030 上緣 ≈ -0.95)。第 5 行起就會撞。
+const SKILL_TEXT_MAX_LINES := 4
+const SKILL_TEXT_CHARS_PER_LINE := 11.0   # width 210px ÷ font 15px = 14,收到 11 留邊
 
 
 ## 估算截斷:超過 5 行的部分切掉、以 … 收尾(全文靠 BattleUI 的 hover 放大預覽看)。
@@ -185,16 +248,18 @@ func _update_skill_label() -> void:
 		lb = Label3D.new()
 		lb.name = "SkillLabel"
 		add_child(lb)
-		lb.position = Vector3(0.0, -0.52, 0.02)   # 卡名(-0.1)與攻血列(-0.9)間的空檔
-		lb.font_size = 19
-		lb.width = 270.0   # 換算世界寬 ≈ 1.35(Label3D 預設 pixel_size 0.005)
+		lb.position = Vector3(0.0, FRAME_DESC_Y, 0.02)   # 描述木框中心
+		lb.font_size = 15          # 木框比舊框的羊皮紙窄,字級跟著縮
+		lb.width = 210.0           # 木框世界寬 1.05 ÷ Label3D 預設 pixel_size 0.005
 		lb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lb.render_priority = 1
-		# Label3D 預設白字+黑外框是給「壓在雜亂背景上」的字用的;
-		# 這裡底是淺色羊皮紙 → 改墨黑、關外框,像印上去的油墨字。
-		lb.modulate = Color(0.09, 0.07, 0.05)
-		lb.outline_size = 0
+		# ⚠ 字色要跟著「底色」走,不是跟著卡框走:
+		# 舊框的描述區是淺色羊皮紙 → 墨黑字;新框是深棕木框 → 墨黑字會直接隱形。
+		# 換卡框時最容易漏掉的就是這一項(位置搬對了、字卻看不見)。
+		lb.modulate = Color(0.90, 0.84, 0.72)
+		lb.outline_size = 2
+		lb.outline_modulate = Color(0.05, 0.03, 0.02)
 	if data != null and data.active_skill != null:
 		var s := data.active_skill
 		if data.card_type == CardData.CardType.MINION:
@@ -222,14 +287,16 @@ func _update_type_label() -> void:
 		lb = Label3D.new()
 		lb.name = "TypeLabel"
 		add_child(lb)
-		lb.position = Vector3(0.0, -0.9, 0.02)   # 攻血列的位置(數字已藏,空出來)
+		lb.position = Vector3(0.0, FRAME_STAT_Y, 0.02)   # 攻血列的位置(數字已藏,空出來)
 		lb.font_size = 26
 		lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lb.render_priority = 1
 		lb.outline_size = 0
 	var badge: Array = TYPE_BADGES.get(data.card_type, ["?", Color(0.2, 0.2, 0.2)])
 	lb.text = "‧ %s ‧" % badge[0]
-	lb.modulate = badge[1]
+	# TYPE_BADGES 的顏色是為舊框的淺色底調的「暗印泥」;新框的卡底是深色,
+	# 原色會糊成一團 → 提亮後再用。基準色只有一份,亮度調整留在使用端(§3 基準/即時之分)。
+	lb.modulate = (badge[1] as Color).lightened(0.55)
 
 
 ## ── 召喚立牌:像素角色站在卡片上(遊戲王式)────────────
