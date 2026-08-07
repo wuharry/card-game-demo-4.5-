@@ -13,6 +13,7 @@ script = ExtResource("3_skill")
 skill_name = "命運窺視"
 description = "檢視牌堆頂 3 張:選 1 張加入手牌,其餘放回牌堆底。"
 effect = 5
+effect_target = 0
 amount = 3
 cost = 1
 

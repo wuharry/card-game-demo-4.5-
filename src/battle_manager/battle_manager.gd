@@ -327,12 +327,59 @@ func mark_summoned(unit: Card) -> String:
 ## 規則只寫這一份:UI 負責選目標和問反制,數值在這裡落地。
 
 
-## 秘術(火焰爆裂):對指定敵方從者造成 skill.power 點傷害(不觸發反擊)。
-func cast_arcana(card: CardData, target: Card) -> void:
+## 秘術結算(有目標的那一類):效果由 skill.effect 決定,不再只有傷害一種。
+## 回傳給 UI 顯示的訊息字串——訊息的措辭跟著效果走,所以由這裡組(同 mark_summoned)。
+##
+## 為什麼傷害要走 _resolve_attack 而不是直接 _deal_damage?
+## 因為橫掃/貫穿/連擊/吸血的展開只寫在那一份裡(§20 choke point)。
+## 秘術傳 attacker = null + retaliate = false:秘術不吃反擊、也沒有施法單位可回血。
+func cast_arcana(card: CardData, target: Card) -> String:
 	if not is_instance_valid(target) or card.active_skill == null:
-		return
-	_deal_damage(target, card.active_skill.power, false)
-	_check_death(target)
+		return ""
+	var sk: SkillData = card.active_skill
+	match sk.effect:
+		SkillData.Effect.HEAL:
+			target.heal(sk.amount)
+			return "【%s】治療【%s】%d 點" % [card.card_name, target.data.card_name, sk.amount]
+		SkillData.Effect.APPLY_STATUS:
+			# 複合秘術:power > 0 就先打傷害再上狀態(順序同從者的攻擊技——
+			# 傷害落地、目標還活著才上狀態,不然是替屍體掛 debuff)。
+			var msg := "【%s】對【%s】" % [card.card_name, target.data.card_name]
+			if sk.power > 0:
+				_resolve_attack(null, target, sk.power, false, sk.modifier, false)
+				msg += "造成 %d 點傷害並" % sk.power
+			if is_instance_valid(target):
+				target.add_status(sk.status, sk.status_turns)
+			return msg + "施加【%s】%d 回合" % [
+				Card.STATUS_NAMES.get(sk.status, "狀態"), sk.status_turns]
+		_:
+			# Effect.NONE = 純傷害秘術(火焰爆裂那一類)。
+			# ⚠ 不要在這裡再補一次 _check_death:_resolve_attack 內部已經做過,
+			# 重複呼叫會讓死亡流程跑兩次——第二次 side_of() 查不到卡槽(第一次已清位)
+			# 回空字串,sides[""] 直接炸。回歸測試抓到的就是這個。
+			var name_before := target.data.card_name   # 目標可能在結算中死亡被清掉
+			_resolve_attack(null, target, sk.power, false, sk.modifier, false)
+			return "【%s】對【%s】造成 %d 點傷害" % [
+				card.card_name, name_before, sk.power]
+
+
+## 召喚系秘術:沒有施法單位,所以空位要用「行動方」來找(對照 _resolve_summon 用 caster)。
+## 回傳訊息字串;場滿時召喚落空(和爐石同規,也和 _resolve_summon 一致)。
+func summon_for_side(side: String, skill: SkillData) -> String:
+	if skill == null or skill.summon_card == "":
+		return ""
+	var res_path := "res://data/cards/%s.tres" % skill.summon_card
+	if not ResourceLoader.exists(res_path):
+		push_warning("[秘術召喚] 找不到 %s" % res_path)
+		return ""
+	var slot := _first_empty_slot(side)
+	if slot == null:
+		return "場上沒有空位,召喚落空了"
+	var unit := spawn_unit(load(res_path), slot)
+	if unit == null:
+		return ""
+	mark_summoned(unit)   # 召喚暈眩 + 對方伏印觸發(§7),和一般召喚同一條路
+	return "召喚了【%s】" % unit.data.card_name
 
 
 ## 靈裝(秘銀胸鎧):我方從者生命上限 +amount 並補等量現血;
@@ -554,8 +601,11 @@ func on_action_performed(caster: Card, skill: SkillData, target: Node3D) -> void
 ## §4.2 雙向傷害交換:「同時結算」——反擊值用交戰前的數值先記下、再一起扣,
 ## 誰先歸零都不影響對方吃到的傷害(順序扣血會讓先死的一方打不出反擊,規則就錯了)。
 ## mod = 打法修飾(§6):連擊/吸血/橫掃/貫穿都在這裡展開;副目標一律不反擊。
+## minion_attack:這是不是「從者攻擊」——只有從者攻擊會吃鐵壁減免(§8)。
+## 秘術傳 false:§8 寫的是「每回合首次受到的**從者攻擊**傷害 −1」,秘術不在其中。
+## 給預設值 true,既有的攻擊呼叫點一行都不用改(§24 的「預設參數擴充 API」)。
 func _resolve_attack(attacker: Card, defender: Card, dmg: int, retaliate: bool,
-		mod: SkillData.Modifier) -> void:
+		mod: SkillData.Modifier, minion_attack: bool = true) -> void:
 	if not is_instance_valid(defender):
 		return
 	var counter := defender.atk_total() if retaliate else 0
@@ -563,7 +613,7 @@ func _resolve_attack(attacker: Card, defender: Card, dmg: int, retaliate: bool,
 	var dealt := 0
 	for hit in range(hits):
 		if is_instance_valid(defender):
-			dealt += _deal_damage(defender, dmg, true)
+			dealt += _deal_damage(defender, dmg, minion_attack)
 	if retaliate and counter > 0 and is_instance_valid(attacker):
 		_deal_damage(attacker, counter, true)
 	# 吸血:回復「實際造成」的傷害——夜幕/鐵壁減免後的數字,不是帳面值。
@@ -572,13 +622,13 @@ func _resolve_attack(attacker: Card, defender: Card, dmg: int, retaliate: bool,
 	# 橫掃:同一排、左右相鄰路線的單位各吃一份。
 	if mod == SkillData.Modifier.SPREAD_3:
 		for u in _adjacent_lane_units(defender):
-			_deal_damage(u, dmg, true)
+			_deal_damage(u, dmg, minion_attack)
 			_check_death(u)
 	# 貫穿:同路線的後排也吃一份。
 	if mod == SkillData.Modifier.PIERCE:
 		var back := _unit_behind(defender)
 		if back != null:
-			_deal_damage(back, dmg, true)
+			_deal_damage(back, dmg, minion_attack)
 			_check_death(back)
 	_check_death(defender)
 	if attacker != defender:
@@ -622,6 +672,12 @@ func _check_death(unit: Card) -> void:
 			unit.play_one_shot_anim("Summon(With magic effects)")
 		return
 	var side := side_of(unit)   # 要在清位「前」問:side_of 靠所在卡槽的群組反查
+	if side.is_empty():
+		# 查不到卡槽 = 這隻已經離場(死亡流程跑過、位子清掉了),節點只是還沒 free。
+		# 沒有這道門,重複結算會走到 sides[""] 直接炸。
+		# 實戰進不來(_is_valid_spell_target 擋掉不在場上的目標),但測試與
+		# 連線重放端會打到,而且錯誤訊息('Dictionary' 上用 String 存取)完全看不出根因。
+		return
 	var slot := _find_slot(unit)
 	if slot != null:
 		slot.on_unit_died()   # 先清位:死亡演出期間這格就能再放牌

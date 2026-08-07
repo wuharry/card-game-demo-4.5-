@@ -13,6 +13,7 @@ script = ExtResource("3_skill")
 skill_name = "以血換識"
 description = "棄掉 1 張手牌,抽 2 張。(沒有其他手牌時直接抽)"
 effect = 6
+effect_target = 0
 amount = 2
 cost = 1
 

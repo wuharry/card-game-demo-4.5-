@@ -478,7 +478,10 @@ func _begin_spell_targeting(card: Card) -> void:
 		card.animate_unhover()
 	_previewed_card = null
 	battle_ui.hide_card_preview()
-	battle_ui.show_targeting("選擇【%s】的目標:敵方從者(點其他地方取消)" % card.data.card_name)
+	# 提示字跟著 effect_target 走:治療系秘術叫你指敵人是最惱人的那種 bug。
+	var who := "我方從者" if _spell_wants_ally() else "敵方從者"
+	battle_ui.show_targeting("選擇【%s】的目標:%s(點其他地方取消)" % [
+		card.data.card_name, who])
 
 
 ## TARGETING 中「懸停高亮」用的合法性:秘術走秘術規則,其餘走單位攻擊規則。
@@ -489,13 +492,25 @@ func _is_valid_targeting_target(card: Card) -> bool:
 	return _is_valid_target(card)
 
 
-## 秘術的合法目標:在場上、敵方(相對行動方)、且非潛行(§8)。
+## 秘術的合法目標:在場上、非潛行(§8)、且**敵我由卡的 effect_target 決定**。
+## ALLY = 只能指我方(治療/增益);LANE_ENEMY = 只能指敵方(傷害/debuff)。
+##
+## ⚠ 潛行照 §8 字面「無法被秘術/瞬咒指定」擋掉——連友方治療也指不到。
+## 這是規格的直譯,不是漏想:要開放友方例外,得先改 README §8,不是先改這裡。
 func _is_valid_spell_target(card: Card) -> bool:
 	if card == null or not card.is_on_board:
 		return false
 	if card.data.keywords.has(&"潛行"):
 		return false
-	return battle_manager.side_of(card) != battle_manager.active_side
+	var is_ally: bool = battle_manager.side_of(card) == battle_manager.active_side
+	return is_ally if _spell_wants_ally() else not is_ally
+
+
+## 瞄準中的那張秘術,想指的是我方還是敵方?(沒有瞄準中的卡就當敵方,維持舊行為)
+func _spell_wants_ally() -> bool:
+	if pending_spell_card == null or pending_spell_card.data.active_skill == null:
+		return false
+	return pending_spell_card.data.active_skill.effect_target == SkillData.Target.ALLY
 
 
 ## 秘術瞄準中左鍵:點到合法敵方從者 = 施放結算;
@@ -563,10 +578,11 @@ func _resolve_arcana(card: Card, target: Card) -> void:
 	Sfx.play(Sfx.SPELL_CAST, -2.0)
 	var countered: bool = await _ask_counter_hotseat(card.data.card_name)
 	if not countered and is_instance_valid(target):
-		# STEP 4:結算(秘術傷害不吃反擊)。
-		battle_manager.cast_arcana(card.data, target)
-		battle_ui.flash_message("【%s】對【%s】造成 %d 點傷害" % [
-			card.data.card_name, target.data.card_name, card.data.active_skill.power])
+		# STEP 4:結算(秘術不吃反擊)。訊息由 cast_arcana 依效果組好回傳——
+		# 措辭要跟著效果走,治療秘術不能報「造成 N 點傷害」。
+		var msg: String = battle_manager.cast_arcana(card.data, target)
+		if msg != "":
+			battle_ui.flash_message(msg)
 	# 秘術結算後離場(§7):不管有沒有被抵銷,牌都用掉了 → 入土。
 	# (queue_free 掉的是「節點」,card.data 是 Resource、進墓地照樣活著。)
 	battle_manager.bury(battle_manager.active_side, card.data)
@@ -614,10 +630,22 @@ func _resolve_effect_arcana(card: Card) -> void:
 		_dispatch_spell_effect(cd)
 
 
-## 抽濾系秘術判定:效果掛在 active_skill.effect 上、無場上目標。
+## 這張秘術要不要在場上選目標?**由資料的 effect_target 決定,不由 effect 種類決定。**
+##
+## 舊版是白名單:`effect in [DRAW, SCRY, DISCARD_DRAW]` = 無目標。那寫法把兩件事綁死了
+## ——只要新增一種效果就得回來改這行,而且 HEAL 這種「有效果又要選目標」的卡根本表達不了
+## (它會被白名單漏掉而被當成傷害秘術,拿 power=0 去打敵人)。
+## 改成問 effect_target:SELF = 作用在自己帳上(抽牌/窺視/召喚),不用選;
+## ALLY / LANE_ENEMY = 要在場上指一個單位。合約早就有這欄,只是以前沒人讀。
+func _spell_needs_target(cd: CardData) -> bool:
+	if cd == null or cd.active_skill == null:
+		return false
+	return cd.active_skill.effect_target != SkillData.Target.SELF
+
+
+## 保留舊名給既有呼叫點:語意是「不用選目標的秘術」= _spell_needs_target 的反面。
 func _is_effect_spell(cd: CardData) -> bool:
-	return cd.active_skill != null and cd.active_skill.effect in [
-		SkillData.Effect.DRAW, SkillData.Effect.SCRY, SkillData.Effect.DISCARD_DRAW]
+	return not _spell_needs_target(cd)
 
 
 ## 效果分流(熱座與連線結算端共用的出口;SCRY/換牌會再開選牌面板)。
@@ -637,6 +665,17 @@ func _dispatch_spell_effect(cd: CardData) -> void:
 				_begin_swap_flow(cd)
 			else:
 				battle_ui.flash_message("對方正在抉擇要換掉哪張牌…")
+		SkillData.Effect.SUMMON:
+			# 召喚系秘術:沒有施法單位,空位用「行動方」找(battle_manager 那邊分兩個入口)。
+			# 兩台各自跑:牌堆/帳同步 → 生出來的是同一張,卡槽也是同一格(§28)。
+			var msg: String = battle_manager.summon_for_side(
+				battle_manager.active_side, cd.active_skill)
+			if msg != "":
+				battle_ui.flash_message("【%s】:%s" % [cd.card_name, msg])
+		SkillData.Effect.HEAL, SkillData.Effect.APPLY_STATUS:
+			# 這兩種要目標,不該走到這條無目標的路——會走到就是 .tres 的
+			# effect_target 填成 SELF 了(資料錯,不是 code 錯)。
+			push_warning("[秘術] 【%s】effect 需要目標,但 effect_target 是 SELF" % cd.card_name)
 
 
 ## 抽 n 張的「帳+視圖」一次做完(兩台各自跑;牌堆同步 → 抽到同一批)。
@@ -1458,12 +1497,12 @@ func _net_arcana_resolve(countered: bool) -> void:
 		if quick != null:
 			battle_manager.consume_quick(defender, quick)
 		battle_ui.flash_message("【%s】被抵銷了!" % cd.card_name)
-	elif not _is_effect_spell(cd):
+	elif _spell_needs_target(cd):
 		var target := _unit_at(_pending_arcana_target)
 		if target != null:
-			battle_manager.cast_arcana(cd, target)
-			battle_ui.flash_message("【%s】造成 %d 點傷害" % [
-				cd.card_name, cd.active_skill.power])
+			var msg: String = battle_manager.cast_arcana(cd, target)
+			if msg != "":
+				battle_ui.flash_message(msg)
 	if _acting_locally():
 		ui_state = UiState.IDLE
 		var card := _take_pending_card()

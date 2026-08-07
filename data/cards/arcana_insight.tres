@@ -13,6 +13,7 @@ script = ExtResource("3_skill")
 skill_name = "秘傳靈感"
 description = "抽 2 張牌。"
 effect = 4
+effect_target = 0
 amount = 2
 cost = 3
 
