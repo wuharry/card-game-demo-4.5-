@@ -49,6 +49,16 @@ func take_damage(amount: int) -> void:
 		_play_one_shot("Hurt")
 
 
+## 治療本體(戰吼的「恢復己方英雄 N 點生命」、治療系秘術/技能)。
+## 和 Card.heal() 同規矩:先算「實際回了多少」(不超上限),數字報實帳不報帳面量。
+func heal(amount: int) -> void:
+	var healed := mini(max_hp, hp + amount) - hp
+	hp += healed
+	_refresh_hp()
+	if healed > 0:
+		_popup_number("+%d" % healed, Color(0.45, 1.0, 0.5))
+
+
 func _die() -> void:
 	# 死亡表定格(不回待機);死靈法師的表名全大寫 DEATH,備案再試一次。
 	if not _play_one_shot("Death", false):

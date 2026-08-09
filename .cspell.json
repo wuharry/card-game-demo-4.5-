@@ -9,6 +9,9 @@
     "tween",
     "raycast",
     "collider",
-    "tilemap"
+    "tilemap",
+    "battlecry",
+    "debuff",
+    "rfind"
   ]
 }

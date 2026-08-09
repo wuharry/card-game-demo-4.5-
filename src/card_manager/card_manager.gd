@@ -104,6 +104,8 @@ func _ready() -> void:
 	battle_manager.unit_died.connect(_on_unit_died)
 	battle_manager.card_buried.connect(_on_card_buried)
 	battle_manager.wards_changed.connect(_on_wards_changed)
+	# 戰吼抽牌:帳房只喊「要抽幾張」,視圖那半(stash 對帳 + 飛入動畫)走既有單一入口。
+	battle_manager.draw_requested.connect(_apply_draw)
 	battle_manager.game_over.connect(_on_game_over)
 	action_performed.connect(battle_manager.on_action_performed)
 	add_child(battle_manager)

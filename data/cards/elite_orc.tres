@@ -6,10 +6,11 @@
 
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
-skill_name = "碎甲斬"
-description = "本次攻擊 +2。"
-cost = 2
-power = 2
+skill_name = "毀滅一擊"
+description = "對敵方單位造成 8 點傷害。"
+kind = 1
+cost = 4
+power = 8
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
 atlas = ExtResource("2_sheet")
@@ -17,10 +18,11 @@ region = Rect2(0, 0, 100, 100)
 
 [resource]
 script = ExtResource("1_script")
-card_name = "菁英獸人"
-cost = 5
-atk = 5
-hp = 6
+card_name = "精英獸人"
+cost = 7
+atk = 6
+hp = 8
 art = SubResource("AtlasTexture_frame")
 standee = ExtResource("2_sheet")
 active_skill = SubResource("Skill_main")
+keywords = Array[StringName]([&"衝鋒"])

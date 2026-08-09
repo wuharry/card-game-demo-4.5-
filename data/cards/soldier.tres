@@ -6,11 +6,12 @@
 
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
-skill_name = "戮力突刺"
-description = "發動一次額外攻擊,造成 2 點傷害。"
-kind = 1
-cost = 2
-power = 2
+skill_name = "防禦姿態"
+description = "使自身獲得 2 點護盾。"
+kind = 2
+effect = 7
+effect_target = 0
+amount = 2
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
 atlas = ExtResource("2_sheet")

@@ -722,17 +722,20 @@ func show_card_preview(card: Card) -> void:
 		_prev_stats.visible = true
 	else:
 		_prev_stats.visible = false
+	var body: PackedStringArray = []
 	if d.active_skill != null:
 		var s := d.active_skill
 		if d.card_type == CardData.CardType.MINION:
 			# 三分類跟著標(強化=用掉攻擊機會/獨立=額外一刀/非攻擊=登場回合也能用)。
-			_prev_body.text = "【%s】◆%d·%s\n%s" % [
-				s.skill_name, s.cost, SkillData.KIND_NAMES[s.kind], s.description]
+			body.append("【%s】◆%d·%s\n%s" % [
+				s.skill_name, s.cost, SkillData.KIND_NAMES[s.kind], s.description])
 		else:
-			_prev_body.text = s.description
-		_prev_body.visible = true
-	else:
-		_prev_body.visible = false
+			body.append(s.description)
+	# 戰吼不收費、也不佔行動經濟(登場自動跑),所以不標 ◆ 與三分類。
+	if d.battlecry != null:
+		body.append("【戰吼】%s" % d.battlecry.description)
+	_prev_body.text = "\n".join(body)
+	_prev_body.visible = not body.is_empty()
 	# 卡圖:從者=立牌動畫第 0 幀(只裁本體可見範圍,和卡面同一把尺);法術=圖示。
 	if d.standee != null:
 		var atlas := AtlasTexture.new()

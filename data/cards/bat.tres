@@ -6,9 +6,13 @@
 
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
-skill_name = "吸血獠牙"
-description = "以吸血獠牙攻擊,回復等同傷害的生命。"
-modifier = 4
+skill_name = "噬血"
+description = "造成 1 點傷害,並恢復己方英雄 1 點生命。"
+kind = 1
+power = 1
+effect = 1
+effect_target = 4
+amount = 1
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
 atlas = ExtResource("2_sheet")
@@ -17,7 +21,9 @@ region = Rect2(0, 0, 100, 100)
 [resource]
 script = ExtResource("1_script")
 card_name = "蝙蝠"
-atk = 2
+cost = 1
+atk = 1
+hp = 1
 art = SubResource("AtlasTexture_frame")
 standee = ExtResource("2_sheet")
 active_skill = SubResource("Skill_main")

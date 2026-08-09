@@ -18,6 +18,11 @@ signal unit_died(unit: Card)
 signal card_buried(side: String, cd: CardData)
 ## 伏印帳有變(CardManager 靠這條開關整排卡槽的紅色警戒)。
 signal wards_changed(side: String, count: int)
+## 規則層要求抽牌(巫師/邪眼魔的戰吼)。為什麼不直接抽:
+## draw_cards() 只動「帳」,手牌「視圖」的 stash 對帳與飛入動畫在 CardManager 那邊
+## (§28 帳/視圖分離)。帳房不該知道視圖怎麼演,所以喊一聲、讓 CardManager 走它既有的
+## _apply_draw 單一入口——連線重放與熱座也就自動沿用同一條路。
+signal draw_requested(n: int)
 ## 勝負已分("player" = 玩家贏)。
 signal game_over(winner: String)
 
@@ -307,10 +312,14 @@ func _tick_dot_side(side: String, phase_start: bool) -> void:
 ## 回傳觸發訊息(空字串 = 沒有伏印),CardManager 拿去 flash 給玩家看。
 func mark_summoned(unit: Card) -> String:
 	unit.summoned_this_turn = true
+	# 戰吼先於伏印結算。順序有實質差別,不是隨便排的:
+	# 黑騎士 A 的【暗影護甲】(登場 +2 護盾)必須先掛上,才擋得住緊接著引爆的伏印傷害。
+	# 反過來排,「登場就有盾」這句話在最需要它的那一刻剛好沒作用。
+	var msg := _resolve_battlecry(unit)
 	var owner_side := "enemy" if active_side == "player" else "player"
 	var traps: Array[Dictionary] = (sides[owner_side] as SideState).wards
 	if traps.is_empty():
-		return ""
+		return msg
 	# §5.1 簡化原則:一次觸發一張(先蓋的先發)。
 	var entry: Dictionary = traps.pop_front()
 	var trap: CardData = entry.cd
@@ -319,8 +328,51 @@ func mark_summoned(unit: Card) -> String:
 	var dmg := trap.active_skill.power if trap.active_skill != null else 0
 	_deal_damage(unit, dmg, false)
 	_check_death(unit)
-	return "伏印【%s】觸發:對召喚的【%s】造成 %d 點傷害!" % [
+	var trap_msg := "伏印【%s】觸發:對召喚的【%s】造成 %d 點傷害!" % [
 		trap.card_name, unit.data.card_name, dmg]
+	return trap_msg if msg.is_empty() else msg + "\n" + trap_msg
+
+
+## 戰吼:召喚落地時自動結算一次 data.battlecry(null = 沒有戰吼)。
+## 回傳給 UI 的訊息(空字串 = 沒觸發)。
+##
+## 為什麼掛在 mark_summoned 而不是出牌按鈕那邊:這裡是**所有召喚的必經之路**——
+## 手動出牌、從者的召喚技(_resolve_summon)、召喚系秘術(summon_for_side)、
+## 連線重放端生單位,四條路最後都會經過它。接一個點,四種情境一起生效;
+## 接在出牌按鈕上,則「死靈法師召出來的骷髏」永遠不會觸發自己的戰吼。
+## (和伏印觸發挑同一個點是同一個理由,不是巧合。)
+func _resolve_battlecry(unit: Card) -> String:
+	if unit.data == null or unit.data.battlecry == null:
+		return ""
+	var bc: SkillData = unit.data.battlecry
+	match bc.effect:
+		SkillData.Effect.SUMMON:
+			_resolve_summon(unit, bc)
+		SkillData.Effect.DRAW:
+			draw_requested.emit(bc.amount)   # 視圖那半交給 CardManager(見信號註解)
+		_:
+			_apply_skill_effect(unit, bc, null)
+	var label := bc.description if bc.description != "" else bc.skill_name
+	return "【%s】的戰吼:%s" % [unit.data.card_name, label]
+
+
+## 正對面那一路的敵方前排單位(戰吼指定 LANE_ENEMY 時用;沒有就回 null)。
+## 路線對位一律用 x 座標找最近的對面格,不寫死欄號——和 _lane_blocked 同一把尺。
+func _lane_opposite(unit: Card) -> Card:
+	var my_slot := _find_slot(unit)
+	if my_slot == null:
+		return null
+	var opposing := "enemy_front" if side_of(unit) == "player" else "player_front"
+	var nearest: CardSlot = null
+	var best := INF
+	for slot in get_tree().get_nodes_in_group(opposing):
+		if slot is CardSlot:
+			var dx: float = absf(
+				(slot as CardSlot).global_position.x - my_slot.global_position.x)
+			if dx < best:
+				best = dx
+				nearest = slot
+	return nearest.card_in_slot if nearest != null else null
 
 
 ## ── 法術結算(§7 非從者卡;由 CardManager 的出牌流程呼叫)──────────
@@ -576,26 +628,87 @@ func on_action_performed(caster: Card, skill: SkillData, target: Node3D) -> void
 	elif skill.kind == SkillData.Kind.INDEPENDENT_ATTACK:
 		dmg = skill.power   # 額外攻擊:不觸發反擊
 	else:
-		# 非攻擊技:治療 / 上狀態 / 召喚(§6【非攻擊】)。
-		match skill.effect:
-			SkillData.Effect.HEAL:
-				if target is Card:
-					(target as Card).heal(skill.amount)
-			SkillData.Effect.APPLY_STATUS:
-				if target is Card:
-					(target as Card).add_status(skill.status, skill.status_turns)
-			SkillData.Effect.SUMMON:
-				_resolve_summon(caster, skill)
+		# 非攻擊技:治療 / 護盾 / 上狀態 / 召喚(§6【非攻擊】)。
+		if skill.effect == SkillData.Effect.SUMMON:
+			_resolve_summon(caster, skill)
+		else:
+			_apply_skill_effect(caster, skill, target)
 		return
 	if target is Hero:
 		(target as Hero).take_damage(dmg)   # 打臉不吃反擊(§4.2)
 		return
 	var mod := SkillData.Modifier.NONE if skill == null else skill.modifier
 	_resolve_attack(caster, target as Card, dmg, retaliate, mod)
-	# 攻擊技的附帶狀態(火球術的灼燒):傷害落地後、目標還活著才上。
-	if skill != null and skill.effect == SkillData.Effect.APPLY_STATUS \
-			and is_instance_valid(target) and target is Card:
-		(target as Card).add_status(skill.status, skill.status_turns)
+	# 攻擊技的附帶效果(火球術的灼燒、戰騎突擊的自身護盾、狂暴衝鋒的自身鍛強):
+	# 一律等傷害落地才結算——打敵方的 debuff 要目標還活著才上,不然是替屍體掛狀態。
+	if skill != null and skill.effect != SkillData.Effect.NONE:
+		_apply_skill_effect(caster, skill, target)
+
+
+## 技能效果的統一結算:**做什麼**由 skill.effect 決定、**對誰做**由 skill.effect_target 決定。
+## 非攻擊技的主體效果、攻擊技的附帶效果、戰吼,三條路都走這一份——
+## 分開寫的話,每加一種 Effect 就得記得改三個地方(這次加護盾就是被這件事逼出來的)。
+func _apply_skill_effect(caster: Card, skill: SkillData, target: Node3D) -> void:
+	for who in _effect_recipients(caster, skill, target):
+		if not is_instance_valid(who):
+			continue
+		match skill.effect:
+			SkillData.Effect.HEAL:
+				if who is Card:
+					(who as Card).heal(skill.amount)
+				elif who is Hero:
+					(who as Hero).heal(skill.amount)
+			SkillData.Effect.SHIELD:
+				if who is Card:
+					(who as Card).add_shield(skill.amount)
+			SkillData.Effect.APPLY_STATUS:
+				if who is Card:
+					(who as Card).add_status(skill.status, skill.status_turns)
+
+
+## 效果的收受者清單。回傳陣列而不是單一節點,是因為 ADJACENT_ALLIES 一次打到好幾個;
+## 其餘型別就是「只有一個元素的陣列」——呼叫端不必為多目標另開一條路。
+func _effect_recipients(caster: Card, skill: SkillData, target: Node3D) -> Array[Node3D]:
+	var out: Array[Node3D] = []
+	match skill.effect_target:
+		SkillData.Target.SELF:
+			if is_instance_valid(caster):
+				out.append(caster)
+		SkillData.Target.ADJACENT_ALLIES:
+			# 騎士【守護】:左右相鄰路線的友軍。_adjacent_lane_units 掃的是「同一排」,
+			# 從我方單位出發掃到的自然是友軍,不必另寫一套敵我判斷。
+			if is_instance_valid(caster):
+				for u in _adjacent_lane_units(caster):
+					out.append(u)
+		SkillData.Target.ALLY_HERO:
+			var hero := _hero_of(side_of(caster))
+			if hero != null:
+				out.append(hero)
+		SkillData.Target.LANE_ENEMY:
+			# 主動技:玩家(或 AI)在宣告階段指定的那一個目標。
+			# 戰吼沒有宣告階段(target 傳 null)→ 退回「正對面那一路的敵人」。
+			# 設計稿原文是「敵方**隨機**一個單位」,這裡刻意去隨機:連線對戰要兩台
+			# 同步 RNG seed 才不會讓帳分岔,成本遠大於隨機買到的那點刺激(同【不滅】的取捨)。
+			if is_instance_valid(target):
+				out.append(target)
+			elif is_instance_valid(caster):
+				var opp := _lane_opposite(caster)
+				if opp != null:
+					out.append(opp)
+		_:
+			# ALLY:玩家指定的友軍(治療系)。
+			if is_instance_valid(target):
+				out.append(target)
+	return out
+
+
+## 某一側的本體節點(戰吼「恢復己方英雄」用)。
+func _hero_of(side: String) -> Hero:
+	if side == "player":
+		return player_hero
+	if side == "enemy":
+		return enemy_hero
+	return null
 
 
 ## §4.2 雙向傷害交換:「同時結算」——反擊值用交戰前的數值先記下、再一起扣,
@@ -624,6 +737,12 @@ func _resolve_attack(attacker: Card, defender: Card, dmg: int, retaliate: bool,
 		for u in _adjacent_lane_units(defender):
 			_deal_damage(u, dmg, minion_attack)
 			_check_death(u)
+	# 全體:守方場上所有其他單位各吃一份(前後排都算)。
+	# 和橫掃共用「副目標不反擊、不吃附帶狀態」的規矩——差別只在取目標的範圍。
+	if mod == SkillData.Modifier.SPREAD_ALL:
+		for u in _other_units_of_side(defender):
+			_deal_damage(u, dmg, minion_attack)
+			_check_death(u)
 	# 貫穿:同路線的後排也吃一份。
 	if mod == SkillData.Modifier.PIERCE:
 		var back := _unit_behind(defender)
@@ -635,8 +754,18 @@ func _resolve_attack(attacker: Card, defender: Card, dmg: int, retaliate: bool,
 		_check_death(attacker)
 
 
-## 傷害管線:夜幕減半(§9)→ 鐵壁首傷 -1(§8,播 Block)→ 扣血+受擊演出。
-## 回傳「實際傷害」給吸血用。minion_attack = 這是從者攻擊(鐵壁只擋這種)。
+## 傷害管線:夜幕減半(§9)→ 鐵壁首傷 -1(§8,播 Block)→ 護盾吸收 → 扣血+受擊演出。
+## 回傳「實際扣掉的血」給吸血用。minion_attack = 這是從者攻擊(鐵壁只擋這種)。
+##
+## ⚠ 護盾為什麼排在減免「之後」而不是之前——這個順序不會報錯,只會讓數值默默不對:
+##   10 點傷害打在「3 盾 + 夜幕 + 鐵壁」的目標上
+##   ‧ 盾先吸:10 −3(盾)=7 → 夜幕減半 4 → 鐵壁 −1 → 掉 3 血,盾全空
+##   ‧ 盾後吸:10 → 夜幕減半 5 → 鐵壁 −1 = 4 → 盾吸 3 → 掉 1 血,盾也全空
+##   同樣一面盾,擺錯位置就少擋 2 點。通則:**減免先做、吸收後做**,
+##   每一層減免才會作用在「還沒被盾墊掉」的完整數字上,兩層都拿到最大價值。
+##
+## ⚠ 回傳值的語意:吸血回的是「HP 真的少了多少」,不含被盾吃掉的部分——
+##   盾不是血,砍在盾上沒有血可吸。5 點吸血打 3 盾的滿血目標 → 掉 2 血、攻擊者回 2。
 func _deal_damage(unit: Card, amount: int, minion_attack: bool) -> int:
 	if not is_instance_valid(unit):
 		return 0
@@ -650,9 +779,14 @@ func _deal_damage(unit: Card, amount: int, minion_attack: bool) -> int:
 		unit.iron_wall_used_this_turn = true
 		dmg = maxi(0, dmg - 1)
 		blocked = true
+	# 護盾在最後一道:減免完的數字先砍盾,穿透的部分才進 HP。
+	# 盾擋掉全部時 dmg 會是 0 → take_damage 不播爆點也不掉血,但盾的消耗有自己的飄字。
+	var shielded := unit.shield > 0
+	dmg = unit.absorb_with_shield(dmg)
 	unit.take_damage(dmg)
 	# 演出:格擋播 Block(沒有該表就退回 Hurt);其餘吃到傷害才縮。
-	if blocked:
+	# 盾擋下全部也算「擋住了」——有 Block 表就播,讓玩家看得出盾有作用。
+	if blocked or (shielded and dmg == 0):
 		if not unit.play_one_shot_anim("Block"):
 			unit.play_one_shot_anim("Hurt")
 	elif dmg > 0:
@@ -801,6 +935,21 @@ func _adjacent_lane_units(target: Card) -> Array[Card]:
 			var dx: float = absf(other.global_position.x - slot.global_position.x)
 			if dx < LANE_ADJACENT_X:
 				out.append(other.card_in_slot)
+	return out
+
+
+## 和 target 同一側、但不是 target 本人的所有場上單位(全體技的副目標)。
+## 前後排都掃 —— 後排站得了從者(前排滿了 AI 就往後放),只有伏印是住側帳不佔槽。
+func _other_units_of_side(target: Card) -> Array[Card]:
+	var out: Array[Card] = []
+	var side := side_of(target)
+	if side.is_empty():
+		return out
+	for group in [side + "_front", side + "_back"]:
+		for slot in get_tree().get_nodes_in_group(group):
+			if slot is CardSlot and slot.card_in_slot != null \
+					and slot.card_in_slot != target:
+				out.append(slot.card_in_slot)
 	return out
 
 

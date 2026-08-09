@@ -6,10 +6,11 @@
 
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
-skill_name = "噬血獠牙"
-description = "以噬血獠牙攻擊,回復等同傷害的生命。"
+skill_name = "烈焰吐息"
+description = "對敵方單位造成 3 點傷害。"
+kind = 1
 cost = 2
-modifier = 4
+power = 3
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
 atlas = ExtResource("2_sheet")
@@ -19,7 +20,7 @@ region = Rect2(0, 0, 100, 100)
 script = ExtResource("1_script")
 card_name = "地獄蝠"
 cost = 2
-atk = 3
+atk = 2
 hp = 2
 art = SubResource("AtlasTexture_frame")
 standee = ExtResource("2_sheet")

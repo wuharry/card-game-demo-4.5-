@@ -6,9 +6,11 @@
 
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
-skill_name = "嗜血撕咬"
-description = "撕咬吸血,回復等同傷害的生命。"
+skill_name = "血怒"
+description = "造成 3 點傷害,並回復等量生命。"
+kind = 1
 cost = 2
+power = 3
 modifier = 4
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
@@ -19,8 +21,8 @@ region = Rect2(0, 0, 100, 100)
 script = ExtResource("1_script")
 card_name = "狼人"
 cost = 5
-atk = 7
-hp = 3
+atk = 4
+hp = 5
 art = SubResource("AtlasTexture_frame")
 standee = ExtResource("2_sheet")
 active_skill = SubResource("Skill_main")

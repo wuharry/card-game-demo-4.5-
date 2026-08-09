@@ -265,6 +265,8 @@ func _skill_text(d: CardData) -> String:
 			parts.append("【%s】%s" % [s.skill_name, s.description])
 		else:
 			parts.append(s.description)
+	if d.battlecry != null:
+		parts.append("【戰吼】%s" % d.battlecry.description)
 	if not d.keywords.is_empty():
 		var words: PackedStringArray = []
 		for w in d.keywords:

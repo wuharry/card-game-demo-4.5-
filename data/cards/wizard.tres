@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3 uid="uid://bs32oiwrk65sj"]
+[gd_resource type="Resource" script_class="CardData" load_steps=7 format=3 uid="uid://bs32oiwrk65sj"]
 
 [ext_resource type="Script" uid="uid://cxot3rc105cul" path="res://src/card/card_data.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://c0k73vvxh21qx" path="res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Wizard/Wizard/Wizard_Idle.png" id="2_sheet"]
@@ -7,13 +7,18 @@
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
 skill_name = "火球術"
-description = "對敵方單位造成 3 點傷害,附加灼燒 1 回合。"
+description = "對敵方單位造成 5 點傷害。"
 kind = 1
 cost = 3
 anim = "Attack02(With magic effects)"
-power = 3
-effect = 2
-status = 1
+power = 5
+
+[sub_resource type="Resource" id="Skill_battlecry"]
+script = ExtResource("3_skill")
+skill_name = "魔法精通"
+description = "登場時,抽一張牌。"
+effect = 4
+amount = 1
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
 atlas = ExtResource("2_sheet")
@@ -23,8 +28,9 @@ region = Rect2(0, 0, 100, 100)
 script = ExtResource("1_script")
 card_name = "巫師"
 cost = 4
-atk = 6
-hp = 2
+atk = 2
+hp = 3
 art = SubResource("AtlasTexture_frame")
 standee = ExtResource("2_sheet")
 active_skill = SubResource("Skill_main")
+battlecry = SubResource("Skill_battlecry")

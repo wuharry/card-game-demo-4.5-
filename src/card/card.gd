@@ -48,6 +48,7 @@ const STATUS_NAMES := {
 	SkillData.Status.POISON: "中毒",
 	SkillData.Status.NIGHT_VEIL: "夜幕",
 	SkillData.Status.FORGE: "鍛強",
+	SkillData.Status.WEAKEN: "衰弱",
 }
 
 ## §7 卡型章:非從者卡的底部印「卡型名 + 印章色」(從者卡的那個位置是攻血數字)。
@@ -90,6 +91,10 @@ var summoned_this_turn: bool = false
 var statuses: Array[Dictionary] = []
 var iron_wall_used_this_turn: bool = false   # 【鐵壁】本回合的首傷減免用掉了?
 var revived: bool = false                    # 【不滅】每場一次的復活用掉了?
+## 護盾:先於 HP 被扣掉的暫時層(不隨回合遞減,吸完為止)。
+## 和 current_hp 同族——存在「場上這個實例」身上,絕不寫回共享的 CardData,
+## 否則同名卡會共用同一面盾。消耗在 BattleManager 的傷害管線裡(_deal_damage)。
+var shield: int = 0
 ## HPLabel 進場時的原色(受傷變紅、補滿要變得回來——基準先快照)。
 var _hp_label_color: Color = Color.WHITE
 
@@ -195,18 +200,23 @@ func _update_skill_label() -> void:
 		# 這裡底是淺色羊皮紙 → 改墨黑、關外框,像印上去的油墨字。
 		lb.modulate = Color(0.09, 0.07, 0.05)
 		lb.outline_size = 0
+	var parts: PackedStringArray = []
 	if data != null and data.active_skill != null:
 		var s := data.active_skill
 		if data.card_type == CardData.CardType.MINION:
 			# 【技能名】◆費用·三分類 + 換行描述;◆ 與指令選單同符號。
 			# 三分類(強化/獨立/非攻擊)決定行動經濟,桌遊試玩回饋:卡面要標出來。
-			lb.text = _fit_card_text("【%s】◆%d·%s\n%s" % [
+			parts.append("【%s】◆%d·%s\n%s" % [
 				s.skill_name, s.cost, SkillData.KIND_NAMES[s.kind], s.description])
 		else:
 			# 法術卡:卡名/費用已在卡框上緣,文字區只印效果,不重複報頭。
-			lb.text = _fit_card_text(s.description)
-	else:
-		lb.text = ""   # 沒有主動技的白板(骷髏弓手):留白
+			parts.append(s.description)
+	# 戰吼排在主動技之後:主動技是玩家每回合要決策的東西,戰吼登場跑完就結束了,
+	# 文字區只有 5 行,先印要反覆讀的那個。兩個都有時超出的部分由 _fit_card_text 截斷。
+	if data != null and data.battlecry != null:
+		parts.append("【戰吼】%s" % data.battlecry.description)
+	# 沒有主動技也沒有戰吼的白板:留白。
+	lb.text = _fit_card_text("\n".join(parts)) if not parts.is_empty() else ""
 	_update_type_label()
 
 
@@ -492,6 +502,29 @@ func heal(amount: int) -> void:
 		_popup_number("+%d" % healed, Color(0.45, 1.0, 0.5))
 
 
+## 上護盾:盾值「疊加」而非取大值(治療是補到上限,護盾沒有上限概念)。
+## 刻意和 heal() 分開:護盾不是血,不吃 max_hp、不會被 clamp_hp 夾掉,
+## 死亡判定也只看 current_hp——把兩者混在一起就會出現「盾滿了不能再上盾」這種怪規則。
+func add_shield(amount: int) -> void:
+	if amount <= 0:
+		return
+	shield += amount
+	_update_status_label()
+	_popup_number("盾+%d" % amount, Color(0.55, 0.8, 1.0))
+
+
+## 護盾吸收:回傳「穿透護盾、真正要扣血的量」。
+## 由 BattleManager 的傷害管線呼叫——放在減免之後、扣血之前(順序見 _deal_damage 註解)。
+func absorb_with_shield(amount: int) -> int:
+	if shield <= 0 or amount <= 0:
+		return amount
+	var absorbed := mini(shield, amount)
+	shield -= absorbed
+	_update_status_label()
+	_popup_number("盾-%d" % absorbed, Color(0.55, 0.8, 1.0))
+	return amount - absorbed
+
+
 ## 飄浮戰鬥數字:冒出 → 上飄 → 淡出 → 自毀。
 ## 掉血看 HP 小字太吃力,尤其反擊是「攻擊的同時自己也掉血」,
 ## 沒有這個數字,反擊看起來就像沒發生(驗收時的真實回饋)。
@@ -567,9 +600,17 @@ func decay_statuses() -> void:
 	_update_status_label()
 
 
-## 目前攻擊力 = 基礎 + 鍛強(§9:ATK +2)。傷害計算一律用這個,別直接讀 data.atk。
+## 目前攻擊力 = 基礎 + 鍛強(§9:ATK +2)- 衰弱(ATK -1)。
+## 傷害計算一律用這個,別直接讀 data.atk。
+## 鍛強與衰弱「不」互斥(§9 只有灼燒/凍結互斥),同時在身上就是淨 +1;
+## 夾在 0 以上——負攻擊力會讓反擊變成「打自己補血」。
 func atk_total() -> int:
-	return data.atk + (2 if has_status(SkillData.Status.FORGE) else 0)
+	var total := data.atk
+	if has_status(SkillData.Status.FORGE):
+		total += 2
+	if has_status(SkillData.Status.WEAKEN):
+		total -= 1
+	return maxi(0, total)
 
 
 ## 卡面頂緣的狀態列(程式生成 Label3D,同 SkillLabel 的規矩):「灼燒2 中毒3」。
@@ -585,6 +626,11 @@ func _update_status_label() -> void:
 		lb.modulate = Color(1.0, 0.62, 0.2)   # 橘=「有事發生中」的警示色
 		lb.outline_size = 8
 	var parts: PackedStringArray = []
+	# 護盾排最前:它是「還能擋幾點」的即時資訊,比 debuff 剩幾回合更影響當下決策。
+	# 用「盾N」而不是 🛡 符號:專案字型是 Noto Serif TC,不含 emoji 區段(U+1F6E1),
+	# 貼上去只會是豆腐框。狀態列本來就是「名字+數字」,這樣反而一致。
+	if shield > 0:
+		parts.append("盾%d" % shield)
 	for s in statuses:
 		parts.append("%s%d" % [STATUS_NAMES.get(s.id, "?"), int(s.turns)])
 	lb.text = " ".join(parts)

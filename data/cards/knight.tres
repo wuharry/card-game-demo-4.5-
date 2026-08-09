@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3 uid="uid://8owyc5j44xdv"]
+[gd_resource type="Resource" script_class="CardData" load_steps=7 format=3 uid="uid://8owyc5j44xdv"]
 
 [ext_resource type="Script" uid="uid://cxot3rc105cul" path="res://src/card/card_data.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://cx2u2fm4rsgqo" path="res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Knight/Knight/Knight_Idle.png" id="2_sheet"]
@@ -7,10 +7,20 @@
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
 skill_name = "盾擊"
-description = "盾擊命中後凍結目標 1 回合。"
-cost = 3
+description = "造成 2 點傷害,並使目標【凍結】1 回合。"
+kind = 1
+cost = 2
+power = 2
 effect = 2
 status = 2
+
+[sub_resource type="Resource" id="Skill_battlecry"]
+script = ExtResource("3_skill")
+skill_name = "守護"
+description = "登場時,左右相鄰的友軍各獲得 2 點護盾。"
+effect = 7
+effect_target = 3
+amount = 2
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
 atlas = ExtResource("2_sheet")
@@ -21,8 +31,9 @@ script = ExtResource("1_script")
 card_name = "騎士"
 cost = 4
 atk = 3
-hp = 6
+hp = 5
 art = SubResource("AtlasTexture_frame")
 standee = ExtResource("2_sheet")
 active_skill = SubResource("Skill_main")
 keywords = Array[StringName]([&"鐵壁"])
+battlecry = SubResource("Skill_battlecry")

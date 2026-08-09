@@ -34,6 +34,12 @@ enum CardType {
                                            # 都讀這欄(show_standee 切幀播待機動畫)
 @export var active_skill: SkillData        # 主動技能(預設 Attack02 動畫;null = 無主動技,
                                            # 見 README §6.1 與 docs/skills_design.md)
+## 戰吼:召喚落地時自動結算一次的效果(null = 沒有戰吼)。
+## 刻意「復用 SkillData」而不是另開 BattlecryData——它要的欄位(effect / effect_target /
+## amount / status / summon_card)一個不多一個不少,新型別只會多一份要同步維護的合約。
+## 差別只在「誰觸發」:主動技由玩家點、戰吼由 BattleManager.mark_summoned 自動跑,
+## 所以 kind / cost / anim 這幾欄對戰吼沒有意義,填了也不讀。
+@export var battlecry: SkillData
 @export var keywords: Array[StringName] = []   # 被動關鍵字(README §8):
                                                # &"飛行"、&"不滅"、&"鐵壁"、&"衝鋒"…
 

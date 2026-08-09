@@ -28,18 +28,24 @@ enum Modifier {
 	PIERCE,     ## 貫穿:同時命中目標路線的前排與後排
 	DOUBLE,     ## 連擊:本次攻擊結算兩次
 	LIFESTEAL,  ## 吸血:回復等同本次造成傷害的 HP(不超過上限)
+	SPREAD_ALL, ## 全體:命中敵方場上所有單位(設計稿的「對敵方所有單位」)
+	            ## 與 SPREAD_3 的差別只在取目標的範圍,展開邏輯共用同一段。
 }
 
 ## 附加效果(非攻擊技的主體;攻擊型技能則是「命中後」附帶觸發)。
 ## 抽濾系(§抽濾):DRAW=抽 amount 張;SCRY=看頂 amount 張選 1 入手、餘放堆底;
 ## DISCARD_DRAW=自選棄 1 張再抽 amount 張。只能往尾巴加(.tres 存 int,§21)。
-enum Effect { NONE, HEAL, APPLY_STATUS, SUMMON, DRAW, SCRY, DISCARD_DRAW }
+## SHIELD=給 amount 點護盾(吸傷害的暫時層,不是治療;見 Card.shield)。
+enum Effect { NONE, HEAL, APPLY_STATUS, SUMMON, DRAW, SCRY, DISCARD_DRAW, SHIELD }
 
 ## 效果作用對象。
-enum Target { SELF, ALLY, LANE_ENEMY }
+## ADJACENT_ALLIES / ALLY_HERO 主要給戰吼用(登場即結算、不由玩家選目標)。
+enum Target { SELF, ALLY, LANE_ENEMY, ADJACENT_ALLIES, ALLY_HERO }
 
 ## 狀態種類(對齊 README Gameplay Spec §9 狀態效果表)。
-enum Status { NONE, BURN, FREEZE, POISON, NIGHT_VEIL, FORGE }
+## WEAKEN 是 FORGE 的反面(ATK -1):設計稿的「防禦力 -1」「攻擊力 -1」都收斂到這裡,
+## 免得為了一個減益在 ATK/HP 之外多開第三個數值(§4.2 數值結構只有 ATK/HP)。
+enum Status { NONE, BURN, FREEZE, POISON, NIGHT_VEIL, FORGE, WEAKEN }
 
 @export var skill_name: String = "未命名技能"
 @export_multiline var description: String = ""   # 卡面 / UI 顯示的效果描述
@@ -56,7 +62,8 @@ enum Status { NONE, BURN, FREEZE, POISON, NIGHT_VEIL, FORGE }
 @export_group("效果參數")
 @export var effect: Effect = Effect.NONE
 @export var effect_target: Target = Target.LANE_ENEMY
-@export var amount: int = 0              # HEAL 治療量;DRAW/DISCARD_DRAW 抽幾張;SCRY 看幾張
+@export var amount: int = 0              # HEAL 治療量;SHIELD 盾值;
+                                         # DRAW/DISCARD_DRAW 抽幾張;SCRY 看幾張
 @export var status: Status = Status.NONE          # APPLY_STATUS 施加哪種狀態
 @export var status_turns: int = 1                 # 狀態持續回合(§9 上限:灼燒 ≤ 2)
 @export var summon_card: String = ""     # SUMMON 要生誰(data/cards 檔名,如 "skeleton")

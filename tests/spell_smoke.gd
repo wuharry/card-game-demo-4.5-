@@ -57,7 +57,10 @@ func _run() -> void:
 	_check(bm.hand_of("player").size() == 5, "玩家起手 5 張(實際 %d)" % bm.hand_of("player").size())
 	_check(bm.deck_count("player") == 55, "玩家牌堆 60-5=55(實際 %d)" % bm.deck_count("player"))
 
-	var knight_cd: CardData = load("res://data/cards/knight.tres")       # hp 6, 鐵壁
+	# ⚠ 期望值一律從卡資料推,別把騎士的 HP 寫死。
+	# 2026-08-10 卡池對齊 Pack01/02 設計稿時騎士 HP 6→5,寫死的 (a)(b)(c) 三條全爆——
+	# 這支驗的是「傷害管線的算術對不對」,不是「騎士有幾滴血」,平衡一動就紅是假警報。
+	var knight_cd: CardData = load("res://data/cards/knight.tres")       # 鐵壁;HP 見資料
 	var fireblast_cd: CardData = load("res://data/cards/arcana_fireblast.tres")  # power 3
 	var mithril_cd: CardData = load("res://data/cards/equip_mithril_plate.tres") # amount 2
 	var ward_cd: CardData = load("res://data/cards/ward_blast_sigil.tres")       # power 2
@@ -80,8 +83,11 @@ func _run() -> void:
 	var msg: String = bm.mark_summoned(unit1)
 	_check(unit1.summoned_this_turn, "(a) 召喚暈眩旗標已立")
 	_check(msg != "", "(a) 伏印觸發訊息非空")
-	# 伏印走 _deal_damage(minion_attack=false):鐵壁不擋 → 6-2=4。
-	_check(unit1.current_hp == 4, "(a) 伏印傷害落地 6-2=4(實際 %d)" % unit1.current_hp)
+	# 伏印走 _deal_damage(minion_attack=false):鐵壁不擋 → 滿血 - 伏印 power。
+	var ward_dmg: int = ward_cd.active_skill.power
+	var hp_a: int = knight_cd.hp - ward_dmg
+	_check(unit1.current_hp == hp_a, "(a) 伏印傷害落地 %d-%d=%d(實際 %d)" % [
+		knight_cd.hp, ward_dmg, hp_a, unit1.current_hp])
 	_check(bm.sides["enemy"].wards.is_empty(), "(a) 伏印用掉即離帳")
 
 	# ── (b) cast_arcana 火焰爆裂:對單位造成 power=3 傷害 ──
@@ -92,7 +98,10 @@ func _run() -> void:
 		return
 	var unit2: Card = bm.spawn_unit(knight_cd, slot2)
 	bm.cast_arcana(fireblast_cd, unit2)
-	_check(unit2.current_hp == 3, "(b) 火焰爆裂 6-3=3(實際 %d)" % unit2.current_hp)
+	var blast: int = fireblast_cd.active_skill.power
+	var hp_b: int = knight_cd.hp - blast
+	_check(unit2.current_hp == hp_b, "(b) 火焰爆裂 %d-%d=%d(實際 %d)" % [
+		knight_cd.hp, blast, hp_b, unit2.current_hp])
 	# 連丟兩發打死:cast_arcana 內建 _check_death → 卡槽應立即清位。
 	bm.cast_arcana(fireblast_cd, unit2)
 	bm.cast_arcana(fireblast_cd, unit2)
@@ -101,7 +110,9 @@ func _run() -> void:
 	# ── (c) attach_equip 秘銀胸鎧:max_hp_bonus +2 並補等量現血 ──
 	bm.attach_equip(mithril_cd, unit1)
 	_check(unit1.max_hp_bonus == 2, "(c) max_hp_bonus == 2(實際 %d)" % unit1.max_hp_bonus)
-	_check(unit1.current_hp == 6, "(c) 現血 4+2=6(實際 %d)" % unit1.current_hp)
+	var bonus: int = mithril_cd.active_skill.amount
+	_check(unit1.current_hp == hp_a + bonus, "(c) 現血 %d+%d=%d(實際 %d)" % [
+		hp_a, bonus, hp_a + bonus, unit1.current_hp])
 
 	# ── (d) set_ward(宿主制):埋在我方場上從者(unit1)底下 ──
 	bm.set_ward(ward_cd, unit1)

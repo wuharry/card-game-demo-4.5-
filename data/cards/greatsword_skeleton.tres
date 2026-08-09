@@ -6,10 +6,12 @@
 
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
-skill_name = "墓土重斬"
-description = "本次攻擊 +3。"
+skill_name = "橫掃"
+description = "對正面與左右相鄰路線的敵人各造成 3 點傷害。"
+kind = 1
 cost = 2
 power = 3
+modifier = 1
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
 atlas = ExtResource("2_sheet")
@@ -17,10 +19,10 @@ region = Rect2(0, 0, 100, 100)
 
 [resource]
 script = ExtResource("1_script")
-card_name = "巨劍骷髏"
-cost = 3
-atk = 4
-hp = 3
+card_name = "大劍骷髏"
+cost = 5
+atk = 5
+hp = 4
 art = SubResource("AtlasTexture_frame")
 standee = ExtResource("2_sheet")
 active_skill = SubResource("Skill_main")

@@ -6,12 +6,12 @@
 
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
-skill_name = "震懾咆哮"
-description = "咆哮震懾,凍結一名敵方單位 1 回合。"
-kind = 2
-cost = 2
-effect = 2
-status = 2
+skill_name = "地震咆哮"
+description = "對敵方所有單位各造成 3 點傷害。"
+kind = 1
+cost = 4
+power = 3
+modifier = 5
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
 atlas = ExtResource("2_sheet")
@@ -20,9 +20,10 @@ region = Rect2(0, 0, 100, 100)
 [resource]
 script = ExtResource("1_script")
 card_name = "熊人"
-cost = 6
+cost = 7
 atk = 6
-hp = 7
+hp = 8
 art = SubResource("AtlasTexture_frame")
 standee = ExtResource("2_sheet")
 active_skill = SubResource("Skill_main")
+keywords = Array[StringName]([&"嘲諷"])

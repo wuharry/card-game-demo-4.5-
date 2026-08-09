@@ -6,13 +6,10 @@
 
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
-skill_name = "舉盾死守"
-description = "舉盾自保,獲得夜幕(下回合首次受到的傷害減半)。"
-kind = 2
-anim = "Block"
-effect = 2
-effect_target = 0
-status = 4
+skill_name = "骨刺"
+description = "對敵方單位造成 3 點傷害。"
+kind = 1
+power = 3
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
 atlas = ExtResource("2_sheet")
@@ -21,6 +18,9 @@ region = Rect2(0, 0, 100, 100)
 [resource]
 script = ExtResource("1_script")
 card_name = "骷髏兵"
+cost = 2
+atk = 2
+hp = 2
 art = SubResource("AtlasTexture_frame")
 standee = ExtResource("2_sheet")
 active_skill = SubResource("Skill_main")

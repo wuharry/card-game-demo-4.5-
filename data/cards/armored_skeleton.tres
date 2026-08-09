@@ -6,12 +6,12 @@
 
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
-skill_name = "白骨凝聚"
-description = "白骨重組,自身回復 3 點生命。"
+skill_name = "骨盾防禦"
+description = "使自身獲得 3 點護盾。"
 kind = 2
 cost = 2
 anim = "Summon"
-effect = 1
+effect = 7
 effect_target = 0
 amount = 3
 
@@ -23,8 +23,8 @@ region = Rect2(0, 0, 100, 100)
 script = ExtResource("1_script")
 card_name = "重甲骷髏"
 cost = 4
-atk = 4
-hp = 4
+atk = 3
+hp = 5
 art = SubResource("AtlasTexture_frame")
 standee = ExtResource("2_sheet")
 active_skill = SubResource("Skill_main")
