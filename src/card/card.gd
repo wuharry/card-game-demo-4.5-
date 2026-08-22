@@ -86,7 +86,7 @@ var current_hp: int = 0
 var attacked_this_turn: bool = false
 var skill_used_this_turn: bool = false
 var summoned_this_turn: bool = false
-## 場上的狀態效果:[{id: SkillData.Status, turns: int}, ...](§9)。
+## 場上的狀態效果:[{id, turns, skip_next_decay}, ...](§9)。
 ## 鍛強在 atk_total() 生效;夜幕/鐵壁在 BattleManager 的傷害管線裡消耗。
 var statuses: Array[Dictionary] = []
 var iron_wall_used_this_turn: bool = false   # 【鐵壁】本回合的首傷減免用掉了?
@@ -122,14 +122,23 @@ func setup(card_data: CardData) -> void:
 	var is_minion := data.card_type == CardData.CardType.MINION
 	$ATKLabel.visible = is_minion
 	$HPLabel.visible = is_minion
-	# ── 卡圖:像素角色第 0 幀「放大」塞進卡框挖空窗 ──────────────
-	# (AI 繪圖卡圖已棄用:和像素立牌風格打架。卡圖=立牌同一張動畫表,全場統一。)
+	# ── 卡圖:有專用插畫就用插畫;舊從者仍用立牌第 0 幀 ───────────
 	# 100×100 的格子裡角色本體只佔中間約 30px:整格塞窗,角色會小得像圖示。
 	# 所以先掃出第 0 幀的「可見範圍」(和 show_standee 共用同一把尺),
 	# 用 region 只裁出本體、等比放大進窗;NEAREST 讓放大後的像素塊保持銳利。
 	# 卡圖擺在卡框「後面」(z = -0.01),從透明挖空處露出來——
 	# 框的邊飾永遠畫在圖上面,所以不管圖放多大,卡框美術都不會被壓到。
-	if data.standee != null:
+	if data.use_dedicated_art and data.art != null:
+		# 專用卡圖按原比例 cover 卡圖窗。素材比例若已對齊 295:207,只會裁到極少邊緣;
+		# 不用法術 icon 的水平拉伸路徑,人物與場景才不會變形。
+		var dedicated_w := maxf(float(data.art.get_width()), 1.0)
+		var dedicated_h := maxf(float(data.art.get_height()), 1.0)
+		$CardArt.texture = data.art
+		$CardArt.region_enabled = false
+		$CardArt.pixel_size = maxf(
+			ART_WINDOW_SIZE.x / dedicated_w, ART_WINDOW_SIZE.y / dedicated_h)
+		$CardArt.scale = Vector3.ONE
+	elif data.standee != null:
 		var cell := maxf(float(data.standee.get_height()), 1.0)
 		var bounds := visible_bounds_of_frame0(data.standee)
 		# grow(2):四周留 2px 呼吸邊;再夾回格子範圍,region 才不會取樣到界外。
@@ -283,8 +292,10 @@ func show_standee() -> void:
 	var pop := _standee.create_tween()
 	pop.tween_property(_standee, "scale", Vector3.ONE, 0.3)\
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	# 待機動畫:交給共用的循環播放器(見下方 _play_sheet_loop)。
-	_play_sheet_loop(frame_count)
+	# 有 Summon 兄弟表就先完整播一次,播完由 play_one_shot_anim 自動回 Idle;
+	# 沒有的舊角色維持原本直接播待機。這讓新增素材不必再改召喚流程。
+	if not play_one_shot_anim("Summon"):
+		_play_sheet_loop(frame_count)
 
 
 ## ── 立牌動畫工具組 ────────────────────────────────────────
@@ -562,7 +573,7 @@ func _refresh_hp_label() -> void:
 
 
 ## ── 狀態效果(§9;由 BattleManager 讀寫)──────────────
-func add_status(id: SkillData.Status, turns: int) -> void:
+func add_status(id: SkillData.Status, turns: int, skip_next_decay: bool = false) -> void:
 	# 灼燒/凍結互斥(§9):新狀態把對立的舊狀態擠掉。
 	if id == SkillData.Status.BURN:
 		remove_status(SkillData.Status.FREEZE)
@@ -571,9 +582,10 @@ func add_status(id: SkillData.Status, turns: int) -> void:
 	for s in statuses:
 		if s.id == id:
 			s.turns = maxi(int(s.turns), turns)   # 重複上同狀態:刷新回合數,不疊加
+			s.skip_next_decay = bool(s.get("skip_next_decay", false)) or skip_next_decay
 			_update_status_label()
 			return
-	statuses.append({"id": id, "turns": turns})
+	statuses.append({"id": id, "turns": turns, "skip_next_decay": skip_next_decay})
 	_update_status_label()
 
 
@@ -594,6 +606,11 @@ func remove_status(id: SkillData.Status) -> void:
 ## 回合開始:所有狀態剩餘回合 -1,歸零解除(§5 開始階段「解除凍結等狀態」)。
 func decay_statuses() -> void:
 	for i in range(statuses.size() - 1, -1, -1):
+		# 凍結若在受害者回合開始前才剛施加,那一次開始階段不能立刻把它消掉;
+		# 先吃掉這枚旗標,下一次自己的開始階段才正常遞減。
+		if bool(statuses[i].get("skip_next_decay", false)):
+			statuses[i].skip_next_decay = false
+			continue
 		statuses[i].turns = int(statuses[i].turns) - 1
 		if int(statuses[i].turns) <= 0:
 			statuses.remove_at(i)

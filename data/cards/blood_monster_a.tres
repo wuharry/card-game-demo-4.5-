@@ -1,8 +1,9 @@
-[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3 uid="uid://dwqrgorxyhy0r"]
+[gd_resource type="Resource" script_class="CardData" load_steps=7 format=3 uid="uid://dwqrgorxyhy0r"]
 
 [ext_resource type="Script" uid="uid://cxot3rc105cul" path="res://src/card/card_data.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 02 -Full 20 Characters/Characters(100x100 split)/Blood Monster_A/Blood Monster_A/Blood Monster_A_Idle.png" id="2_sheet"]
 [ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/blood_monster_a_card_art.png" id="4_card_art"]
 
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
@@ -23,6 +24,7 @@ card_name = "血肉魔物"
 cost = 4
 atk = 3
 hp = 5
-art = SubResource("AtlasTexture_frame")
+art = ExtResource("4_card_art")
+use_dedicated_art = true
 standee = ExtResource("2_sheet")
 active_skill = SubResource("Skill_main")

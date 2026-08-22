@@ -12,6 +12,8 @@ signal attack_chosen
 signal skill_chosen(skill: SkillData)
 signal cancelled
 signal end_turn_pressed
+## Debug 離線用:請 CardManager 建立「指定卡+足夠魔力+對位靶」的測試場。
+signal debug_test_pressed
 ## 勝負畫面上的兩個去向(CardManager 接手換場景/重開)。
 signal restart_pressed
 signal menu_pressed
@@ -62,6 +64,7 @@ var _hud_mana_bonus: Label
 var _hud_opp: Label   # 對方手牌張數(2d;只在連線時顯示)
 var _end_turn_btn: Button
 var _leave_btn: Button   # 中途離開(左上角;真正的攔截在確認窗)
+var _debug_test_btn: Button = null   # Debug 離線才生成;Release/連線不存在
 var _toast: Label
 var _toast_tween: Tween
 
@@ -369,6 +372,29 @@ func _build_hud() -> void:
 	_leave_btn.set_anchors_and_offsets_preset(
 		Control.PRESET_TOP_LEFT, Control.PRESET_MODE_MINSIZE, 24)
 
+	# 測卡入口要能用滑鼠點:Godot Editor 可能先吃掉 F8(停止執行),不能只靠快捷鍵。
+	if OS.is_debug_build() and not NetMatch.is_online and not NetMatch.is_dedicated_server:
+		_debug_test_btn = Button.new()
+		_debug_test_btn.text = "準備測試牌  [F8]"
+		_debug_test_btn.tooltip_text = "把測試卡放進手牌、補足魔力，並在正對面放置測試靶"
+		_debug_test_btn.add_theme_font_override("font", FONT_BODY)
+		_debug_test_btn.add_theme_font_size_override("font_size", 14)
+		_debug_test_btn.add_theme_color_override("font_color", Color("8edfff"))
+		_debug_test_btn.add_theme_color_override("font_hover_color", Color("d9f7ff"))
+		_debug_test_btn.add_theme_stylebox_override("normal", _make_panel_style())
+		var debug_lit := _make_panel_style()
+		debug_lit.border_color = Color("8edfff")
+		_debug_test_btn.add_theme_stylebox_override("hover", debug_lit)
+		_debug_test_btn.add_theme_stylebox_override("focus", debug_lit)
+		_debug_test_btn.add_theme_stylebox_override("pressed", debug_lit)
+		_debug_test_btn.pressed.connect(func() -> void:
+			Sfx.play(Sfx.CLICK, -8.0)
+			debug_test_pressed.emit())
+		add_child(_debug_test_btn)
+		_debug_test_btn.set_anchors_and_offsets_preset(
+			Control.PRESET_TOP_LEFT, Control.PRESET_MODE_MINSIZE, 24)
+		_debug_test_btn.position.y += 58.0
+
 	_toast = Label.new()
 	_toast.add_theme_font_override("font", FONT_TITLE)
 	# 提示是「行動被擋下」的當下回饋,要一眼看到:大字、亮色、厚黑邊。
@@ -442,6 +468,8 @@ func show_game_over(victory: bool) -> void:
 	# 這裡只做「視覺收窗」而不呼叫 dismiss_leave_confirm()——後者會 emit
 	# leave_decided(false),把 CardManager 剛鎖上的 GAME_OVER 互動鎖解開。
 	_leave_btn.visible = false
+	if _debug_test_btn != null:
+		_debug_test_btn.visible = false
 	if _leave_dim != null:
 		_leave_dim.visible = false
 		_leave_panel.visible = false
@@ -736,8 +764,11 @@ func show_card_preview(card: Card) -> void:
 		body.append("【戰吼】%s" % d.battlecry.description)
 	_prev_body.text = "\n".join(body)
 	_prev_body.visible = not body.is_empty()
-	# 卡圖:從者=立牌動畫第 0 幀(只裁本體可見範圍,和卡面同一把尺);法術=圖示。
-	if d.standee != null:
+	# 有專用卡圖時優先使用;舊從者才裁立牌第 0 幀,法術則直接顯示圖示。
+	if d.use_dedicated_art and d.art != null:
+		_prev_art.texture = d.art
+		_prev_art.visible = true
+	elif d.standee != null:
 		var atlas := AtlasTexture.new()
 		atlas.atlas = d.standee
 		atlas.region = Card.visible_bounds_of_frame0(d.standee)
@@ -934,8 +965,10 @@ func _make_pick_tile(d: CardData, idx: int) -> Control:
 	return tile
 
 
-## 卡面圖:從者=立牌第 0 幀裁可見範圍;法術=圖示(和 hover 預覽同一把尺)。
+## 卡面圖:專用插畫優先;舊從者=立牌第 0 幀;法術=圖示(和 hover 預覽同一把尺)。
 func _cardface_art(d: CardData) -> Texture2D:
+	if d.use_dedicated_art and d.art != null:
+		return d.art
 	if d.standee != null:
 		var atlas := AtlasTexture.new()
 		atlas.atlas = d.standee

@@ -137,6 +137,78 @@ func hand_of(side: String) -> Array[CardData]:
 	return (sides[side] as SideState).hand
 
 
+## Debug 離線測卡:把指定卡移進手牌並補足它的費用。
+## 這裡只改「帳」;CardManager 呼叫前會先 stash 視圖、呼叫後再 rebuild。
+## 線上禁用:client 本地塞牌會和權威帳分家,也等同作弊。
+func debug_prepare_card(side: String, card_path: String) -> Dictionary:
+	var result := {
+		"ok": false, "reason": "", "added": false,
+		"replaced": "", "replacement_note": "", "card": null,
+	}
+	if not OS.is_debug_build():
+		result.reason = "僅 Debug 版本可使用測卡功能"
+		return result
+	if NetMatch.is_online or NetMatch.is_dedicated_server:
+		result.reason = "連線對局停用測卡功能,避免雙方帳目不同步"
+		return result
+	if not sides.has(side):
+		result.reason = "找不到測試側別:%s" % side
+		return result
+	if not ResourceLoader.exists(card_path):
+		result.reason = "找不到測試卡:%s" % card_path
+		return result
+	var cd := load(card_path) as CardData
+	if cd == null:
+		result.reason = "測試資源不是 CardData:%s" % card_path
+		return result
+
+	var st := sides[side] as SideState
+	var already_held := false
+	for held in st.hand:
+		if held.resource_path == cd.resource_path:
+			cd = held
+			already_held = true
+			break
+	if not already_held:
+		# 優先把牌堆裡原有的那一份搬進手牌;沒有時移除一張牌堆底卡來維持總張數。
+		var deck_index := -1
+		for i in range(st.deck.size()):
+			if st.deck[i].resource_path == cd.resource_path:
+				deck_index = i
+				break
+		if deck_index >= 0:
+			cd = st.deck[deck_index]
+			st.deck.remove_at(deck_index)
+		elif not st.deck.is_empty():
+			st.deck.pop_front()
+		elif not st.hand.is_empty():
+			# 牌堆已空時改成原位替換一張手牌;不憑空增加這局的總牌數。
+			var displaced: CardData = st.hand.pop_back()
+			result.replaced = displaced.card_name
+			result.replacement_note = "(牌堆已空,以【%s】替換)" % displaced.card_name
+		else:
+			result.reason = "牌堆與手牌都已空,沒有可替換的測試牌位置"
+			return result
+		# 滿手時把最右一張放回牌堆底,測卡不直接燒掉玩家原本的牌。
+		if st.hand.size() >= MAX_HAND:
+			var returned: CardData = st.hand.pop_back()
+			result.replaced = returned.card_name
+			result.replacement_note = "(滿手,已把【%s】放回牌堆底)" % returned.card_name
+			st.deck.push_front(returned)
+		st.hand.append(cd)
+		result.added = true
+
+	var needed := clampi(cd.cost, 0, MANA_CAP)
+	st.mana_max = maxi(st.mana_max, needed)
+	st.mana = maxi(st.mana, needed)
+	st.temp_mana = mini(st.temp_mana, st.mana)
+	result.ok = true
+	result.card = cd
+	if side == active_side:
+		_emit_state()
+	return result
+
+
 func deck_count(side: String) -> int:
 	return (sides[side] as SideState).deck.size() if sides.has(side) else 0
 
@@ -401,7 +473,7 @@ func cast_arcana(card: CardData, target: Card) -> String:
 				_resolve_attack(null, target, sk.power, false, sk.modifier, false)
 				msg += "造成 %d 點傷害並" % sk.power
 			if is_instance_valid(target):
-				target.add_status(sk.status, sk.status_turns)
+				_apply_timed_status(target, sk.status, sk.status_turns)
 			return msg + "施加【%s】%d 回合" % [
 				Card.STATUS_NAMES.get(sk.status, "狀態"), sk.status_turns]
 		_:
@@ -663,7 +735,16 @@ func _apply_skill_effect(caster: Card, skill: SkillData, target: Node3D) -> void
 					(who as Card).add_shield(skill.amount)
 			SkillData.Effect.APPLY_STATUS:
 				if who is Card:
-					(who as Card).add_status(skill.status, skill.status_turns)
+					_apply_timed_status(who as Card, skill.status, skill.status_turns)
+
+
+## 凍結 1 回合若施加在「下一個才要行動」的敵人身上,不能在它緊接著的開始階段
+## 立刻 -1 消失。用一次性旗標跳過那次遞減,資料與狀態列仍能如實保持「1」。
+func _apply_timed_status(target: Card, status: SkillData.Status, turns: int) -> void:
+	var target_side := side_of(target)
+	var defer_first_decay := status == SkillData.Status.FREEZE \
+		and not target_side.is_empty() and target_side != active_side
+	target.add_status(status, turns, defer_first_decay)
 
 
 ## 效果的收受者清單。回傳陣列而不是單一節點,是因為 ADJACENT_ALLIES 一次打到好幾個;

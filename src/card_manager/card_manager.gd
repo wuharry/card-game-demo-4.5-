@@ -22,6 +22,10 @@ const COLLISION_MASK_CARD = 1  # 第 1 層：卡片實體(拖曳時要找的對�
 const COLLISION_MASK_SLOT = 2  # 第 2 層：桌面卡槽(放牌時要找的對象)
 const COLLISION_MASK_HERO = 4  # 第 3 層：本體(hero.gd 生成碰撞時自掛這層)
 const COLLISION_MASK_GRAVE = 8  # 第 4 層：墓地投放區(grave_pile.gd 自掛;丟牌回魔 §1.1)
+## Debug 離線測卡:F8 預設準備冰霜女巫;啟動參數 --test-card=<tres 檔名> 可換卡。
+const DEBUG_TEST_CARD_SLUG := "frost_witch"
+const DEBUG_TEST_CARD_ARG := "--test-card="
+const DEBUG_TARGET_CARD_PATH := "res://data/cards/soldier.tres"
 
 ## @onready：等節點都準備好後，才執行右邊的取值並存進變數(太早拿可能還是 null)。
 ## camera：場景目前啟用中的攝影機。把滑鼠的 2D 座標換成 3D 射線時一定要用到它。
@@ -96,6 +100,7 @@ func _ready() -> void:
 	battle_ui.skill_chosen.connect(_on_skill_chosen)
 	battle_ui.cancelled.connect(_cancel_command)
 	battle_ui.end_turn_pressed.connect(_on_end_turn)
+	battle_ui.debug_test_pressed.connect(_prepare_debug_card_test)
 	# 戰鬥帳房:規則與數值都在它那裡。UI 的決定經中樞轉發給帳房、
 	# 帳的變化再流回 UI——兩端只認識中樞,互不相識(同 hover 中繼鏈的哲學)。
 	battle_manager = BattleManager.new()
@@ -300,6 +305,14 @@ func _process(_delta: float) -> void:
 ## ── 處理滑鼠輸入:依「互動狀態」分流 ──────────────
 ## _input(event) 在每次有輸入(滑鼠/鍵盤)時被呼叫,event 帶有這次事件的資訊。
 func _input(event: InputEvent) -> void:
+	# F8 一鍵建立可立即出牌、且正對面有靶的測試情境。只在 Debug build 攔鍵;
+	# Release 完全沒有這條操作,線上則由 helper 明確拒絕以保護權威帳。
+	if OS.is_debug_build() and event is InputEventKey:
+		var key_event := event as InputEventKey
+		if key_event.pressed and not key_event.echo and key_event.keycode == KEY_F8:
+			_prepare_debug_card_test()
+			get_viewport().set_input_as_handled()
+			return
 	# 右鍵 / ESC = 反悔:不管在選單還是指定目標,都退回平時狀態。
 	var is_rmb: bool = event is InputEventMouseButton \
 		and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed
@@ -342,6 +355,101 @@ func _input(event: InputEvent) -> void:
 					pass
 		elif ui_state == UiState.DRAGGING:
 			_on_left_released_drag()
+
+
+## F8 測卡完整夾具:同步手牌帳 → 注入卡/補魔 → 重建視圖 → 準備同路線敵方靶。
+func _prepare_debug_card_test() -> void:
+	if battle_manager == null or battle_ui == null or player_hand == null:
+		return
+	if NetMatch.is_online or _is_srv():
+		battle_ui.flash_message("連線對局不能使用 F8 測卡,避免雙方帳目不同步")
+		return
+	if ui_state != UiState.IDLE or _picking:
+		battle_ui.flash_message("請先結束目前的拖曳、選單或選牌操作,再按 F8")
+		return
+	if MatchMode.is_vs_ai() and battle_manager.active_side != "player":
+		battle_ui.flash_message("請等到玩家回合再按 F8")
+		return
+
+	var side := battle_manager.active_side
+	battle_manager.stash_hand(player_hand.hand_data())
+	var prepared := battle_manager.debug_prepare_card(side, _debug_test_card_path())
+	if not prepared.get("ok", false):
+		battle_ui.flash_message(str(prepared.get("reason", "測卡準備失敗")))
+		return
+	currently_hovered_card = null
+	_previewed_card = null
+	battle_ui.hide_card_preview()
+	player_hand.rebuild_from(battle_manager.hand_of(side), false)
+	_update_deck_labels()
+
+	var cd := prepared.get("card") as CardData
+	var target := _debug_find_or_create_lane_target(side)
+	var replacement_note := str(prepared.get("replacement_note", ""))
+	if target == null:
+		battle_ui.flash_message("F8:【%s】已入手並補足魔力%s;但找不到可用的對位卡槽" % [
+			cd.card_name, replacement_note])
+		return
+	battle_ui.flash_message("F8 測試場:【%s】已入手並補足魔力%s;請放到【%s】正對面" % [
+		cd.card_name, replacement_note, target.data.card_name])
+
+
+## 預設測 frost_witch;Godot 參數分隔符後加 -- --test-card=wizard 可換 data/cards/*.tres。
+func _debug_test_card_path() -> String:
+	var slug := DEBUG_TEST_CARD_SLUG
+	for raw_arg in OS.get_cmdline_user_args():
+		var arg := String(raw_arg)
+		if arg.begins_with(DEBUG_TEST_CARD_ARG):
+			slug = arg.trim_prefix(DEBUG_TEST_CARD_ARG).trim_suffix(".tres")
+			break
+	# 只接受單純檔名,不讓測試參數跳出 data/cards。
+	if slug.is_empty() or slug.contains("/") or slug.contains("\\") or slug.contains(".."):
+		slug = DEBUG_TEST_CARD_SLUG
+	return "res://data/cards/%s.tres" % slug
+
+
+## 找一組「我方前排空格 ↔ 對面前排」的同路線卡槽。已有單位就沿用;
+## 沒有就生成無戰吼的士兵當靶,且不呼叫 mark_summoned(測試靶不應觸發額外規則)。
+func _debug_find_or_create_lane_target(side: String) -> Card:
+	var home_group := "player_front" if side == "player" else "enemy_front"
+	var target_group := "enemy_front" if side == "player" else "player_front"
+	var home_slots := _debug_front_slots(home_group)
+	var target_slots := _debug_front_slots(target_group)
+	for target_slot in target_slots:
+		var occupied_home := _debug_nearest_slot(home_slots, target_slot.global_position.x)
+		if occupied_home != null and occupied_home.is_empty and target_slot.card_in_slot != null:
+			target_slot.card_in_slot.remove_status(SkillData.Status.FREEZE)
+			return target_slot.card_in_slot
+	var dummy := load(DEBUG_TARGET_CARD_PATH) as CardData
+	for target_slot in target_slots:
+		var empty_home := _debug_nearest_slot(home_slots, target_slot.global_position.x)
+		if empty_home != null and empty_home.is_empty and target_slot.is_empty:
+			return battle_manager.spawn_unit(dummy, target_slot)
+	return null
+
+
+func _debug_front_slots(group: String) -> Array[CardSlot]:
+	var slots: Array[CardSlot] = []
+	for node in get_tree().get_nodes_in_group(group):
+		if node is CardSlot:
+			slots.append(node)
+	# 中路優先,讓玩家第一眼就看得到靶;同距離時以 x 排序保持結果固定。
+	slots.sort_custom(func(a: CardSlot, b: CardSlot) -> bool:
+		var da := absf(a.global_position.x)
+		var db := absf(b.global_position.x)
+		return da < db if not is_equal_approx(da, db) else a.global_position.x < b.global_position.x)
+	return slots
+
+
+func _debug_nearest_slot(slots: Array[CardSlot], target_x: float) -> CardSlot:
+	var nearest: CardSlot = null
+	var best := INF
+	for slot in slots:
+		var distance := absf(slot.global_position.x - target_x)
+		if distance < best:
+			best = distance
+			nearest = slot
+	return nearest
 
 
 ## 平時左鍵按下:點手牌 = 抓起拖曳;點上桌單位 = 開指令選單(歧路旅人式:先選人再選招)。
@@ -1419,9 +1527,11 @@ func _net_summon(hand_idx: int, card_path: String, slot_np: NodePath) -> void:
 		var card := _take_pending_card()
 		if card == null:
 			return
-		msg = battle_manager.mark_summoned(card)   # 召喚暈眩+對方伏印觸發(§7)
+		# 必須先入槽,戰吼的 _lane_opposite 才查得到「我站在哪一路」;
+		# 也要先離手,否則抽牌型戰吼 stash 視圖時會把已打出的卡又存回手牌帳。
 		slot.place_card(card)
 		player_hand.play_card(card)
+		msg = battle_manager.mark_summoned(card)   # 召喚暈眩+戰吼+對方伏印(§7)
 	else:
 		# 重放端:帳面扣牌 + 生一個新單位節點放進同一格。
 		battle_manager.remove_from_hand(battle_manager.active_side, hand_idx)

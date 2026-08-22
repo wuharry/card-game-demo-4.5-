@@ -277,8 +277,10 @@ func _skill_text(d: CardData) -> String:
 	return "\n".join(parts)
 
 
-## 卡面圖:從者=立牌動畫第 0 幀裁可見範圍;法術=圖示(和戰鬥 hover 預覽同一把尺)。
+## 卡面圖:專用插畫優先;舊從者=立牌第 0 幀;法術=圖示(和戰鬥 hover 預覽同一把尺)。
 func _cardface_art(d: CardData) -> Texture2D:
+	if d.use_dedicated_art and d.art != null:
+		return d.art
 	if d.standee != null:
 		var atlas := AtlasTexture.new()
 		atlas.atlas = d.standee

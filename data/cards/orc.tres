@@ -1,8 +1,9 @@
-[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3 uid="uid://bqjg1didx6r3x"]
+[gd_resource type="Resource" script_class="CardData" load_steps=7 format=3 uid="uid://bqjg1didx6r3x"]
 
 [ext_resource type="Script" uid="uid://cxot3rc105cul" path="res://src/card/card_data.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://cw7kvpv637w64" path="res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Orc/Orc/Orc_Idle.png" id="2_sheet"]
 [ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/orc_card_art.png" id="4_card_art"]
 
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
@@ -25,6 +26,7 @@ card_name = "獸人"
 cost = 3
 atk = 3
 hp = 3
-art = SubResource("AtlasTexture_frame")
+art = ExtResource("4_card_art")
+use_dedicated_art = true
 standee = ExtResource("2_sheet")
 active_skill = SubResource("Skill_main")

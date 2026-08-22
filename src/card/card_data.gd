@@ -27,11 +27,9 @@ enum CardType {
 @export var cost: int = 1                  # 召喚費用(左上 CostLabel)
 @export var atk: int = 1                   # 攻擊力(左下 ATKLabel)
 @export var hp: int = 1                    # 生命值(右下 HPLabel)
-@export var art: Texture2D                 # 卡圖(備用):AI 繪圖路線已棄用,現行
-                                           # 卡圖由 card.gd 從 standee 掃第 0 幀放大;
-                                           # 這欄留給未來真的有手繪卡圖時替換
-@export var standee: Texture2D             # 立牌動畫表:card.gd 的卡圖與召喚立牌
-                                           # 都讀這欄(show_standee 切幀播待機動畫)
+@export var art: Texture2D                 # 卡面靜態圖;舊從者仍可放 standee 第 0 幀的 AtlasTexture
+@export var use_dedicated_art: bool = false # true = 卡面/預覽讀 art,召喚立牌仍只讀 standee
+@export var standee: Texture2D             # 立牌動畫表(show_standee 切幀播待機動畫)
 @export var active_skill: SkillData        # 主動技能(預設 Attack02 動畫;null = 無主動技,
                                            # 見 README §6.1 與 docs/skills_design.md)
 ## 戰吼:召喚落地時自動結算一次的效果(null = 沒有戰吼)。

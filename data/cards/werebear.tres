@@ -1,8 +1,9 @@
-[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3 uid="uid://dxrv3nnv2yap5"]
+[gd_resource type="Resource" script_class="CardData" load_steps=7 format=3 uid="uid://dxrv3nnv2yap5"]
 
 [ext_resource type="Script" uid="uid://cxot3rc105cul" path="res://src/card/card_data.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://0o5f1fuenoep" path="res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Werebear/Werebear/Werebear_Idle.png" id="2_sheet"]
 [ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/werebear_card_art.png" id="4_card_art"]
 
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
@@ -23,7 +24,8 @@ card_name = "熊人"
 cost = 7
 atk = 6
 hp = 8
-art = SubResource("AtlasTexture_frame")
+art = ExtResource("4_card_art")
+use_dedicated_art = true
 standee = ExtResource("2_sheet")
 active_skill = SubResource("Skill_main")
 keywords = Array[StringName]([&"嘲諷"])
