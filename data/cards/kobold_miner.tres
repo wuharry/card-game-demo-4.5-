@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://src/card/card_data.gd" id="1_card"]
+[ext_resource type="Texture2D" path="res://assets/characters/generated/kobold_miner/Kobold_Miner_Idle.png" id="2_sheet"]
+[ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/kobold_miner_card_art.png" id="4_art"]
+
+[sub_resource type="Resource" id="Skill_main"]
+script = ExtResource("3_skill")
+skill_name = "碎岩鎬擊"
+description = "獨立攻擊造成 2 點傷害。"
+kind = 1
+cost = 1
+anim = "Attack02"
+power = 2
+
+[resource]
+script = ExtResource("1_card")
+card_name = "狗頭人礦工"
+cost = 2
+atk = 2
+hp = 4
+art = ExtResource("4_art")
+use_dedicated_art = true
+standee = ExtResource("2_sheet")
+active_skill = SubResource("Skill_main")

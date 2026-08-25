@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://src/card/card_data.gd" id="1_card"]
+[ext_resource type="Texture2D" path="res://assets/characters/generated/adventurer/Adventurer_Idle.png" id="2_sheet"]
+[ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/adventurer_card_art.png" id="4_art"]
+
+[sub_resource type="Resource" id="Skill_main"]
+script = ExtResource("3_skill")
+skill_name = "老練劍擊"
+description = "強化攻擊，本次攻擊獲得 +2 攻擊力。"
+cost = 1
+anim = "Attack02"
+power = 2
+
+[resource]
+script = ExtResource("1_card")
+card_name = "冒險者"
+cost = 2
+atk = 3
+hp = 3
+art = ExtResource("4_art")
+use_dedicated_art = true
+standee = ExtResource("2_sheet")
+active_skill = SubResource("Skill_main")

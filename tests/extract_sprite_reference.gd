@@ -1,5 +1,5 @@
 extends SceneTree
-## 從橫排動畫表擷取第 0 幀人物，最近鄰放大成 imagegen 可清楚辨識的參考圖。
+## 從橫排動畫表擷取指定影格人物，最近鄰放大成 imagegen 可清楚辨識的參考圖。
 ## Godot --headless --path . -s tests/extract_sprite_reference.gd -- sheet.png out.png
 
 const CANVAS_SIZE := 512
@@ -18,8 +18,14 @@ func _initialize() -> void:
 		quit(2)
 		return
 	sheet.convert(Image.FORMAT_RGBA8)
+	var frame_index := int(args[2]) if args.size() > 2 else 0
 	var cell_size := sheet.get_height()
-	var frame := sheet.get_region(Rect2i(0, 0, mini(cell_size, sheet.get_width()), cell_size))
+	var frame_count := sheet.get_width() / cell_size
+	if frame_index < 0 or frame_index >= frame_count:
+		printerr("frame index out of range: ", frame_index, " / ", frame_count)
+		quit(2)
+		return
+	var frame := sheet.get_region(Rect2i(frame_index * cell_size, 0, cell_size, cell_size))
 	var used := frame.get_used_rect()
 	if used.size.x <= 0 or used.size.y <= 0:
 		printerr("frame 0 has no visible pixels")
@@ -40,5 +46,6 @@ func _initialize() -> void:
 		printerr("failed to save reference: ", error)
 		quit(2)
 		return
-	print("saved: ", args[1], " source=", used, " enlarged=", character.get_size())
+	print("saved: ", args[1], " frame=", frame_index, " source=", used,
+		" enlarged=", character.get_size())
 	quit(0)
