@@ -52,13 +52,13 @@ const STATUS_NAMES := {
 }
 
 ## §7 卡型章:非從者卡的底部印「卡型名 + 印章色」(從者卡的那個位置是攻血數字)。
-## 色調刻意壓暗:要像蓋在羊皮紙上的印泥,不是螢光標籤。
+## 深色寒鐵文字區上的分類色:提高明度維持辨識,彩度仍收斂避免螢光感。
 const TYPE_BADGES := {
-	CardData.CardType.EQUIP: ["靈裝", Color(0.5, 0.36, 0.1)],
-	CardData.CardType.ARCANA: ["秘術", Color(0.4, 0.18, 0.5)],
-	CardData.CardType.QUICK: ["瞬咒", Color(0.12, 0.32, 0.55)],
-	CardData.CardType.WARD: ["伏印", Color(0.16, 0.4, 0.18)],
-	CardData.CardType.DOMAIN: ["領域", Color(0.35, 0.35, 0.35)],
+	CardData.CardType.EQUIP: ["靈裝", Color(0.86, 0.72, 0.36)],
+	CardData.CardType.ARCANA: ["秘術", Color(0.72, 0.55, 0.86)],
+	CardData.CardType.QUICK: ["瞬咒", Color(0.49, 0.75, 0.94)],
+	CardData.CardType.WARD: ["伏印", Color(0.54, 0.79, 0.59)],
+	CardData.CardType.DOMAIN: ["領域", Color(0.72, 0.77, 0.82)],
 }
 
 ## 立牌「角色可見高度」(世界單位)。召喚時會掃描角色圖的不透明範圍,
@@ -205,9 +205,8 @@ func _update_skill_label() -> void:
 		lb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		lb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lb.render_priority = 1
-		# Label3D 預設白字+黑外框是給「壓在雜亂背景上」的字用的;
-		# 這裡底是淺色羊皮紙 → 改墨黑、關外框,像印上去的油墨字。
-		lb.modulate = Color(0.09, 0.07, 0.05)
+		# 新卡框的文字區是深色寒鐵:用淡冰灰保持對比,關外框維持乾淨像素感。
+		lb.modulate = Color(0.78, 0.86, 0.93)
 		lb.outline_size = 0
 	var parts: PackedStringArray = []
 	if data != null and data.active_skill != null:
