@@ -9,7 +9,8 @@
 - Output naming: `<data/cards slug>_card_art.png`
 - Card-art window: landscape `295:207` (approximately 10:7)
 - Runtime usage: `CardData.art` with `use_dedicated_art = true`
-- Animation invariant: `CardData.standee` and every Idle/Summon/Attack sheet remain unchanged
+- Animation invariant: every minion has `Idle` plus `Attack01` for its mandatory normal attack. A minion with an
+  active skill additionally has a distinct skill sheet (currently `Attack02` for the generated archetypes).
 
 ## Minion shared visual contract
 
@@ -36,16 +37,23 @@ The existing minion cards share a stricter visual language than a generic "pixel
 
 ## Generated runtime character contract
 
-New character archetypes that do not exist in the Tiny RPG packs use one dedicated six-frame source generation:
+New character archetypes that do not exist in the Tiny RPG packs use separate identity/skill and normal-attack
+source generations:
 
-- Exactly 3 columns × 2 rows on a transparent background; top row is a three-frame Idle loop and bottom row is a
-  three-frame `Attack02` or skill-action loop.
+- The identity/skill source is exactly 3 columns × 2 rows on a transparent background; the top row is a three-frame
+  Idle loop and the bottom row is a three-frame `Attack02` skill-action loop.
+- The mandatory normal-attack source is exactly 3 columns × 1 row: wind-up, ordinary impact, recovery. It exports
+  as `Attack01` and must be a visibly simpler, character-specific physical action rather than a duplicate of the
+  `Attack02` skill. A future skill-less minion still requires `Idle` plus `Attack01`, but has no `Attack02`.
 - The subject keeps one identity, facing direction, palette, anatomy, equipment count, and foot baseline across all
-  six cells. Idle uses neutral/down/up timing; the action uses wind-up/impact/recovery timing.
+  cells. Idle uses neutral/down/up timing; each action uses wind-up/impact/recovery timing.
 - Source art targets a 28–34 logical-pixel character, hard one-pixel outline, nearest-neighbor pixels, 10–14 flat
   colors, and no scenery, floor, shadow, text, labels, borders, or grid lines.
 - `tests/process_generated_sprite_sheet.gd` removes border-connected baked checkerboard pixels, normalizes a shared
   scale/baseline, and exports `<Character>_Idle.png` plus `<Character>_Attack02.png` as 300×100 three-frame sheets.
+- `tests/process_generated_action_sheet.gd` performs the same normalization for the 3×1 normal-attack source and
+  exports `<Character>_Attack01.png` as a 300×100 three-frame sheet. It also removes border-connected light
+  checkerboards or dark generated fills without erasing enclosed black sprite details.
 - The processed action sheet then becomes the identity/action authority for that character's dedicated card art.
 
 ## Input roles
