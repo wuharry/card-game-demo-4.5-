@@ -41,6 +41,18 @@ enum CardType {
 @export var keywords: Array[StringName] = []   # 被動關鍵字(README §8):
                                                # &"飛行"、&"不滅"、&"鐵壁"、&"衝鋒"…
 
+## 高階卡的資料驅動欄位。舊卡全部使用預設值，行為完全不變；新卡則不用把
+## 卡名硬寫進戰鬥系統。special_id 只標記無法由 SkillData 單一效果表達的複合結算。
+@export_group("高階卡效果")
+@export var special_id: StringName = &""
+@export var equip_atk_bonus: int = 0
+@export var equip_hp_bonus: int = 0
+@export var equip_keywords: Array[StringName] = []
+@export var equip_lifesteal: bool = false
+@export var turn_start_heal: int = 0
+@export var turn_start_shield: int = 0
+@export var revive_hp: int = 1
+
 
 ## 從 standee 的路徑推「同資料夾的兄弟動畫表」,例:get_anim_sheet("Attack02")。
 ## 素材命名規則是 <角色>_<動畫>.png,把最後一個底線之後換掉即可——

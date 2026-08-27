@@ -1,6 +1,6 @@
 extends SceneTree
 ## 將 imagegen 的 3×2 六格角色稿轉成遊戲既有的橫排 100×100 動畫表。
-## 上排三格 = Idle,下排三格 = Attack02。
+## 上排三格 = Idle,下排三格 = 指定動作（預設 Attack02；無技能從者傳 Attack01）。
 ##
 ## imagegen 偶爾把「透明棋盤」烤進 PNG。這裡只清除從畫布外緣能連通到的
 ## 近白灰像素,角色內部被黑線包住的白色高光會留下。
@@ -70,7 +70,8 @@ func _initialize() -> void:
 			dst_sheet.blit_rect(sprite, Rect2i(Vector2i.ZERO, sprite.get_size()), Vector2i(x, y))
 
 	var idle_path := args[1].path_join(args[2] + "_Idle.png")
-	var attack_path := args[1].path_join(args[2] + "_Attack02.png")
+	var action_suffix := args[3] if args.size() >= 4 else "Attack02"
+	var attack_path := args[1].path_join(args[2] + "_" + action_suffix + ".png")
 	var idle_err := idle_sheet.save_png(idle_path)
 	var attack_err := attack_sheet.save_png(attack_path)
 	if idle_err != OK or attack_err != OK:
@@ -86,7 +87,11 @@ func _initialize() -> void:
 func _is_checker_pixel(color: Color) -> bool:
 	var hi := maxf(color.r, maxf(color.g, color.b))
 	var lo := minf(color.r, minf(color.g, color.b))
-	return color.a > 0.0 and lo >= 0.91 and hi - lo <= 0.035
+	var light_checker := lo >= 0.91 and hi - lo <= 0.035
+	# Imagegen 常把「透明」輸出成邊緣連通的黑色柔光底；0.18 可吃掉這層底，
+	# 但角色外框被較亮像素包住，不會從畫布邊緣一路灌進角色內部。
+	var generated_dark_fill := hi <= 0.18
+	return color.a > 0.0 and (light_checker or generated_dark_fill)
 
 
 func _clear_connected_checkerboard(image: Image) -> void:

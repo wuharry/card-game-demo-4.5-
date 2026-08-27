@@ -485,6 +485,8 @@ func exit_board_mode() -> void:
 ## 靈裝加成(§7):生命上限增量,記在「節點」不記在共享的 CardData 上——
 ## 一份資料生多張卡,寫回 data.hp 會讓全場同名卡一起變厚;宿主離場加成隨節點消失。
 var max_hp_bonus: int = 0
+## 靈裝攻擊加成同樣放在實例，不能改共享 CardData.atk。
+var equip_atk_bonus: int = 0
 
 ## 裝備中的靈裝「卡」(§7):加成數值在上面,這裡記的是卡本身——
 ## 宿主陣亡時要知道「哪幾張」跟著入墓(BattleManager._check_death 隨葬用)。
@@ -562,6 +564,23 @@ func clamp_hp() -> void:
 	_refresh_hp_label()
 
 
+## 關鍵字來源 = 從者本身 + 當前靈裝。裝備授予的鐵壁／不滅不能寫回共享模板。
+func has_keyword(keyword: StringName) -> bool:
+	if data != null and data.keywords.has(keyword):
+		return true
+	for equipment in equipped_cards:
+		if equipment.equip_keywords.has(keyword):
+			return true
+	return false
+
+
+func has_equipped_lifesteal() -> bool:
+	for equipment in equipped_cards:
+		if equipment.equip_lifesteal:
+			return true
+	return false
+
+
 func _refresh_hp_label() -> void:
 	$HPLabel.text = str(current_hp)
 	# 殘血紅字:一眼掃出誰快死了;補滿就恢復原色。
@@ -621,7 +640,7 @@ func decay_statuses() -> void:
 ## 鍛強與衰弱「不」互斥(§9 只有灼燒/凍結互斥),同時在身上就是淨 +1;
 ## 夾在 0 以上——負攻擊力會讓反擊變成「打自己補血」。
 func atk_total() -> int:
-	var total := data.atk
+	var total := data.atk + equip_atk_bonus
 	if has_status(SkillData.Status.FORGE):
 		total += 2
 	if has_status(SkillData.Status.WEAKEN):

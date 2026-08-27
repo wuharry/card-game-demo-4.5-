@@ -74,7 +74,7 @@ func _is_generated_background_pixel(color: Color) -> bool:
 	var hi := maxf(color.r, maxf(color.g, color.b))
 	var lo := minf(color.r, minf(color.g, color.b))
 	var is_light_checker := lo >= 0.91 and hi - lo <= 0.035
-	var is_dark_fill := hi <= 0.06 and hi - lo <= 0.04
+	var is_dark_fill := hi <= 0.18
 	return color.a > 0.0 and (is_light_checker or is_dark_fill)
 
 

@@ -111,6 +111,7 @@ func _ready() -> void:
 	battle_manager.wards_changed.connect(_on_wards_changed)
 	# 戰吼抽牌:帳房只喊「要抽幾張」,視圖那半(stash 對帳 + 飛入動畫)走既有單一入口。
 	battle_manager.draw_requested.connect(_apply_draw)
+	battle_manager.battle_message.connect(battle_ui.flash_message)
 	battle_manager.game_over.connect(_on_game_over)
 	action_performed.connect(battle_manager.on_action_performed)
 	add_child(battle_manager)
@@ -610,7 +611,7 @@ func _is_valid_targeting_target(card: Card) -> bool:
 func _is_valid_spell_target(card: Card) -> bool:
 	if card == null or not card.is_on_board:
 		return false
-	if card.data.keywords.has(&"潛行"):
+	if card.has_keyword(&"潛行"):
 		return false
 	var is_ally: bool = battle_manager.side_of(card) == battle_manager.active_side
 	return is_ally if _spell_wants_ally() else not is_ally
@@ -640,7 +641,7 @@ func _on_left_pressed_spell_target() -> void:
 		# 誤判成「敵方」而把秘術砸在手牌上——視同點空地,取消。
 		_cancel_command()
 		return
-	if target.data.keywords.has(&"潛行"):
+	if target.has_keyword(&"潛行"):
 		battle_ui.flash_message("已取消:【%s】具有潛行,無法被秘術指定(§8)" % target.data.card_name)
 		_cancel_command()
 		return
@@ -760,6 +761,11 @@ func _is_effect_spell(cd: CardData) -> bool:
 
 ## 效果分流(熱座與連線結算端共用的出口;SCRY/換牌會再開選牌面板)。
 func _dispatch_spell_effect(cd: CardData) -> void:
+	if cd.special_id != &"":
+		var report := battle_manager.resolve_special_arcana(cd, battle_manager.active_side)
+		if not report.is_empty():
+			battle_ui.flash_message("【%s】：%s" % [cd.card_name, report])
+		return
 	match cd.active_skill.effect:
 		SkillData.Effect.DRAW:
 			_apply_draw(cd.active_skill.amount)
@@ -1635,12 +1641,14 @@ func _net_equip(hand_idx: int, card_path: String, target_np: NodePath) -> void:
 		return
 	battle_manager.spend(cd.cost)
 	var replaced: String = battle_manager.attach_equip(cd, target)
+	var hp_bonus := cd.equip_hp_bonus if cd.special_id != &"" else cd.active_skill.amount
+	var bonus_text := "攻擊 +%d、生命上限 +%d" % [cd.equip_atk_bonus, hp_bonus]
 	if replaced != "":
-		battle_ui.flash_message("【%s】替換了【%s】(舊裝進墓地):生命上限 +%d" % [
-			cd.card_name, replaced, cd.active_skill.amount])
+		battle_ui.flash_message("【%s】替換了【%s】(舊裝進墓地)：%s" % [
+			cd.card_name, replaced, bonus_text])
 	else:
-		battle_ui.flash_message("【%s】裝備到【%s】:生命上限 +%d" % [
-			cd.card_name, target.data.card_name, cd.active_skill.amount])
+		battle_ui.flash_message("【%s】裝備到【%s】：%s" % [
+			cd.card_name, target.data.card_name, bonus_text])
 	_consume_played(hand_idx)
 
 
@@ -1653,7 +1661,7 @@ func _net_ward(hand_idx: int, card_path: String, host_slot: NodePath) -> void:
 	battle_manager.spend(cd.cost)
 	battle_manager.set_ward(cd, host)
 	# ⚠ 訊息不能報宿主名字:這行兩台都會 flash,說了就把陷阱位置洩給對手。
-	battle_ui.flash_message("伏印已埋設(敵方召喚從者時觸發)")
+	battle_ui.flash_message("伏印已埋設（符合卡面條件時觸發）")
 	_consume_played(hand_idx)
 
 

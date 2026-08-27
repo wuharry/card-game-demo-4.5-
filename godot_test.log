@@ -1,0 +1,570 @@
+Godot Engine v4.5.1.stable.official.f62fdbde1 - https://godotengine.org
+TextServer: Added interface "Dummy"
+TextServer: Added interface "ICU / HarfBuzz / Graphite (Built-in)"
+Unrecognized output string "misc2" in mapping:
+030000000d0f00000202000000000000,Horipad O Nintendo Switch 2 Controller,a:b1,b:b0,back:b8,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,guide:b12,leftshoulder:b4,leftstick:b10,lefttrigger:b6,leftx:a0,lefty:a1,misc1:b13,misc2:b14,rightshoulder:b5,rightstick:b11,righttrigger:b7,rightx:a2,righty:a3,start:b9,x:b3,y:b2,platform:Windows,
+Unrecognized output string "misc2" in mapping:
+030000000d0f00009601000000000000,Horipad Steam,a:b0,b:b1,back:b10,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,guide:b12,leftshoulder:b6,leftstick:b13,lefttrigger:b8,leftx:a0,lefty:a1,misc2:b2,paddle1:b5,paddle2:b15,paddle3:b18,paddle4:b19,rightshoulder:b7,rightstick:b14,righttrigger:b9,rightx:a3,righty:a4,start:b11,x:b3,y:b4,platform:Windows,
+Unrecognized output string "misc2" in mapping:
+030000007e0500006920000000000000,Nintendo Switch 2 Pro Controller,a:b0,b:b1,back:b14,dpdown:b8,dpleft:b10,dpright:b9,dpup:b11,guide:b16,leftshoulder:b12,leftstick:b15,lefttrigger:b13,leftx:a0,lefty:a1~,misc1:b17,misc2:b20,paddle1:b18,paddle2:b19,rightshoulder:b4,rightstick:b7,righttrigger:b5,rightx:a2,righty:a3~,start:b6,x:b2,y:b3,platform:Windows,
+Using "default" pen tablet driver...
+
+TextServer: Primary interface set to: "ICU / HarfBuzz / Graphite (Built-in)".
+CORE API HASH: 937899573
+EDITOR API HASH: 1777164193
+Loading resource: res://tests/card_pool_verify.gd
+SceneTreeFTI: traversal method DEFAULT
+MbedTLS: Some X509 certificates could not be parsed (1 certificates skipped).
+Loaded system CA certificates
+Loading resource: res://data/cards/adventurer.tres
+Loading resource: res://assets/characters/generated/adventurer/Adventurer_Idle.png
+Loading resource: res://.godot/imported/Adventurer_Idle.png-b278afe640dc6996679cdef9e689d9d6.ctex
+Loading resource: res://assets/ui/card_art/adventurer_card_art.png
+Loading resource: res://.godot/imported/adventurer_card_art.png-088bd774aa808d90a2482eaadab50651.ctex
+Loading resource: res://data/cards/alchemist.tres
+Loading resource: res://assets/characters/generated/alchemist/Alchemist_Idle.png
+Loading resource: res://.godot/imported/Alchemist_Idle.png-33bd32fdaf026da830d493b28bd7c134.ctex
+Loading resource: res://assets/ui/card_art/alchemist_card_art.png
+Loading resource: res://.godot/imported/alchemist_card_art.png-73fd4969d9da974e2f3e987a73a33b68.ctex
+Loading resource: res://data/cards/arcana_armor_break_ray.tres
+Loading resource: res://assets/ui/card_art/arcana_armor_break_ray_card_art.png
+Loading resource: res://.godot/imported/arcana_armor_break_ray_card_art.png-f2630569d7e9da3ef3dad1078e41fac4.ctex
+Loading resource: res://data/cards/arcana_arrow_rain.tres
+Loading resource: res://assets/ui/icons/antahonist_spells/spell_icons_32x32.png
+Loading resource: res://.godot/imported/spell_icons_32x32.png-5578ddc41490221798cc0894375cc166.ctex
+Loading resource: res://assets/ui/card_art/arcana_arrow_rain_card_art.png
+Loading resource: res://.godot/imported/arcana_arrow_rain_card_art.png-4130b0a373e5b7fb111708a079d245cf.ctex
+Loading resource: res://data/cards/arcana_battle_fury.tres
+Loading resource: res://assets/ui/icons/antahonist_spells/spell_icons_32x32.png
+Loading resource: res://.godot/imported/spell_icons_32x32.png-5578ddc41490221798cc0894375cc166.ctex
+Loading resource: res://assets/ui/card_art/arcana_battle_fury_card_art.png
+Loading resource: res://.godot/imported/arcana_battle_fury_card_art.png-83d305260d1e8857023a98b4685c11cd.ctex
+Loading resource: res://data/cards/arcana_blood_swap.tres
+Loading resource: res://assets/ui/icons/shikashi/v2/icons_transparent.png
+Loading resource: res://.godot/imported/icons_transparent.png-151a0e227686e0f92f645c62c3744085.ctex
+Loading resource: res://assets/ui/card_art/arcana_blood_swap_card_art.png
+Loading resource: res://.godot/imported/arcana_blood_swap_card_art.png-6317b73a27ca862278d84cf24cdadede.ctex
+Loading resource: res://data/cards/arcana_bloodwing_pact.tres
+Loading resource: res://assets/ui/card_art/arcana_bloodwing_pact_card_art.png
+Loading resource: res://.godot/imported/arcana_bloodwing_pact_card_art.png-2057acf5e8d75c44e1440d50f5280c44.ctex
+Loading resource: res://data/cards/arcana_corroding_curse.tres
+Loading resource: res://assets/ui/card_art/arcana_corroding_curse_card_art.png
+Loading resource: res://.godot/imported/arcana_corroding_curse_card_art.png-ccd8c17ff0831147984472ecb79d049f.ctex
+Loading resource: res://data/cards/arcana_fate_scry.tres
+Loading resource: res://assets/ui/icons/shikashi/v2/icons_transparent.png
+Loading resource: res://.godot/imported/icons_transparent.png-151a0e227686e0f92f645c62c3744085.ctex
+Loading resource: res://assets/ui/card_art/arcana_fate_scry_card_art.png
+Loading resource: res://.godot/imported/arcana_fate_scry_card_art.png-66eaae3b1f78ec451f8dae52394398d1.ctex
+Loading resource: res://data/cards/arcana_fireblast.tres
+Loading resource: res://assets/ui/icons/antahonist_spells/spell_icons_32x32.png
+Loading resource: res://.godot/imported/spell_icons_32x32.png-5578ddc41490221798cc0894375cc166.ctex
+Loading resource: res://assets/ui/card_art/arcana_fireblast_card_art.png
+Loading resource: res://.godot/imported/arcana_fireblast_card_art.png-c50c206ae2456591ca1a570fecc52101.ctex
+Loading resource: res://data/cards/arcana_flame_staff.tres
+Loading resource: res://assets/ui/icons/antahonist_spells/spell_icons_32x32.png
+Loading resource: res://.godot/imported/spell_icons_32x32.png-5578ddc41490221798cc0894375cc166.ctex
+Loading resource: res://assets/ui/card_art/arcana_flame_staff_card_art.png
+Loading resource: res://.godot/imported/arcana_flame_staff_card_art.png-428d4c26c365f32cdbca2b12a4163c47.ctex
+Loading resource: res://data/cards/arcana_forged_will.tres
+Loading resource: res://assets/ui/card_art/arcana_forged_will_card_art.png
+Loading resource: res://.godot/imported/arcana_forged_will_card_art.png-b41919fec0d18c780f04eb32cf6ea847.ctex
+Loading resource: res://data/cards/arcana_frost_shackles.tres
+Loading resource: res://assets/ui/card_art/arcana_frost_shackles_card_art.png
+Loading resource: res://.godot/imported/arcana_frost_shackles_card_art.png-7d9a5811daa7f4a05185d1a3f9278ee8.ctex
+Loading resource: res://data/cards/arcana_frozen_pulse.tres
+Loading resource: res://assets/ui/card_art/arcana_frozen_pulse_card_art.png
+Loading resource: res://.godot/imported/arcana_frozen_pulse_card_art.png-a86a604b6c34d234ce95f188ce5f4fec.ctex
+Loading resource: res://data/cards/arcana_hellhound_call.tres
+Loading resource: res://assets/ui/card_art/arcana_hellhound_call_card_art.png
+Loading resource: res://.godot/imported/arcana_hellhound_call_card_art.png-8f1f26fc69dcc52a34169cc418f7ad2f.ctex
+Loading resource: res://data/cards/arcana_holy_blessing.tres
+Loading resource: res://assets/ui/icons/antahonist_spells/spell_icons_32x32.png
+Loading resource: res://.godot/imported/spell_icons_32x32.png-5578ddc41490221798cc0894375cc166.ctex
+Loading resource: res://assets/ui/card_art/arcana_holy_blessing_card_art.png
+Loading resource: res://.godot/imported/arcana_holy_blessing_card_art.png-f6b13d70e21acae11a04a909a259487b.ctex
+Loading resource: res://data/cards/arcana_insight.tres
+Loading resource: res://assets/ui/icons/shikashi/v2/icons_transparent.png
+Loading resource: res://.godot/imported/icons_transparent.png-151a0e227686e0f92f645c62c3744085.ctex
+Loading resource: res://assets/ui/card_art/arcana_insight_card_art.png
+Loading resource: res://.godot/imported/arcana_insight_card_art.png-852bbbc5e6d22ec081dbc7345a1c7398.ctex
+Loading resource: res://data/cards/arcana_life_spring.tres
+Loading resource: res://assets/ui/icons/antahonist_spells/spell_icons_32x32.png
+Loading resource: res://.godot/imported/spell_icons_32x32.png-5578ddc41490221798cc0894375cc166.ctex
+Loading resource: res://assets/ui/card_art/arcana_life_spring_card_art.png
+Loading resource: res://.godot/imported/arcana_life_spring_card_art.png-c0ea1cc3cc59bca4818d909fba9a7e52.ctex
+Loading resource: res://data/cards/arcana_memory_tide.tres
+Loading resource: res://assets/ui/card_art/arcana_memory_tide_card_art.png
+Loading resource: res://.godot/imported/arcana_memory_tide_card_art.png-0ba055aec96f0dc1bf2c98af5d1bd8b1.ctex
+Loading resource: res://data/cards/arcana_night_shelter.tres
+Loading resource: res://assets/ui/card_art/arcana_night_shelter_card_art.png
+Loading resource: res://.godot/imported/arcana_night_shelter_card_art.png-846d0e3260a478a8248fb7c2a68e1c9d.ctex
+Loading resource: res://data/cards/arcana_raise_dead.tres
+Loading resource: res://assets/ui/icons/antahonist_spells/spell_icons_32x32.png
+Loading resource: res://.godot/imported/spell_icons_32x32.png-5578ddc41490221798cc0894375cc166.ctex
+Loading resource: res://assets/ui/card_art/arcana_raise_dead_card_art.png
+Loading resource: res://.godot/imported/arcana_raise_dead_card_art.png-3c8781878c8b008381103092e89b8f62.ctex
+Loading resource: res://data/cards/arcana_shockwave.tres
+Loading resource: res://assets/ui/icons/antahonist_spells/spell_icons_32x32.png
+Loading resource: res://.godot/imported/spell_icons_32x32.png-5578ddc41490221798cc0894375cc166.ctex
+Loading resource: res://assets/ui/card_art/arcana_shockwave_card_art.png
+Loading resource: res://.godot/imported/arcana_shockwave_card_art.png-e19d5f7eab2925222646c8a0f35ca26b.ctex
+Loading resource: res://data/cards/arcana_skeletal_reinforcements.tres
+Loading resource: res://assets/ui/card_art/arcana_skeletal_reinforcements_card_art.png
+Loading resource: res://.godot/imported/arcana_skeletal_reinforcements_card_art.png-192d9f10e205b6bf4f08bce6eb173227.ctex
+Loading resource: res://data/cards/arcana_star_tempest.tres
+Loading resource: res://assets/ui/card_art/arcana_star_tempest_card_art.png
+Loading resource: res://.godot/imported/arcana_star_tempest_card_art.png-75bcd5dd74bd7a06779489c425e0f2f6.ctex
+Loading resource: res://data/cards/arcana_thunder_pierce.tres
+Loading resource: res://assets/ui/icons/antahonist_spells/spell_icons_32x32.png
+Loading resource: res://.godot/imported/spell_icons_32x32.png-5578ddc41490221798cc0894375cc166.ctex
+Loading resource: res://assets/ui/card_art/arcana_thunder_pierce_card_art.png
+Loading resource: res://.godot/imported/arcana_thunder_pierce_card_art.png-82cfac8124cb8cd993ff04db641597f1.ctex
+Loading resource: res://data/cards/arcana_toxic_miasma.tres
+Loading resource: res://assets/ui/card_art/arcana_toxic_miasma_card_art.png
+Loading resource: res://.godot/imported/arcana_toxic_miasma_card_art.png-9c6ebde1373940d6f828c5cbda450494.ctex
+Loading resource: res://data/cards/arcana_twin_thunder.tres
+Loading resource: res://assets/ui/card_art/arcana_twin_thunder_card_art.png
+Loading resource: res://.godot/imported/arcana_twin_thunder_card_art.png-07b5e4d13805687182d2137d7fb7dcb6.ctex
+Loading resource: res://data/cards/archer.tres
+WARNING: res://data/cards/archer.tres:4 - ext_resource, invalid UID: uid://bnu3vnu4r8csp - using text path instead: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Archer/Archer/Archer_Idle.png
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/card_pool_verify.gd:49)
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Archer/Archer/Archer_Idle.png
+Loading resource: res://.godot/imported/Archer_Idle.png-fe51b02bb36f214f0841b9946c6085e8.ctex
+Loading resource: res://assets/ui/card_art/archer_card_art.png
+Loading resource: res://.godot/imported/archer_card_art.png-95b42d198f19eb4c57712e3adaba1294.ctex
+Loading resource: res://data/cards/armored_axeman.tres
+WARNING: res://data/cards/armored_axeman.tres:4 - ext_resource, invalid UID: uid://ban6n652t4pr3 - using text path instead: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Armored Axeman/Armored Axeman/Armored Axeman_Idle.png
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/card_pool_verify.gd:49)
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Armored Axeman/Armored Axeman/Armored Axeman_Idle.png
+Loading resource: res://.godot/imported/Armored Axeman_Idle.png-1f4a61f03b66179f7bce7001ee9bc786.ctex
+Loading resource: res://assets/ui/card_art/armored_axeman_card_art.png
+Loading resource: res://.godot/imported/armored_axeman_card_art.png-77217d9a9717c0c2972a008e253e7f89.ctex
+Loading resource: res://data/cards/armored_orc.tres
+WARNING: res://data/cards/armored_orc.tres:4 - ext_resource, invalid UID: uid://e5fq2dk8ue1o - using text path instead: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Armored Orc/Armored Orc/Armored Orc_Idle.png
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/card_pool_verify.gd:49)
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Armored Orc/Armored Orc/Armored Orc_Idle.png
+Loading resource: res://.godot/imported/Armored Orc_Idle.png-ca1d67bad7221b4c68fa5a21348f80f4.ctex
+Loading resource: res://assets/ui/card_art/armored_orc_card_art.png
+Loading resource: res://.godot/imported/armored_orc_card_art.png-5376cb99c2fddc21ee49247cb887e972.ctex
+Loading resource: res://data/cards/armored_skeleton.tres
+WARNING: res://data/cards/armored_skeleton.tres:4 - ext_resource, invalid UID: uid://c6xy4csp72tbp - using text path instead: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Armored Skeleton/Armored Skeleton/Armored Skeleton_Idle.png
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/card_pool_verify.gd:49)
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Armored Skeleton/Armored Skeleton/Armored Skeleton_Idle.png
+Loading resource: res://.godot/imported/Armored Skeleton_Idle.png-e91107c1c648d02e49b99befa63c3757.ctex
+Loading resource: res://assets/ui/card_art/armored_skeleton_card_art.png
+Loading resource: res://.godot/imported/armored_skeleton_card_art.png-ac960f3fe9d3d6caa67f9efd60160b14.ctex
+Loading resource: res://data/cards/bat.tres
+WARNING: res://data/cards/bat.tres:4 - ext_resource, invalid UID: uid://c174mkh0bip2b - using text path instead: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Bat/Bat/Bat_Flying.png
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/card_pool_verify.gd:49)
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Bat/Bat/Bat_Flying.png
+Loading resource: res://.godot/imported/Bat_Flying.png-227b9a3f7df4ac22c97c2f19cd340d1e.ctex
+Loading resource: res://assets/ui/card_art/bat_card_art.png
+Loading resource: res://.godot/imported/bat_card_art.png-a2560dc9b06e085f308cdf73e9e3f661.ctex
+Loading resource: res://data/cards/black_knight_a.tres
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 02 -Full 20 Characters/Characters(100x100 split)/Black Knight_A/Black Knight_A/Black Knight_A_Idle.png
+Loading resource: res://.godot/imported/Black Knight_A_Idle.png-a09a2e5525b979e54e710a7299786d6c.ctex
+Loading resource: res://assets/ui/card_art/black_knight_a_card_art.png
+Loading resource: res://.godot/imported/black_knight_a_card_art.png-2d0c92ae3aa2d90e29d2907421f259ed.ctex
+Loading resource: res://data/cards/black_knight_b.tres
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 02 -Full 20 Characters/Characters(100x100 split)/Black Knight_B/Black Knight_B/Black Knight_B_Idle.png
+Loading resource: res://.godot/imported/Black Knight_B_Idle.png-7320b49ba4de81186dd82e4c9c6986ae.ctex
+Loading resource: res://assets/ui/card_art/black_knight_b_card_art.png
+Loading resource: res://.godot/imported/black_knight_b_card_art.png-2ed58fd75a56e6c0a8c3695c87d61394.ctex
+Loading resource: res://data/cards/black_knight_c.tres
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 02 -Full 20 Characters/Characters(100x100 split)/Black Knight_C/Black Knight_C/Black Knight_C_Idle.png
+Loading resource: res://.godot/imported/Black Knight_C_Idle.png-5892c2405079b29181570eb64ab4c627.ctex
+Loading resource: res://assets/ui/card_art/black_knight_c_card_art.png
+Loading resource: res://.godot/imported/black_knight_c_card_art.png-26644622b6185ef975259eaaace3fede.ctex
+Loading resource: res://data/cards/blood_monster_a.tres
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 02 -Full 20 Characters/Characters(100x100 split)/Blood Monster_A/Blood Monster_A/Blood Monster_A_Idle.png
+Loading resource: res://.godot/imported/Blood Monster_A_Idle.png-a286a9e5457de3fbca229d61e52dabe0.ctex
+Loading resource: res://assets/ui/card_art/blood_monster_a_card_art.png
+Loading resource: res://.godot/imported/blood_monster_a_card_art.png-f82290ab62af80863aefb3fe4d801c68.ctex
+Loading resource: res://data/cards/blood_monster_b.tres
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 02 -Full 20 Characters/Characters(100x100 split)/Blood Monster_B/Blood Monster_B/Blood Monster_B_Flying.png
+Loading resource: res://.godot/imported/Blood Monster_B_Flying.png-30b79107aa501b0cea8690548dbc5ebc.ctex
+Loading resource: res://assets/ui/card_art/blood_monster_b_card_art.png
+Loading resource: res://.godot/imported/blood_monster_b_card_art.png-8649354b13e79d6e38187f0bf072d399.ctex
+Loading resource: res://data/cards/catfolk_rogue.tres
+Loading resource: res://assets/characters/generated/catfolk_rogue/Catfolk_Rogue_Idle.png
+Loading resource: res://.godot/imported/Catfolk_Rogue_Idle.png-45e5f9cac488b1a95d771de5c8e554a5.ctex
+Loading resource: res://assets/ui/card_art/catfolk_rogue_card_art.png
+Loading resource: res://.godot/imported/catfolk_rogue_card_art.png-6c2b243f532ceb30554b2ca478f5a361.ctex
+Loading resource: res://data/cards/demon_a.tres
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 02 -Full 20 Characters/Characters(100x100 split)/Demon_A/Demon_A/Demon_A_Idle.png
+Loading resource: res://.godot/imported/Demon_A_Idle.png-b50f584a7d58405dd6e6ab93c693a77b.ctex
+Loading resource: res://assets/ui/card_art/demon_a_card_art.png
+Loading resource: res://.godot/imported/demon_a_card_art.png-30bb91ff9bda6cc57ee415e08199fc7b.ctex
+Loading resource: res://data/cards/demon_b.tres
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 02 -Full 20 Characters/Characters(100x100 split)/Demon_B/Demon_B/Demon_B_Idle.png
+Loading resource: res://.godot/imported/Demon_B_Idle.png-fde5f678d7bac4140b337f2bf3c06336.ctex
+Loading resource: res://assets/ui/card_art/demon_b_card_art.png
+Loading resource: res://.godot/imported/demon_b_card_art.png-c32bc228f811525c6215e5f8bb8eca21.ctex
+Loading resource: res://data/cards/demon_c.tres
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 02 -Full 20 Characters/Characters(100x100 split)/Demon_C/Demon_C/Demon_C_Idle.png
+Loading resource: res://.godot/imported/Demon_C_Idle.png-71c83775a0cc4ec1491d9f53394e7975.ctex
+Loading resource: res://assets/ui/card_art/demon_c_card_art.png
+Loading resource: res://.godot/imported/demon_c_card_art.png-8159b2cd36e1c7bbc925e66d557316b5.ctex
+Loading resource: res://data/cards/demon_d.tres
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 02 -Full 20 Characters/Characters(100x100 split)/Demon_D/Demon_D/Demon_D_Idle.png
+Loading resource: res://.godot/imported/Demon_D_Idle.png-1c980e739718bf64b4dbeea69e2eb3e7.ctex
+Loading resource: res://assets/ui/card_art/demon_d_card_art.png
+Loading resource: res://.godot/imported/demon_d_card_art.png-b7d61a58df8025b6f63329eb3c22a4ad.ctex
+Loading resource: res://data/cards/demon_e.tres
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 02 -Full 20 Characters/Characters(100x100 split)/Demon_E/Demon_E/Demon_E_Idle.png
+Loading resource: res://.godot/imported/Demon_E_Idle.png-520d40a5e21add383fc2807af801915f.ctex
+Loading resource: res://assets/ui/card_art/demon_e_card_art.png
+Loading resource: res://.godot/imported/demon_e_card_art.png-747426223dd4de143347aa080fa6960b.ctex
+Loading resource: res://data/cards/demoness_a.tres
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 02 -Full 20 Characters/Characters(100x100 split)/Demoness_A/Demoness_A/Demoness_A_Idle.png
+Loading resource: res://.godot/imported/Demoness_A_Idle.png-56f215f49c39e4dcc810cd32571070fb.ctex
+Loading resource: res://assets/ui/card_art/demoness_a_card_art.png
+Loading resource: res://.godot/imported/demoness_a_card_art.png-4d3896e360ad67fcb5103f7ad4b2d4fe.ctex
+Loading resource: res://data/cards/demoness_b.tres
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 02 -Full 20 Characters/Characters(100x100 split)/Demoness_B/Demoness_B/Demoness_B_Idle.png
+Loading resource: res://.godot/imported/Demoness_B_Idle.png-1a26f61c527cc4be841bfe5915164f94.ctex
+Loading resource: res://assets/ui/card_art/demoness_b_card_art.png
+Loading resource: res://.godot/imported/demoness_b_card_art.png-b8ed3df250218a345f3cf7e7932b4708.ctex
+Loading resource: res://data/cards/desert_nomad.tres
+Loading resource: res://assets/characters/generated/desert_nomad/Desert_Nomad_Idle.png
+Loading resource: res://.godot/imported/Desert_Nomad_Idle.png-7f2f7d9a7bee1b4d0e1ced6a63d6c9db.ctex
+Loading resource: res://assets/ui/card_art/desert_nomad_card_art.png
+Loading resource: res://.godot/imported/desert_nomad_card_art.png-76fdb37f0670c30033ab2b5a65855b3a.ctex
+Loading resource: res://data/cards/dwarf_smith.tres
+Loading resource: res://assets/characters/generated/dwarf_smith/Dwarf_Smith_Idle.png
+Loading resource: res://.godot/imported/Dwarf_Smith_Idle.png-e49d63beb86246d34796b1cde4c9226e.ctex
+Loading resource: res://assets/ui/card_art/dwarf_smith_card_art.png
+Loading resource: res://.godot/imported/dwarf_smith_card_art.png-d6a17408bf3ec957aa63288ce12368fb.ctex
+Loading resource: res://data/cards/elite_orc.tres
+WARNING: res://data/cards/elite_orc.tres:4 - ext_resource, invalid UID: uid://cmdpsfm3ytxmq - using text path instead: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Elite Orc/Elite Orc/Elite Orc_Idle.png
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/card_pool_verify.gd:49)
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Elite Orc/Elite Orc/Elite Orc_Idle.png
+Loading resource: res://.godot/imported/Elite Orc_Idle.png-0fe2e4abd0c19f85c0e14c402a9c98e9.ctex
+Loading resource: res://assets/ui/card_art/elite_orc_card_art.png
+Loading resource: res://.godot/imported/elite_orc_card_art.png-98424f981a6f9011c3fb8b2053eb5d36.ctex
+Loading resource: res://data/cards/equip_mithril_plate.tres
+Loading resource: res://assets/ui/icons/antahonist_spells/spell_icons_32x32.png
+Loading resource: res://.godot/imported/spell_icons_32x32.png-5578ddc41490221798cc0894375cc166.ctex
+Loading resource: res://assets/ui/card_art/equip_mithril_plate_card_art.png
+Loading resource: res://.godot/imported/equip_mithril_plate_card_art.png-5168e7d711c955cc6e0f27e908115f02.ctex
+Loading resource: res://data/cards/eyeball_monster.tres
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 02 -Full 20 Characters/Characters(100x100 split)/Eyeball Monster/Eyeball Monster/Eyeball Monster_Idle.png
+Loading resource: res://.godot/imported/Eyeball Monster_Idle.png-332094f9f09ae7567527824e57d3de54.ctex
+Loading resource: res://assets/ui/card_art/eyeball_monster_card_art.png
+Loading resource: res://.godot/imported/eyeball_monster_card_art.png-6702ff344a012091fc01b814792259c7.ctex
+Loading resource: res://data/cards/flame_golem.tres
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 02 -Full 20 Characters/Characters(100x100 split)/Flame Golem/Flame Golem/Flame Golem_Idle.png
+Loading resource: res://.godot/imported/Flame Golem_Idle.png-b8f529bd185dc14e07e08be74b63d41f.ctex
+Loading resource: res://assets/ui/card_art/flame_golem_card_art.png
+Loading resource: res://.godot/imported/flame_golem_card_art.png-56177786781c202b6bbf3786de5c8d9c.ctex
+Loading resource: res://data/cards/frog_shaman.tres
+Loading resource: res://assets/characters/generated/frog_shaman/Frog_Shaman_Idle.png
+Loading resource: res://.godot/imported/Frog_Shaman_Idle.png-a71eee1c8cbbc28b8432914607021cf3.ctex
+Loading resource: res://assets/ui/card_art/frog_shaman_card_art.png
+Loading resource: res://.godot/imported/frog_shaman_card_art.png-4d61910405cdc2b10ff25a192c473368.ctex
+Loading resource: res://data/cards/frost_witch.tres
+Loading resource: res://assets/ui/card_art/Frost_Witch_CardArt.png
+Loading resource: res://.godot/imported/Frost_Witch_CardArt.png-2c7620887d2eb5c92b7e09fa54741db2.ctex
+Loading resource: res://assets/characters/frost_witch/Frost_Witch_Idle.png
+Loading resource: res://.godot/imported/Frost_Witch_Idle.png-10f5084da9293d84c505db599a55f96f.ctex
+Loading resource: res://data/cards/gargoyle_sentinel.tres
+Loading resource: res://assets/characters/generated/gargoyle_sentinel/Gargoyle_Sentinel_Idle.png
+Loading resource: res://.godot/imported/Gargoyle_Sentinel_Idle.png-37c495b7bf70656d5254c83b58ecc894.ctex
+Loading resource: res://assets/ui/card_art/gargoyle_sentinel_card_art.png
+Loading resource: res://.godot/imported/gargoyle_sentinel_card_art.png-8a6a08e4d8ef87c851b855b76b3a19a6.ctex
+Loading resource: res://data/cards/ghostfire.tres
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 02 -Full 20 Characters/Characters(100x100 split)/Ghostfire/Ghostfire/Ghostfire_Flying.png
+Loading resource: res://.godot/imported/Ghostfire_Flying.png-722242af58454b8fc57320f5fcedbbda.ctex
+Loading resource: res://assets/ui/card_art/ghostfire_card_art.png
+Loading resource: res://.godot/imported/ghostfire_card_art.png-7a481ddacf7024c8896533476c59ea92.ctex
+Loading resource: res://data/cards/goblin_bomber.tres
+Loading resource: res://assets/characters/generated/goblin_bomber/Goblin_Bomber_Idle.png
+Loading resource: res://.godot/imported/Goblin_Bomber_Idle.png-dc3e80b791429b797c83d2896a3b457d.ctex
+Loading resource: res://assets/ui/card_art/goblin_bomber_card_art.png
+Loading resource: res://.godot/imported/goblin_bomber_card_art.png-d1a2d34343cfc5f956ca744a669299e9.ctex
+Loading resource: res://data/cards/greatsword_skeleton.tres
+WARNING: res://data/cards/greatsword_skeleton.tres:4 - ext_resource, invalid UID: uid://cptrbkdwqcfnt - using text path instead: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Greatsword Skeleton/Greatsword Skeleton/Greatsword Skeleton_Idle.png
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/card_pool_verify.gd:49)
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Greatsword Skeleton/Greatsword Skeleton/Greatsword Skeleton_Idle.png
+Loading resource: res://.godot/imported/Greatsword Skeleton_Idle.png-2a5f26a3a376a7deb74b69b1ec2d6b1c.ctex
+Loading resource: res://assets/ui/card_art/greatsword_skeleton_card_art.png
+Loading resource: res://.godot/imported/greatsword_skeleton_card_art.png-eb87f1c1aa8e72ff2f6b294204c5f6b9.ctex
+Loading resource: res://data/cards/halfling_scout.tres
+Loading resource: res://assets/characters/generated/halfling_scout/Halfling_Scout_Idle.png
+Loading resource: res://.godot/imported/Halfling_Scout_Idle.png-7db29ba5cec50d11ad79b0adc2a5cb7e.ctex
+Loading resource: res://assets/ui/card_art/halfling_scout_card_art.png
+Loading resource: res://.godot/imported/halfling_scout_card_art.png-56f746d946cc1ceb178d88cdeddea8f0.ctex
+Loading resource: res://data/cards/harpy_hunter.tres
+Loading resource: res://assets/characters/generated/harpy_hunter/Harpy_Hunter_Idle.png
+Loading resource: res://.godot/imported/Harpy_Hunter_Idle.png-68ae2a7927f06bca7bff0a1ebea79875.ctex
+Loading resource: res://assets/ui/card_art/harpy_hunter_card_art.png
+Loading resource: res://.godot/imported/harpy_hunter_card_art.png-f4cc5d51179ccf8b65fb8d57f495d993.ctex
+Loading resource: res://data/cards/hellbat.tres
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 02 -Full 20 Characters/Characters(100x100 split)/Hellbat/Hellbat/Hellbat_Flying.png
+Loading resource: res://.godot/imported/Hellbat_Flying.png-74c967ab1cb41b477d0ff27eac84469e.ctex
+Loading resource: res://assets/ui/card_art/hellbat_card_art.png
+Loading resource: res://.godot/imported/hellbat_card_art.png-933dc6665ea70577394fb5f0c552d0e2.ctex
+Loading resource: res://data/cards/hellhound.tres
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 02 -Full 20 Characters/Characters(100x100 split)/Hellhound/Hellhound/Hellhound_Idle.png
+Loading resource: res://.godot/imported/Hellhound_Idle.png-719b9ad4540ff17a44e6c707d461e97f.ctex
+Loading resource: res://assets/ui/card_art/hellhound_card_art.png
+Loading resource: res://.godot/imported/hellhound_card_art.png-79a426bec06850230007280bb2da2437.ctex
+Loading resource: res://data/cards/knight.tres
+WARNING: res://data/cards/knight.tres:4 - ext_resource, invalid UID: uid://cx2u2fm4rsgqo - using text path instead: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Knight/Knight/Knight_Idle.png
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/card_pool_verify.gd:49)
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Knight/Knight/Knight_Idle.png
+Loading resource: res://.godot/imported/Knight_Idle.png-df49b2b62902b47724a9304ae1051a11.ctex
+Loading resource: res://assets/ui/card_art/knight_card_art.png
+Loading resource: res://.godot/imported/knight_card_art.png-9b73abe9ec82f581920bf8a8af0ce12d.ctex
+Loading resource: res://data/cards/knight_templar.tres
+WARNING: res://data/cards/knight_templar.tres:4 - ext_resource, invalid UID: uid://cvpd8fe4gjo7w - using text path instead: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Knight Templar/Knight Templar/Knight Templar_Idle.png
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/card_pool_verify.gd:49)
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Knight Templar/Knight Templar/Knight Templar_Idle.png
+Loading resource: res://.godot/imported/Knight Templar_Idle.png-1fc4ad7c262acbe7436ecd24b7241f2d.ctex
+Loading resource: res://assets/ui/card_art/knight_templar_card_art.png
+Loading resource: res://.godot/imported/knight_templar_card_art.png-6c2422548144cabb3415323b545cc31e.ctex
+Loading resource: res://data/cards/kobold_miner.tres
+Loading resource: res://assets/characters/generated/kobold_miner/Kobold_Miner_Idle.png
+Loading resource: res://.godot/imported/Kobold_Miner_Idle.png-c7a0cbe22907d985b714da9a928dff12.ctex
+Loading resource: res://assets/ui/card_art/kobold_miner_card_art.png
+Loading resource: res://.godot/imported/kobold_miner_card_art.png-8d0ba56ed94de24664bdd7109747ed94.ctex
+Loading resource: res://data/cards/lancer.tres
+WARNING: res://data/cards/lancer.tres:4 - ext_resource, invalid UID: uid://cu1jttuys4ocg - using text path instead: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Lancer/Lancer/Lancer_Idle.png
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/card_pool_verify.gd:49)
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Lancer/Lancer/Lancer_Idle.png
+Loading resource: res://.godot/imported/Lancer_Idle.png-f4fa9d960b34d6e04d2e2371dc0851e1.ctex
+Loading resource: res://assets/ui/card_art/lancer_card_art.png
+Loading resource: res://.godot/imported/lancer_card_art.png-b97ef89c23e10c59293514b28a058ade.ctex
+Loading resource: res://data/cards/lava_slime.tres
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 02 -Full 20 Characters/Characters(100x100 split)/Lava Slime/Lava Slime/Lava Slime_Idle.png
+Loading resource: res://.godot/imported/Lava Slime_Idle.png-e87b309a284297d476ca32adc2258a8f.ctex
+Loading resource: res://assets/ui/card_art/lava_slime_card_art.png
+Loading resource: res://.godot/imported/lava_slime_card_art.png-a1faf3437d7a1d71e80c21a6fae992e4.ctex
+Loading resource: res://data/cards/lizard_warrior.tres
+Loading resource: res://assets/characters/generated/lizard_warrior/Lizard_Warrior_Idle.png
+Loading resource: res://.godot/imported/Lizard_Warrior_Idle.png-9e2645d17d0c1cc08532744165ea6bd9.ctex
+Loading resource: res://assets/ui/card_art/lizard_warrior_card_art.png
+Loading resource: res://.godot/imported/lizard_warrior_card_art.png-94c75b9fb764a5a31c5afbc656b83222.ctex
+Loading resource: res://data/cards/minotaur.tres
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 02 -Full 20 Characters/Characters(100x100 split)/Minotaur/Minotaur/Minotaur_Idle.png
+Loading resource: res://.godot/imported/Minotaur_Idle.png-481e583d77147192b1d566de3ee960d0.ctex
+Loading resource: res://assets/ui/card_art/minotaur_card_art.png
+Loading resource: res://.godot/imported/minotaur_card_art.png-cf7c6b78f96a4dd2a45a87cb60b9a2ae.ctex
+Loading resource: res://data/cards/mushroom_mage.tres
+Loading resource: res://assets/characters/generated/mushroom_mage/Mushroom_Mage_Idle.png
+Loading resource: res://.godot/imported/Mushroom_Mage_Idle.png-3bc3c2c1ec1740c80cae7c9d602d8882.ctex
+Loading resource: res://assets/ui/card_art/mushroom_mage_card_art.png
+Loading resource: res://.godot/imported/mushroom_mage_card_art.png-64a1f25c0094ba44d342d834f9cd8c7a.ctex
+Loading resource: res://data/cards/necromancer.tres
+WARNING: res://data/cards/necromancer.tres:4 - ext_resource, invalid UID: uid://cy2xwjpuc705u - using text path instead: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Necromancer/Necromancer/Necromancer_Idle.png
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/card_pool_verify.gd:49)
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Necromancer/Necromancer/Necromancer_Idle.png
+Loading resource: res://.godot/imported/Necromancer_Idle.png-ec3eb571c1a83439a452228896a06a8f.ctex
+Loading resource: res://assets/ui/card_art/necromancer_card_art.png
+Loading resource: res://.godot/imported/necromancer_card_art.png-898e868b86e838a3bb59aab7fc5492c3.ctex
+Loading resource: res://data/cards/orc.tres
+WARNING: res://data/cards/orc.tres:4 - ext_resource, invalid UID: uid://cw7kvpv637w64 - using text path instead: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Orc/Orc/Orc_Idle.png
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/card_pool_verify.gd:49)
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Orc/Orc/Orc_Idle.png
+Loading resource: res://.godot/imported/Orc_Idle.png-bce1e4dbfa2388465519fa2780223fc3.ctex
+Loading resource: res://assets/ui/card_art/orc_card_art.png
+Loading resource: res://.godot/imported/orc_card_art.png-5442b5aa1ea54c7d4850b3774936be78.ctex
+Loading resource: res://data/cards/orc_rider.tres
+WARNING: res://data/cards/orc_rider.tres:4 - ext_resource, invalid UID: uid://coekx1dca8x2f - using text path instead: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Orc rider/Orc rider/Orc rider_Idle.png
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/card_pool_verify.gd:49)
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Orc rider/Orc rider/Orc rider_Idle.png
+Loading resource: res://.godot/imported/Orc rider_Idle.png-e6f0f8ef1dc7e7ec78fa9758f2316fe8.ctex
+Loading resource: res://assets/ui/card_art/orc_rider_card_art.png
+Loading resource: res://.godot/imported/orc_rider_card_art.png-7006bb1e8a2c1f4414abae9521ff83f5.ctex
+Loading resource: res://data/cards/pirate_captain.tres
+Loading resource: res://assets/characters/generated/pirate_captain/Pirate_Captain_Idle.png
+Loading resource: res://.godot/imported/Pirate_Captain_Idle.png-dd6de607ae5f3cffec45dff96cdd2640.ctex
+Loading resource: res://assets/ui/card_art/pirate_captain_card_art.png
+Loading resource: res://.godot/imported/pirate_captain_card_art.png-966f021711f884ac07bdac50b16c505b.ctex
+Loading resource: res://data/cards/priest.tres
+WARNING: res://data/cards/priest.tres:4 - ext_resource, invalid UID: uid://dhj8n1g3cfdai - using text path instead: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Priest/Priest/Priest_Idle.png
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/card_pool_verify.gd:49)
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Priest/Priest/Priest_Idle.png
+Loading resource: res://.godot/imported/Priest_Idle.png-6d2ac502ee5497f7713c7b992fe50ded.ctex
+Loading resource: res://assets/ui/card_art/priest_card_art.png
+Loading resource: res://.godot/imported/priest_card_art.png-4f6438ec32be9a2520a7513398a27121.ctex
+Loading resource: res://data/cards/quick_astral_severance.tres
+Loading resource: res://assets/ui/card_art/quick_astral_severance_card_art.png
+Loading resource: res://.godot/imported/quick_astral_severance_card_art.png-85073f1715abc79eb2260107c90cc21f.ctex
+Loading resource: res://data/cards/quick_reversal_edict.tres
+Loading resource: res://assets/ui/card_art/quick_reversal_edict_card_art.png
+Loading resource: res://.godot/imported/quick_reversal_edict_card_art.png-eeaaebbce1117a7cab44f781f4487a5f.ctex
+Loading resource: res://data/cards/quick_void_rebuke.tres
+Loading resource: res://assets/ui/icons/antahonist_spells/spell_icons_32x32.png
+Loading resource: res://.godot/imported/spell_icons_32x32.png-5578ddc41490221798cc0894375cc166.ctex
+Loading resource: res://assets/ui/card_art/quick_void_rebuke_card_art.png
+Loading resource: res://.godot/imported/quick_void_rebuke_card_art.png-133cf79c0148cf68955d0dc9503944f3.ctex
+Loading resource: res://data/cards/ratfolk_plague_doctor.tres
+Loading resource: res://assets/characters/generated/ratfolk_plague_doctor/Ratfolk_Plague_Doctor_Idle.png
+Loading resource: res://.godot/imported/Ratfolk_Plague_Doctor_Idle.png-e568eaddf63d9403ee72c644027f16a6.ctex
+Loading resource: res://assets/ui/card_art/ratfolk_plague_doctor_card_art.png
+Loading resource: res://.godot/imported/ratfolk_plague_doctor_card_art.png-6b897f08a9c26bbf77fefae7b2917b3d.ctex
+Loading resource: res://data/cards/skeleton.tres
+WARNING: res://data/cards/skeleton.tres:4 - ext_resource, invalid UID: uid://vidfx63cu8an - using text path instead: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Skeleton/Skeleton/Skeleton_Idle.png
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/card_pool_verify.gd:49)
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Skeleton/Skeleton/Skeleton_Idle.png
+Loading resource: res://.godot/imported/Skeleton_Idle.png-c0452d9f29bca35f8bd7499d3fa0e850.ctex
+Loading resource: res://assets/ui/card_art/skeleton_card_art.png
+Loading resource: res://.godot/imported/skeleton_card_art.png-c8918a0311c7c979460414883f5d28f1.ctex
+Loading resource: res://data/cards/skeleton_archer.tres
+WARNING: res://data/cards/skeleton_archer.tres:4 - ext_resource, invalid UID: uid://pnwau85tbok - using text path instead: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Skeleton Archer/Skeleton Archer/Skeleton Archer_Idle.png
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/card_pool_verify.gd:49)
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Skeleton Archer/Skeleton Archer/Skeleton Archer_Idle.png
+Loading resource: res://.godot/imported/Skeleton Archer_Idle.png-1975412d7fe1f0745dc2d1343453e8b8.ctex
+Loading resource: res://assets/ui/card_art/skeleton_archer_card_art.png
+Loading resource: res://.godot/imported/skeleton_archer_card_art.png-ca2e5a2bd37afc6d32ed5f375570ea05.ctex
+Loading resource: res://data/cards/slime.tres
+WARNING: res://data/cards/slime.tres:4 - ext_resource, invalid UID: uid://c2vyri3v6ku0a - using text path instead: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Slime/Slime/Slime_Idle.png
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/card_pool_verify.gd:49)
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Slime/Slime/Slime_Idle.png
+Loading resource: res://.godot/imported/Slime_Idle.png-a222efd07a39f652e34a9f1bbf1ec4a3.ctex
+Loading resource: res://assets/ui/card_art/slime_card_art.png
+Loading resource: res://.godot/imported/slime_card_art.png-b7faf3cce502ac7c69f30c52b2fe6e23.ctex
+Loading resource: res://data/cards/soldier.tres
+WARNING: res://data/cards/soldier.tres:4 - ext_resource, invalid UID: uid://mmagq40li0fu - using text path instead: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Soldier/Soldier/Soldier_Idle.png
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/card_pool_verify.gd:49)
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Soldier/Soldier/Soldier_Idle.png
+Loading resource: res://.godot/imported/Soldier_Idle.png-82417778c47fd702974a692e1eeae6d1.ctex
+Loading resource: res://assets/ui/card_art/soldier_card_art.png
+Loading resource: res://.godot/imported/soldier_card_art.png-98cf69d358b0775117bde2272c9b6980.ctex
+Loading resource: res://data/cards/swordsman.tres
+WARNING: res://data/cards/swordsman.tres:4 - ext_resource, invalid UID: uid://c5713f755d5hc - using text path instead: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Swordsman/Swordsman/Swordsman_Idle.png
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/card_pool_verify.gd:49)
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Swordsman/Swordsman/Swordsman_Idle.png
+Loading resource: res://.godot/imported/Swordsman_Idle.png-23d96763bb942d24da6ce0697cd9ad22.ctex
+Loading resource: res://assets/ui/card_art/swordsman_card_art.png
+Loading resource: res://.godot/imported/swordsman_card_art.png-07c784282ba690e56100ad1f80bf26f7.ctex
+Loading resource: res://data/cards/treant_guardian.tres
+Loading resource: res://assets/characters/generated/treant_guardian/Treant_Guardian_Idle.png
+Loading resource: res://.godot/imported/Treant_Guardian_Idle.png-605ce89fadcb7c7f0e0ec6db2e7596bb.ctex
+Loading resource: res://assets/ui/card_art/treant_guardian_card_art.png
+Loading resource: res://.godot/imported/treant_guardian_card_art.png-e3c47a76f904071ae4288d86b3c99ebf.ctex
+Loading resource: res://data/cards/wandering_bard.tres
+Loading resource: res://assets/characters/generated/wandering_bard/Wandering_Bard_Idle.png
+Loading resource: res://.godot/imported/Wandering_Bard_Idle.png-157916ca25460327e4f43ea5e95547a0.ctex
+Loading resource: res://assets/ui/card_art/wandering_bard_card_art.png
+Loading resource: res://.godot/imported/wandering_bard_card_art.png-a898fd3980f7528d1c90e11fafefc641.ctex
+Loading resource: res://data/cards/ward_blast_sigil.tres
+Loading resource: res://assets/ui/icons/antahonist_spells/spell_icons_32x32.png
+Loading resource: res://.godot/imported/spell_icons_32x32.png-5578ddc41490221798cc0894375cc166.ctex
+Loading resource: res://assets/ui/card_art/ward_blast_sigil_card_art.png
+Loading resource: res://.godot/imported/ward_blast_sigil_card_art.png-843f2246218698c7f07e388e00aa9014.ctex
+Loading resource: res://data/cards/ward_soulburn_sigil.tres
+Loading resource: res://assets/ui/card_art/ward_soulburn_sigil_card_art.png
+Loading resource: res://.godot/imported/ward_soulburn_sigil_card_art.png-d11186432f6c44cd9cfcdbecbe904f37.ctex
+Loading resource: res://data/cards/ward_thorn_sigil.tres
+Loading resource: res://assets/ui/card_art/ward_thorn_sigil_card_art.png
+Loading resource: res://.godot/imported/ward_thorn_sigil_card_art.png-52fbd980609bd22c51738a844adbe5e0.ctex
+Loading resource: res://data/cards/warlock.tres
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 02 -Full 20 Characters/Characters(100x100 split)/Warlock/Warlock/Warlock_Idle.png
+Loading resource: res://.godot/imported/Warlock_Idle.png-4bc4a0e5801ca0c38b37448498d56a0d.ctex
+Loading resource: res://assets/ui/card_art/warlock_card_art.png
+Loading resource: res://.godot/imported/warlock_card_art.png-570f5c41664c550898425d36254b4b99.ctex
+Loading resource: res://data/cards/werebear.tres
+WARNING: res://data/cards/werebear.tres:4 - ext_resource, invalid UID: uid://0o5f1fuenoep - using text path instead: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Werebear/Werebear/Werebear_Idle.png
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/card_pool_verify.gd:49)
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Werebear/Werebear/Werebear_Idle.png
+Loading resource: res://.godot/imported/Werebear_Idle.png-b05a7aa23626c7847f4c5ebf7e4e9b9d.ctex
+Loading resource: res://assets/ui/card_art/werebear_card_art.png
+Loading resource: res://.godot/imported/werebear_card_art.png-a94c3ca95ff74937fbcfe4211cecbbca.ctex
+Loading resource: res://data/cards/werewolf.tres
+WARNING: res://data/cards/werewolf.tres:4 - ext_resource, invalid UID: uid://bvkg7od6ikpoe - using text path instead: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Werewolf/Werewolf/Werewolf_Idle.png
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/card_pool_verify.gd:49)
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Werewolf/Werewolf/Werewolf_Idle.png
+Loading resource: res://.godot/imported/Werewolf_Idle.png-6db5dece6b84bcce51a4601c0af0181c.ctex
+Loading resource: res://assets/ui/card_art/werewolf_card_art.png
+Loading resource: res://.godot/imported/werewolf_card_art.png-8ef807f1059fb2e16259416f3535149c.ctex
+Loading resource: res://data/cards/wizard.tres
+WARNING: res://data/cards/wizard.tres:4 - ext_resource, invalid UID: uid://c0k73vvxh21qx - using text path instead: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Wizard/Wizard/Wizard_Idle.png
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _run (res://tests/card_pool_verify.gd:49)
+Loading resource: res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Wizard/Wizard/Wizard_Idle.png
+Loading resource: res://.godot/imported/Wizard_Idle.png-530a2b50430195051867e6383f0b48df.ctex
+Loading resource: res://assets/ui/card_art/wizard_card_art.png
+Loading resource: res://.godot/imported/wizard_card_art.png-493ca5e361d9d6eec75cf168b1d2cc02.ctex
+卡池總數:92(載入失敗 0)
+  從者:60
+  靈裝:1
+  秘術:25
+  瞬咒:3
+  伏印:3
+
+秘術逐張:
+  破甲射線                         ◆3  effect=2 target=2 power=2 amount=0 status=6 mod=0
+  箭雨                           ◆4  effect=0 target=2 power=2 amount=0 status=0 mod=1
+  戰意灌注                         ◆2  effect=2 target=1 power=0 amount=0 status=5 mod=0
+  以血換識                         ◆1  effect=6 target=0 power=0 amount=2 status=0 mod=0
+  血翼契約                         ◆2  effect=3 target=0 power=0 amount=0 status=0 mod=0
+  腐蝕詛咒                         ◆2  effect=2 target=2 power=1 amount=0 status=6 mod=0
+  命運窺視                         ◆1  effect=5 target=0 power=0 amount=3 status=0 mod=0
+  火焰爆裂                         ◆3  effect=0 target=2 power=3 amount=0 status=0 mod=0
+  烈焰法杖                         ◆3  effect=2 target=2 power=2 amount=0 status=1 mod=0
+  鐵鑄意志                         ◆2  effect=2 target=1 power=0 amount=0 status=5 mod=0
+  寒霜鎖鏈                         ◆3  effect=2 target=2 power=1 amount=0 status=2 mod=0
+  凍土脈衝                         ◆4  effect=2 target=2 power=2 amount=0 status=2 mod=0
+  獄犬召令                         ◆4  effect=3 target=0 power=0 amount=0 status=0 mod=0
+  聖光庇佑                         ◆2  effect=1 target=1 power=0 amount=3 status=0 mod=0
+  秘傳靈感                         ◆3  effect=4 target=0 power=0 amount=2 status=0 mod=0
+  生命湧泉                         ◆3  effect=1 target=1 power=0 amount=5 status=0 mod=0
+  回憶潮汐                         ◆5  effect=4 target=0 power=0 amount=3 status=0 mod=0
+  夜幕庇護                         ◆2  effect=2 target=1 power=0 amount=0 status=4 mod=0
+  亡者召集                         ◆2  effect=3 target=0 power=0 amount=0 status=0 mod=0
+  衝擊波                          ◆2  effect=0 target=2 power=2 amount=0 status=0 mod=0
+  骸骨援軍                         ◆4  effect=3 target=0 power=0 amount=0 status=0 mod=0
+  群星雷暴                         ◆4  effect=0 target=2 power=1 amount=0 status=0 mod=5
+  雷霆貫穿                         ◆3  effect=0 target=2 power=2 amount=0 status=0 mod=2
+  猛毒瘴氣                         ◆3  effect=2 target=2 power=1 amount=0 status=3 mod=0
+  雙重雷擊                         ◆4  effect=0 target=2 power=2 amount=0 status=0 mod=3
+
+PASS 36 項檢查,0 失敗
+XR: Clearing primary interface
+XR: Removed interface "Native mobile"
+XR: Removed interface "OpenXR"
