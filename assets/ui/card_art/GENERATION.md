@@ -16,19 +16,22 @@
 
 The existing minion cards share a stricter visual language than a generic "pixel-art character" prompt:
 
-- Current card art refines the tiny sprite to roughly three times its logical detail while preserving the sprite's
-  chibi proportions and identity. It is not a raw 17×21-pixel frame enlarged to fill the card.
+- Current card art keeps the visual density of a roughly 48×32 to 64×48 logical-pixel JRPG sprite enlarged with
+  nearest-neighbor scaling. It may clarify the source silhouette, but must not invent fur strands, scales,
+  engravings, material grain, anatomy, or other concept-art detail that the runtime sprite does not contain.
 - Use `Idle` frame 0 for a neutral card. A variant that advertises an attack/block/summon identity must use an
   enlarged real frame from that matching animation sheet as an imagegen reference; never invent an unavailable
   action. `tests/extract_sprite_reference.gd` accepts an optional frame index for this.
 - Preserve the reference sprite's weapon type/count, armor or clothing shapes, ears/horns/tail/wings, facing
   direction, dominant palette, and pose silhouette. Character identity outranks every style anchor.
-- Render crisp deliberate pixel clusters, hard edges, and a dark outer contour with no antialiasing. Match current
-  minion cards' medium logical pixel density: visibly finer than the runtime sprite, much coarser than painted art.
+- Render large square pixel clusters, hard edges, and a dark outer contour with no antialiasing. Use roughly 10–14
+  flat subject colors and at most one shadow/highlight tone per material. At 1536×1024 output size, important
+  subject pixels should normally read as blocks about 12–24 output pixels wide, not one-pixel AI micro-texture.
 - Keep the chibi body proportions from the sprite; do not lengthen limbs, add realistic anatomy, or turn the pose
   into a cinematic illustration.
-- Center the character horizontally at roughly 35–45% of canvas width and 52–58% of canvas height, with the lowest
-  visible pixel near baseline y≈900 of the 1495×1052 canvas and generous empty space above.
+- Center the character horizontally in the lower-middle, usually occupying 45–52% of canvas height (35–45% for
+  long flying creatures), with the lowest visible pixel near baseline y≈900 of the 1495×1052 canvas and generous
+  empty space above.
 - Reuse `assets/ui/card_art/backgrounds/card_bg_neutral.png`: large empty dark-navy upper field, tiny distant
   mountains near the lower quarter, and a dim stone floor. The background must not recolor the sprite.
 - Card-art action and runtime identity must agree: the `.tres` standee and the source animation family used for
@@ -74,14 +77,16 @@ be used only to clarify a tiny sprite; they are not runtime assets.
 Use case: stylized-concept
 Asset type: landscape collectible-card illustration for the same game as Image 1
 Primary request: create the dedicated illustration for <card>, preserving <reference identity or implemented effect>.
-Style/medium: for minions, polished crisp pixel art matching the character anchor; for non-minions, a simple
+Style/medium: for minions, deliberately coarse nearest-neighbor JRPG pixel art matching the character anchor;
+for non-minions, a simple
 retro pixel icon designed at 32–48 px then enlarged nearest-neighbor, using chunky edges and 6–10 flat colors.
 Composition/framing: 295:207 landscape ratio; minions use one clear focal subject; non-minions use one isolated
 centered icon occupying roughly 35% of the image with large empty dark-navy space.
 Constraints: opaque scenic background edge to edge; no card frame, text, logo, UI, or watermark;
 not a sprite sheet; no unrelated characters or objects; do not copy the Frost Witch subject.
 Avoid: smooth vector shapes, painterly brush texture, photorealism, cropped focal elements, illegible silhouette,
-excessive visual noise, and for non-minions especially the high-detail cinematic AI-concept-art look.
+excessive visual noise, tiny surface pixels, fur strands, individual scales, reflective material rendering,
+volumetric light, and the high-detail cinematic AI-concept-art look for every card type.
 ```
 
 Each call adds a card-specific subject, action/effect, environment, mood, and palette derived from the
@@ -102,3 +107,6 @@ Codex image store; project copies in this directory are the assets consumed by G
 - High-tier runtime families added: Steel Forge Titan, Abyss Devourer, Thunderhorn Behemoth,
   Tombsea Colossus, Sky Leviathan, and Red Obsidian Ancient Dragon. Their normal attacks use hammer smash,
   claw swipe, horn jab, anchor sweep, tail/body ram, and dragon claw respectively; none uses a kick loop.
+- 2026-08-28 style correction: all six high-tier minion card arts were regenerated from their enlarged Idle frames
+  using finished coarse minion cards as the style authority. Rejected versions were too large, over-rendered, and
+  introduced unsupported identities (multi-headed forge beast, giant-mouth blob, jeweled concept-art dragon).
