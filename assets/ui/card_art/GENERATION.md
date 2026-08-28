@@ -121,3 +121,7 @@ Codex image store; project copies in this directory are the assets consumed by G
   pass looked like a direct low-resolution Pack upscale; earlier rejected versions were over-rendered and introduced
   unsupported identities (multi-headed forge beast, giant-mouth blob, jeweled concept-art dragon). The accepted
   pass keeps the Frost Witch's medium pixel density and restrained shading while preserving exact sprite anatomy.
+- 2026-08-28 user selection override: Steel Forge Titan, Abyss Devourer, and Thunderhorn Behemoth keep that final
+  Frost-Witch-led redraw. Sky Leviathan and Red Obsidian Ancient Dragon restore their original `d6dbc82` art, while
+  Tombsea Colossus restores its simpler anchor-arm art from `b0804b5`. These three historical PNGs are intentional
+  art-direction exceptions and must not be automatically normalized to the shared minion contract.
