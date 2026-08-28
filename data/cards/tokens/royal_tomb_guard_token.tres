@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/card/card_data.gd" id="1_card"]
+[ext_resource type="Texture2D" path="res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Armored Skeleton/Armored Skeleton/Armored Skeleton_Idle.png" id="2_idle"]
+
+[resource]
+script = ExtResource("1_card")
+card_name = "王墓守衛"
+cost = 0
+atk = 6
+hp = 8
+standee = ExtResource("2_idle")
+keywords = Array[StringName]([&"鐵壁"])

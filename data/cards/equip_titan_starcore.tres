@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=5 format=3]
+[ext_resource type="Script" path="res://src/card/card_data.gd" id="1_card"]
+[ext_resource type="Script" path="res://src/card/skill_data.gd" id="2_skill"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/equip_titan_starcore_card_art.png" id="3_art"]
+[sub_resource type="Resource" id="Skill_main"]
+script = ExtResource("2_skill")
+skill_name = "泰坦星核"
+description = "裝備：攻擊 +2、生命上限 +10；己方回合開始恢復 3 並獲盾 2。"
+kind = 2
+cost = 0
+[resource]
+script = ExtResource("1_card")
+card_type = 1
+card_name = "泰坦星核"
+cost = 12
+atk = 0
+hp = 0
+art = ExtResource("3_art")
+use_dedicated_art = true
+active_skill = SubResource("Skill_main")
+special_id = &"equip_titan_starcore"
+equip_atk_bonus = 2
+equip_hp_bonus = 10
+turn_start_heal = 3
+turn_start_shield = 2

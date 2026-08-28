@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=5 format=3]
+[ext_resource type="Script" path="res://src/card/card_data.gd" id="1_card"]
+[ext_resource type="Script" path="res://src/card/skill_data.gd" id="2_skill"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/ward_bloodthorn_array_card_art.png" id="3_art"]
+[sub_resource type="Resource" id="Skill_main"]
+script = ExtResource("2_skill")
+skill_name = "血棘伏陣"
+description = "宿主被攻擊時：攻擊者受到 5 點傷害與中毒 3。"
+kind = 2
+cost = 0
+[resource]
+script = ExtResource("1_card")
+card_type = 4
+card_name = "血棘伏陣"
+cost = 9
+atk = 0
+hp = 0
+art = ExtResource("3_art")
+use_dedicated_art = true
+active_skill = SubResource("Skill_main")
+special_id = &"ward_bloodthorn"

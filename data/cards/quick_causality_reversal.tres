@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=5 format=3]
+[ext_resource type="Script" path="res://src/card/card_data.gd" id="1_card"]
+[ext_resource type="Script" path="res://src/card/skill_data.gd" id="2_skill"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/quick_causality_reversal_card_art.png" id="3_art"]
+[sub_resource type="Resource" id="Skill_main"]
+script = ExtResource("2_skill")
+skill_name = "因果逆轉"
+description = "反制敵方攻擊型主動技；來源承受該技能原傷害。"
+kind = 2
+cost = 0
+[resource]
+script = ExtResource("1_card")
+card_type = 3
+card_name = "因果逆轉"
+cost = 11
+atk = 0
+hp = 0
+art = ExtResource("3_art")
+use_dedicated_art = true
+active_skill = SubResource("Skill_main")
+special_id = &"quick_causality"

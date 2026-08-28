@@ -90,12 +90,15 @@ Codex image store; project copies in this directory are the assets consumed by G
 
 ## Completed-set verification
 
-- Dedicated art resolved from `CardData`: 92/92 cards
-- New generated project assets: 91 (the existing Frost Witch is the style anchor and 92nd card)
-- PNG encoding: 92/92 opaque RGB, edge-to-edge
+- Dedicated art resolved from `CardData`: 120/120 cards
+- New generated project assets: 119 (the existing Frost Witch is the style anchor and 120th card)
+- PNG encoding: 120/120 opaque RGB, edge-to-edge
 - Dimensions: 1493x1054 through 1536x1024
 - Aspect-ratio range: 1.4165 through 1.5000
-- Unique SHA-256 hashes: 92/92
+- Unique SHA-256 hashes: 120/120
 - Missing art references: 0
 - `load_steps` mismatches: 0
 - `standee` changes introduced by this pass: 0
+- High-tier runtime families added: Steel Forge Titan, Abyss Devourer, Thunderhorn Behemoth,
+  Tombsea Colossus, Sky Leviathan, and Red Obsidian Ancient Dragon. Their normal attacks use hammer smash,
+  claw swipe, horn jab, anchor sweep, tail/body ram, and dragon claw respectively; none uses a kick loop.
