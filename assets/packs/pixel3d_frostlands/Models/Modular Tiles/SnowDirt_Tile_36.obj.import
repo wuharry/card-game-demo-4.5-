@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://cv1bggli1ffe3"
+path="res://.godot/imported/SnowDirt_Tile_36.obj-0a501b36edaca2e06ccea8c3ff9c69bd.mesh"
+
+[deps]
+
+files=["res://.godot/imported/SnowDirt_Tile_36.obj-0a501b36edaca2e06ccea8c3ff9c69bd.mesh"]
+
+source_file="res://assets/packs/pixel3d_frostlands/Models/Modular Tiles/SnowDirt_Tile_36.obj"
+dest_files=["res://.godot/imported/SnowDirt_Tile_36.obj-0a501b36edaca2e06ccea8c3ff9c69bd.mesh", "res://.godot/imported/SnowDirt_Tile_36.obj-0a501b36edaca2e06ccea8c3ff9c69bd.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

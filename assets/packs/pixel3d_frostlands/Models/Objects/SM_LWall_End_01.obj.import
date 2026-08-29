@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://dn32kqyg4601w"
+path="res://.godot/imported/SM_LWall_End_01.obj-fccf6680c601b131a9297ceff6ffa11e.mesh"
+
+[deps]
+
+files=["res://.godot/imported/SM_LWall_End_01.obj-fccf6680c601b131a9297ceff6ffa11e.mesh"]
+
+source_file="res://assets/packs/pixel3d_frostlands/Models/Objects/SM_LWall_End_01.obj"
+dest_files=["res://.godot/imported/SM_LWall_End_01.obj-fccf6680c601b131a9297ceff6ffa11e.mesh", "res://.godot/imported/SM_LWall_End_01.obj-fccf6680c601b131a9297ceff6ffa11e.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

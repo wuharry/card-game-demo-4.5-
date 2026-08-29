@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://cph8l7lha7w6g"
+path="res://.godot/imported/Cliff_Face_Grass_02.obj-12722e55e89f7b1c01c2f58ddb0767e4.mesh"
+
+[deps]
+
+files=["res://.godot/imported/Cliff_Face_Grass_02.obj-12722e55e89f7b1c01c2f58ddb0767e4.mesh"]
+
+source_file="res://assets/terrain/pixel_3d_grasslands/mountains/OBJ/Cliff_Face_Grass_02.obj"
+dest_files=["res://.godot/imported/Cliff_Face_Grass_02.obj-12722e55e89f7b1c01c2f58ddb0767e4.mesh", "res://.godot/imported/Cliff_Face_Grass_02.obj-12722e55e89f7b1c01c2f58ddb0767e4.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

@@ -34,7 +34,7 @@ var original_scale: Vector3 = Vector3.ONE
 @export var data: CardData
 
 ## ── 卡框挖空窗(卡圖要塞進去的那塊)──────────────
-## 卡框 NewCard.png 上半部有一塊「透明挖空」的卡圖窗,以下常數是用 alpha 掃描
+## 卡框 NewCard_fixed.png 上半部有一塊「透明挖空」的卡圖窗,以下常數是用 alpha 掃描
 ## 量出來的實際範圍(像素 x 40..334、y 59..265),換算成卡片本地座標。
 ## 換了卡框圖的話,這三個常數要重新量測(掃透明區的位置)。
 const ART_WINDOW_CENTER := Vector2(0.022, 0.488)   # 透明窗相對 364px 框中心右移約 5px

@@ -1,12 +1,8 @@
-# Card-back candidates
+# Selected card back
 
-All candidates use the active card-back dimensions (`1621×2432`) and the same
-dark, restrained pixel-art palette as the refreshed card illustrations.
+The candidate review is complete. The battlefield, player deck, and opponent hand
+all use `card_back_04_cold_iron_crest.png` directly.
 
-1. `card_back_01_frost_sigil.png` — frost sigil
-2. `card_back_02_obsidian_rune.png` — obsidian rune
-3. `card_back_03_eclipse_astrolabe.png` — eclipse astrolabe
-4. `card_back_04_cold_iron_crest.png` — minimal cold-iron crest
-
-After a direction is selected, copy that image over
-`assets/ui/textures/card_back.png`; no scene changes are required.
+The selected asset keeps the active dimensions (`1621×2432`) and uses a restrained
+cold-iron pixel-art palette. Superseded candidates were removed during the asset
+cleanup; this directory intentionally retains only the selected source.

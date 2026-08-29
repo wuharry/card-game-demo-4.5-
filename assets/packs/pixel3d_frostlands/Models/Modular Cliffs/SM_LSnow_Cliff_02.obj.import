@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://dukkp5tfewl3g"
+path="res://.godot/imported/SM_LSnow_Cliff_02.obj-36bd637333838844c494b0d64bda8211.mesh"
+
+[deps]
+
+files=["res://.godot/imported/SM_LSnow_Cliff_02.obj-36bd637333838844c494b0d64bda8211.mesh"]
+
+source_file="res://assets/packs/pixel3d_frostlands/Models/Modular Cliffs/SM_LSnow_Cliff_02.obj"
+dest_files=["res://.godot/imported/SM_LSnow_Cliff_02.obj-36bd637333838844c494b0d64bda8211.mesh", "res://.godot/imported/SM_LSnow_Cliff_02.obj-36bd637333838844c494b0d64bda8211.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

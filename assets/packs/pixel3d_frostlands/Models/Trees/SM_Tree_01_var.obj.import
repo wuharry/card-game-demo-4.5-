@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://b7m2rdsysmvwl"
+path="res://.godot/imported/SM_Tree_01_var.obj-28bfa15a5cf7032cb259081760a000fa.mesh"
+
+[deps]
+
+files=["res://.godot/imported/SM_Tree_01_var.obj-28bfa15a5cf7032cb259081760a000fa.mesh"]
+
+source_file="res://assets/packs/pixel3d_frostlands/Models/Trees/SM_Tree_01_var.obj"
+dest_files=["res://.godot/imported/SM_Tree_01_var.obj-28bfa15a5cf7032cb259081760a000fa.mesh", "res://.godot/imported/SM_Tree_01_var.obj-28bfa15a5cf7032cb259081760a000fa.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

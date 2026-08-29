@@ -95,15 +95,15 @@ main.tscn  ← 牌桌主場景 (MainScene, Node3D)  [src/main_scene/main_scene.g
 | [scenes/arena_forest.tscn](scenes/arena_forest.tscn) | 森林戰場（預設）：程序地板 + 森林散佈 + 溪流 + 燈光環境 |
 | [scenes/arena_caverns.tscn](scenes/arena_caverns.tscn) / [scenes/arena_frostlands.tscn](scenes/arena_frostlands.tscn) | 洞窟 / 冰原戰場（繼承 ArenaBase 程式生成，進牌桌時隨機輪替） |
 | [scenes/arena_town.tscn](scenes/arena_town.tscn) | 黃昏城鎮廣場（主選單背景） |
-| [src/card/card.tscn](src/card/card.tscn) | 可實例化的 3D 卡片預製件（卡面用 `NewCard.png`）|
-| [src/card_slot/card_slot.tscn](src/card_slot/card_slot.tscn) | 可實例化的 3D 卡槽預製件（卡框用 `assets/ui/card_frames/base 11.png`）|
+| [src/card/card.tscn](src/card/card.tscn) | 可實例化的 3D 卡片預製件（卡面用 `NewCard_fixed.png`）|
+| [src/card_slot/card_slot.tscn](src/card_slot/card_slot.tscn) | 可實例化的 3D 卡槽預製件（卡槽外觀由 `slot_tile.gdshader` 程序生成）|
 | [src/player_board/player_board.tscn](src/player_board/player_board.tscn) | 棋盤場景，`@export card_slot_scene` 指向 `card_slot.tscn` |
 
 ### 美術資源
 
 | 路徑 | 用途 |
 |------|------|
-| `NewCard.png` | 卡框圖（上半有透明挖空窗，CardArt 嵌入其中）|
+| `NewCard_fixed.png` | 目前卡框圖（已清除白色 matte，上半透明窗由 CardArt 遮罩填入）|
 | `data/cards/*.tres` | 24 張 CardData 卡片資料（名稱 / 費用 / 攻血 / 立牌動畫表）|
 | `assets/packs/tiny_rpg_characters` | 像素角色動畫表（卡圖取第 0 幀、召喚立牌播待機動畫）|
 | `assets/packs/pixel3d_{caverns,frostlands,town}` | 洞窟 / 冰原 / 城鎮 像素 3D 環境素材包（第三方素材包統一收 `assets/packs/`，資料夾 snake_case、包內保留原始結構利於對照授權） |
