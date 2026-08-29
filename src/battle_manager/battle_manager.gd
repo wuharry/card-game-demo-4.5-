@@ -29,6 +29,8 @@ signal battle_message(text: String)
 signal game_over(winner: String)
 
 const MANA_CAP := 7
+## F8 測卡沙盒的獨立上限。正式規則仍是 7；這個值不會進入線上或 Release 對局。
+const DEBUG_MANA_CAP := 10
 ## 卡槽群組(player_board 生成卡槽時分好的):查單位在哪個槽、站哪邊都靠它。
 const SLOT_GROUPS: Array[String] = [
 	"player_front", "player_back", "enemy_front", "enemy_back"]
@@ -60,6 +62,8 @@ class SideState:
 	var grave: Array[CardData] = []
 	## 丟牌回魔冷卻(§1.1):0=可用;使用設 2、自己回合開始 -1 → 隔回合一次。
 	var discard_cd: int = 0
+	## F8 沙盒只掛在被準備的側別：固定 10 上限，並開放墓地直接捨棄。
+	var debug_test_mode: bool = false
 
 var turn: int = 1
 var active_side: String = "player"   # 現在輪到誰行動(回合歸屬)
@@ -93,9 +97,12 @@ func _active() -> SideState:
 	return sides[active_side]
 
 
-## 輪到某一側的回合開始:魔力上限 +1(封頂)並回滿(未用不保留,§1)。
+## 輪到某一側的回合開始:正式規則上限 +1；F8 沙盒則固定回滿 10/10。
 func _begin_side_turn(st: SideState) -> void:
-	st.mana_max = mini(MANA_CAP, st.mana_max + 1)
+	if st.debug_test_mode:
+		st.mana_max = DEBUG_MANA_CAP
+	else:
+		st.mana_max = mini(MANA_CAP, st.mana_max + 1)
 	st.mana = st.mana_max
 	st.temp_mana = 0   # 暫時魔力被「回滿」洗掉:帳中帳跟著歸零(§1.1)
 	st.discard_cd = maxi(0, st.discard_cd - 1)   # 丟牌回魔冷卻:自己回合開始 -1(§1.1)
@@ -139,7 +146,7 @@ func hand_of(side: String) -> Array[CardData]:
 	return (sides[side] as SideState).hand
 
 
-## Debug 離線測卡:把指定卡移進手牌並補足它的費用。
+## Debug 離線測卡:把指定卡移進手牌，並為該側啟用 10/10 魔力沙盒。
 ## 這裡只改「帳」;CardManager 呼叫前會先 stash 視圖、呼叫後再 rebuild。
 ## 線上禁用:client 本地塞牌會和權威帳分家,也等同作弊。
 func debug_prepare_card(side: String, card_path: String) -> Dictionary:
@@ -200,10 +207,11 @@ func debug_prepare_card(side: String, card_path: String) -> Dictionary:
 		st.hand.append(cd)
 		result.added = true
 
-	var needed := clampi(cd.cost, 0, MANA_CAP)
-	st.mana_max = maxi(st.mana_max, needed)
-	st.mana = maxi(st.mana, needed)
-	st.temp_mana = mini(st.temp_mana, st.mana)
+	st.debug_test_mode = true
+	st.mana_max = DEBUG_MANA_CAP
+	st.mana = DEBUG_MANA_CAP
+	st.temp_mana = 0
+	st.discard_cd = 0
 	result.ok = true
 	result.card = cd
 	if side == active_side:
@@ -234,6 +242,20 @@ func grave_count(side: String) -> int:
 func grave_top(side: String) -> CardData:
 	var g: Array[CardData] = (sides[side] as SideState).grave
 	return g.back() if not g.is_empty() else null
+
+
+## 只有 F8 離線沙盒可以把手牌直接丟進真正的墓地；不增加魔力、也不碰回魔冷卻。
+func is_debug_test_mode(side: String) -> bool:
+	if not OS.is_debug_build() or NetMatch.is_online or NetMatch.is_dedicated_server:
+		return false
+	return sides.has(side) and (sides[side] as SideState).debug_test_mode
+
+
+func debug_discard_to_grave(side: String, cd: CardData) -> bool:
+	if cd == null or not is_debug_test_mode(side):
+		return false
+	bury(side, cd)
+	return true
 
 
 ## ── 丟牌回魔(§1.1)───────────────────────────────

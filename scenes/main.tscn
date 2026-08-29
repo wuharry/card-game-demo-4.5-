@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://chgkpoxgxfare" path="res://scenes/arena_forest.tscn" id="3_r0du0"]
 [ext_resource type="PackedScene" uid="uid://d3snrkgtw7cj4" path="res://src/player_board/player_board.tscn" id="4_cm0pq"]
 [ext_resource type="Script" uid="uid://tufcahb6ac65" path="res://src/play_hand/player_hand.gd" id="5_ph001"]
-[ext_resource type="Texture2D" uid="uid://n4ac73p70pqg" path="res://assets/ui/textures/card_back.png" id="5_tbgi4"]
+[ext_resource type="Texture2D" path="res://assets/ui/textures/card_back_candidates/card_back_04_cold_iron_crest.png" id="5_tbgi4"]
 [ext_resource type="PackedScene" uid="uid://ms5b78mvgm7c" path="res://src/card/card.tscn" id="6_dcard"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_jyhfs"]
@@ -53,41 +53,49 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0, 4)
 [node name="CardBack_0" type="Sprite3D" parent="Deck/CardStack"]
 transform = Transform3D(5, 0, 0, 0, 0, -5, 0, 5, 0, 0, 0, 0)
 pixel_size = 0.0001974
+texture_filter = 2
 texture = ExtResource("5_tbgi4")
 
 [node name="CardBack_1" type="Sprite3D" parent="Deck/CardStack"]
 transform = Transform3D(5, 0, 0, 0, 0, -5, 0, 5, 0, 0, 0.022, 0)
 pixel_size = 0.0001974
+texture_filter = 2
 texture = ExtResource("5_tbgi4")
 
 [node name="CardBack_2" type="Sprite3D" parent="Deck/CardStack"]
 transform = Transform3D(5, 0, 0, 0, 0, -5, 0, 5, 0, 0, 0.044, 0)
 pixel_size = 0.0001974
+texture_filter = 2
 texture = ExtResource("5_tbgi4")
 
 [node name="CardBack_3" type="Sprite3D" parent="Deck/CardStack"]
 transform = Transform3D(5, 0, 0, 0, 0, -5, 0, 5, 0, 0, 0.066, 0)
 pixel_size = 0.0001974
+texture_filter = 2
 texture = ExtResource("5_tbgi4")
 
 [node name="CardBack_4" type="Sprite3D" parent="Deck/CardStack"]
 transform = Transform3D(5, 0, 0, 0, 0, -5, 0, 5, 0, 0, 0.088, 0)
 pixel_size = 0.0001974
+texture_filter = 2
 texture = ExtResource("5_tbgi4")
 
 [node name="CardBack_5" type="Sprite3D" parent="Deck/CardStack"]
 transform = Transform3D(5, 0, 0, 0, 0, -5, 0, 5, 0, 0, 0.11, 0)
 pixel_size = 0.0001974
+texture_filter = 2
 texture = ExtResource("5_tbgi4")
 
 [node name="CardBack_6" type="Sprite3D" parent="Deck/CardStack"]
 transform = Transform3D(5, 0, 0, 0, 0, -5, 0, 5, 0, 0, 0.132, 0)
 pixel_size = 0.0001974
+texture_filter = 2
 texture = ExtResource("5_tbgi4")
 
 [node name="CardBack_7" type="Sprite3D" parent="Deck/CardStack"]
 transform = Transform3D(5, 0, 0, 0, 0, -5, 0, 5, 0, 0, 0.154, 0)
 pixel_size = 0.0001974
+texture_filter = 2
 texture = ExtResource("5_tbgi4")
 
 [node name="Area3D" type="Area3D" parent="Deck"]

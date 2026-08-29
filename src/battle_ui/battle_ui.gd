@@ -30,11 +30,12 @@ const FONT_TITLE: FontFile = preload(
 	"res://assets/fonts/Noto_Serif_TC/static/NotoSerifTC-Bold.ttf")
 const FONT_BODY: FontFile = preload(
 	"res://assets/fonts/Noto_Serif_TC/static/NotoSerifTC-SemiBold.ttf")
+const UI_STYLE: GDScript = preload("res://src/ui/fantasy_ui_theme.gd")
 
 ## 配色與主選單同一組「暮色金」:整個遊戲的 UI 說同一種話。
-const GOLD := Color("f2e3ae")
-const GOLD_DIM := Color("b8a984")
-const LINE_GOLD := Color(0.83, 0.72, 0.45, 0.85)
+const GOLD := UI_STYLE.GOLD
+const GOLD_DIM := UI_STYLE.GOLD_DIM
+const LINE_GOLD := Color(UI_STYLE.GOLD, 0.76)
 const ATTACK_DESC := "普通攻擊:對目標造成等同攻擊力的傷害,並吃下目標的反擊(免費,每回合 1 次)。"
 
 var _panel: PanelContainer
@@ -278,13 +279,7 @@ func _show_skill_desc() -> void:
 
 ## 深色半透明+金邊的面板底(指令選單/HUD/結束回合鈕共用同一張皮)。
 func _make_panel_style() -> StyleBoxFlat:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.05, 0.04, 0.03, 0.86)   # 深色半透明底:壓得住亮背景
-	sb.border_color = LINE_GOLD
-	sb.set_border_width_all(1)
-	sb.set_corner_radius_all(6)
-	sb.set_content_margin_all(14.0)
-	return sb
+	return UI_STYLE.panel(UI_STYLE.GOLD, false)
 
 
 ## ── 戰況 HUD ─────────────────────────────────────────
@@ -316,10 +311,10 @@ func _build_hud() -> void:
 	_hud_mana_row.add_theme_constant_override("separation", 0)
 	_hud_mana_row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	col.add_child(_hud_mana_row)
-	_hud_mana_norm = _make_mana_label(Color("7fd9ff"))
-	_hud_mana_temp = _make_mana_label(Color("ffd75e"))
-	_hud_mana_rest = _make_mana_label(Color("7fd9ff"))
-	_hud_mana_bonus = _make_mana_label(Color("ffd75e"))
+	_hud_mana_norm = _make_mana_label(UI_STYLE.AMETHYST_BRIGHT)
+	_hud_mana_temp = _make_mana_label(UI_STYLE.GOLD)
+	_hud_mana_rest = _make_mana_label(UI_STYLE.AMETHYST)
+	_hud_mana_bonus = _make_mana_label(UI_STYLE.GOLD)
 
 	# 對方手牌張數(2d):平常隱藏,連線時由 update_opp_count 開燈。
 	_hud_opp = Label.new()
@@ -335,10 +330,10 @@ func _build_hud() -> void:
 	_end_turn_btn.add_theme_font_override("font", FONT_TITLE)
 	_end_turn_btn.add_theme_font_size_override("font_size", 18)
 	_end_turn_btn.add_theme_color_override("font_color", GOLD_DIM)
-	_end_turn_btn.add_theme_color_override("font_hover_color", Color("fff3cf"))
-	_end_turn_btn.add_theme_stylebox_override("normal", _make_panel_style())
-	var lit := _make_panel_style()
-	lit.border_color = Color("fff3cf")
+	_end_turn_btn.add_theme_color_override("font_hover_color", UI_STYLE.GOLD_BRIGHT)
+	_end_turn_btn.add_theme_color_override("font_focus_color", UI_STYLE.GOLD_BRIGHT)
+	_end_turn_btn.add_theme_stylebox_override("normal", UI_STYLE.button(false))
+	var lit: StyleBoxFlat = UI_STYLE.button(false)
 	_end_turn_btn.add_theme_stylebox_override("hover", lit)
 	_end_turn_btn.add_theme_stylebox_override("focus", lit)
 	_end_turn_btn.add_theme_stylebox_override("pressed", lit)
@@ -358,10 +353,10 @@ func _build_hud() -> void:
 	_leave_btn.add_theme_font_override("font", FONT_BODY)
 	_leave_btn.add_theme_font_size_override("font_size", 15)
 	_leave_btn.add_theme_color_override("font_color", GOLD_DIM)
-	_leave_btn.add_theme_color_override("font_hover_color", Color("fff3cf"))
-	_leave_btn.add_theme_stylebox_override("normal", _make_panel_style())
-	var leave_lit := _make_panel_style()
-	leave_lit.border_color = Color("fff3cf")
+	_leave_btn.add_theme_color_override("font_hover_color", UI_STYLE.GOLD_BRIGHT)
+	_leave_btn.add_theme_color_override("font_focus_color", UI_STYLE.GOLD_BRIGHT)
+	_leave_btn.add_theme_stylebox_override("normal", UI_STYLE.button(true))
+	var leave_lit: StyleBoxFlat = UI_STYLE.button(false)
 	_leave_btn.add_theme_stylebox_override("hover", leave_lit)
 	_leave_btn.add_theme_stylebox_override("focus", leave_lit)
 	_leave_btn.add_theme_stylebox_override("pressed", leave_lit)
@@ -375,8 +370,9 @@ func _build_hud() -> void:
 	# 測卡入口要能用滑鼠點:Godot Editor 可能先吃掉 F8(停止執行),不能只靠快捷鍵。
 	if OS.is_debug_build() and not NetMatch.is_online and not NetMatch.is_dedicated_server:
 		_debug_test_btn = Button.new()
-		_debug_test_btn.text = "準備測試牌  [F8]"
-		_debug_test_btn.tooltip_text = "把測試卡放進手牌、補足魔力，並在正對面放置測試靶"
+		_debug_test_btn.text = "測卡沙盒 10/10  [F8]"
+		_debug_test_btn.tooltip_text = \
+			"把測試卡放進手牌、魔力設為 10/10，並開放拖到墓地直接捨棄（不回魔）"
 		_debug_test_btn.add_theme_font_override("font", FONT_BODY)
 		_debug_test_btn.add_theme_font_size_override("font_size", 14)
 		_debug_test_btn.add_theme_color_override("font_color", Color("8edfff"))
@@ -399,7 +395,7 @@ func _build_hud() -> void:
 	_toast.add_theme_font_override("font", FONT_TITLE)
 	# 提示是「行動被擋下」的當下回饋,要一眼看到:大字、亮色、厚黑邊。
 	_toast.add_theme_font_size_override("font_size", 32)
-	_toast.add_theme_color_override("font_color", Color("ffe08a"))
+	_toast.add_theme_color_override("font_color", UI_STYLE.GOLD_BRIGHT)
 	_toast.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.85))
 	_toast.add_theme_constant_override("outline_size", 10)
 	add_child(_toast)
@@ -427,7 +423,7 @@ func update_hud(turn: int, side: String, mana: int, mana_max: int, temp_mana: in
 	_hud_turn.text = "第 %d 回合 ‧ %s" % [turn, side_name]
 	# 行動方用顏色再講一次:金=我方、緋=對方(熱座換邊要一眼可辨)。
 	_hud_turn.add_theme_color_override(
-		"font_color", GOLD if side == NetMatch.my_side else Color(0.92, 0.55, 0.5))
+		"font_color", GOLD if side == NetMatch.my_side else UI_STYLE.DANGER)
 	# ◆=現有、◇=已用掉的上限:不讀數字也能一眼讀量。
 	# 黃◆=暫時魔力,疊在最右(付費從右邊扣,見 battle_manager._pay);
 	# 回收可能把 mana 推超過上限(5/5 再棄牌),◇ 用 maxi 兜住別變負。
@@ -528,17 +524,14 @@ func _make_option(text_value: String) -> Button:
 	btn.add_theme_font_override("font", FONT_BODY)
 	btn.add_theme_font_size_override("font_size", 20)
 	btn.add_theme_color_override("font_color", GOLD_DIM)
-	btn.add_theme_color_override("font_hover_color", Color("fff3cf"))
-	btn.add_theme_color_override("font_focus_color", Color("fff3cf"))
+	btn.add_theme_color_override("font_hover_color", UI_STYLE.GOLD_BRIGHT)
+	btn.add_theme_color_override("font_focus_color", UI_STYLE.GOLD_BRIGHT)
 	btn.add_theme_color_override("font_pressed_color", GOLD)
 	# 灰化態:理由由描述列轉述,按鈕本身只要「看得出不能按」。
 	btn.add_theme_color_override("font_disabled_color", Color(0.55, 0.5, 0.42, 0.5))
-	btn.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
-	btn.add_theme_stylebox_override("disabled", StyleBoxEmpty.new())
-	var lit := StyleBoxFlat.new()
-	lit.bg_color = Color(1.0, 1.0, 1.0, 0.05)
-	lit.border_color = LINE_GOLD
-	lit.border_width_bottom = 2
+	btn.add_theme_stylebox_override("normal", UI_STYLE.button(true))
+	btn.add_theme_stylebox_override("disabled", UI_STYLE.button(true))
+	var lit: StyleBoxFlat = UI_STYLE.button(false)
 	btn.add_theme_stylebox_override("hover", lit)
 	btn.add_theme_stylebox_override("focus", lit)
 	btn.add_theme_stylebox_override("pressed", lit)
@@ -549,9 +542,11 @@ func _make_option(text_value: String) -> Button:
 
 
 ## 細金分隔線(同主選單的印刷品語彙)。
-func _make_gold_line() -> ColorRect:
-	var line := ColorRect.new()
-	line.color = LINE_GOLD
+func _make_gold_line() -> TextureRect:
+	var line := TextureRect.new()
+	line.texture = UI_STYLE.separator_gradient()
+	line.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	line.stretch_mode = TextureRect.STRETCH_SCALE
 	line.custom_minimum_size = Vector2(0, 1)
 	return line
 

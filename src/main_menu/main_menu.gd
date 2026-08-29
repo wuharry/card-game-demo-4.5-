@@ -50,11 +50,13 @@ const FONT_MENU: FontFile = preload(
 	"res://assets/fonts/Noto_Serif_TC/static/NotoSerifTC-SemiBold.ttf")
 const FONT_SUB: FontFile = preload(
 	"res://assets/fonts/Playpen_Sans/static/PlaypenSans-Regular.ttf")
+const UI_STYLE: GDScript = preload("res://src/ui/fantasy_ui_theme.gd")
+const MENU_SIGIL_SCRIPT: GDScript = preload("res://src/ui/arcane_sigil.gd")
 
 ## ── 配色:同一組「暮色金」貫穿全畫面,和城鎮的夕陽/窗光同色系 ──
-const GOLD := Color("f2e3ae")       # 亮金:標題
-const GOLD_DIM := Color("b8a984")   # 沉金:未選中的選單文字
-const LINE_GOLD := Color(0.83, 0.72, 0.45, 0.85)   # 裝飾細線
+const GOLD := UI_STYLE.GOLD
+const GOLD_DIM := UI_STYLE.GOLD_DIM
+const LINE_GOLD := Color(UI_STYLE.GOLD, 0.76)
 
 var _start_button: Button    # 記住開始鈕,換場景前要鎖它防連點
 var _practice_button: Button # 單人練習鈕(和開始鈕一起鎖,兩顆都能進牌桌)
@@ -123,6 +125,7 @@ func _build_ui() -> void:
 	ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	_build_vignette(ui)
+	_build_menu_sigil(ui)
 	_build_menu_column(ui)
 	_build_footer(ui)
 
@@ -139,8 +142,8 @@ func _build_ui() -> void:
 ## (之前的上下漸層只壓天和地,左右兩側壓不住,亮背景時字會浮。)
 func _build_vignette(ui: Control) -> void:
 	var grad := Gradient.new()
-	grad.set_color(0, Color(0.0, 0.0, 0.0, 0.10))
-	grad.set_color(1, Color(0.0, 0.0, 0.0, 0.62))
+	grad.set_color(0, Color(0.025, 0.02, 0.08, 0.14))
+	grad.set_color(1, Color(0.01, 0.01, 0.035, 0.76))
 	var tex := GradientTexture2D.new()
 	tex.gradient = grad
 	tex.fill = GradientTexture2D.FILL_RADIAL
@@ -154,37 +157,65 @@ func _build_vignette(ui: Control) -> void:
 	rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 
+## 原創奧術徽記只當低彩度背光，不承擔資訊；縮放與透明度都刻意壓低。
+func _build_menu_sigil(ui: Control) -> void:
+	var sigil := MENU_SIGIL_SCRIPT.new() as Control
+	sigil.custom_minimum_size = Vector2(660, 660)
+	sigil.modulate = Color(0.84, 0.80, 0.92, 0.44)
+	ui.add_child(sigil)
+	sigil.set_anchors_and_offsets_preset(
+		Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
+
+
 ## ── 選單主體:置中一欄(標題 → 金線 → 選項)──────────────
 func _build_menu_column(ui: Control) -> void:
 	var center_box := CenterContainer.new()
 	ui.add_child(center_box)
 	center_box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
+	var stage := PanelContainer.new()
+	stage.custom_minimum_size = Vector2(430, 0)
+	stage.add_theme_stylebox_override("panel", UI_STYLE.panel(UI_STYLE.GOLD, true))
+	center_box.add_child(stage)
+
+	var stack := VBoxContainer.new()
+	stage.add_child(stack)
+
 	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 10)
-	center_box.add_child(col)
+	col.add_theme_constant_override("separation", 8)
+	stack.add_child(col)
 	_menu_col = col   # 記住選單欄:進大廳時要把它藏起來、返回時再現身
+
+	var eyebrow := Label.new()
+	eyebrow.text = "◆  ARCANE DUEL  ◆"
+	eyebrow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	eyebrow.add_theme_font_override("font", FONT_SUB)
+	eyebrow.add_theme_font_size_override("font_size", 12)
+	eyebrow.add_theme_color_override("font_color", UI_STYLE.AMETHYST_BRIGHT)
+	col.add_child(eyebrow)
 
 	# 標題:襯線粗體 + 往下柔影。陰影比粗描邊高級:大字配粗描邊會有「貼紙感」。
 	var title := Label.new()
 	title.text = game_title
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_override("font", FONT_TITLE)
-	title.add_theme_font_size_override("font_size", 84)
+	title.add_theme_font_size_override("font_size", 66)
 	title.add_theme_color_override("font_color", GOLD)
-	title.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.65))
+	title.add_theme_color_override("font_shadow_color", Color(0.18, 0.08, 0.28, 0.52))
 	title.add_theme_constant_override("shadow_offset_x", 0)
-	title.add_theme_constant_override("shadow_offset_y", 4)
+	title.add_theme_constant_override("shadow_offset_y", 2)
 	col.add_child(title)
 
 	# 標題底下一條細金線:印刷品式的裝飾,成本一個 ColorRect,氣質到位。
-	var line := ColorRect.new()
-	line.color = LINE_GOLD
+	var line := TextureRect.new()
+	line.texture = UI_STYLE.separator_gradient()
+	line.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	line.stretch_mode = TextureRect.STRETCH_SCALE
 	line.custom_minimum_size = Vector2(300, 2)
 	line.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	col.add_child(line)
 
-	col.add_child(_make_spacer(52))   # 標題區和選項區之間拉開呼吸空間
+	col.add_child(_make_spacer(20))
 
 	_start_button = _make_menu_option("開始遊戲")
 	_start_button.pressed.connect(_on_start_pressed)
@@ -206,8 +237,8 @@ func _build_menu_column(ui: Control) -> void:
 	quit_btn.pressed.connect(func() -> void: get_tree().quit())   # 直接關閉遊戲
 	col.add_child(quit_btn)
 
-	# 大廳欄放進同一個置中容器:兩欄重疊置中,靠 visible 互斥切換。
-	_build_lobby_column(center_box)
+	# 大廳欄與主選單共用同一塊黑曜石舞台，靠 visible 互斥切換。
+	_build_lobby_column(stack)
 
 
 ## ── 底部小字:版本行,像標題畫面角落的版權訊息 ─────────────
@@ -216,7 +247,7 @@ func _build_footer(ui: Control) -> void:
 	sub.text = game_subtitle
 	sub.add_theme_font_override("font", FONT_SUB)
 	sub.add_theme_font_size_override("font_size", 14)
-	sub.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 0.45))
+	sub.add_theme_color_override("font_color", Color(UI_STYLE.TEXT_DIM, 0.58))
 	ui.add_child(sub)
 	# CENTER_BOTTOM 預設模式會用文字的最小尺寸定位;最後的 18 = 離底邊 18px。
 	sub.set_anchors_and_offsets_preset(
@@ -265,7 +296,7 @@ func _enter_game() -> void:
 
 ## ── 大廳欄(2a):建立房間 / 輸 IP 加入 / 狀態字 / 返回 ──────────
 ## UI 只負責「顯示與轉告」:按鈕轉呼叫 NetLobby,狀態字聽 status_changed 更新。
-func _build_lobby_column(parent: CenterContainer) -> void:
+func _build_lobby_column(parent: Container) -> void:
 	_lobby_col = VBoxContainer.new()
 	_lobby_col.add_theme_constant_override("separation", 10)
 	_lobby_col.visible = false   # 平時藏著,按「連線對戰」才現身
@@ -281,8 +312,9 @@ func _build_lobby_column(parent: CenterContainer) -> void:
 	title.add_theme_constant_override("shadow_offset_y", 3)
 	_lobby_col.add_child(title)
 
-	var line := ColorRect.new()
-	line.color = LINE_GOLD
+	var line := TextureRect.new()
+	line.texture = UI_STYLE.separator_gradient()
+	line.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	line.custom_minimum_size = Vector2(240, 2)
 	line.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_lobby_col.add_child(line)
@@ -302,13 +334,11 @@ func _build_lobby_column(parent: CenterContainer) -> void:
 	_ip_edit.custom_minimum_size = Vector2(300, 44)
 	_ip_edit.add_theme_font_override("font", FONT_MENU)
 	_ip_edit.add_theme_font_size_override("font_size", 17)
-	var edit_style := StyleBoxFlat.new()
-	edit_style.bg_color = Color(0.0, 0.0, 0.0, 0.38)
-	edit_style.border_color = LINE_GOLD
-	edit_style.set_border_width_all(1)
-	edit_style.set_corner_radius_all(4)
-	edit_style.set_content_margin_all(8)
-	_ip_edit.add_theme_stylebox_override("normal", edit_style)
+	_ip_edit.add_theme_color_override("font_color", UI_STYLE.TEXT)
+	_ip_edit.add_theme_color_override("font_placeholder_color", UI_STYLE.TEXT_DIM)
+	_ip_edit.add_theme_color_override("caret_color", UI_STYLE.AMETHYST_BRIGHT)
+	_ip_edit.add_theme_stylebox_override("normal", UI_STYLE.field())
+	_ip_edit.add_theme_stylebox_override("focus", UI_STYLE.panel(UI_STYLE.AMETHYST_BRIGHT, true))
 	# 在輸入框按 Enter = 按「尋找對手」:鍵盤派不用伸手拿滑鼠。
 	_ip_edit.text_submitted.connect(func(_text: String) -> void: _on_find_match_pressed())
 	row.add_child(_ip_edit)
@@ -329,7 +359,7 @@ func _build_lobby_column(parent: CenterContainer) -> void:
 	_lobby_status.custom_minimum_size = Vector2(460, 0)
 	_lobby_status.add_theme_font_override("font", FONT_MENU)
 	_lobby_status.add_theme_font_size_override("font_size", 16)
-	_lobby_status.add_theme_color_override("font_color", GOLD_DIM)
+	_lobby_status.add_theme_color_override("font_color", UI_STYLE.TEXT_DIM)
 	_lobby_col.add_child(_lobby_status)
 
 	_lobby_col.add_child(_make_spacer(20))
@@ -388,29 +418,22 @@ func _make_menu_option(text_value: String) -> Button:
 	var btn := Button.new()
 	btn.text = text_value
 	btn.pressed.connect(func() -> void: Sfx.play(Sfx.CLICK, -8.0))
-	btn.custom_minimum_size = Vector2(280, 48)
+	btn.custom_minimum_size = Vector2(300, 46)
 	btn.add_theme_font_override("font", FONT_MENU)
-	btn.add_theme_font_size_override("font_size", 26)
+	btn.add_theme_font_size_override("font_size", 22)
 	btn.add_theme_color_override("font_color", GOLD_DIM)
-	btn.add_theme_color_override("font_hover_color", Color("fff3cf"))
-	btn.add_theme_color_override("font_focus_color", Color("fff3cf"))
+	btn.add_theme_color_override("font_hover_color", UI_STYLE.GOLD_BRIGHT)
+	btn.add_theme_color_override("font_focus_color", UI_STYLE.GOLD_BRIGHT)
 	btn.add_theme_color_override("font_pressed_color", GOLD)
-	# normal 狀態給「空樣式」= 沒有底沒有框,就是一行字(色塊按鈕感從這裡消失)。
-	btn.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
-	var lit := _make_underline_style()
+	btn.add_theme_color_override("font_disabled_color", Color(UI_STYLE.TEXT_DIM, 0.36))
+	btn.add_theme_stylebox_override("normal", UI_STYLE.button(true))
+	btn.add_theme_stylebox_override("disabled", UI_STYLE.button(true))
+	var lit: StyleBoxFlat = UI_STYLE.button(false)
 	btn.add_theme_stylebox_override("hover", lit)
 	btn.add_theme_stylebox_override("focus", lit)
-	btn.add_theme_stylebox_override("pressed", _make_underline_style())
+	btn.add_theme_stylebox_override("pressed", UI_STYLE.button(false))
+	btn.mouse_entered.connect(btn.grab_focus)
 	return btn
-
-
-## 選中狀態的樣式:透明底 + 只開「下邊框」的金線(StyleBoxFlat 可逐邊開關)。
-func _make_underline_style() -> StyleBoxFlat:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(1.0, 1.0, 1.0, 0.04)   # 極淡提亮,整行有「浮起」感
-	sb.border_color = LINE_GOLD
-	sb.border_width_bottom = 2
-	return sb
 
 
 ## ── 純占位的透明空隙 ──

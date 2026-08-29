@@ -8,7 +8,8 @@
 class_name OpponentHand
 extends Node3D
 
-const BACK_TEXTURE: Texture2D = preload("res://assets/ui/textures/card_back.png")
+const BACK_TEXTURE: Texture2D = preload(
+	"res://assets/ui/textures/card_back_candidates/card_back_04_cold_iron_crest.png")
 const MAX_SHOWN := 8          # 手牌上限 8(§1),卡背最多也就 8 張
 const BACK_WIDTH := 0.62      # 每張卡背的世界寬度(縮小版,別跟本體搶戲)
 const SPACING := 0.34         # 相鄰卡背的水平間距(疊出「一手牌」的密度)
@@ -44,6 +45,7 @@ func update_count(n: int) -> void:
 func _make_back(order: int) -> Sprite3D:
 	var s := Sprite3D.new()
 	s.texture = BACK_TEXTURE
+	s.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
 	s.pixel_size = BACK_WIDTH / maxf(float(BACK_TEXTURE.get_width()), 1.0)
 	s.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
 	s.alpha_cut = SpriteBase3D.ALPHA_CUT_OPAQUE_PREPASS   # 寫深度,DOF 才不會拿背後森林糊它

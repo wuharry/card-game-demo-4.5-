@@ -21,7 +21,8 @@ extends Node3D
 const COLLISION_MASK_CARD = 1  # 第 1 層：卡片實體(拖曳時要找的對象)
 const COLLISION_MASK_SLOT = 2  # 第 2 層：桌面卡槽(放牌時要找的對象)
 const COLLISION_MASK_HERO = 4  # 第 3 層：本體(hero.gd 生成碰撞時自掛這層)
-const COLLISION_MASK_GRAVE = 8  # 第 4 層：墓地投放區(grave_pile.gd 自掛;丟牌回魔 §1.1)
+const COLLISION_MASK_RECYCLE = 8  # 第 4 層：回魔黑洞投放區(ManaRecycle 自掛;§1.1)
+const COLLISION_MASK_DEBUG_GRAVE = 16  # 第 5 層：僅 F8 沙盒開啟的墓地直接捨棄區
 ## Debug 離線測卡:F8 預設準備冰霜女巫;啟動參數 --test-card=<tres 檔名> 可換卡。
 const DEBUG_TEST_CARD_SLUG := "frost_witch"
 const DEBUG_TEST_CARD_ARG := "--test-card="
@@ -33,7 +34,8 @@ const DEBUG_TARGET_CARD_PATH := "res://data/cards/soldier.tres"
 
 ## 目前「被滑鼠抓著拖曳」的卡片。沒有在拖任何卡時是 null。
 var card_being_dragged: Card = null
-var _hint_pile: GravePile = null   # 目前亮著回魔提示的墓(拖曳懸停中)
+var _hint_well: ManaRecycle = null   # 目前亮著回魔提示的黑洞(拖曳懸停中)
+var _hint_grave: GravePile = null    # F8 沙盒目前亮著「不回魔捨棄」提示的墓地
 var _picking := false   # 選牌面板開著:費用已付、選擇是義務(擋取消/結束回合)
 ## 拖曳時把卡片鎖在這個高度(Y 軸)，避免它忽高忽低或穿進地板。
 var drag_plane_height: float = 0.0
@@ -234,9 +236,12 @@ func on_card_unhovered(card: Card) -> void:
 func _process(_delta: float) -> void:
 	# 拖曳結束(出牌/棄牌/取消,不管走哪條路)= 在這個單一收斂點清回魔提示。
 	# 比在每條退出路徑各補一刀可靠:之後新增退出路徑也不會漏。
-	if card_being_dragged == null and _hint_pile != null:
-		_hint_pile.hide_recycle_hint()
-		_hint_pile = null
+	if card_being_dragged == null and _hint_well != null:
+		_hint_well.hide_recycle_hint()
+		_hint_well = null
+	if card_being_dragged == null and _hint_grave != null:
+		_hint_grave.hide_debug_discard_hint()
+		_hint_grave = null
 	# 只有真的抓著卡時才需要處理。
 	if card_being_dragged:
 		# 1. 想像桌面是一個「數學平面」：法線朝上(Vector3.UP)、高度為 drag_plane_height。
@@ -271,17 +276,26 @@ func _process(_delta: float) -> void:
 				# 更新記錄。
 				currently_hovered_slot = found_slot
 
-			# ── 拖曳時的回魔提示:懸停墓地 = 光環轉金 + 「+n ◆」(§1.1)──
-			var pile := raycast_check_for_grave()
+			# ── 拖曳時的回魔提示:懸停黑洞 = 轉金 + 「+n ◆」(§1.1)──
+			var well := raycast_check_for_recycle()
 			if not battle_manager.can_discard_for_mana(battle_manager.active_side):
-				pile = null   # 冷卻中不亮提示;真丟下去 _try_discard 會用人話拒絕
-			if pile != _hint_pile:
-				if _hint_pile != null:
-					_hint_pile.hide_recycle_hint()
-				_hint_pile = pile
-				if _hint_pile != null:
-					_hint_pile.show_recycle_hint(
+				well = null   # 冷卻中不亮提示;真丟下去 _try_discard 會用人話拒絕
+			if well != _hint_well:
+				if _hint_well != null:
+					_hint_well.hide_recycle_hint()
+				_hint_well = well
+				if _hint_well != null:
+					_hint_well.show_recycle_hint(
 						floori(card_being_dragged.data.cost / 2.0))
+
+			# F8 沙盒多一個獨立落點：左側墓地只捨棄，不回魔、不吃黑洞冷卻。
+			var debug_grave := raycast_check_for_debug_grave()
+			if debug_grave != _hint_grave:
+				if _hint_grave != null:
+					_hint_grave.hide_debug_discard_hint()
+				_hint_grave = debug_grave
+				if _hint_grave != null:
+					_hint_grave.show_debug_discard_hint()
 
 	# 指定目標中:每幀把「施放者 → 游標」的螢幕座標餵給 BattleUI 畫導引箭頭。
 	# unproject_position 是射線的反運算:3D 世界座標 → 螢幕像素座標。
@@ -384,15 +398,20 @@ func _prepare_debug_card_test() -> void:
 	player_hand.rebuild_from(battle_manager.hand_of(side), false)
 	_update_deck_labels()
 
+	var grave := _grave_piles.get(side) as GravePile
+	if grave != null:
+		grave.set_debug_discard_enabled(true)
+
 	var cd := prepared.get("card") as CardData
 	var target := _debug_find_or_create_lane_target(side)
 	var replacement_note := str(prepared.get("replacement_note", ""))
 	if target == null:
-		battle_ui.flash_message("F8:【%s】已入手並補足魔力%s;但找不到可用的對位卡槽" % [
+		battle_ui.flash_message("F8 沙盒:【%s】已入手、魔力 10/10%s;但找不到可用的對位卡槽" % [
 			cd.card_name, replacement_note])
 		return
-	battle_ui.flash_message("F8 測試場:【%s】已入手並補足魔力%s;請放到【%s】正對面" % [
-		cd.card_name, replacement_note, target.data.card_name])
+	battle_ui.flash_message(
+		"F8 沙盒:【%s】已入手、魔力 10/10%s;拖到墓地可直接捨棄(不回魔)，請放到【%s】正對面" % [
+			cd.card_name, replacement_note, target.data.card_name])
 
 
 ## 預設測 frost_witch;Godot 參數分隔符後加 -- --test-card=wizard 可換 data/cards/*.tres。
@@ -527,8 +546,18 @@ func _on_left_released_drag() -> void:
 	var card := card_being_dragged
 	card_being_dragged = null
 	ui_state = UiState.IDLE
-	# 丟牌回魔(§1.1):放到墓地投放區 = 棄牌換魔,任何卡型都可棄——比卡型分流優先。
-	if raycast_check_for_grave() != null:
+	# F8 沙盒墓地是「純清手牌」工具；先於正常卡型與黑洞回魔分流。
+	var debug_grave := raycast_check_for_debug_grave()
+	if debug_grave != null:
+		debug_grave.hide_debug_discard_hint()
+		_hint_grave = null
+		_try_debug_grave_discard(card)
+		return
+	# 丟牌回魔(§1.1):放到黑洞投放區 = 棄牌換魔,任何卡型都可棄——比卡型分流優先。
+	var recycle := raycast_check_for_recycle()
+	if recycle != null:
+		recycle.hide_recycle_hint()
+		_hint_well = null
 		_try_discard(card)
 		return
 	match card.data.card_type:
@@ -962,14 +991,34 @@ func _net_discard(hand_idx: int, card_path: String) -> void:
 	var cd := load(card_path) as CardData
 	if cd == null or not battle_manager.can_discard_for_mana(battle_manager.active_side):
 		return
-	var pile := _grave_piles.get(battle_manager.active_side) as GravePile
-	if pile != null:
-		pile.arm_recycle()   # 先上膛再結算:這次入土演出走回魔金,不跟陣亡的紫混
+	var well := _recycle_wells.get(battle_manager.active_side) as ManaRecycle
+	if well != null:
+		well.pulse_recycle()
 	var gained: int = battle_manager.apply_discard_for_mana(battle_manager.active_side, cd)
 	_consume_played(hand_idx)   # 出牌端移視圖節點、重放端扣帳(同召喚的不對稱)
 	Sfx.play(Sfx.MANA_GAIN, -4.0)   # 數錢聲:回魔的「入帳感」
 	battle_ui.flash_message(
 		"捨棄【%s】回暫時魔力 ◆%d(用不完不保留;丟牌下回合不可再用)" % [cd.card_name, gained])
+
+
+## F8 沙盒清手牌：真正埋進墓地，但不給魔力、也完全不改黑洞的使用冷卻。
+## 不做 RPC 是刻意的——測卡入口本來就只允許 Debug 離線局。
+func _try_debug_grave_discard(card: Card) -> void:
+	var side := battle_manager.active_side
+	if card == null or not battle_manager.is_debug_test_mode(side):
+		organize_hand()
+		return
+	var hand_idx := player_hand.cards.find(card)
+	if hand_idx < 0:
+		organize_hand()
+		return
+	_pending_play_card = card
+	if not battle_manager.debug_discard_to_grave(side, card.data):
+		_pending_play_card = null
+		organize_hand()
+		return
+	_consume_played(hand_idx)
+	battle_ui.flash_message("測試捨棄【%s】→ 墓地（魔力不變）" % card.data.card_name)
 
 
 ## 指定目標中左鍵按下:點到合法目標就發動;點到其他任何地方 = 取消
@@ -1277,25 +1326,35 @@ func _spawn_enemy_deck() -> void:
 		-deck.position.x, deck.position.y, mid_z * 2.0 - deck.position.z)
 
 
-var _grave_piles: Dictionary = {}   # "player"/"enemy" → GravePile(純視覺,帳在 BattleManager)
+var _grave_piles: Dictionary = {}     # "player"/"enemy" → GravePile(墓地牌疊)
+var _recycle_wells: Dictionary = {}   # "player"/"enemy" → ManaRecycle(回魔投放區)
 
 
-## 墓地雙座:玩家墓在牌堆旁、靠場中央那側(挪 x 不挪 z——往中線挪會踩進
-## 溪流的水帶 ±1.7,見 §29 的岸線保證),敵方對角鏡射(同 EnemyDeck)。
-## 位置對稱於中線 → client 翻轉視角免特別處理(鏡像紅利)。
+## 每側各有兩個清楚分工的地標：黑洞在牌堆內側供丟牌回魔；墓地放到水平反邊。
+## 敵方整組對角鏡射，client 翻視角時仍維持自己右側回魔、左側墓地的讀法。
 func _spawn_grave_piles() -> void:
 	var deck := get_node_or_null("../Deck") as Node3D
 	if deck == null:
 		return
 	var mid_z := _board_mid_z()
-	var p_pos := deck.position + Vector3(-1.9, 0.0, 0.0)
+	var p_well_pos := deck.position + Vector3(-1.9, 0.0, 0.0)
+	var p_grave_pos := Vector3(-p_well_pos.x, p_well_pos.y, p_well_pos.z)
 	for side in ["player", "enemy"]:
+		var well := ManaRecycle.new()
+		well.name = "RecyclePlayer" if side == "player" else "RecycleEnemy"
+		get_parent().add_child(well)
+		well.setup(side)
+		well.position = p_well_pos if side == "player" \
+			else Vector3(-p_well_pos.x, p_well_pos.y, mid_z * 2.0 - p_well_pos.z)
+		_recycle_wells[side] = well
+
 		var pile := GravePile.new()
 		pile.name = "GravePlayer" if side == "player" else "GraveEnemy"
 		get_parent().add_child(pile)
 		pile.setup(side)
-		pile.position = p_pos if side == "player" \
-			else Vector3(-p_pos.x, p_pos.y, mid_z * 2.0 - p_pos.z)
+		pile.set_debug_discard_enabled(battle_manager.is_debug_test_mode(side))
+		pile.position = p_grave_pos if side == "player" \
+			else Vector3(-p_grave_pos.x, p_grave_pos.y, mid_z * 2.0 - p_grave_pos.z)
 		_grave_piles[side] = pile
 
 
@@ -1438,19 +1497,41 @@ func raycast_check_for_card_slot() -> CardSlot:
 	return null
 
 
-## ── 射線:找滑鼠下方的「墓地投放區」(第 4 層;丟牌回魔 §1.1)──────
-func raycast_check_for_grave() -> GravePile:
+## ── 射線：F8 沙盒的「墓地直接捨棄」區（第 5 層）────────────
+func raycast_check_for_debug_grave() -> GravePile:
+	if battle_manager == null or not battle_manager.is_debug_test_mode(
+			battle_manager.active_side):
+		return null
 	var space_state := get_world_3d().direct_space_state
 	var mouse_pos := get_viewport().get_mouse_position()
 	var ray_origin := camera.project_ray_origin(mouse_pos)
 	var ray_end := ray_origin + camera.project_ray_normal(mouse_pos) * 1000.0
 	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_end)
-	query.collision_mask = COLLISION_MASK_GRAVE
+	query.collision_mask = COLLISION_MASK_DEBUG_GRAVE
 	query.collide_with_areas = true
 	var result := space_state.intersect_ray(query)
 	if result:
-		# 打中的是墓座底下的 Area3D,它的父節點才是 GravePile 本體。
-		return (result.collider as Area3D).get_parent() as GravePile
+		var pile := (result.collider as Area3D).get_parent() as GravePile
+		if pile != null and pile.side == battle_manager.active_side:
+			return pile
+	return null
+
+
+## ── 射線:找滑鼠下方的「回魔黑洞」(第 4 層;丟牌回魔 §1.1)──────
+func raycast_check_for_recycle() -> ManaRecycle:
+	var space_state := get_world_3d().direct_space_state
+	var mouse_pos := get_viewport().get_mouse_position()
+	var ray_origin := camera.project_ray_origin(mouse_pos)
+	var ray_end := ray_origin + camera.project_ray_normal(mouse_pos) * 1000.0
+	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_end)
+	query.collision_mask = COLLISION_MASK_RECYCLE
+	query.collide_with_areas = true
+	var result := space_state.intersect_ray(query)
+	if result:
+		var well := (result.collider as Area3D).get_parent() as ManaRecycle
+		# 不能把牌拖去對手的黑洞替自己回魔；視角翻轉後仍以 side 判定，不看座標。
+		if well != null and well.side == battle_manager.active_side:
+			return well
 	return null
 
 

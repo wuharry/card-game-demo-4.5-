@@ -36,10 +36,13 @@ var original_scale: Vector3 = Vector3.ONE
 ## ── 卡框挖空窗(卡圖要塞進去的那塊)──────────────
 ## 卡框 NewCard.png 上半部有一塊「透明挖空」的卡圖窗,以下常數是用 alpha 掃描
 ## 量出來的實際範圍(像素 x 40..334、y 59..265),換算成卡片本地座標。
-## 換了卡框圖的話,這三個常數要重量(掃透明區的位置)。
-const ART_WINDOW_CENTER := Vector2(0.022, 0.488)   # 窗中心(卡片本地 x/y)
+## 換了卡框圖的話,這三個常數要重新量測(掃透明區的位置)。
+const ART_WINDOW_CENTER := Vector2(0.022, 0.488)   # 透明窗相對 364px 框中心右移約 5px
 const ART_WINDOW_SIZE := Vector2(1.297, 0.910)     # 窗寬高(世界單位)
 const ART_ICON_SIDE_MARGIN := 0.044                # 法術圖示每側留白(≈卡框 10px;Harvey 目測調參 2026-07-11)
+## 卡圖向框底多延伸 1.2%：覆蓋縮放/旋轉時可能露出的次像素細縫，仍完全藏在框條下。
+const ART_WINDOW_OVERSCAN := 1.012
+const ART_WINDOW_SHADER: Shader = preload("res://src/card/card_art_window.gdshader")
 
 ## 狀態效果的顯示名(§9;卡面狀態列用)。
 const STATUS_NAMES := {
@@ -54,11 +57,11 @@ const STATUS_NAMES := {
 ## §7 卡型章:非從者卡的底部印「卡型名 + 印章色」(從者卡的那個位置是攻血數字)。
 ## 深色寒鐵文字區上的分類色:提高明度維持辨識,彩度仍收斂避免螢光感。
 const TYPE_BADGES := {
-	CardData.CardType.EQUIP: ["靈裝", Color(0.86, 0.72, 0.36)],
-	CardData.CardType.ARCANA: ["秘術", Color(0.72, 0.55, 0.86)],
-	CardData.CardType.QUICK: ["瞬咒", Color(0.49, 0.75, 0.94)],
-	CardData.CardType.WARD: ["伏印", Color(0.54, 0.79, 0.59)],
-	CardData.CardType.DOMAIN: ["領域", Color(0.72, 0.77, 0.82)],
+	CardData.CardType.EQUIP: ["靈裝", Color("d8bd78")],
+	CardData.CardType.ARCANA: ["秘術", Color("9a7ac7")],
+	CardData.CardType.QUICK: ["瞬咒", Color("c1a9e8")],
+	CardData.CardType.WARD: ["伏印", Color("807091")],
+	CardData.CardType.DOMAIN: ["領域", Color("aaa6b2")],
 }
 
 ## 立牌「角色可見高度」(世界單位)。召喚時會掃描角色圖的不透明範圍,
@@ -97,6 +100,7 @@ var revived: bool = false                    # 【不滅】每場一次的復活
 var shield: int = 0
 ## HPLabel 進場時的原色(受傷變紅、補滿要變得回來——基準先快照)。
 var _hp_label_color: Color = Color.WHITE
+var _hp_flash_tween: Tween = null
 
 
 ## _ready() 是 Godot 的生命週期函式：節點一進入場景、準備好時自動執行一次。
@@ -129,16 +133,28 @@ func setup(card_data: CardData) -> void:
 	# 卡圖擺在卡框「後面」(z = -0.01),從透明挖空處露出來——
 	# 框的邊飾永遠畫在圖上面,所以不管圖放多大,卡框美術都不會被壓到。
 	if data.use_dedicated_art and data.art != null:
-		# 專用卡圖按原比例 cover 卡圖窗。素材比例若已對齊 295:207,只會裁到極少邊緣;
-		# 不用法術 icon 的水平拉伸路徑,人物與場景才不會變形。
-		var dedicated_w := maxf(float(data.art.get_width()), 1.0)
-		var dedicated_h := maxf(float(data.art.get_height()), 1.0)
+		# 真正的 cover-crop：先在來源圖中央裁出與卡窗完全相同的比例，再讓裁切後
+		# 的矩形精確貼齊卡窗。舊版只放大整張圖、靠卡框「看起來像裁切」，不同
+		# 長寬比會讓 Sprite 實體尺寸溢出，還可能從框外透明區漏出。
+		var crop := _cover_crop_rect(data.art, ART_WINDOW_SIZE.x / ART_WINDOW_SIZE.y)
+		var target := ART_WINDOW_SIZE * ART_WINDOW_OVERSCAN
 		$CardArt.texture = data.art
-		$CardArt.region_enabled = false
-		$CardArt.pixel_size = maxf(
-			ART_WINDOW_SIZE.x / dedicated_w, ART_WINDOW_SIZE.y / dedicated_h)
+		$CardArt.region_enabled = true
+		$CardArt.region_rect = crop
+		$CardArt.pixel_size = target.x / maxf(crop.size.x, 1.0)
 		$CardArt.scale = Vector3.ONE
+		var art_mat := ShaderMaterial.new()
+		art_mat.shader = ART_WINDOW_SHADER
+		art_mat.set_shader_parameter("art_texture", data.art)
+		var tex_size := Vector2(
+			maxf(float(data.art.get_width()), 1.0),
+			maxf(float(data.art.get_height()), 1.0))
+		art_mat.set_shader_parameter("source_uv_rect", Vector4(
+			crop.position.x / tex_size.x, crop.position.y / tex_size.y,
+			crop.size.x / tex_size.x, crop.size.y / tex_size.y))
+		$CardArt.material_override = art_mat
 	elif data.standee != null:
+		$CardArt.material_override = null
 		var cell := maxf(float(data.standee.get_height()), 1.0)
 		var bounds := visible_bounds_of_frame0(data.standee)
 		# grow(2):四周留 2px 呼吸邊;再夾回格子範圍,region 才不會取樣到界外。
@@ -150,6 +166,7 @@ func setup(card_data: CardData) -> void:
 			ART_WINDOW_SIZE.y / bounds.size.y)   # contain:整個本體進窗,不裁到肉
 		$CardArt.scale = Vector3.ONE   # 從者卡維持等比,別吃到法術卡分支的拉伸
 	elif data.art != null:
+		$CardArt.material_override = null
 		# 法術卡的主要路徑:卡圖是 1:1 圖示(AtlasTexture 從圖示表切格),窗是橫向。
 		# fill/stretch:高度等比貼齊窗高,寬度用 scale.x 拉寬到「窗寬 − 兩側呼吸邊」——
 		# 不裁圖、不凸框,兩側各留 ≤5px 留白換較小的變形率(定案 2026-07-11)。
@@ -164,6 +181,19 @@ func setup(card_data: CardData) -> void:
 	# 擺到窗中心、退到卡框後 0.01(透明物件由遠到近畫:後面的圖先畫、框蓋在上)。
 	$CardArt.position = Vector3(ART_WINDOW_CENTER.x, ART_WINDOW_CENTER.y, -0.01)
 	_update_skill_label()
+
+
+## 回傳來源圖中央的最大矩形，使其比例精確等於 target_aspect（CSS cover 同語意）。
+## Sprite3D 的 region 真的只生成這塊幾何，卡圖不再依賴框圖替它裁掉多餘部分。
+static func _cover_crop_rect(texture: Texture2D, target_aspect: float) -> Rect2:
+	var source_size := Vector2(
+		maxf(float(texture.get_width()), 1.0), maxf(float(texture.get_height()), 1.0))
+	var crop_size := source_size
+	if source_size.x / source_size.y > target_aspect:
+		crop_size.x = source_size.y * target_aspect
+	else:
+		crop_size.y = source_size.x / target_aspect
+	return Rect2((source_size - crop_size) * 0.5, crop_size)
 
 
 ## ── 技能描述(卡框下半的文字區)────────────────────────────
@@ -583,11 +613,15 @@ func has_equipped_lifesteal() -> bool:
 
 func _refresh_hp_label() -> void:
 	$HPLabel.text = str(current_hp)
-	# 殘血紅字:一眼掃出誰快死了;補滿就恢復原色。
+	# 綠晶體已承擔「生命」語意；數字常駐米白融入卡框，受傷只短暫閃紅。
+	if _hp_flash_tween != null and _hp_flash_tween.is_valid():
+		_hp_flash_tween.kill()
+	$HPLabel.modulate = _hp_label_color
 	if current_hp < data.hp:
-		$HPLabel.modulate = Color(1.0, 0.32, 0.28)
-	else:
-		$HPLabel.modulate = _hp_label_color
+		$HPLabel.modulate = Color(1.0, 0.52, 0.43)
+		_hp_flash_tween = create_tween()
+		_hp_flash_tween.tween_property($HPLabel, "modulate", _hp_label_color, 0.32)\
+			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 
 ## ── 狀態效果(§9;由 BattleManager 讀寫)──────────────

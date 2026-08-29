@@ -18,20 +18,21 @@ const FONT_TITLE: FontFile = preload(
 	"res://assets/fonts/Noto_Serif_TC/static/NotoSerifTC-Bold.ttf")
 const FONT_BODY: FontFile = preload(
 	"res://assets/fonts/Noto_Serif_TC/static/NotoSerifTC-SemiBold.ttf")
+const UI_STYLE: GDScript = preload("res://src/ui/fantasy_ui_theme.gd")
 
 ## 配色沿用主選單/戰鬥 UI 的「暮色金」,整個遊戲說同一種話。
-const GOLD := Color("f2e3ae")
-const GOLD_DIM := Color("b8a984")
-const LINE_GOLD := Color(0.83, 0.72, 0.45, 0.85)
+const GOLD := UI_STYLE.GOLD
+const GOLD_DIM := UI_STYLE.GOLD_DIM
+const LINE_GOLD := Color(UI_STYLE.GOLD, 0.76)
 
 ## 卡型顯示名 + 印章色(和 card.gd 的 TYPE_BADGES 同語彙;MINION 另給「從者」)。
 const TYPE_INFO := {
-	CardData.CardType.MINION: ["從者", Color(0.55, 0.42, 0.2)],
-	CardData.CardType.EQUIP: ["靈裝", Color(0.5, 0.36, 0.1)],
-	CardData.CardType.ARCANA: ["秘術", Color(0.4, 0.18, 0.5)],
-	CardData.CardType.QUICK: ["瞬咒", Color(0.12, 0.32, 0.55)],
-	CardData.CardType.WARD: ["伏印", Color(0.16, 0.4, 0.18)],
-	CardData.CardType.DOMAIN: ["領域", Color(0.35, 0.35, 0.35)],
+	CardData.CardType.MINION: ["從者", UI_STYLE.GOLD_DIM],
+	CardData.CardType.EQUIP: ["靈裝", UI_STYLE.GOLD],
+	CardData.CardType.ARCANA: ["秘術", UI_STYLE.AMETHYST],
+	CardData.CardType.QUICK: ["瞬咒", UI_STYLE.AMETHYST_BRIGHT],
+	CardData.CardType.WARD: ["伏印", Color("75658f")],
+	CardData.CardType.DOMAIN: ["領域", UI_STYLE.TEXT_DIM],
 }
 
 ## 篩選分頁:全部 + 五種在用的卡型(順序即分頁順序;-1 = 全部)。
@@ -101,7 +102,7 @@ func _build() -> void:
 		return a.card_name < b.card_name)
 
 	var dim := ColorRect.new()
-	dim.color = Color(0.03, 0.02, 0.05, 0.92)   # 近乎全黑:圖鑑是獨立畫面、不用透出城鎮
+	dim.color = Color(0.018, 0.02, 0.055, 0.97)
 	add_child(dim)
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
@@ -161,8 +162,10 @@ func _build_header(col: VBoxContainer) -> void:
 	_back_btn.pressed.connect(close)
 	row.add_child(_back_btn)
 
-	var line := ColorRect.new()
-	line.color = LINE_GOLD
+	var line := TextureRect.new()
+	line.texture = UI_STYLE.separator_gradient()
+	line.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	line.stretch_mode = TextureRect.STRETCH_SCALE
 	line.custom_minimum_size = Vector2(0, 2)
 	col.add_child(line)
 
@@ -246,7 +249,7 @@ func _make_card_tile(d: CardData) -> Control:
 	var desc := Label.new()
 	desc.add_theme_font_override("font", FONT_BODY)
 	desc.add_theme_font_size_override("font_size", 12)
-	desc.add_theme_color_override("font_color", Color("cfc4a6"))
+	desc.add_theme_color_override("font_color", UI_STYLE.TEXT_DIM)
 	desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -291,12 +294,10 @@ func _cardface_art(d: CardData) -> Texture2D:
 
 ## 卡磚底:半透明深底 + 細金框,和暗幕拉出層次。
 func _make_tile_style() -> StyleBoxFlat:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.09, 0.07, 0.12, 0.85)
-	sb.border_color = Color(0.45, 0.38, 0.24, 0.7)
-	sb.set_border_width_all(1)
-	sb.set_corner_radius_all(6)
-	sb.set_content_margin_all(8)
+	var sb: StyleBoxFlat = UI_STYLE.panel(UI_STYLE.AMETHYST, false)
+	sb.bg_color = Color(0.04, 0.045, 0.10, 0.96)
+	sb.shadow_size = 3
+	sb.set_content_margin_all(9.0)
 	return sb
 
 
@@ -308,13 +309,10 @@ func _make_text_button(text_value: String, size: int) -> Button:
 	btn.add_theme_font_override("font", FONT_BODY)
 	btn.add_theme_font_size_override("font_size", size)
 	btn.add_theme_color_override("font_color", GOLD_DIM)
-	btn.add_theme_color_override("font_hover_color", Color("fff3cf"))
-	btn.add_theme_color_override("font_focus_color", Color("fff3cf"))
-	btn.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
-	var lit := StyleBoxFlat.new()
-	lit.bg_color = Color(1.0, 1.0, 1.0, 0.04)
-	lit.border_color = LINE_GOLD
-	lit.border_width_bottom = 2
+	btn.add_theme_color_override("font_hover_color", UI_STYLE.GOLD_BRIGHT)
+	btn.add_theme_color_override("font_focus_color", UI_STYLE.GOLD_BRIGHT)
+	btn.add_theme_stylebox_override("normal", UI_STYLE.button(true))
+	var lit: StyleBoxFlat = UI_STYLE.button(false)
 	btn.add_theme_stylebox_override("hover", lit)
 	btn.add_theme_stylebox_override("focus", lit)
 	return btn
