@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://vcuc6hl4iec6"
+path="res://.godot/imported/SM_Bush_03.obj-24a854e9aaf61d33f60eb58751d3d59c.mesh"
+
+[deps]
+
+files=["res://.godot/imported/SM_Bush_03.obj-24a854e9aaf61d33f60eb58751d3d59c.mesh"]
+
+source_file="res://assets/packs/pixel3d_frostlands/Models/Foliage/SM_Bush_03.obj"
+dest_files=["res://.godot/imported/SM_Bush_03.obj-24a854e9aaf61d33f60eb58751d3d59c.mesh", "res://.godot/imported/SM_Bush_03.obj-24a854e9aaf61d33f60eb58751d3d59c.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

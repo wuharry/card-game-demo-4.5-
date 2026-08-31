@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://src/card/card_data.gd" id="1_card"]
+[ext_resource type="Texture2D" path="res://assets/characters/generated/abyss_devourer/Abyss_Devourer_Idle.png" id="2_idle"]
+[ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/abyss_devourer_card_art.png" id="4_art"]
+
+[sub_resource type="Resource" id="Skill_main"]
+script = ExtResource("3_skill")
+skill_name = "噬魂"
+description = "獨立攻擊造成 4 點傷害並吸血。"
+kind = 1
+cost = 2
+anim = "Attack02"
+power = 4
+modifier = 4
+
+[resource]
+script = ExtResource("1_card")
+card_name = "深淵吞噬者"
+cost = 10
+atk = 9
+hp = 11
+art = ExtResource("4_art")
+use_dedicated_art = true
+standee = ExtResource("2_idle")
+active_skill = SubResource("Skill_main")

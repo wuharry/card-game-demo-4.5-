@@ -1,18 +1,19 @@
-[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="CardData" load_steps=7 format=3]
 
 [ext_resource type="Script" uid="uid://cxot3rc105cul" path="res://src/card/card_data.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 02 -Full 20 Characters/Characters(100x100 split)/Flame Golem/Flame Golem/Flame Golem_Idle.png" id="2_sheet"]
 [ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/flame_golem_card_art.png" id="4_card_art"]
 
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
-skill_name = "熔火重擊"
-description = "本次攻擊 +2,命中後附加灼燒 1 回合。"
+skill_name = "熔岩爆發"
+description = "對敵方所有單位各造成 2 點傷害。"
+kind = 1
 cost = 3
 anim = "Attack03"
 power = 2
-effect = 2
-status = 1
+modifier = 5
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
 atlas = ExtResource("2_sheet")
@@ -20,10 +21,11 @@ region = Rect2(0, 0, 100, 100)
 
 [resource]
 script = ExtResource("1_script")
-card_name = "熔岩魔像"
-cost = 5
-atk = 4
+card_name = "火焰魔像"
+cost = 6
+atk = 5
 hp = 7
-art = SubResource("AtlasTexture_frame")
+art = ExtResource("4_card_art")
+use_dedicated_art = true
 standee = ExtResource("2_sheet")
 active_skill = SubResource("Skill_main")

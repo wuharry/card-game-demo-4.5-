@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://7kefxd41iq1k"
+path="res://.godot/imported/SnowIce_Tile_15.obj-f4eec84f770dcfd68cd13fd577b9b411.mesh"
+
+[deps]
+
+files=["res://.godot/imported/SnowIce_Tile_15.obj-f4eec84f770dcfd68cd13fd577b9b411.mesh"]
+
+source_file="res://assets/packs/pixel3d_frostlands/Models/Modular Tiles/SnowIce_Tile_15.obj"
+dest_files=["res://.godot/imported/SnowIce_Tile_15.obj-f4eec84f770dcfd68cd13fd577b9b411.mesh", "res://.godot/imported/SnowIce_Tile_15.obj-f4eec84f770dcfd68cd13fd577b9b411.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

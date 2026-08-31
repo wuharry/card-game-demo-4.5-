@@ -15,6 +15,8 @@ extends Area3D
 ## 註冊成全域型別 CardSlot，CardManager 才能寫 var slot: CardSlot。
 class_name CardSlot
 
+const SETTINGS: GDScript = preload("res://src/settings/app_settings.gd")
+
 
 ## ── 狀態變數 ──────────────────────────────────
 ## 這個卡槽現在是不是空的。CardManager 放牌前會先檢查它。
@@ -71,7 +73,8 @@ func place_card(card: Card) -> void:
 	# 目標位置 = 卡槽位置再往上抬 0.09，讓卡片疊在卡槽上方一點點、不會穿插。
 	# global_position 是「世界座標」(整個場景的絕對位置)。
 	var target_position := global_position + Vector3(0, 0.09, 0)
-	tw.tween_property(card, "global_position", target_position, 0.15)  # 0.15 秒滑到定位
+	tw.tween_property(card, "global_position", target_position,
+		SETTINGS.current().motion_duration(0.15))
 	# 「躺平」= 世界座標繞 X 轉 -90°(卡面朝上、卡頂朝敵方，遊戲王式擺法)。
 	# 卡片上桌後仍掛在 PlayerHand 底下，而 PlayerHand 為了讓手牌面向玩家帶了傾角
 	# (構圖改版後是 +108°X，不再是當初的 -90°X)。所以 local 目標**不能寫死 (0,0,0)**：
@@ -82,10 +85,11 @@ func place_card(card: Card) -> void:
 	var flat_world := Basis.from_euler(Vector3(-PI / 2.0, 0.0, 0.0))
 	var parent_basis: Basis = card.get_parent().global_transform.basis
 	var flat_local := (parent_basis.inverse() * flat_world).get_rotation_quaternion()
-	tw.tween_property(card, "quaternion", flat_local, 0.15)
+	tw.tween_property(card, "quaternion", flat_local, SETTINGS.current().motion_duration(0.15))
 	# 卡片大小「跟著卡槽走」:兩者原生同為 1.6×2.4;卡槽被 PlayerBoard 縮放過,
 	# 卡片就乘上同一個倍率,入槽後才會剛好蓋住卡槽。
-	tw.tween_property(card, "scale", Vector3.ONE * _base_scale.x, 0.15)
+	tw.tween_property(card, "scale", Vector3.ONE * _base_scale.x,
+		SETTINGS.current().motion_duration(0.15))
 	# chain()：從「同時播放」切回「排隊」——等上面的躺平動畫都走完，
 	# 才呼叫 show_standee() 讓角色現身，時序上就是「卡落地 → 怪獸登場」。
 	tw.chain().tween_callback(card.show_standee)
@@ -103,9 +107,11 @@ func remove_card() -> void:
 		card_in_slot.exit_board_mode()
 
 		var tw := create_tween().set_parallel(true)
-		tw.tween_property(card_in_slot, "rotation_degrees", Vector3(0, 0, 0), 0.15)
+		tw.tween_property(card_in_slot, "rotation_degrees", Vector3(0, 0, 0),
+			SETTINGS.current().motion_duration(0.15))
 		# 縮回卡片自己記住的「原始大小」(在 card.gd 的 original_scale)。
-		tw.tween_property(card_in_slot, "scale", card_in_slot.original_scale, 0.15)
+		tw.tween_property(card_in_slot, "scale", card_in_slot.original_scale,
+			SETTINGS.current().motion_duration(0.15))
 
 	# 清空狀態：這個槽又變回空的了。
 	is_empty = true
@@ -132,8 +138,10 @@ func highlight() -> void:
 	# 主角是發光:shader 的 glow 推到 1(變亮+呼吸脈動);
 	# 縮放只留 1.06 的輕微「湊上前」,別跟發光搶戲。
 	_highlight_tween = create_tween().set_parallel(true)
-	_highlight_tween.tween_property(self, "scale", _base_scale * 1.06, 0.12)
-	_highlight_tween.tween_method(_set_glow, _current_glow(), 1.0, 0.12)
+	_highlight_tween.tween_property(self, "scale", _base_scale * 1.06,
+		SETTINGS.current().motion_duration(0.12))
+	_highlight_tween.tween_method(_set_glow, _current_glow(), 1.0,
+		SETTINGS.current().motion_duration(0.12))
 
 
 ## ── 取消高亮：滑鼠離開、或卡片已放入後 ─────────────
@@ -143,8 +151,10 @@ func unhighlight() -> void:
 
 	# 縮回「基準大小」(不是 Vector3.ONE——卡槽可能被 PlayerBoard 整體縮放過)、熄燈。
 	_highlight_tween = create_tween().set_parallel(true)
-	_highlight_tween.tween_property(self, "scale", _base_scale, 0.1)
-	_highlight_tween.tween_method(_set_glow, _current_glow(), 0.0, 0.1)
+	_highlight_tween.tween_property(self, "scale", _base_scale,
+		SETTINGS.current().motion_duration(0.1))
+	_highlight_tween.tween_method(_set_glow, _current_glow(), 0.0,
+		SETTINGS.current().motion_duration(0.1))
 
 
 ## ── 伏印警戒(§7 威懾):這一側場上有伏印時整排泛紅 ──────────
@@ -157,7 +167,8 @@ func set_ward_alert(on: bool) -> void:
 	if _alert_tween != null:
 		_alert_tween.kill()
 	_alert_tween = create_tween()
-	_alert_tween.tween_method(_set_alert, _current_alert(), 1.0 if on else 0.0, 0.4)
+	_alert_tween.tween_method(_set_alert, _current_alert(), 1.0 if on else 0.0,
+		SETTINGS.current().motion_duration(0.4))
 
 
 func _set_alert(value: float) -> void:

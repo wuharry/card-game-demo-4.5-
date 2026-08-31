@@ -1,16 +1,18 @@
-[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3 uid="uid://c2c1n5uamv7jw"]
+[gd_resource type="Resource" script_class="CardData" load_steps=7 format=3 uid="uid://c2c1n5uamv7jw"]
 
 [ext_resource type="Script" uid="uid://cxot3rc105cul" path="res://src/card/card_data.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://mmagq40li0fu" path="res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Soldier/Soldier/Soldier_Idle.png" id="2_sheet"]
 [ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/soldier_card_art.png" id="4_card_art"]
 
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
-skill_name = "戮力突刺"
-description = "發動一次額外攻擊,造成 2 點傷害。"
-kind = 1
-cost = 2
-power = 2
+skill_name = "防禦姿態"
+description = "使自身獲得 2 點護盾。"
+kind = 2
+effect = 7
+effect_target = 0
+amount = 2
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
 atlas = ExtResource("2_sheet")
@@ -22,6 +24,7 @@ card_name = "士兵"
 cost = 2
 atk = 2
 hp = 3
-art = SubResource("AtlasTexture_frame")
+art = ExtResource("4_card_art")
+use_dedicated_art = true
 standee = ExtResource("2_sheet")
 active_skill = SubResource("Skill_main")

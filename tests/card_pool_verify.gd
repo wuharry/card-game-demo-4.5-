@@ -40,6 +40,7 @@ func _run() -> void:
 	var bad := 0
 	var total := 0
 	var arcana: Array = []
+	var art_paths := {}
 
 	for f in dir.get_files():
 		var fn: String = f.trim_suffix(".remap")
@@ -53,10 +54,28 @@ func _run() -> void:
 			continue
 		var t: int = cd.card_type
 		counts[t] = counts.get(t, 0) + 1
+		_check(cd.use_dedicated_art and cd.art != null, "%s 缺少專用卡圖" % fn)
+		if cd.use_dedicated_art and cd.art != null:
+			var art_path: String = cd.art.resource_path
+			_check(not art_paths.has(art_path), "%s 與 %s 共用卡圖 %s" % [
+				fn, art_paths.get(art_path, "?"), art_path])
+			art_paths[art_path] = fn
 		if t == CARD_DATA.CardType.ARCANA:
 			arcana.append([fn, cd])
 
 	_check(bad == 0, "有 %d 張載入失敗" % bad)
+	_check(total == 120, "卡池應為 120 張，目前 %d" % total)
+	var expected_counts := {
+		CARD_DATA.CardType.MINION: 66,
+		CARD_DATA.CardType.EQUIP: 5,
+		CARD_DATA.CardType.ARCANA: 33,
+		CARD_DATA.CardType.QUICK: 8,
+		CARD_DATA.CardType.WARD: 8,
+		CARD_DATA.CardType.DOMAIN: 0,
+	}
+	for type in expected_counts:
+		_check(counts.get(type, 0) == expected_counts[type], "%s應為 %d 張，目前 %d" % [
+			_type_name(type), expected_counts[type], counts.get(type, 0)])
 	print("卡池總數:%d(載入失敗 %d)" % [total, bad])
 	for t in [0, 1, 2, 3, 4, 5]:
 		if counts.has(t):
@@ -80,6 +99,9 @@ func _run() -> void:
 		elif eff in [SKILL_DATA.Effect.DRAW, SKILL_DATA.Effect.SCRY,
 				SKILL_DATA.Effect.DISCARD_DRAW, SKILL_DATA.Effect.SUMMON]:
 			_check(not needs_target, "%s:effect=%d 不該選目標,但 effect_target≠SELF" % [fn, eff])
+		elif cd.special_id != &"":
+			# 複合高階秘術由 special_id 結算；它們是無目標卡，不要求 power。
+			_check(not needs_target, "%s:複合秘術應為 SELF 無目標" % fn)
 		else:
 			# Effect.NONE = 純傷害,一定要有目標而且 power > 0
 			_check(needs_target, "%s:純傷害秘術卻不用選目標" % fn)

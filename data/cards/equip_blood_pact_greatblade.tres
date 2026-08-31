@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=5 format=3]
+[ext_resource type="Script" path="res://src/card/card_data.gd" id="1_card"]
+[ext_resource type="Script" path="res://src/card/skill_data.gd" id="2_skill"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/equip_blood_pact_greatblade_card_art.png" id="3_art"]
+[sub_resource type="Resource" id="Skill_main"]
+script = ExtResource("2_skill")
+skill_name = "血契巨刃"
+description = "裝備：攻擊 +5、生命上限 +2；普通攻擊具有吸血。"
+kind = 2
+cost = 0
+[resource]
+script = ExtResource("1_card")
+card_type = 1
+card_name = "血契巨刃"
+cost = 10
+atk = 0
+hp = 0
+art = ExtResource("3_art")
+use_dedicated_art = true
+active_skill = SubResource("Skill_main")
+special_id = &"equip_blood_pact_greatblade"
+equip_atk_bonus = 5
+equip_hp_bonus = 2
+equip_lifesteal = true

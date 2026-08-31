@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://ctewgv687nupv"
+path="res://.godot/imported/Grass_Dirt_Tile_12.obj-17d7cb6b84901a9ca96f50ef013850eb.mesh"
+
+[deps]
+
+files=["res://.godot/imported/Grass_Dirt_Tile_12.obj-17d7cb6b84901a9ca96f50ef013850eb.mesh"]
+
+source_file="res://assets/terrain/pixel_3d_grasslands/tile_models/OBJ/Grass_Dirt_Tile_12.obj"
+dest_files=["res://.godot/imported/Grass_Dirt_Tile_12.obj-17d7cb6b84901a9ca96f50ef013850eb.mesh", "res://.godot/imported/Grass_Dirt_Tile_12.obj-17d7cb6b84901a9ca96f50ef013850eb.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

@@ -1,17 +1,20 @@
-[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="CardData" load_steps=7 format=3]
 
 [ext_resource type="Script" uid="uid://cxot3rc105cul" path="res://src/card/card_data.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 02 -Full 20 Characters/Characters(100x100 split)/Hellhound/Hellhound/Hellhound_Idle.png" id="2_sheet"]
 [ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/hellhound_card_art.png" id="4_card_art"]
 
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
-skill_name = "烈焰撕咬"
-description = "本次攻擊 +1,命中後附加灼燒 1 回合。"
+skill_name = "地獄咆哮"
+description = "對敵方所有單位各造成 1 點傷害,主目標【衰弱】1 回合。"
+kind = 1
 cost = 2
 power = 1
+modifier = 5
 effect = 2
-status = 1
+status = 6
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
 atlas = ExtResource("2_sheet")
@@ -20,10 +23,11 @@ region = Rect2(0, 0, 100, 100)
 [resource]
 script = ExtResource("1_script")
 card_name = "地獄犬"
-cost = 3
-atk = 3
-hp = 3
-art = SubResource("AtlasTexture_frame")
+cost = 4
+atk = 4
+hp = 4
+art = ExtResource("4_card_art")
+use_dedicated_art = true
 standee = ExtResource("2_sheet")
 active_skill = SubResource("Skill_main")
 keywords = Array[StringName]([&"衝鋒"])

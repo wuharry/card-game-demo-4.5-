@@ -24,6 +24,16 @@ func _first_empty(group: String):
 	return null
 
 
+## 卡池裡費用最低的從者(測試夾具:保證 AI 第一個回合的 1 點魔力出得起)。
+func _cheapest_minion() -> CardData:
+	var best: CardData = null
+	for cd in Deck.load_pool():
+		if cd.card_type == CardData.CardType.MINION \
+				and (best == null or cd.cost < best.cost):
+			best = cd
+	return best
+
+
 func _units_in(groups: Array) -> int:
 	var n := 0
 	for g in groups:
@@ -46,7 +56,9 @@ func _run() -> void:
 
 	# 預置:AI 帳裡塞一張便宜從者(保證有牌可出);雙方各一隻場上單位(驗攻擊,
 	# spawn_unit 不 mark_summoned → 沒有召喚暈眩,AI 的劍士當回合就能動)
-	bm.sides["enemy"].hand.append(load("res://data/cards/skeleton.tres"))
+	# 塞「當前卡池最便宜的從者」而不是寫死骷髏:AI 的第一個回合只有 1 點魔力,
+	# 卡池一重平衡費用就會變(2026-08-10 骷髏 1→2,這條假設當場破掉、AI 整回合沒牌可出)。
+	bm.sides["enemy"].hand.append(_cheapest_minion())
 	var e_unit = bm.spawn_unit(load("res://data/cards/swordsman.tres"), _first_empty("enemy_front"))
 	var p_unit = bm.spawn_unit(load("res://data/cards/knight.tres"), _first_empty("player_front"))
 	var p_hp0: int = p_unit.current_hp

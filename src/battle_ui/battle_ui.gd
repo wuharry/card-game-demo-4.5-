@@ -7,11 +7,15 @@
 extends CanvasLayer
 class_name BattleUI
 
+const SETTINGS: GDScript = preload("res://src/settings/app_settings.gd")
+
 ## 玩家在選單裡做了決定 → 廣播給 CardManager(它才是狀態機,UI 只負責問)。
 signal attack_chosen
 signal skill_chosen(skill: SkillData)
 signal cancelled
 signal end_turn_pressed
+## Debug 離線用:請 CardManager 建立「指定卡+足夠魔力+對位靶」的測試場。
+signal debug_test_pressed
 ## 勝負畫面上的兩個去向(CardManager 接手換場景/重開)。
 signal restart_pressed
 signal menu_pressed
@@ -28,13 +32,12 @@ const FONT_TITLE: FontFile = preload(
 	"res://assets/fonts/Noto_Serif_TC/static/NotoSerifTC-Bold.ttf")
 const FONT_BODY: FontFile = preload(
 	"res://assets/fonts/Noto_Serif_TC/static/NotoSerifTC-SemiBold.ttf")
+const UI_STYLE: GDScript = preload("res://src/ui/fantasy_ui_theme.gd")
 
 ## 配色與主選單同一組「暮色金」:整個遊戲的 UI 說同一種話。
-const GOLD := Color("f2e3ae")
-const GOLD_DIM := Color("b8a984")
-const LINE_GOLD := Color(0.83, 0.72, 0.45, 0.85)
-const ATTACK_DESC := "普通攻擊:對目標造成等同攻擊力的傷害,並吃下目標的反擊(免費,每回合 1 次)。"
-
+const GOLD := UI_STYLE.GOLD
+const GOLD_DIM := UI_STYLE.GOLD_DIM
+const LINE_GOLD := Color(UI_STYLE.GOLD, 0.76)
 var _panel: PanelContainer
 var _title: Label
 var _stats: Label
@@ -62,6 +65,7 @@ var _hud_mana_bonus: Label
 var _hud_opp: Label   # 對方手牌張數(2d;只在連線時顯示)
 var _end_turn_btn: Button
 var _leave_btn: Button   # 中途離開(左上角;真正的攔截在確認窗)
+var _debug_test_btn: Button = null   # Debug 離線才生成;Release/連線不存在
 var _toast: Label
 var _toast_tween: Tween
 
@@ -97,7 +101,7 @@ func open(card: Card, attack_note: String = "", skill_note: String = "") -> void
 	_skill_note = skill_note
 	if card.data != null:
 		_skill = card.data.active_skill
-		_title.text = card.data.card_name
+		_title.text = SETTINGS.current().card_name(card.data)
 		# HP 顯示「當前/上限」:掉過血的單位一眼看得出來。
 		_stats.text = "ATK %d ／ HP %d／%d" \
 			% [card.data.atk, card.current_hp, card.data.hp]
@@ -106,7 +110,8 @@ func open(card: Card, attack_note: String = "", skill_note: String = "") -> void
 	if _skill != null:
 		# 技能鈕直接標費用(◆)+三分類:學費和「佔不佔攻擊機會」都寫在門口。
 		_skill_btn.text = "%s  ◆%d·%s" % [
-			_skill.skill_name, _skill.cost, SkillData.KIND_NAMES[_skill.kind]]
+			SETTINGS.current().skill_name(card.data, _skill), _skill.cost,
+			SETTINGS.current().kind_name(_skill.kind)]
 		_skill_btn.disabled = skill_note != ""
 	_show_attack_desc()
 	_hint.visible = false
@@ -190,13 +195,13 @@ func _build_panel() -> void:
 
 	col.add_child(_make_gold_line())
 
-	_attack_btn = _make_option("攻擊")
+	_attack_btn = _make_option(SETTINGS.current().text("battle_attack"))
 	_attack_btn.pressed.connect(func() -> void: attack_chosen.emit())
 	_attack_btn.mouse_entered.connect(_show_attack_desc)
 	_attack_btn.focus_entered.connect(_show_attack_desc)
 	col.add_child(_attack_btn)
 
-	_skill_btn = _make_option("技能")
+	_skill_btn = _make_option(SETTINGS.current().text("battle_skill"))
 	_skill_btn.pressed.connect(func() -> void:
 		if _skill != null:
 			skill_chosen.emit(_skill))
@@ -204,10 +209,12 @@ func _build_panel() -> void:
 	_skill_btn.focus_entered.connect(_show_skill_desc)
 	col.add_child(_skill_btn)
 
-	var cancel_btn := _make_option("取消")
+	var cancel_btn := _make_option(SETTINGS.current().text("battle_cancel"))
 	cancel_btn.pressed.connect(func() -> void: cancelled.emit())
-	cancel_btn.mouse_entered.connect(func() -> void: _desc.text = "收回指令。")
-	cancel_btn.focus_entered.connect(func() -> void: _desc.text = "收回指令。")
+	cancel_btn.mouse_entered.connect(
+		func() -> void: _desc.text = SETTINGS.current().text("battle_cancel_desc"))
+	cancel_btn.focus_entered.connect(
+		func() -> void: _desc.text = SETTINGS.current().text("battle_cancel_desc"))
 	col.add_child(cancel_btn)
 
 	col.add_child(_make_gold_line())
@@ -264,24 +271,20 @@ func _hide_arrow() -> void:
 
 ## 描述列:能做就講效果,不能做就講「為什麼不行」(理由來自 BattleManager)。
 func _show_attack_desc() -> void:
-	_desc.text = ATTACK_DESC if _attack_note == "" else "✕ " + _attack_note
+	_desc.text = SETTINGS.current().text("battle_attack_desc") \
+		if _attack_note == "" else "✕ " + _attack_note
 
 
 func _show_skill_desc() -> void:
 	if _skill == null:
 		return
-	_desc.text = _skill.description if _skill_note == "" else "✕ " + _skill_note
+	_desc.text = SETTINGS.current().skill_description(_skill) \
+		if _skill_note == "" else "✕ " + _skill_note
 
 
 ## 深色半透明+金邊的面板底(指令選單/HUD/結束回合鈕共用同一張皮)。
 func _make_panel_style() -> StyleBoxFlat:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.05, 0.04, 0.03, 0.86)   # 深色半透明底:壓得住亮背景
-	sb.border_color = LINE_GOLD
-	sb.set_border_width_all(1)
-	sb.set_corner_radius_all(6)
-	sb.set_content_margin_all(14.0)
-	return sb
+	return UI_STYLE.panel(UI_STYLE.GOLD, false)
 
 
 ## ── 戰況 HUD ─────────────────────────────────────────
@@ -313,10 +316,10 @@ func _build_hud() -> void:
 	_hud_mana_row.add_theme_constant_override("separation", 0)
 	_hud_mana_row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	col.add_child(_hud_mana_row)
-	_hud_mana_norm = _make_mana_label(Color("7fd9ff"))
-	_hud_mana_temp = _make_mana_label(Color("ffd75e"))
-	_hud_mana_rest = _make_mana_label(Color("7fd9ff"))
-	_hud_mana_bonus = _make_mana_label(Color("ffd75e"))
+	_hud_mana_norm = _make_mana_label(UI_STYLE.AMETHYST_BRIGHT)
+	_hud_mana_temp = _make_mana_label(UI_STYLE.GOLD)
+	_hud_mana_rest = _make_mana_label(UI_STYLE.AMETHYST)
+	_hud_mana_bonus = _make_mana_label(UI_STYLE.GOLD)
 
 	# 對方手牌張數(2d):平常隱藏,連線時由 update_opp_count 開燈。
 	_hud_opp = Label.new()
@@ -328,14 +331,14 @@ func _build_hud() -> void:
 	col.add_child(_hud_opp)
 
 	_end_turn_btn = Button.new()
-	_end_turn_btn.text = "結束回合"
+	_end_turn_btn.text = SETTINGS.current().text("battle_end_turn")
 	_end_turn_btn.add_theme_font_override("font", FONT_TITLE)
 	_end_turn_btn.add_theme_font_size_override("font_size", 18)
 	_end_turn_btn.add_theme_color_override("font_color", GOLD_DIM)
-	_end_turn_btn.add_theme_color_override("font_hover_color", Color("fff3cf"))
-	_end_turn_btn.add_theme_stylebox_override("normal", _make_panel_style())
-	var lit := _make_panel_style()
-	lit.border_color = Color("fff3cf")
+	_end_turn_btn.add_theme_color_override("font_hover_color", UI_STYLE.GOLD_BRIGHT)
+	_end_turn_btn.add_theme_color_override("font_focus_color", UI_STYLE.GOLD_BRIGHT)
+	_end_turn_btn.add_theme_stylebox_override("normal", UI_STYLE.button(false))
+	var lit: StyleBoxFlat = UI_STYLE.button(false)
 	_end_turn_btn.add_theme_stylebox_override("hover", lit)
 	_end_turn_btn.add_theme_stylebox_override("focus", lit)
 	_end_turn_btn.add_theme_stylebox_override("pressed", lit)
@@ -351,14 +354,14 @@ func _build_hud() -> void:
 	# 中途離開:擺左上角,和右側的「結束回合/魔力」隔一整個畫面寬——
 	# 誤點的代價是「退出整局」,所以位置先隔開,再由確認窗攔一次(show_leave_confirm)。
 	_leave_btn = Button.new()
-	_leave_btn.text = "離開對戰"
+	_leave_btn.text = SETTINGS.current().text("battle_leave")
 	_leave_btn.add_theme_font_override("font", FONT_BODY)
 	_leave_btn.add_theme_font_size_override("font_size", 15)
 	_leave_btn.add_theme_color_override("font_color", GOLD_DIM)
-	_leave_btn.add_theme_color_override("font_hover_color", Color("fff3cf"))
-	_leave_btn.add_theme_stylebox_override("normal", _make_panel_style())
-	var leave_lit := _make_panel_style()
-	leave_lit.border_color = Color("fff3cf")
+	_leave_btn.add_theme_color_override("font_hover_color", UI_STYLE.GOLD_BRIGHT)
+	_leave_btn.add_theme_color_override("font_focus_color", UI_STYLE.GOLD_BRIGHT)
+	_leave_btn.add_theme_stylebox_override("normal", UI_STYLE.button(true))
+	var leave_lit: StyleBoxFlat = UI_STYLE.button(false)
 	_leave_btn.add_theme_stylebox_override("hover", leave_lit)
 	_leave_btn.add_theme_stylebox_override("focus", leave_lit)
 	_leave_btn.add_theme_stylebox_override("pressed", leave_lit)
@@ -369,11 +372,35 @@ func _build_hud() -> void:
 	_leave_btn.set_anchors_and_offsets_preset(
 		Control.PRESET_TOP_LEFT, Control.PRESET_MODE_MINSIZE, 24)
 
+	# 測卡入口要能用滑鼠點:Godot Editor 可能先吃掉 F8(停止執行),不能只靠快捷鍵。
+	if OS.is_debug_build() and not NetMatch.is_online and not NetMatch.is_dedicated_server:
+		_debug_test_btn = Button.new()
+		_debug_test_btn.text = "測卡沙盒 10/10  [F8]"
+		_debug_test_btn.tooltip_text = \
+			"把測試卡放進手牌、魔力設為 10/10，並開放拖到墓地直接捨棄（不回魔）"
+		_debug_test_btn.add_theme_font_override("font", FONT_BODY)
+		_debug_test_btn.add_theme_font_size_override("font_size", 14)
+		_debug_test_btn.add_theme_color_override("font_color", Color("8edfff"))
+		_debug_test_btn.add_theme_color_override("font_hover_color", Color("d9f7ff"))
+		_debug_test_btn.add_theme_stylebox_override("normal", _make_panel_style())
+		var debug_lit := _make_panel_style()
+		debug_lit.border_color = Color("8edfff")
+		_debug_test_btn.add_theme_stylebox_override("hover", debug_lit)
+		_debug_test_btn.add_theme_stylebox_override("focus", debug_lit)
+		_debug_test_btn.add_theme_stylebox_override("pressed", debug_lit)
+		_debug_test_btn.pressed.connect(func() -> void:
+			Sfx.play(Sfx.CLICK, -8.0)
+			debug_test_pressed.emit())
+		add_child(_debug_test_btn)
+		_debug_test_btn.set_anchors_and_offsets_preset(
+			Control.PRESET_TOP_LEFT, Control.PRESET_MODE_MINSIZE, 24)
+		_debug_test_btn.position.y += 58.0
+
 	_toast = Label.new()
 	_toast.add_theme_font_override("font", FONT_TITLE)
 	# 提示是「行動被擋下」的當下回饋,要一眼看到:大字、亮色、厚黑邊。
 	_toast.add_theme_font_size_override("font_size", 32)
-	_toast.add_theme_color_override("font_color", Color("ffe08a"))
+	_toast.add_theme_color_override("font_color", UI_STYLE.GOLD_BRIGHT)
 	_toast.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.85))
 	_toast.add_theme_constant_override("outline_size", 10)
 	add_child(_toast)
@@ -397,11 +424,12 @@ func _make_mana_label(color: Color) -> Label:
 func update_hud(turn: int, side: String, mana: int, mana_max: int, temp_mana: int) -> void:
 	# 「我方」以本機視角判定(2b):my_side 離線恆為 "player",熱座語意不變;
 	# 連線時 client 的我方是 "enemy" 側——別寫死字串。
-	var side_name := "我方回合" if side == NetMatch.my_side else "對方回合"
-	_hud_turn.text = "第 %d 回合 ‧ %s" % [turn, side_name]
+	var side_name: String = SETTINGS.current().text("battle_my_turn") \
+		if side == NetMatch.my_side else SETTINGS.current().text("battle_enemy_turn")
+	_hud_turn.text = SETTINGS.current().text("battle_turn") % [turn, side_name]
 	# 行動方用顏色再講一次:金=我方、緋=對方(熱座換邊要一眼可辨)。
 	_hud_turn.add_theme_color_override(
-		"font_color", GOLD if side == NetMatch.my_side else Color(0.92, 0.55, 0.5))
+		"font_color", GOLD if side == NetMatch.my_side else UI_STYLE.DANGER)
 	# ◆=現有、◇=已用掉的上限:不讀數字也能一眼讀量。
 	# 黃◆=暫時魔力,疊在最右(付費從右邊扣,見 battle_manager._pay);
 	# 回收可能把 mana 推超過上限(5/5 再棄牌),◇ 用 maxi 兜住別變負。
@@ -429,7 +457,8 @@ func flash_message(text_value: String) -> void:
 		_toast_tween.kill()
 	_toast_tween = create_tween()
 	_toast_tween.tween_interval(1.0)
-	_toast_tween.tween_property(_toast, "modulate:a", 0.0, 0.35)
+	_toast_tween.tween_property(
+		_toast, "modulate:a", 0.0, SETTINGS.current().motion_duration(0.35))
 	_toast_tween.tween_callback(func() -> void: _toast.visible = false)
 
 
@@ -442,12 +471,15 @@ func show_game_over(victory: bool) -> void:
 	# 這裡只做「視覺收窗」而不呼叫 dismiss_leave_confirm()——後者會 emit
 	# leave_decided(false),把 CardManager 剛鎖上的 GAME_OVER 互動鎖解開。
 	_leave_btn.visible = false
+	if _debug_test_btn != null:
+		_debug_test_btn.visible = false
 	if _leave_dim != null:
 		_leave_dim.visible = false
 		_leave_panel.visible = false
 	if _over_dim == null:
 		_build_game_over()
-	_over_title.text = "勝 利" if victory else "敗 北"
+	_over_title.text = SETTINGS.current().text("battle_victory") \
+		if victory else SETTINGS.current().text("battle_defeat")
 	_over_title.add_theme_color_override(
 		"font_color", GOLD if victory else Color(0.85, 0.35, 0.3))
 	_over_dim.visible = true
@@ -480,10 +512,10 @@ func _build_game_over() -> void:
 
 	col.add_child(_make_gold_line())
 
-	var again := _make_option("再戰一場")
+	var again := _make_option(SETTINGS.current().text("battle_again"))
 	again.pressed.connect(func() -> void: restart_pressed.emit())
 	col.add_child(again)
-	var menu := _make_option("回到主選單")
+	var menu := _make_option(SETTINGS.current().text("battle_main_menu"))
 	menu.pressed.connect(func() -> void: menu_pressed.emit())
 	col.add_child(menu)
 
@@ -500,17 +532,14 @@ func _make_option(text_value: String) -> Button:
 	btn.add_theme_font_override("font", FONT_BODY)
 	btn.add_theme_font_size_override("font_size", 20)
 	btn.add_theme_color_override("font_color", GOLD_DIM)
-	btn.add_theme_color_override("font_hover_color", Color("fff3cf"))
-	btn.add_theme_color_override("font_focus_color", Color("fff3cf"))
+	btn.add_theme_color_override("font_hover_color", UI_STYLE.GOLD_BRIGHT)
+	btn.add_theme_color_override("font_focus_color", UI_STYLE.GOLD_BRIGHT)
 	btn.add_theme_color_override("font_pressed_color", GOLD)
 	# 灰化態:理由由描述列轉述,按鈕本身只要「看得出不能按」。
 	btn.add_theme_color_override("font_disabled_color", Color(0.55, 0.5, 0.42, 0.5))
-	btn.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
-	btn.add_theme_stylebox_override("disabled", StyleBoxEmpty.new())
-	var lit := StyleBoxFlat.new()
-	lit.bg_color = Color(1.0, 1.0, 1.0, 0.05)
-	lit.border_color = LINE_GOLD
-	lit.border_width_bottom = 2
+	btn.add_theme_stylebox_override("normal", UI_STYLE.button(true))
+	btn.add_theme_stylebox_override("disabled", UI_STYLE.button(true))
+	var lit: StyleBoxFlat = UI_STYLE.button(false)
 	btn.add_theme_stylebox_override("hover", lit)
 	btn.add_theme_stylebox_override("focus", lit)
 	btn.add_theme_stylebox_override("pressed", lit)
@@ -521,9 +550,11 @@ func _make_option(text_value: String) -> Button:
 
 
 ## 細金分隔線(同主選單的印刷品語彙)。
-func _make_gold_line() -> ColorRect:
-	var line := ColorRect.new()
-	line.color = LINE_GOLD
+func _make_gold_line() -> TextureRect:
+	var line := TextureRect.new()
+	line.texture = UI_STYLE.separator_gradient()
+	line.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	line.stretch_mode = TextureRect.STRETCH_SCALE
 	line.custom_minimum_size = Vector2(0, 1)
 	return line
 
@@ -581,10 +612,10 @@ func _build_reaction() -> void:
 	_react_body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(_react_body)
 
-	var use_btn := _make_option("發動抵銷")
+	var use_btn := _make_option(SETTINGS.current().text("battle_counter"))
 	use_btn.pressed.connect(func() -> void: _answer_reaction(true))
 	col.add_child(use_btn)
-	var pass_btn := _make_option("放棄反制")
+	var pass_btn := _make_option(SETTINGS.current().text("battle_pass"))
 	pass_btn.pressed.connect(func() -> void: _answer_reaction(false))
 	col.add_child(pass_btn)
 
@@ -639,7 +670,7 @@ func _build_leave_confirm() -> void:
 	_leave_panel.add_child(col)
 
 	var title := Label.new()
-	title.text = "離開對戰?"
+	title.text = SETTINGS.current().text("battle_leave_title")
 	title.add_theme_font_override("font", FONT_TITLE)
 	title.add_theme_font_size_override("font_size", 28)
 	title.add_theme_color_override("font_color", GOLD)
@@ -659,10 +690,10 @@ func _build_leave_confirm() -> void:
 	_leave_body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(_leave_body)
 
-	var stay := _make_option("繼續遊戲")
+	var stay := _make_option(SETTINGS.current().text("battle_stay"))
 	stay.pressed.connect(func() -> void: _answer_leave(false))
 	col.add_child(stay)
-	var quit := _make_option("確定離開,回到主選單")
+	var quit := _make_option(SETTINGS.current().text("battle_confirm_leave"))
 	# 緋色 = 這一顆會毀掉這局(和敗北標題同一個色系,玩家早就學過這個顏色)。
 	quit.add_theme_color_override("font_color", Color(0.8, 0.42, 0.36))
 	quit.add_theme_color_override("font_hover_color", Color(0.97, 0.56, 0.46))
@@ -707,34 +738,42 @@ func show_card_preview(card: Card) -> void:
 		_build_preview()
 	_prev_source = card
 	var d := card.data
-	_prev_name.text = "%s  ◆%d" % [d.card_name, d.cost]
-	_prev_type.text = TYPE_NAMES.get(d.card_type, "?")
+	_prev_name.text = "%s  ◆%d" % [SETTINGS.current().card_name(d), d.cost]
+	_prev_type.text = SETTINGS.current().type_name(d.card_type)
 	if d.card_type == CardData.CardType.MINION:
 		# 桌上單位印當前血/上限(含靈裝加成);手牌印模板值(setup 時 current_hp = hp)。
-		var lines: PackedStringArray = ["攻 %d    血 %d/%d" % [
+		var lines: PackedStringArray = [SETTINGS.current().text("battle_stats") % [
 			d.atk, card.current_hp, d.hp + card.max_hp_bonus]]
 		if not d.keywords.is_empty():
 			var words: PackedStringArray = []
 			for w in d.keywords:
-				words.append(String(w))
-			lines.append("關鍵字:" + "、".join(words))
+				words.append(SETTINGS.current().keyword_name(w))
+			lines.append(SETTINGS.current().text("keywords") + ": " + ", ".join(words))
 		_prev_stats.text = "\n".join(lines)
 		_prev_stats.visible = true
 	else:
 		_prev_stats.visible = false
+	var body: PackedStringArray = []
 	if d.active_skill != null:
 		var s := d.active_skill
 		if d.card_type == CardData.CardType.MINION:
 			# 三分類跟著標(強化=用掉攻擊機會/獨立=額外一刀/非攻擊=登場回合也能用)。
-			_prev_body.text = "【%s】◆%d·%s\n%s" % [
-				s.skill_name, s.cost, SkillData.KIND_NAMES[s.kind], s.description]
+			body.append("【%s】◆%d·%s\n%s" % [
+				SETTINGS.current().skill_name(d, s), s.cost, SETTINGS.current().kind_name(s.kind),
+				SETTINGS.current().skill_description(s)])
 		else:
-			_prev_body.text = s.description
-		_prev_body.visible = true
-	else:
-		_prev_body.visible = false
-	# 卡圖:從者=立牌動畫第 0 幀(只裁本體可見範圍,和卡面同一把尺);法術=圖示。
-	if d.standee != null:
+			body.append(SETTINGS.current().skill_description(s))
+	# 戰吼不收費、也不佔行動經濟(登場自動跑),所以不標 ◆ 與三分類。
+	if d.battlecry != null:
+		body.append("【%s】%s" % [SETTINGS.current().text("battlecry"),
+			SETTINGS.current().skill_description(d.battlecry)])
+	_prev_body.text = "\n".join(body)
+	_prev_body.visible = not body.is_empty()
+	# 有專用卡圖時優先使用;舊從者才裁立牌第 0 幀,法術則直接顯示圖示。
+	if d.use_dedicated_art and d.art != null:
+		_prev_art.texture = d.art
+		_prev_art.visible = true
+	elif d.standee != null:
 		var atlas := AtlasTexture.new()
 		atlas.atlas = d.standee
 		atlas.region = Card.visible_bounds_of_frame0(d.standee)
@@ -820,7 +859,7 @@ func update_opp_count(count: int) -> void:
 	if _hud_opp == null:
 		return
 	_hud_opp.visible = true
-	_hud_opp.text = "對方手牌:%d 張" % count
+	_hud_opp.text = SETTINGS.current().text("battle_enemy_hand") % count
 	_hud_panel.reset_size()
 
 
@@ -904,7 +943,7 @@ func _make_pick_tile(d: CardData, idx: int) -> Control:
 	name_l.add_theme_font_size_override("font_size", 18)
 	name_l.add_theme_color_override("font_color", GOLD)
 	name_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_l.text = "%s ◆%d" % [d.card_name, d.cost]
+	name_l.text = "%s ◆%d" % [SETTINGS.current().card_name(d), d.cost]
 	col.add_child(name_l)
 
 	var info := Label.new()
@@ -915,11 +954,12 @@ func _make_pick_tile(d: CardData, idx: int) -> Control:
 	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	info.custom_minimum_size = Vector2(170, 0)
 	if d.card_type == CardData.CardType.MINION:
-		info.text = "從者  攻 %d / 血 %d" % [d.atk, d.hp]
+		info.text = ("%s  ATK %d / HP %d" if SETTINGS.current().language == "en" \
+			else "%s  攻 %d / 血 %d") % [SETTINGS.current().type_name(d.card_type), d.atk, d.hp]
 	elif d.active_skill != null:
-		info.text = d.active_skill.description
+		info.text = SETTINGS.current().skill_description(d.active_skill)
 	else:
-		info.text = TYPE_NAMES.get(d.card_type, "")
+		info.text = SETTINGS.current().type_name(d.card_type)
 	col.add_child(info)
 
 	tile.mouse_entered.connect(func() -> void: tile.modulate = Color(1.25, 1.2, 1.0))
@@ -931,8 +971,10 @@ func _make_pick_tile(d: CardData, idx: int) -> Control:
 	return tile
 
 
-## 卡面圖:從者=立牌第 0 幀裁可見範圍;法術=圖示(和 hover 預覽同一把尺)。
+## 卡面圖:專用插畫優先;舊從者=立牌第 0 幀;法術=圖示(和 hover 預覽同一把尺)。
 func _cardface_art(d: CardData) -> Texture2D:
+	if d.use_dedicated_art and d.art != null:
+		return d.art
 	if d.standee != null:
 		var atlas := AtlasTexture.new()
 		atlas.atlas = d.standee

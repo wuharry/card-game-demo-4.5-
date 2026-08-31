@@ -21,7 +21,12 @@ extends Node3D
 const COLLISION_MASK_CARD = 1  # 第 1 層：卡片實體(拖曳時要找的對象)
 const COLLISION_MASK_SLOT = 2  # 第 2 層：桌面卡槽(放牌時要找的對象)
 const COLLISION_MASK_HERO = 4  # 第 3 層：本體(hero.gd 生成碰撞時自掛這層)
-const COLLISION_MASK_GRAVE = 8  # 第 4 層：墓地投放區(grave_pile.gd 自掛;丟牌回魔 §1.1)
+const COLLISION_MASK_RECYCLE = 8  # 第 4 層：回魔黑洞投放區(ManaRecycle 自掛;§1.1)
+const COLLISION_MASK_DEBUG_GRAVE = 16  # 第 5 層：僅 F8 沙盒開啟的墓地直接捨棄區
+## Debug 離線測卡:F8 預設準備冰霜女巫;啟動參數 --test-card=<tres 檔名> 可換卡。
+const DEBUG_TEST_CARD_SLUG := "frost_witch"
+const DEBUG_TEST_CARD_ARG := "--test-card="
+const DEBUG_TARGET_CARD_PATH := "res://data/cards/soldier.tres"
 
 ## @onready：等節點都準備好後，才執行右邊的取值並存進變數(太早拿可能還是 null)。
 ## camera：場景目前啟用中的攝影機。把滑鼠的 2D 座標換成 3D 射線時一定要用到它。
@@ -29,7 +34,8 @@ const COLLISION_MASK_GRAVE = 8  # 第 4 層：墓地投放區(grave_pile.gd 自�
 
 ## 目前「被滑鼠抓著拖曳」的卡片。沒有在拖任何卡時是 null。
 var card_being_dragged: Card = null
-var _hint_pile: GravePile = null   # 目前亮著回魔提示的墓(拖曳懸停中)
+var _hint_well: ManaRecycle = null   # 目前亮著回魔提示的黑洞(拖曳懸停中)
+var _hint_grave: GravePile = null    # F8 沙盒目前亮著「不回魔捨棄」提示的墓地
 var _picking := false   # 選牌面板開著:費用已付、選擇是義務(擋取消/結束回合)
 ## 拖曳時把卡片鎖在這個高度(Y 軸)，避免它忽高忽低或穿進地板。
 var drag_plane_height: float = 0.0
@@ -96,14 +102,19 @@ func _ready() -> void:
 	battle_ui.skill_chosen.connect(_on_skill_chosen)
 	battle_ui.cancelled.connect(_cancel_command)
 	battle_ui.end_turn_pressed.connect(_on_end_turn)
+	battle_ui.debug_test_pressed.connect(_prepare_debug_card_test)
 	# 戰鬥帳房:規則與數值都在它那裡。UI 的決定經中樞轉發給帳房、
 	# 帳的變化再流回 UI——兩端只認識中樞,互不相識(同 hover 中繼鏈的哲學)。
 	battle_manager = BattleManager.new()
 	battle_manager.hand_node = player_hand   # spawn_unit 的掛點(召喚技/連線重放生單位)
 	battle_manager.state_changed.connect(battle_ui.update_hud)
+	battle_manager.state_changed.connect(_sync_vs_ai_player_hand_on_state)
 	battle_manager.unit_died.connect(_on_unit_died)
 	battle_manager.card_buried.connect(_on_card_buried)
 	battle_manager.wards_changed.connect(_on_wards_changed)
+	# 戰吼抽牌:帳房只喊「要抽幾張」,視圖那半(stash 對帳 + 飛入動畫)走既有單一入口。
+	battle_manager.draw_requested.connect(_apply_draw)
+	battle_manager.battle_message.connect(battle_ui.flash_message)
 	battle_manager.game_over.connect(_on_game_over)
 	action_performed.connect(battle_manager.on_action_performed)
 	add_child(battle_manager)
@@ -226,9 +237,12 @@ func on_card_unhovered(card: Card) -> void:
 func _process(_delta: float) -> void:
 	# 拖曳結束(出牌/棄牌/取消,不管走哪條路)= 在這個單一收斂點清回魔提示。
 	# 比在每條退出路徑各補一刀可靠:之後新增退出路徑也不會漏。
-	if card_being_dragged == null and _hint_pile != null:
-		_hint_pile.hide_recycle_hint()
-		_hint_pile = null
+	if card_being_dragged == null and _hint_well != null:
+		_hint_well.hide_recycle_hint()
+		_hint_well = null
+	if card_being_dragged == null and _hint_grave != null:
+		_hint_grave.hide_debug_discard_hint()
+		_hint_grave = null
 	# 只有真的抓著卡時才需要處理。
 	if card_being_dragged:
 		# 1. 想像桌面是一個「數學平面」：法線朝上(Vector3.UP)、高度為 drag_plane_height。
@@ -263,17 +277,26 @@ func _process(_delta: float) -> void:
 				# 更新記錄。
 				currently_hovered_slot = found_slot
 
-			# ── 拖曳時的回魔提示:懸停墓地 = 光環轉金 + 「+n ◆」(§1.1)──
-			var pile := raycast_check_for_grave()
+			# ── 拖曳時的回魔提示:懸停黑洞 = 轉金 + 「+n ◆」(§1.1)──
+			var well := raycast_check_for_recycle()
 			if not battle_manager.can_discard_for_mana(battle_manager.active_side):
-				pile = null   # 冷卻中不亮提示;真丟下去 _try_discard 會用人話拒絕
-			if pile != _hint_pile:
-				if _hint_pile != null:
-					_hint_pile.hide_recycle_hint()
-				_hint_pile = pile
-				if _hint_pile != null:
-					_hint_pile.show_recycle_hint(
+				well = null   # 冷卻中不亮提示;真丟下去 _try_discard 會用人話拒絕
+			if well != _hint_well:
+				if _hint_well != null:
+					_hint_well.hide_recycle_hint()
+				_hint_well = well
+				if _hint_well != null:
+					_hint_well.show_recycle_hint(
 						floori(card_being_dragged.data.cost / 2.0))
+
+			# F8 沙盒多一個獨立落點：左側墓地只捨棄，不回魔、不吃黑洞冷卻。
+			var debug_grave := raycast_check_for_debug_grave()
+			if debug_grave != _hint_grave:
+				if _hint_grave != null:
+					_hint_grave.hide_debug_discard_hint()
+				_hint_grave = debug_grave
+				if _hint_grave != null:
+					_hint_grave.show_debug_discard_hint()
 
 	# 指定目標中:每幀把「施放者 → 游標」的螢幕座標餵給 BattleUI 畫導引箭頭。
 	# unproject_position 是射線的反運算:3D 世界座標 → 螢幕像素座標。
@@ -298,6 +321,14 @@ func _process(_delta: float) -> void:
 ## ── 處理滑鼠輸入:依「互動狀態」分流 ──────────────
 ## _input(event) 在每次有輸入(滑鼠/鍵盤)時被呼叫,event 帶有這次事件的資訊。
 func _input(event: InputEvent) -> void:
+	# F8 一鍵建立可立即出牌、且正對面有靶的測試情境。只在 Debug build 攔鍵;
+	# Release 完全沒有這條操作,線上則由 helper 明確拒絕以保護權威帳。
+	if OS.is_debug_build() and event is InputEventKey:
+		var key_event := event as InputEventKey
+		if key_event.pressed and not key_event.echo and key_event.keycode == KEY_F8:
+			_prepare_debug_card_test()
+			get_viewport().set_input_as_handled()
+			return
 	# 右鍵 / ESC = 反悔:不管在選單還是指定目標,都退回平時狀態。
 	var is_rmb: bool = event is InputEventMouseButton \
 		and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed
@@ -340,6 +371,106 @@ func _input(event: InputEvent) -> void:
 					pass
 		elif ui_state == UiState.DRAGGING:
 			_on_left_released_drag()
+
+
+## F8 測卡完整夾具:同步手牌帳 → 注入卡/補魔 → 重建視圖 → 準備同路線敵方靶。
+func _prepare_debug_card_test() -> void:
+	if battle_manager == null or battle_ui == null or player_hand == null:
+		return
+	if NetMatch.is_online or _is_srv():
+		battle_ui.flash_message("連線對局不能使用 F8 測卡,避免雙方帳目不同步")
+		return
+	if ui_state != UiState.IDLE or _picking:
+		battle_ui.flash_message("請先結束目前的拖曳、選單或選牌操作,再按 F8")
+		return
+	if MatchMode.is_vs_ai() and battle_manager.active_side != "player":
+		battle_ui.flash_message("請等到玩家回合再按 F8")
+		return
+
+	var side := battle_manager.active_side
+	battle_manager.stash_hand(player_hand.hand_data())
+	var prepared := battle_manager.debug_prepare_card(side, _debug_test_card_path())
+	if not prepared.get("ok", false):
+		battle_ui.flash_message(str(prepared.get("reason", "測卡準備失敗")))
+		return
+	currently_hovered_card = null
+	_previewed_card = null
+	battle_ui.hide_card_preview()
+	player_hand.rebuild_from(battle_manager.hand_of(side), false)
+	_update_deck_labels()
+
+	var grave := _grave_piles.get(side) as GravePile
+	if grave != null:
+		grave.set_debug_discard_enabled(true)
+
+	var cd := prepared.get("card") as CardData
+	var target := _debug_find_or_create_lane_target(side)
+	var replacement_note := str(prepared.get("replacement_note", ""))
+	if target == null:
+		battle_ui.flash_message("F8 沙盒:【%s】已入手、魔力 10/10%s;但找不到可用的對位卡槽" % [
+			cd.card_name, replacement_note])
+		return
+	battle_ui.flash_message(
+		"F8 沙盒:【%s】已入手、魔力 10/10%s;拖到墓地可直接捨棄(不回魔)，請放到【%s】正對面" % [
+			cd.card_name, replacement_note, target.data.card_name])
+
+
+## 預設測 frost_witch;Godot 參數分隔符後加 -- --test-card=wizard 可換 data/cards/*.tres。
+func _debug_test_card_path() -> String:
+	var slug := DEBUG_TEST_CARD_SLUG
+	for raw_arg in OS.get_cmdline_user_args():
+		var arg := String(raw_arg)
+		if arg.begins_with(DEBUG_TEST_CARD_ARG):
+			slug = arg.trim_prefix(DEBUG_TEST_CARD_ARG).trim_suffix(".tres")
+			break
+	# 只接受單純檔名,不讓測試參數跳出 data/cards。
+	if slug.is_empty() or slug.contains("/") or slug.contains("\\") or slug.contains(".."):
+		slug = DEBUG_TEST_CARD_SLUG
+	return "res://data/cards/%s.tres" % slug
+
+
+## 找一組「我方前排空格 ↔ 對面前排」的同路線卡槽。已有單位就沿用;
+## 沒有就生成無戰吼的士兵當靶,且不呼叫 mark_summoned(測試靶不應觸發額外規則)。
+func _debug_find_or_create_lane_target(side: String) -> Card:
+	var home_group := "player_front" if side == "player" else "enemy_front"
+	var target_group := "enemy_front" if side == "player" else "player_front"
+	var home_slots := _debug_front_slots(home_group)
+	var target_slots := _debug_front_slots(target_group)
+	for target_slot in target_slots:
+		var occupied_home := _debug_nearest_slot(home_slots, target_slot.global_position.x)
+		if occupied_home != null and occupied_home.is_empty and target_slot.card_in_slot != null:
+			target_slot.card_in_slot.remove_status(SkillData.Status.FREEZE)
+			return target_slot.card_in_slot
+	var dummy := load(DEBUG_TARGET_CARD_PATH) as CardData
+	for target_slot in target_slots:
+		var empty_home := _debug_nearest_slot(home_slots, target_slot.global_position.x)
+		if empty_home != null and empty_home.is_empty and target_slot.is_empty:
+			return battle_manager.spawn_unit(dummy, target_slot)
+	return null
+
+
+func _debug_front_slots(group: String) -> Array[CardSlot]:
+	var slots: Array[CardSlot] = []
+	for node in get_tree().get_nodes_in_group(group):
+		if node is CardSlot:
+			slots.append(node)
+	# 中路優先,讓玩家第一眼就看得到靶;同距離時以 x 排序保持結果固定。
+	slots.sort_custom(func(a: CardSlot, b: CardSlot) -> bool:
+		var da := absf(a.global_position.x)
+		var db := absf(b.global_position.x)
+		return da < db if not is_equal_approx(da, db) else a.global_position.x < b.global_position.x)
+	return slots
+
+
+func _debug_nearest_slot(slots: Array[CardSlot], target_x: float) -> CardSlot:
+	var nearest: CardSlot = null
+	var best := INF
+	for slot in slots:
+		var distance := absf(slot.global_position.x - target_x)
+		if distance < best:
+			best = distance
+			nearest = slot
+	return nearest
 
 
 ## 平時左鍵按下:點手牌 = 抓起拖曳;點上桌單位 = 開指令選單(歧路旅人式:先選人再選招)。
@@ -416,8 +547,18 @@ func _on_left_released_drag() -> void:
 	var card := card_being_dragged
 	card_being_dragged = null
 	ui_state = UiState.IDLE
-	# 丟牌回魔(§1.1):放到墓地投放區 = 棄牌換魔,任何卡型都可棄——比卡型分流優先。
-	if raycast_check_for_grave() != null:
+	# F8 沙盒墓地是「純清手牌」工具；先於正常卡型與黑洞回魔分流。
+	var debug_grave := raycast_check_for_debug_grave()
+	if debug_grave != null:
+		debug_grave.hide_debug_discard_hint()
+		_hint_grave = null
+		_try_debug_grave_discard(card)
+		return
+	# 丟牌回魔(§1.1):放到黑洞投放區 = 棄牌換魔,任何卡型都可棄——比卡型分流優先。
+	var recycle := raycast_check_for_recycle()
+	if recycle != null:
+		recycle.hide_recycle_hint()
+		_hint_well = null
 		_try_discard(card)
 		return
 	match card.data.card_type:
@@ -500,7 +641,7 @@ func _is_valid_targeting_target(card: Card) -> bool:
 func _is_valid_spell_target(card: Card) -> bool:
 	if card == null or not card.is_on_board:
 		return false
-	if card.data.keywords.has(&"潛行"):
+	if card.has_keyword(&"潛行"):
 		return false
 	var is_ally: bool = battle_manager.side_of(card) == battle_manager.active_side
 	return is_ally if _spell_wants_ally() else not is_ally
@@ -530,7 +671,7 @@ func _on_left_pressed_spell_target() -> void:
 		# 誤判成「敵方」而把秘術砸在手牌上——視同點空地,取消。
 		_cancel_command()
 		return
-	if target.data.keywords.has(&"潛行"):
+	if target.has_keyword(&"潛行"):
 		battle_ui.flash_message("已取消:【%s】具有潛行,無法被秘術指定(§8)" % target.data.card_name)
 		_cancel_command()
 		return
@@ -591,14 +732,15 @@ func _resolve_arcana(card: Card, target: Card) -> void:
 
 
 ## 守方反制窗口(§5.1 STEP 2;熱座/單機共用,傷害秘術與抽濾秘術同一個口):
-## 有付得起的瞬咒就問,AI 自動抵銷。抵銷成立時瞬咒消耗與提示都在這裡做完。
+## 有付得起的瞬咒就問；單人局只有「AI 守方」會自動抵銷。
+## AI 施法時守方是玩家，仍要把反制決定留給玩家。
 func _ask_counter_hotseat(spell_name: String) -> bool:
 	var defender := "enemy" if battle_manager.active_side == "player" else "player"
 	var quick: CardData = battle_manager.quick_candidate(defender)
 	if quick == null:
 		return false
 	var used := false
-	if MatchMode.is_vs_ai():
+	if MatchMode.is_vs_ai() and defender == "enemy":
 		# 單人:守方是 AI,自動決策(有付得起的瞬咒就抵銷),不開人類面板——
 		# 面板一開等於把 AI 的手牌資訊攤給玩家,還得由玩家替 AI 按鈕。
 		used = true
@@ -614,6 +756,91 @@ func _ask_counter_hotseat(spell_name: String) -> bool:
 		battle_manager.consume_quick(defender, quick)
 		battle_ui.flash_message("【%s】被【%s】抵銷了!" % [spell_name, quick.card_name])
 	return used
+
+
+## 單人 AI 的秘術入口。AI 沒有可拖曳的手牌 Card 節點，所以以帳面索引完成
+## 「付費→玩家反制窗口→離手入墓→效果」，其餘規則仍交給 BattleManager。
+func ai_play_arcana(hand_idx: int, target: Card = null, scry_pick: int = 0,
+		swap_discard_path: String = "") -> bool:
+	if not MatchMode.is_vs_ai() or battle_manager.active_side != "enemy":
+		return false
+	var hand := battle_manager.hand_of("enemy")
+	if hand_idx < 0 or hand_idx >= hand.size():
+		return false
+	var cd: CardData = hand[hand_idx]
+	if cd == null or cd.card_type != CardData.CardType.ARCANA \
+			or not battle_manager.can_afford(cd.cost):
+		return false
+	if _spell_needs_target(cd):
+		if target == null or not is_instance_valid(target) or not target.is_on_board:
+			return false
+		var wanted_side := "enemy" \
+			if cd.active_skill.effect_target == SkillData.Target.ALLY else "player"
+		if battle_manager.side_of(target) != wanted_side or target.has_keyword(&"潛行"):
+			return false
+
+	battle_manager.spend(cd.cost)
+	Sfx.play(Sfx.SPELL_CAST, -2.0)
+	var countered: bool = await _ask_counter_hotseat(cd.card_name)
+
+	# 反制可能讓守方手牌變動，但不應影響 AI 手牌；仍以 Resource 身分
+	# 再對一次索引，讓未來新增「反制後抽對手牌」也不會棄錯牌。
+	hand = battle_manager.hand_of("enemy")
+	var live_idx := hand.find(cd)
+	if live_idx < 0:
+		return false
+	battle_manager.remove_from_hand("enemy", live_idx)
+	battle_manager.bury("enemy", cd)
+
+	if not countered:
+		if _spell_needs_target(cd):
+			if is_instance_valid(target):
+				var msg: String = battle_manager.cast_arcana(cd, target)
+				if msg != "":
+					battle_ui.flash_message(msg)
+		else:
+			_resolve_ai_effect_arcana(cd, scry_pick, swap_discard_path)
+	_update_deck_labels()
+	_refresh_opp_hud()
+	return true
+
+
+func _resolve_ai_effect_arcana(cd: CardData, scry_pick: int,
+		swap_discard_path: String) -> void:
+	if cd.special_id != &"":
+		var report := battle_manager.resolve_special_arcana(cd, "enemy")
+		if not report.is_empty():
+			battle_ui.flash_message("【%s】：%s" % [cd.card_name, report])
+		return
+	var sk := cd.active_skill
+	if sk == null:
+		return
+	match sk.effect:
+		SkillData.Effect.DRAW:
+			_apply_draw(sk.amount)
+			battle_ui.flash_message("對手施放【%s】：抽 %d 張" % [cd.card_name, sk.amount])
+		SkillData.Effect.SCRY:
+			var res: Dictionary = battle_manager.scry_pick("enemy", sk.amount, scry_pick)
+			if res.picked != null:
+				battle_ui.flash_message("對手透過【%s】檢視牌堆並取得 1 張牌" % cd.card_name)
+		SkillData.Effect.DISCARD_DRAW:
+			var hand := battle_manager.hand_of("enemy")
+			var dump_idx := -1
+			for i in range(hand.size()):
+				if (hand[i] as CardData).resource_path == swap_discard_path:
+					dump_idx = i
+					break
+			if dump_idx < 0 and not hand.is_empty():
+				dump_idx = hand.size() - 1
+			if dump_idx >= 0:
+				var dumped := battle_manager.discard_from_hand("enemy", dump_idx)
+				if dumped != null:
+					battle_ui.flash_message("對手換掉【%s】" % dumped.card_name)
+			_apply_draw(sk.amount)
+		SkillData.Effect.SUMMON:
+			var msg: String = battle_manager.summon_for_side("enemy", sk)
+			if msg != "":
+				battle_ui.flash_message("【%s】：%s" % [cd.card_name, msg])
 
 
 ## 抽濾系秘術的熱座/單機結算:付費 → 反制窗口 → 牌離手入墓 → 效果落地。
@@ -650,6 +877,11 @@ func _is_effect_spell(cd: CardData) -> bool:
 
 ## 效果分流(熱座與連線結算端共用的出口;SCRY/換牌會再開選牌面板)。
 func _dispatch_spell_effect(cd: CardData) -> void:
+	if cd.special_id != &"":
+		var report := battle_manager.resolve_special_arcana(cd, battle_manager.active_side)
+		if not report.is_empty():
+			battle_ui.flash_message("【%s】：%s" % [cd.card_name, report])
+		return
 	match cd.active_skill.effect:
 		SkillData.Effect.DRAW:
 			_apply_draw(cd.active_skill.amount)
@@ -846,14 +1078,34 @@ func _net_discard(hand_idx: int, card_path: String) -> void:
 	var cd := load(card_path) as CardData
 	if cd == null or not battle_manager.can_discard_for_mana(battle_manager.active_side):
 		return
-	var pile := _grave_piles.get(battle_manager.active_side) as GravePile
-	if pile != null:
-		pile.arm_recycle()   # 先上膛再結算:這次入土演出走回魔金,不跟陣亡的紫混
+	var well := _recycle_wells.get(battle_manager.active_side) as ManaRecycle
+	if well != null:
+		well.pulse_recycle()
 	var gained: int = battle_manager.apply_discard_for_mana(battle_manager.active_side, cd)
 	_consume_played(hand_idx)   # 出牌端移視圖節點、重放端扣帳(同召喚的不對稱)
 	Sfx.play(Sfx.MANA_GAIN, -4.0)   # 數錢聲:回魔的「入帳感」
 	battle_ui.flash_message(
 		"捨棄【%s】回暫時魔力 ◆%d(用不完不保留;丟牌下回合不可再用)" % [cd.card_name, gained])
+
+
+## F8 沙盒清手牌：真正埋進墓地，但不給魔力、也完全不改黑洞的使用冷卻。
+## 不做 RPC 是刻意的——測卡入口本來就只允許 Debug 離線局。
+func _try_debug_grave_discard(card: Card) -> void:
+	var side := battle_manager.active_side
+	if card == null or not battle_manager.is_debug_test_mode(side):
+		organize_hand()
+		return
+	var hand_idx := player_hand.cards.find(card)
+	if hand_idx < 0:
+		organize_hand()
+		return
+	_pending_play_card = card
+	if not battle_manager.debug_discard_to_grave(side, card.data):
+		_pending_play_card = null
+		organize_hand()
+		return
+	_consume_played(hand_idx)
+	battle_ui.flash_message("測試捨棄【%s】→ 墓地（魔力不變）" % card.data.card_name)
 
 
 ## 指定目標中左鍵按下:點到合法目標就發動;點到其他任何地方 = 取消
@@ -1108,6 +1360,27 @@ func _hand_view_shows_active_side() -> bool:
 	return not NetMatch.is_online or battle_manager.active_side == NetMatch.my_side
 
 
+## VS AI 的手牌視圖始終鎖在 player。AI 回合觸發的瞬咒可能在
+## BattleManager 內直接離手（召喚/攻擊/技能/伏印/瀕死反應）；這些入口都會
+## 發 state_changed，所以在單一出口比對帳與視圖，只有真的不同才重建。
+func _sync_vs_ai_player_hand_on_state(_turn: int, _side: String, _mana: int,
+		_mana_max: int, _temp_mana: int) -> void:
+	if not MatchMode.is_vs_ai() or battle_manager.active_side != "enemy":
+		return
+	var account := battle_manager.hand_of("player")
+	var visible := player_hand.hand_data()
+	if account.size() == visible.size():
+		var same := true
+		for i in range(account.size()):
+			if account[i] != visible[i]:
+				same = false
+				break
+		if same:
+			return
+	player_hand.rebuild_from(account, false)
+	_update_deck_labels()
+
+
 ## 開局同步:手牌視圖餵「這台機器該看的那側」+ 掛上牌堆剩量標籤。
 ## 連線:鎖自己這側(client 開局看到自己的手牌,不是 host 的);
 ## 離線:my_side 恆 "player" = 開局行動方,行為不變。
@@ -1180,25 +1453,35 @@ func _spawn_enemy_deck() -> void:
 		-deck.position.x, deck.position.y, mid_z * 2.0 - deck.position.z)
 
 
-var _grave_piles: Dictionary = {}   # "player"/"enemy" → GravePile(純視覺,帳在 BattleManager)
+var _grave_piles: Dictionary = {}     # "player"/"enemy" → GravePile(墓地牌疊)
+var _recycle_wells: Dictionary = {}   # "player"/"enemy" → ManaRecycle(回魔投放區)
 
 
-## 墓地雙座:玩家墓在牌堆旁、靠場中央那側(挪 x 不挪 z——往中線挪會踩進
-## 溪流的水帶 ±1.7,見 §29 的岸線保證),敵方對角鏡射(同 EnemyDeck)。
-## 位置對稱於中線 → client 翻轉視角免特別處理(鏡像紅利)。
+## 每側各有兩個清楚分工的地標：黑洞在牌堆內側供丟牌回魔；墓地放到水平反邊。
+## 敵方整組對角鏡射，client 翻視角時仍維持自己右側回魔、左側墓地的讀法。
 func _spawn_grave_piles() -> void:
 	var deck := get_node_or_null("../Deck") as Node3D
 	if deck == null:
 		return
 	var mid_z := _board_mid_z()
-	var p_pos := deck.position + Vector3(-1.9, 0.0, 0.0)
+	var p_well_pos := deck.position + Vector3(-1.9, 0.0, 0.0)
+	var p_grave_pos := Vector3(-p_well_pos.x, p_well_pos.y, p_well_pos.z)
 	for side in ["player", "enemy"]:
+		var well := ManaRecycle.new()
+		well.name = "RecyclePlayer" if side == "player" else "RecycleEnemy"
+		get_parent().add_child(well)
+		well.setup(side)
+		well.position = p_well_pos if side == "player" \
+			else Vector3(-p_well_pos.x, p_well_pos.y, mid_z * 2.0 - p_well_pos.z)
+		_recycle_wells[side] = well
+
 		var pile := GravePile.new()
 		pile.name = "GravePlayer" if side == "player" else "GraveEnemy"
 		get_parent().add_child(pile)
 		pile.setup(side)
-		pile.position = p_pos if side == "player" \
-			else Vector3(-p_pos.x, p_pos.y, mid_z * 2.0 - p_pos.z)
+		pile.set_debug_discard_enabled(battle_manager.is_debug_test_mode(side))
+		pile.position = p_grave_pos if side == "player" \
+			else Vector3(-p_grave_pos.x, p_grave_pos.y, mid_z * 2.0 - p_grave_pos.z)
 		_grave_piles[side] = pile
 
 
@@ -1341,19 +1624,41 @@ func raycast_check_for_card_slot() -> CardSlot:
 	return null
 
 
-## ── 射線:找滑鼠下方的「墓地投放區」(第 4 層;丟牌回魔 §1.1)──────
-func raycast_check_for_grave() -> GravePile:
+## ── 射線：F8 沙盒的「墓地直接捨棄」區（第 5 層）────────────
+func raycast_check_for_debug_grave() -> GravePile:
+	if battle_manager == null or not battle_manager.is_debug_test_mode(
+			battle_manager.active_side):
+		return null
 	var space_state := get_world_3d().direct_space_state
 	var mouse_pos := get_viewport().get_mouse_position()
 	var ray_origin := camera.project_ray_origin(mouse_pos)
 	var ray_end := ray_origin + camera.project_ray_normal(mouse_pos) * 1000.0
 	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_end)
-	query.collision_mask = COLLISION_MASK_GRAVE
+	query.collision_mask = COLLISION_MASK_DEBUG_GRAVE
 	query.collide_with_areas = true
 	var result := space_state.intersect_ray(query)
 	if result:
-		# 打中的是墓座底下的 Area3D,它的父節點才是 GravePile 本體。
-		return (result.collider as Area3D).get_parent() as GravePile
+		var pile := (result.collider as Area3D).get_parent() as GravePile
+		if pile != null and pile.side == battle_manager.active_side:
+			return pile
+	return null
+
+
+## ── 射線:找滑鼠下方的「回魔黑洞」(第 4 層;丟牌回魔 §1.1)──────
+func raycast_check_for_recycle() -> ManaRecycle:
+	var space_state := get_world_3d().direct_space_state
+	var mouse_pos := get_viewport().get_mouse_position()
+	var ray_origin := camera.project_ray_origin(mouse_pos)
+	var ray_end := ray_origin + camera.project_ray_normal(mouse_pos) * 1000.0
+	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_end)
+	query.collision_mask = COLLISION_MASK_RECYCLE
+	query.collide_with_areas = true
+	var result := space_state.intersect_ray(query)
+	if result:
+		var well := (result.collider as Area3D).get_parent() as ManaRecycle
+		# 不能把牌拖去對手的黑洞替自己回魔；視角翻轉後仍以 side 判定，不看座標。
+		if well != null and well.side == battle_manager.active_side:
+			return well
 	return null
 
 
@@ -1436,9 +1741,11 @@ func _net_summon(hand_idx: int, card_path: String, slot_np: NodePath) -> void:
 		var card := _take_pending_card()
 		if card == null:
 			return
-		msg = battle_manager.mark_summoned(card)   # 召喚暈眩+對方伏印觸發(§7)
+		# 必須先入槽,戰吼的 _lane_opposite 才查得到「我站在哪一路」;
+		# 也要先離手,否則抽牌型戰吼 stash 視圖時會把已打出的卡又存回手牌帳。
 		slot.place_card(card)
 		player_hand.play_card(card)
+		msg = battle_manager.mark_summoned(card)   # 召喚暈眩+戰吼+對方伏印(§7)
 	else:
 		# 重放端:帳面扣牌 + 生一個新單位節點放進同一格。
 		battle_manager.remove_from_hand(battle_manager.active_side, hand_idx)
@@ -1542,12 +1849,14 @@ func _net_equip(hand_idx: int, card_path: String, target_np: NodePath) -> void:
 		return
 	battle_manager.spend(cd.cost)
 	var replaced: String = battle_manager.attach_equip(cd, target)
+	var hp_bonus := cd.equip_hp_bonus if cd.special_id != &"" else cd.active_skill.amount
+	var bonus_text := "攻擊 +%d、生命上限 +%d" % [cd.equip_atk_bonus, hp_bonus]
 	if replaced != "":
-		battle_ui.flash_message("【%s】替換了【%s】(舊裝進墓地):生命上限 +%d" % [
-			cd.card_name, replaced, cd.active_skill.amount])
+		battle_ui.flash_message("【%s】替換了【%s】(舊裝進墓地)：%s" % [
+			cd.card_name, replaced, bonus_text])
 	else:
-		battle_ui.flash_message("【%s】裝備到【%s】:生命上限 +%d" % [
-			cd.card_name, target.data.card_name, cd.active_skill.amount])
+		battle_ui.flash_message("【%s】裝備到【%s】：%s" % [
+			cd.card_name, target.data.card_name, bonus_text])
 	_consume_played(hand_idx)
 
 
@@ -1560,7 +1869,7 @@ func _net_ward(hand_idx: int, card_path: String, host_slot: NodePath) -> void:
 	battle_manager.spend(cd.cost)
 	battle_manager.set_ward(cd, host)
 	# ⚠ 訊息不能報宿主名字:這行兩台都會 flash,說了就把陷阱位置洩給對手。
-	battle_ui.flash_message("伏印已埋設(敵方召喚從者時觸發)")
+	battle_ui.flash_message("伏印已埋設（符合卡面條件時觸發）")
 	_consume_played(hand_idx)
 
 

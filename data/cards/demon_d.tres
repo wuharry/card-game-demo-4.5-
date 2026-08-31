@@ -1,16 +1,19 @@
-[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="CardData" load_steps=7 format=3]
 
 [ext_resource type="Script" uid="uid://cxot3rc105cul" path="res://src/card/card_data.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 02 -Full 20 Characters/Characters(100x100 split)/Demon_D/Demon_D/Demon_D_Idle.png" id="2_sheet"]
 [ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/demon_d_card_art.png" id="4_card_art"]
 
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
-skill_name = "反擊重斬"
-description = "本次攻擊 +2。"
+skill_name = "小惡魔召喚"
+description = "召喚一個 1/1 的爪牙。"
+kind = 2
 cost = 2
 anim = "Attack03"
-power = 2
+effect = 3
+summon_card = "bat"
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
 atlas = ExtResource("2_sheet")
@@ -19,10 +22,11 @@ region = Rect2(0, 0, 100, 100)
 [resource]
 script = ExtResource("1_script")
 card_name = "惡魔守衛"
-cost = 4
-atk = 3
-hp = 6
-art = SubResource("AtlasTexture_frame")
+cost = 3
+atk = 2
+hp = 3
+art = ExtResource("4_card_art")
+use_dedicated_art = true
 standee = ExtResource("2_sheet")
 active_skill = SubResource("Skill_main")
 keywords = Array[StringName]([&"嘲諷"])

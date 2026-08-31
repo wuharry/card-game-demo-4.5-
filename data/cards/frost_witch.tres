@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3]
+
+[ext_resource type="Script" uid="uid://cxot3rc105cul" path="res://src/card/card_data.gd" id="1_card"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/Frost_Witch_CardArt.png" id="2_art"]
+[ext_resource type="Texture2D" path="res://assets/characters/frost_witch/Frost_Witch_Idle.png" id="3_idle"]
+[ext_resource type="Script" path="res://src/card/skill_data.gd" id="4_skill"]
+
+[sub_resource type="Resource" id="Skill_battlecry"]
+script = ExtResource("4_skill")
+skill_name = "寒霜降臨"
+description = "登場時,使正對面的敵人【凍結】1 回合。"
+effect = 2
+status = 2
+status_turns = 1
+
+[resource]
+script = ExtResource("1_card")
+card_name = "冰霜女巫"
+cost = 4
+atk = 2
+hp = 4
+art = ExtResource("2_art")
+use_dedicated_art = true
+standee = ExtResource("3_idle")
+battlecry = SubResource("Skill_battlecry")

@@ -1,8 +1,9 @@
-[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="CardData" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://src/card/card_data.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/ui/icons/antahonist_spells/spell_icons_32x32.png" id="2_sheet"]
 [ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/arcana_battle_fury_card_art.png" id="4_card_art"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_art"]
 atlas = ExtResource("2_sheet")
@@ -25,5 +26,6 @@ card_name = "戰意灌注"
 cost = 2
 atk = 0
 hp = 0
-art = SubResource("AtlasTexture_art")
+art = ExtResource("4_card_art")
+use_dedicated_art = true
 active_skill = SubResource("Skill_main")

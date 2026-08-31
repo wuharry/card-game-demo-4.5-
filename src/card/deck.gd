@@ -27,7 +27,7 @@ static func load_pool() -> Array[CardData]:
 
 
 ## 洗好的一副牌:60 張、同名卡最多 3 份。
-## 做法:先把「每種卡 ×3」攤成一疊大池(24 種 → 72 張),洗亂後砍到 60 張——
+## 做法:先把「每種卡 ×3」攤成一疊大池(目前 120 種 → 360 張),洗亂後砍到 60 張——
 ## 取出來的自然不會超過上限,不必邊抽邊查份數(想過才不做:拒絕重抽法)。
 static func build_shuffled() -> Array[CardData]:
 	var pile: Array[CardData] = []

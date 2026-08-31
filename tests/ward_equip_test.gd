@@ -38,7 +38,9 @@ func _run() -> void:
 		await process_frame
 	var cm = root.find_child("CardManger", true, false)
 	var bm = cm.get("battle_manager")
-	var knight := load("res://data/cards/knight.tres") as CardData        # hp 6
+	# 期望值從卡資料推,不寫死 HP:這支驗的是「裝備替換的加成帳」,
+	# 不是騎士有幾滴血(2026-08-10 卡池重平衡 6→5 時,寫死的那條就假警報了)。
+	var knight := load("res://data/cards/knight.tres") as CardData
 	var mithril := load("res://data/cards/equip_mithril_plate.tres") as CardData  # +2
 	var ward := load("res://data/cards/ward_blast_sigil.tres") as CardData
 
@@ -87,7 +89,9 @@ func _run() -> void:
 	_check(u.equipped_cards.size() == 1, "同時只有一件靈裝")
 	_check(u.max_hp_bonus == 2, "加成不疊(2,不是 4)")
 	_check(bm.grave_count("player") == g1 + 1, "舊裝進墓地")
-	_check(u.current_hp == 8, "替換後現血:拆舊夾回 6 → 新裝補 2 = 8(實際 %d)" % u.current_hp)
+	var full: int = knight.hp + 2   # 拆舊裝夾回滿血 → 新裝再補 2 點上限與現血
+	_check(u.current_hp == full, "替換後現血:拆舊夾回 %d → 新裝補 2 = %d(實際 %d)" % [
+		knight.hp, full, u.current_hp])
 
 	if fails == 0:
 		print("PASS 伏印宿主制+裝備替換 13 斷言全過")

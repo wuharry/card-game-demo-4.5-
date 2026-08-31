@@ -1,15 +1,18 @@
-[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3 uid="uid://m3tmbrcgqiju"]
+[gd_resource type="Resource" script_class="CardData" load_steps=7 format=3 uid="uid://m3tmbrcgqiju"]
 
 [ext_resource type="Script" uid="uid://cxot3rc105cul" path="res://src/card/card_data.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://ban6n652t4pr3" path="res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Armored Axeman/Armored Axeman/Armored Axeman_Idle.png" id="2_sheet"]
 [ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/armored_axeman_card_art.png" id="4_card_art"]
 
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
-skill_name = "狂暴迴旋"
-description = "迴旋斧橫掃,同時命中左中右三路。"
-cost = 3
-modifier = 1
+skill_name = "旋風斬"
+description = "對敵方所有單位各造成 2 點傷害。"
+kind = 1
+cost = 2
+power = 2
+modifier = 5
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
 atlas = ExtResource("2_sheet")
@@ -17,10 +20,12 @@ region = Rect2(0, 0, 100, 100)
 
 [resource]
 script = ExtResource("1_script")
-card_name = "重甲斧手"
-cost = 4
-atk = 5
-hp = 3
-art = SubResource("AtlasTexture_frame")
+card_name = "重甲斧兵"
+cost = 5
+atk = 4
+hp = 6
+art = ExtResource("4_card_art")
+use_dedicated_art = true
 standee = ExtResource("2_sheet")
 active_skill = SubResource("Skill_main")
+keywords = Array[StringName]([&"嘲諷"])

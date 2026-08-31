@@ -11,6 +11,8 @@
 class_name CardGallery
 extends CanvasLayer
 
+const SETTINGS: GDScript = preload("res://src/settings/app_settings.gd")
+
 ## 關閉圖鑑(把焦點交還給主選單)。main_menu 訂閱這條決定收尾動作。
 signal closed
 
@@ -18,30 +20,31 @@ const FONT_TITLE: FontFile = preload(
 	"res://assets/fonts/Noto_Serif_TC/static/NotoSerifTC-Bold.ttf")
 const FONT_BODY: FontFile = preload(
 	"res://assets/fonts/Noto_Serif_TC/static/NotoSerifTC-SemiBold.ttf")
+const UI_STYLE: GDScript = preload("res://src/ui/fantasy_ui_theme.gd")
 
 ## 配色沿用主選單/戰鬥 UI 的「暮色金」,整個遊戲說同一種話。
-const GOLD := Color("f2e3ae")
-const GOLD_DIM := Color("b8a984")
-const LINE_GOLD := Color(0.83, 0.72, 0.45, 0.85)
+const GOLD := UI_STYLE.GOLD
+const GOLD_DIM := UI_STYLE.GOLD_DIM
+const LINE_GOLD := Color(UI_STYLE.GOLD, 0.76)
 
 ## 卡型顯示名 + 印章色(和 card.gd 的 TYPE_BADGES 同語彙;MINION 另給「從者」)。
 const TYPE_INFO := {
-	CardData.CardType.MINION: ["從者", Color(0.55, 0.42, 0.2)],
-	CardData.CardType.EQUIP: ["靈裝", Color(0.5, 0.36, 0.1)],
-	CardData.CardType.ARCANA: ["秘術", Color(0.4, 0.18, 0.5)],
-	CardData.CardType.QUICK: ["瞬咒", Color(0.12, 0.32, 0.55)],
-	CardData.CardType.WARD: ["伏印", Color(0.16, 0.4, 0.18)],
-	CardData.CardType.DOMAIN: ["領域", Color(0.35, 0.35, 0.35)],
+	CardData.CardType.MINION: ["type_minion", UI_STYLE.GOLD_DIM],
+	CardData.CardType.EQUIP: ["type_equip", UI_STYLE.GOLD],
+	CardData.CardType.ARCANA: ["type_arcana", UI_STYLE.AMETHYST],
+	CardData.CardType.QUICK: ["type_quick", UI_STYLE.AMETHYST_BRIGHT],
+	CardData.CardType.WARD: ["type_ward", Color("75658f")],
+	CardData.CardType.DOMAIN: ["type_domain", UI_STYLE.TEXT_DIM],
 }
 
 ## 篩選分頁:全部 + 五種在用的卡型(順序即分頁順序;-1 = 全部)。
 const FILTER_TABS: Array = [
-	[-1, "全部"],
-	[CardData.CardType.MINION, "從者"],
-	[CardData.CardType.ARCANA, "秘術"],
-	[CardData.CardType.EQUIP, "靈裝"],
-	[CardData.CardType.QUICK, "瞬咒"],
-	[CardData.CardType.WARD, "伏印"],
+	[-1, "filter_all"],
+	[CardData.CardType.MINION, "type_minion"],
+	[CardData.CardType.ARCANA, "type_arcana"],
+	[CardData.CardType.EQUIP, "type_equip"],
+	[CardData.CardType.QUICK, "type_quick"],
+	[CardData.CardType.WARD, "type_ward"],
 ]
 
 const GRID_COLUMNS := 5
@@ -101,7 +104,7 @@ func _build() -> void:
 		return a.card_name < b.card_name)
 
 	var dim := ColorRect.new()
-	dim.color = Color(0.03, 0.02, 0.05, 0.92)   # 近乎全黑:圖鑑是獨立畫面、不用透出城鎮
+	dim.color = Color(0.018, 0.02, 0.055, 0.97)
 	add_child(dim)
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
@@ -140,7 +143,7 @@ func _build_header(col: VBoxContainer) -> void:
 	col.add_child(row)
 
 	var title := Label.new()
-	title.text = "牌庫圖鑑"
+	title.text = SETTINGS.current().text("gallery_title")
 	title.add_theme_font_override("font", FONT_TITLE)
 	title.add_theme_font_size_override("font_size", 40)
 	title.add_theme_color_override("font_color", GOLD)
@@ -157,12 +160,14 @@ func _build_header(col: VBoxContainer) -> void:
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(spacer)
 
-	_back_btn = _make_text_button("返回", 24)
+	_back_btn = _make_text_button(SETTINGS.current().text("back"), 24)
 	_back_btn.pressed.connect(close)
 	row.add_child(_back_btn)
 
-	var line := ColorRect.new()
-	line.color = LINE_GOLD
+	var line := TextureRect.new()
+	line.texture = UI_STYLE.separator_gradient()
+	line.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	line.stretch_mode = TextureRect.STRETCH_SCALE
 	line.custom_minimum_size = Vector2(0, 2)
 	col.add_child(line)
 
@@ -174,7 +179,7 @@ func _build_tabs(col: VBoxContainer) -> void:
 	col.add_child(_tab_row)
 	for tab in FILTER_TABS:
 		var type_id: int = tab[0]
-		var btn := _make_text_button(tab[1], 20)
+		var btn := _make_text_button(SETTINGS.current().text(tab[1]), 20)
 		btn.pressed.connect(func() -> void:
 			_active_filter = type_id
 			_refresh_grid()
@@ -192,7 +197,7 @@ func _refresh_grid() -> void:
 			continue
 		_grid.add_child(_make_card_tile(cd))
 		shown += 1
-	_count_label.text = "  共 %d 張" % shown
+	_count_label.text = "  " + (SETTINGS.current().text("gallery_count") % shown)
 
 
 ## 分頁高亮:當前分頁的字轉亮金,其餘沉金(靠字色區分,不做底色按鈕)。
@@ -228,7 +233,7 @@ func _make_card_tile(d: CardData) -> Control:
 	name_l.add_theme_color_override("font_color", GOLD)
 	name_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	name_l.text = "%s  ◆%d" % [d.card_name, d.cost]
+	name_l.text = "%s  ◆%d" % [SETTINGS.current().card_name(d), d.cost]
 	col.add_child(name_l)
 
 	var info: Array = TYPE_INFO.get(d.card_type, ["?", GOLD_DIM])
@@ -238,15 +243,16 @@ func _make_card_tile(d: CardData) -> Control:
 	badge.add_theme_color_override("font_color", (info[1] as Color).lightened(0.35))
 	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	if d.card_type == CardData.CardType.MINION:
-		badge.text = "從者  攻 %d / 血 %d" % [d.atk, d.hp]
+		badge.text = ("%s  ATK %d / HP %d" if SETTINGS.current().language == "en" \
+			else "%s  攻 %d / 血 %d") % [SETTINGS.current().type_name(d.card_type), d.atk, d.hp]
 	else:
-		badge.text = info[0]
+		badge.text = SETTINGS.current().text(info[0])
 	col.add_child(badge)
 
 	var desc := Label.new()
 	desc.add_theme_font_override("font", FONT_BODY)
 	desc.add_theme_font_size_override("font_size", 12)
-	desc.add_theme_color_override("font_color", Color("cfc4a6"))
+	desc.add_theme_color_override("font_color", UI_STYLE.TEXT_DIM)
 	desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -262,21 +268,27 @@ func _skill_text(d: CardData) -> String:
 	if d.active_skill != null:
 		var s := d.active_skill
 		if d.card_type == CardData.CardType.MINION:
-			parts.append("【%s】%s" % [s.skill_name, s.description])
+			parts.append("【%s】%s" % [
+				SETTINGS.current().skill_name(d, s), SETTINGS.current().skill_description(s)])
 		else:
-			parts.append(s.description)
+			parts.append(SETTINGS.current().skill_description(s))
+	if d.battlecry != null:
+		parts.append("【%s】%s" % [
+			SETTINGS.current().text("battlecry"), SETTINGS.current().skill_description(d.battlecry)])
 	if not d.keywords.is_empty():
 		var words: PackedStringArray = []
 		for w in d.keywords:
-			words.append(String(w))
-		parts.append("關鍵字:" + "、".join(words))
+			words.append(SETTINGS.current().keyword_name(w))
+		parts.append(SETTINGS.current().text("keywords") + ": " + ", ".join(words))
 	if parts.is_empty():
 		return "—"
 	return "\n".join(parts)
 
 
-## 卡面圖:從者=立牌動畫第 0 幀裁可見範圍;法術=圖示(和戰鬥 hover 預覽同一把尺)。
+## 卡面圖:專用插畫優先;舊從者=立牌第 0 幀;法術=圖示(和戰鬥 hover 預覽同一把尺)。
 func _cardface_art(d: CardData) -> Texture2D:
+	if d.use_dedicated_art and d.art != null:
+		return d.art
 	if d.standee != null:
 		var atlas := AtlasTexture.new()
 		atlas.atlas = d.standee
@@ -287,12 +299,10 @@ func _cardface_art(d: CardData) -> Texture2D:
 
 ## 卡磚底:半透明深底 + 細金框,和暗幕拉出層次。
 func _make_tile_style() -> StyleBoxFlat:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.09, 0.07, 0.12, 0.85)
-	sb.border_color = Color(0.45, 0.38, 0.24, 0.7)
-	sb.set_border_width_all(1)
-	sb.set_corner_radius_all(6)
-	sb.set_content_margin_all(8)
+	var sb: StyleBoxFlat = UI_STYLE.panel(UI_STYLE.AMETHYST, false)
+	sb.bg_color = Color(0.04, 0.045, 0.10, 0.96)
+	sb.shadow_size = 3
+	sb.set_content_margin_all(9.0)
 	return sb
 
 
@@ -304,13 +314,10 @@ func _make_text_button(text_value: String, size: int) -> Button:
 	btn.add_theme_font_override("font", FONT_BODY)
 	btn.add_theme_font_size_override("font_size", size)
 	btn.add_theme_color_override("font_color", GOLD_DIM)
-	btn.add_theme_color_override("font_hover_color", Color("fff3cf"))
-	btn.add_theme_color_override("font_focus_color", Color("fff3cf"))
-	btn.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
-	var lit := StyleBoxFlat.new()
-	lit.bg_color = Color(1.0, 1.0, 1.0, 0.04)
-	lit.border_color = LINE_GOLD
-	lit.border_width_bottom = 2
+	btn.add_theme_color_override("font_hover_color", UI_STYLE.GOLD_BRIGHT)
+	btn.add_theme_color_override("font_focus_color", UI_STYLE.GOLD_BRIGHT)
+	btn.add_theme_stylebox_override("normal", UI_STYLE.button(true))
+	var lit: StyleBoxFlat = UI_STYLE.button(false)
 	btn.add_theme_stylebox_override("hover", lit)
 	btn.add_theme_stylebox_override("focus", lit)
 	return btn

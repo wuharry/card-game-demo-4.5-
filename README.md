@@ -80,6 +80,8 @@ main.tscn  ← 牌桌主場景 (MainScene, Node3D)  [src/main_scene/main_scene.g
 | [src/environment/arena_pool.gd](src/environment/arena_pool.gd) | 戰場抽籤桶（static 純工具，不進場景樹）：主選單抽路徑 → `main_scene.gd` 讀取決定換不換環境 |
 | [src/main_scene/main_scene.gd](src/main_scene/main_scene.gd) | 牌桌環境切換器：依 ArenaPool 抽籤結果，`_ready` 時把烤死的森林換成抽到的戰場（用 `free()` 避免兩個 WorldEnvironment 並存） |
 | [src/main_menu/main_menu.gd](src/main_menu/main_menu.gd) | 主選單：3D 城鎮背景 + 固定鏡頭 + 歧路旅人式純文字選單（UI 全由程式組裝，CanvasLayer 疊在 3D 上） |
+| [src/settings/app_settings.gd](src/settings/app_settings.gd) | 全域設定 Autoload：`user://settings.cfg` 持久化、視窗／全螢幕、解析度、三檔畫質、繁中／英文 UI 與無障礙參數 |
+| [src/settings/settings_panel.gd](src/settings/settings_panel.gd) | 主選單設定疊層：套用／取消／恢復預設，大字模式可捲動且鍵盤焦點會自動跟隨 |
 | [src/battle_ui/battle_ui.gd](src/battle_ui/battle_ui.gd) | 指令選單（歧路旅人式）：點擊上桌單位 → 攻擊/技能/取消 + 效果描述列；指定目標時出提示字；戰況 HUD（回合/魔力/結束回合/提示訊息）。全程式生成，由 CardManager 掛載並訂閱信號 |
 | [src/battle_manager/battle_manager.gd](src/battle_manager/battle_manager.gd) | 戰鬥帳房：魔力/回合/行動經濟（§1/§3/§6）與真結算（§4.2 雙向傷害交換、死亡清位、打臉與路線阻擋 §4.1、勝負判定）。訂閱 `CardManager.action_performed`；規則只寫這一份，UI 轉述 |
 | [src/hero/hero.gd](src/hero/hero.gd) | 本體（玩家/敵方的「臉」）：像素立牌呈現（同卡牌角色、無卡槽）、HP 20、受擊/死亡動畫；程式生成、站位由卡槽群組實際位置推算 |
@@ -95,15 +97,15 @@ main.tscn  ← 牌桌主場景 (MainScene, Node3D)  [src/main_scene/main_scene.g
 | [scenes/arena_forest.tscn](scenes/arena_forest.tscn) | 森林戰場（預設）：程序地板 + 森林散佈 + 溪流 + 燈光環境 |
 | [scenes/arena_caverns.tscn](scenes/arena_caverns.tscn) / [scenes/arena_frostlands.tscn](scenes/arena_frostlands.tscn) | 洞窟 / 冰原戰場（繼承 ArenaBase 程式生成，進牌桌時隨機輪替） |
 | [scenes/arena_town.tscn](scenes/arena_town.tscn) | 黃昏城鎮廣場（主選單背景） |
-| [src/card/card.tscn](src/card/card.tscn) | 可實例化的 3D 卡片預製件（卡面用 `NewCard.png`）|
-| [src/card_slot/card_slot.tscn](src/card_slot/card_slot.tscn) | 可實例化的 3D 卡槽預製件（卡框用 `assets/ui/card_frames/base 11.png`）|
+| [src/card/card.tscn](src/card/card.tscn) | 可實例化的 3D 卡片預製件（卡面用 `NewCard_fixed.png`）|
+| [src/card_slot/card_slot.tscn](src/card_slot/card_slot.tscn) | 可實例化的 3D 卡槽預製件（卡槽外觀由 `slot_tile.gdshader` 程序生成）|
 | [src/player_board/player_board.tscn](src/player_board/player_board.tscn) | 棋盤場景，`@export card_slot_scene` 指向 `card_slot.tscn` |
 
 ### 美術資源
 
 | 路徑 | 用途 |
 |------|------|
-| `NewCard.png` | 卡框圖（上半有透明挖空窗，CardArt 嵌入其中）|
+| `NewCard_fixed.png` | 目前卡框圖（已清除白色 matte，上半透明窗由 CardArt 遮罩填入）|
 | `data/cards/*.tres` | 24 張 CardData 卡片資料（名稱 / 費用 / 攻血 / 立牌動畫表）|
 | `assets/packs/tiny_rpg_characters` | 像素角色動畫表（卡圖取第 0 幀、召喚立牌播待機動畫）|
 | `assets/packs/pixel3d_{caverns,frostlands,town}` | 洞窟 / 冰原 / 城鎮 像素 3D 環境素材包（第三方素材包統一收 `assets/packs/`，資料夾 snake_case、包內保留原始結構利於對照授權） |
@@ -137,15 +139,16 @@ main.tscn  ← 牌桌主場景 (MainScene, Node3D)  [src/main_scene/main_scene.g
 |------|------|
 | 勝利條件 | 將對手玩家生命值由 **20** 降至 **0** |
 | 玩家初始 HP | 20 |
-| 魔力上限 | 起始 0，每回合開始 +1（上限 10），並回滿至上限 |
+| 魔力上限 | 起始 0，每回合開始 +1（上限 7），並回滿至上限 |
 | 魔力累積 | 未使用魔力**不**保留到下回合 |
 | 手牌上限 | **8**：手牌滿時抽到的牌**直接銷毀**（爆牌，雙方可見；同爐石／暗影詩章。棄牌價值另有 §1.1 丟牌回魔） |
-| 牌堆 | **60 張**／副，同名卡最多 **3** 份（現階段由 24 種卡隨機組成；抽空後不再抽、無疲勞傷害） |
+| 牌堆 | **60 張**／副，同名卡最多 **3** 份（現階段由 120 種卡隨機組成；抽空後不再抽、無疲勞傷害） |
 
 ### 1.1 丟牌回魔（含冷卻）`[數位調整]`
 
 - 抽牌後，可捨棄 1 張手牌，獲得「該牌 Cost ÷ 2（無條件捨去）」的**暫時魔力**。
 - **冷卻：使用後下一回合不可再用**（最多隔回合一次）。
+- 9–13 費高階卡必須靠這個機制跨越自然魔力上限：9／10／11／12／13 費分別至少要棄掉 4／6／8／10／12 費卡。
 - ✅ **已實作（2026-07-16）**：把手牌**拖到墓地**放開＝棄牌（任何卡型皆可）；帳在 `battle_manager.gd` 的 `apply_discard_for_mana()`，UX 與同步在 `card_manager.gd` 的 `_try_discard` / `_net_discard`（連線/單人 AI 走同一條重放路）。
 - 實作註記：`SideState.discard_cd` 使用時設 **2**、**自己**回合開始 `max(0, cd - 1)`、`cd == 0` 才允許——設 1 會在下一個自己回合就歸零，變成「每回合都能用」，違反「下一回合不可再用」。（早期草稿的 `=1` 寫法是 off-by-one，勿沿用。）
 
@@ -154,7 +157,12 @@ main.tscn  ← 牌桌主場景 (MainScene, Node3D)  [src/main_scene/main_scene.g
 - 戰場為 **5 條並排路線 (Lane)**，雙方一對一對應（路線 1–5）。
 - 每條路線可有：前排從者（可被攻擊/阻擋）+ 其附著的靈裝 / 伏印。
 - `[桌遊]` 桌面只有 10 格卡槽；後排（伏印）以皮製卡盒直立卡位呈現，對手看不到內容。
-- `[數位調整]` 數位版可直接用獨立的 `back_row` 資料層表示伏印區，無需卡盒。
+- `[數位調整]` 伏印**不佔卡槽**，住在 `SideState.wards` 側帳（宿主制：埋在我方場上從者底下）。
+
+> ⚠ **後排卡槽站得了從者**（2026-08-10 訂正）：早期這段寫「後排＝伏印區」，但實作上
+> `player_back` / `enemy_back` 是真的卡槽，前排滿了就往後放（`enemy_ai.gd` 的落點順序即如此）。
+> 規則上的差別只有兩點：**後排不當阻擋**（`_lane_blocked` 只看前排），
+> 但**打得到**——【貫穿】的第二目標就是同路線的後排單位。
 
 ## 3. 召喚
 
@@ -251,8 +259,14 @@ STEP 6 清算        移除陣亡從者、處理死亡觸發 → 回到 STEP 1 �
 
 - 主動技能歸類沿用 §6 三分類（強化攻擊 / 獨立攻擊 / 非攻擊），行動經濟不變：每回合 1 攻擊 + 1 技能。
 - 沒有第二張攻擊表的單位（骷髏弓手）＝ 無主動技，靠被動與數值補（白板堆料）。
-- **24 張卡的完整技能 / 被動配置與資料層合約見 [docs/skills_design.md](docs/skills_design.md)**；
-  資料結構在 [src/card/skill_data.gd](src/card/skill_data.gd)（`CardData.active_skill` / `keywords`）。
+- 資料結構在 [src/card/skill_data.gd](src/card/skill_data.gd)（`CardData.active_skill` / `battlecry` / `keywords`）。
+  **42 張從者的現行配置以 [docs/card_rebalance_pack01_02.md](docs/card_rebalance_pack01_02.md) 為準**
+  （2026-08-10 對齊 Pack01/02 設計稿）；[docs/skills_design.md](docs/skills_design.md) 的 24 卡表已被它取代，
+  該檔仍有效的是**動畫盤點與命名地雷**那兩節。
+- **戰吼（登場效果）** `[數位調整]`：`CardData.battlecry` 是一份 `SkillData`，召喚落地時自動結算一次。
+  不收魔力、不佔「每回合 1 攻擊 + 1 技能」的行動經濟——它不是玩家的選擇，是卡的登場條款。
+  觸發點在 `BattleManager.mark_summoned()`（所有召喚的必經之路：手動出牌／召喚技／召喚秘術／連線重放），
+  且**先於伏印結算**（否則「登場就有盾」在最需要它的那一刻剛好還沒生效）。
 
 ## 7. 卡牌類型
 
@@ -316,6 +330,31 @@ class StatusEffect:
 | **中毒 Poison** | 減益 | 每回合 -1 HP（取代舊「凋零」） | **預設 3 回合，可更高**（必 > 灼燒） | 回合**結束**一次 | — |
 | 夜幕 | 增益 | 下回合首次受到的傷害減半 | 1 回合 | — | — |
 | 鍛強 | 增益 | ATK +2 | 2 回合 | — | — |
+| **衰弱** `[數位調整]` | 減益 | ATK −1(夾在 0 以上) | 依卡面 | — | — |
+
+> **衰弱的由來**:卡池設計稿有「防禦力 −1」「攻擊力 −1」兩種寫法,但 §4.2 的數值結構只有
+> ATK/HP。與其為了一個減益開第三個數值(卡面、HUD、AI 評估、連線同步全要動),
+> 一律收斂成 ATK −1。鍛強與衰弱**不互斥**(只有灼燒/凍結互斥),同時在身上就是淨 +1。
+
+### 9.3 護盾 `[數位調整]`
+
+**護盾不是狀態,是單位身上的一層「暫時 HP」**——沒有回合數、不會自然消退,吸完為止。
+之所以不塞進上面那張狀態表:狀態靠 `turns_left` 遞減,護盾靠被打才減少,tick 的時機完全不同。
+
+**在傷害管線的位置(順序是規則的一部分)**:
+
+```
+夜幕減半 → 鐵壁 −1 → 護盾吸收 → 扣 HP
+```
+
+減免**先**做、吸收**後**做。反過來排不會報錯,只會讓數值默默不對:
+10 點傷害打在「3 盾 + 夜幕 + 鐵壁」的單位上,盾先吸只擋下 7 點(掉 3 血),盾後吸擋下 9 點(掉 1 血)。
+通則:**每一層減免都要作用在「還沒被盾墊掉」的完整數字上**,兩層才都拿到最大價值。
+
+- 護盾擋掉的部分**不算「實際傷害」**:吸血回的是真正扣掉的 HP(盾不是血,砍在盾上沒有血可吸)。
+- 護盾存在**場上的單位實例**(`Card.shield`),不寫回共享的 `CardData`——寫回去會讓全場同名卡共用一面盾。
+- 卡面狀態列以 `盾N` 顯示，排在其他狀態之前（「還能擋幾點」比「減益剩幾回合」更影響當下決策）。
+  刻意不用 🛡 符號：專案字型 Noto Serif TC 不含 emoji 區段，貼上去是豆腐框。
 
 ### 9.1 灼燒 / 凍結互斥規則（火融冰、冰滅火）`[數位調整]`
 
@@ -349,10 +388,10 @@ func apply_freeze(unit, turns := 1) -> void:
 - [x] 棋盤程序生成：5×2 卡槽自動置中，玩家/敵方分別擺位並分群
 
 **資料與卡面**
-- [x] CardData 資料層：Resource + 24 張 `.tres`；DirAccess 掃卡池、發牌隨機 `setup()`（資料變、程式不變）
+- [x] CardData 資料層：Resource + 120 張 `.tres`；DirAccess 掃卡池、發牌隨機 `setup()`（資料變、程式不變）
 - [x] 卡片數值 Label3D（爐石式四角配置；z=0.02 + render_priority 解決手牌/上桌兩態的深度浮埋）
 - [x] 卡圖嵌入卡框挖空窗 + 遊戲王式召喚立牌（像素角色第 0 幀卡圖、入槽立牌待機動畫）
-- [x] 動畫驅動技能資料層：24 卡 `active_skill` / `keywords` 全接線（[§6.1](#61-動畫驅動技能animation-driven-skills-數位調整)）；卡面顯示技能名+費用+描述
+- [x] 動畫驅動技能資料層：120 卡 `active_skill` / `keywords` 全接線（[§6.1](#61-動畫驅動技能animation-driven-skills-數位調整)）；卡面顯示技能名+費用+描述
 - [x] 指令選單（純演出版）：點上桌單位 → 歧路旅人式選單 → 指定目標 → 施放/受擊動畫；結算走 `action_performed` 信號留給戰鬥系統
 - [x] 魔力與生命值（BattleManager）：魔力回合成長/召喚與技能費用檢查（§1/§3）、行動分離+召喚暈眩+衝鋒（§6）、雙向傷害交換與治療（§4.2）、死亡演出+卡槽清位；HUD 回合/魔力/結束回合
 - [x] 戰鬥回饋：飄浮傷害/治療數字、反擊受擊動畫、受擊綁「結算」不綁「宣告」
@@ -366,7 +405,8 @@ func apply_freeze(unit, turns := 1) -> void:
 - [x] 真牌堆（`deck.gd`）：雙方各一副 **60 張**（同名上限 3，§1）、抽完即空、兩疊牌堆掛剩量數字
 - [x] 熱座雙人（連線前置，ADR-001 後果清單完成）：雙方獨立魔力/牌堆/手牌帳（`SideState`）、回合歸屬（非行動方單位不能動、只能召喚自己那側）、結束回合＝換邊＋換手牌視圖；狀態效果改在持有者自己的回合階段 tick
 - [x] 連線 2a 大廳與骨架（`src/net/`）：主選單「連線對戰」→ 大廳欄（開房顯示本機 IP／輸 IP 加入）；ENet 建線、`_start_match` 握手 RPC（host 抽牌桌廣播 index）、host=player / client=enemy 寫進 `NetMatch`；headless 雙分支 loopback 實連驗證通過
-- [x] 法術卡型卡面（§7 前置）：秘術/瞬咒/靈裝/伏印各 1 張**樣本卡**入池（`data/cards/`）；非從者卡面＝圖示卡圖＋藏攻血＋卡型印章（`card.gd`）。像素圖示包歸位 `assets/ui/icons/`（Shikashi v1/v2 免署名；Antahonist **CC-BY 4.0 發佈時需掛名 "Icons by Andrey Kalyuzhnyy"**，見 [CREDITS.md](CREDITS.md)）
+- [x] 五類卡池完成（領域不啟用）：從者 66／靈裝 5／秘術 33／瞬咒 8／伏印 8，共 120 張；非從者卡面＝圖示卡圖＋藏攻血＋卡型印章（`card.gd`）。像素圖示包歸位 `assets/ui/icons/`（Shikashi v1/v2 免署名；Antahonist **CC-BY 4.0 發佈時需掛名 "Icons by Andrey Kalyuzhnyy"**，見 [CREDITS.md](CREDITS.md)）
+- [x] **9–13 費高階卡（2026-08-28）**：新增 28 張（9 費 7／10 費 6／11 費 6／12 費 6／13 費 3），包含從者、秘術、瞬咒、伏印與靈裝；自然魔力維持 7，終結卡靠丟牌回魔支付。六名新從者必有普通攻擊 `Attack01`，只有具主動技能者才另有 `Attack02`。
 - [x] **法術結算層（§7）**：秘術＝拖到敵方從者即結算（宣告即付費 §5.1 STEP1、潛行不可指定 §8）；**守方瞬咒反制窗口**（施放秘術時熱座面板詢問守方，發動＝抵銷、扣守方剩餘魔力並離手）；靈裝＝拖到我方從者附著（生命上限加成記在單位節點，宿主離場隨亡）；伏印＝蓋放進側帳資料層（§2 後排、不佔格），敵方召喚從者時觸發傷害。headless 驗收 14 斷言全過
 - [x] 通用命中爆點 3D 特效（`src/fx/fx_burst.gd`）：GPUParticles3D 純程式美術（emission 過 glow 門檻自動泛光），掛在 Card/Hero `take_damage` ＝所有傷害自動觸發
 - [x] 匯出管線（macOS）：export preset ＋ ETC2 ASTC（Universal 必需）＋ 匯出版 headless 啟動驗證；掛名清單 [CREDITS.md](CREDITS.md)（含待查證素材區）
@@ -378,12 +418,13 @@ func apply_freeze(unit, turns := 1) -> void:
 - [x] 程序化森林散佈（成簇樹叢、內圈淨空、PSX alpha 鏤空材質）+ 地形整修（溪流凹進地形、樹木落地、地景小物散佈、遠景土丘、世界邊界推遠配霧）
 - [x] 牌堆視覺（玩家右側卡背堆疊）
 - [x] 主選單（歧路旅人式：3D 城鎮背景 + 固定鏡頭 + 純文字選單）
+- [x] **完整設定系統（2026-08-31）**：視窗／全螢幕與 720p–1440p 解析度；低／中／高畫質實際調整 3D 渲染比例、MSAA、FXAA 與陰影圖；繁體中文／English 切換主選單、圖鑑分類、戰鬥 UI 與資料化卡牌效果；無障礙含 UI 100/125/150%、高對比、減少動態（主選單／設定面板皆可捲動與鍵盤導覽）。全部保存至 `user://settings.cfg`；`tests/settings_test.gd` 自動驗收加 720p 中英文／150% 實機截圖檢查。
 - [x] 戰場家族：洞窟 / 冰原 / 城鎮（ArenaBase 繼承 + ArenaPool 隨機輪替）
 - [x] 卡槽高亮著色器（鈴蘭之劍式：圓角雙框 SDF + 內緣漸層 + 拖曳懸停呼吸脈動發光；執行期掛材質、場景檔零改動）
 - [x] **牌桌構圖改版（2026-07-14）**：鏡頭沿中線一眼看穿「我方本體→我方卡槽→溪流→敵方卡槽→敵方本體」，歧路旅人式斜視角（俯角 36°、fov 50，截圖 harness 迭代定案後烘進 main.tscn）；手牌壓在畫面下緣只露卡頂、面向鏡頭攤開（hand 傾 -108° 與每張卡自帶 +55° 合成後法線對準視線），hover 抬升整張浮出（爐石式，`HOVER_LIFT`）；敵方卡槽改**鏡像**（前排貼中線——修正舊版「敵方前排反而離玩家更遠」的語意顛倒，全場 mid_z 歸 0）；本體改巫師 vs 死靈法師、鏡像站各自後排正後方 2.2；溪流置中 z=0（Stream 節點/ground_generator/forest_scatter 三處同步）、岸線蜿蜒收斂（bank_jitter 0.9→0.4）保證水帶最寬 ±1.7 不進前排卡槽（槽緣 ±1.74）；forest/caverns/frostlands 與 client 翻轉視角構圖皆截圖驗證
 - [x] **hover 卡片放大預覽＋卡面截斷**：hover 任何卡（手牌/桌上單位）→ 右側資訊卡（卡圖第 0 幀/名稱/費用/卡型/攻血含靈裝加成/關鍵字/技能全文，mouse_filter 全 IGNORE 不擋操作，來源卡被釋放自動收起）；卡面描述超過 5 行估算截斷加 …（全形 1/半形 0.5 字寬估算——不再壓到攻血列），全文交給預覽面板
 - [x] **伏印宿主制＋裝備替換＋技能三標籤標示（2026-07-17，對齊桌遊 v0.1 試玩回饋）**：伏印改「埋設在我方場上從者底下」（拖到從者＝埋設、一格一張、宿主陣亡未觸發伏印隨葬入墓 §7 FAQ）；埋設後**我方整排卡槽紅色脈動警戒**（前後排都亮＝威懾成立：對手知道有陷阱、不知道在誰底下；訊息也不報宿主名）；靈裝**一次一件新蓋舊**（舊裝加成收回、現血夾回上限、舊卡入墓）；技能三分類（強化攻擊/獨立攻擊/非攻擊——機制與卡池早已就位）補上**卡面/指令選單/hover 預覽**的標示。`tests/ward_equip_test.gd` 13 斷言＋全測回歸
-- [x] **墓地＋丟牌回魔（2026-07-16）**：所有離場的牌統一走 `BattleManager.bury()` 入土（死亡從者＋隨葬靈裝、用畢秘術/瞬咒、觸發的伏印、爆牌、棄牌）——埋點全在兩台會重放的函式裡，連線零新增同步；`GravePile` 雙墓視覺（牌堆旁、對角鏡射、躺著最後入土那張＋張數），拖手牌到墓地＝丟牌回魔（§1.1：Cost÷2 捨去、隔回合冷卻）；`tests/grave_test.gd` 14 斷言＋loopback 簽名一致。**殘留**：AI 不用丟牌回魔（既有債）、墓地內容查看面板未做（現只顯示最上張與張數）
+- [x] **墓地＋丟牌回魔（2026-07-16）**：所有離場的牌統一走 `BattleManager.bury()` 入土（死亡從者＋隨葬靈裝、用畢秘術/瞬咒、觸發的伏印、爆牌、棄牌）——埋點全在兩台會重放的函式裡，連線零新增同步；`GravePile` 雙墓視覺（牌堆旁、對角鏡射、躺著最後入土那張＋張數），拖手牌到墓地＝丟牌回魔（§1.1：Cost÷2 捨去、隔回合冷卻）；`tests/grave_test.gd` 14 斷言＋loopback 簽名一致。AI 也會在「棄牌後能立即解鎖更高價值行動」時使用回魔。**殘留**：墓地內容查看面板未做（現只顯示最上張與張數）
 - [x] **素材整理（2026-07-16）**：第三方素材包統一收 `assets/packs/`（snake_case、包內保留原結構）；清 ~82M 死重（未用字重 73M、構圖參考圖 8M→docs/、殘留複本與孤兒檔——匯出預設打包全部資源，死重會進 zip）；`docs/` 加 `.gdignore` 不被引擎掃描；驗證＝重掃＋三測試全綠＋洞窟/冰原/主選單截圖
 - [x] **景深 DOF（2026-07-15）**：HD-2D 微縮感——Camera3D 掛 `CameraAttributesPractical`（僅 far blur：20/5/0.08，遊戲資訊沿視線 4.8~18.5 全在對焦內；near 刻意不開，否則最先糊的是手牌）；透明物件（本體/召喚立牌、對手卡背）加 `ALPHA_CUT_OPAQUE_PREPASS` 寫深度，免被 DOF 拿背景深度當遠景糊；本體 HP 標籤改墊**深度錨定板**（Label3D 直接掛 alpha_cut 會黑字——字身/外框共面、render_priority 在深度管線失效）；截圖對比＋spell/hover/AI 三回歸驗證；純視覺驗證工具 `tests/screenshot.gd` 落籍
 
@@ -408,7 +449,7 @@ func apply_freeze(unit, turns := 1) -> void:
    - **實機驗收待做**：本機開兩個遊戲視窗走大廳連 `127.0.0.1` 對打一局（headless 已驗邏輯,UI/視角要人眼）；家用網路跑 `upnp_probe` 驗 UPnP 成功路徑＋真異地連入一局。
 3. **打磨與試玩** — 連線實測抓蟲、音效（出牌/攻擊/受擊至少三個）、數值平衡。
 4. **發佈** — Windows 匯出 preset（icon/版本號）＋ itch.io 或 GitHub Releases 下載頁。
-5. ~~**敵方 AI（單人練習模式）**~~ ✅ 完成（2026-07-15）：主選單「單人練習」→ `MatchMode.VS_AI`（static 旗標，仿 ArenaPool）；`EnemyAI` 設計成「另一個會按按鈕的玩家」——走連線重放同一條結算路（`_acting_locally()` 在 AI 回合回 false → `_net_summon`/`_net_action` 帳面路徑），召喚付得起的從者（前排優先）→ 每隻能動的單位普攻（先清場、路線無阻打臉）→ 自己結束回合；視圖鎖玩家側（AI 回合不攤牌、鎖操作）；守方瞬咒反制自動決策（不開人類面板）；對手手牌=卡背小扇形（本體身後）＋張數 HUD。headless 驗收 9 斷言全過。**殘留**：AI 不施放法術牌/不用主動技（握著當死牌）、無策略權重（無腦鋪場+順序攻擊）、丟牌回魔不用。
+5. ~~**敵方 AI（單人練習模式）**~~ ✅ 完成（2026-08-31 強化）：主選單「單人練習」→ `MatchMode.VS_AI`（static 旗標，仿 ArenaPool）；`EnemyAI` 走玩家同一條結算路，對手手牌仍以卡背與張數隱藏。AI 現會把手牌、全場技能與可攻擊目標生成合法候選並評分：施放目標/無目標/高階秘術，使用抽濾、靈裝、伏印與主動技能，優先斬殺、有利交換、受傷治療與高價值宿主；瞬咒保留反制，棄牌回魔只在能當回合解鎖更強行動時使用。AI 施法時的玩家瞬咒反制仍由玩家決定；AI 守方才自動反制。`tests/ai_turn_test.gd` 驗收完整回合，`tests/ai_strategy_test.gd` 以固定局面驗收秘術/靈裝/伏印/技能/棄牌回魔與優先級。
 6. **卡片從卡槽取回** — `card_slot.gd` 的 `remove_card()` 已寫好，但尚未接上互動（例如再次拖出或右鍵取消）。
 7. **CardData 欄位擴充** — 技能資料層與 24 張接線已完成；剩 `attack_range` / `Sacrifice`（[§4.1](#41-攻擊範圍-數位調整)、[§3](#3-召喚)）。
 8. **地形收尾** — meshlib 純草磚問題與空的 `Terrain` / `Cliffs` 節點；地形整修 commit（04f8bbf）後需重驗哪些仍存在。
@@ -418,7 +459,7 @@ func apply_freeze(unit, turns := 1) -> void:
 ## 開發備註
 
 - **回歸測試在 [tests/](tests/)**（headless SceneTree 腳本，曾放系統暫存被清掉兩次，故落籍版控）：
-  `Godot --headless --path . -s tests/spell_smoke.gd`（法術結算 14 斷言）、`tests/ai_turn_test.gd`（單人 vs AI 9 斷言）、`tests/hover_spam_test.gd`（手牌 hover 漂移/碰撞箱釘位）、`tests/grave_test.gd`（墓地＋丟牌回魔 14 斷言）、`tests/net_battle_test.gd`（雙進程連線 loopback：先開 host，再帶 `-- client` 開第二個進程，比對兩端簽名）。
+  `Godot --headless --path . -s tests/spell_smoke.gd`（法術結算 14 斷言）、`tests/ai_turn_test.gd`（單人 vs AI 完整回合）、`tests/ai_strategy_test.gd`（AI 秘術/靈裝/伏印/技能/棄牌回魔與優先級）、`tests/hover_spam_test.gd`（手牌 hover 漂移/碰撞箱釘位）、`tests/grave_test.gd`（墓地＋丟牌回魔 14 斷言）、`tests/net_battle_test.gd`（雙進程連線 loopback：先開 host，再帶 `-- client` 開第二個進程，比對兩端簽名）。
   另有幾支**非 CI 的工具腳本**：`tests/screenshot.gd` / `tests/screenshot_summon.gd`（非 headless 跑遊戲存 PNG，驗純視覺改動）、`tests/screenshot_leave.gd`（拍「離開對戰」確認窗，並印出面板實際尺寸；加 `-- <png> online` 拍連線版的長文案）、`tests/upnp_probe.gd`（實測目前網路的 UPnP 打洞，結果依環境而異）。
 - 在編輯器**外**新建帶 `class_name` 的腳本後，headless 跑會報「Identifier not declared」——全域類別註冊表（`.godot/global_script_class_cache.cfg`）由編輯器掃描生成，跑一次 `Godot --headless --editor --quit` 重掃即可。
 - `ground_generator.gd` 與 `forest_scatter.gd` 皆為 `@tool` 腳本：在編輯器調整 `@export` 後勾選 `regenerate` 即可即時重新生成，不必執行遊戲。

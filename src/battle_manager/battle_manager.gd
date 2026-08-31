@@ -18,10 +18,19 @@ signal unit_died(unit: Card)
 signal card_buried(side: String, cd: CardData)
 ## 伏印帳有變(CardManager 靠這條開關整排卡槽的紅色警戒)。
 signal wards_changed(side: String, count: int)
+## 規則層要求抽牌(巫師/邪眼魔的戰吼)。為什麼不直接抽:
+## draw_cards() 只動「帳」,手牌「視圖」的 stash 對帳與飛入動畫在 CardManager 那邊
+## (§28 帳/視圖分離)。帳房不該知道視圖怎麼演,所以喊一聲、讓 CardManager 走它既有的
+## _apply_draw 單一入口——連線重放與熱座也就自動沿用同一條路。
+signal draw_requested(n: int)
+## 規則層產生的反應訊息（自動伏印／瞬咒等）交給 CardManager 顯示。
+signal battle_message(text: String)
 ## 勝負已分("player" = 玩家贏)。
 signal game_over(winner: String)
 
-const MANA_CAP := 10
+const MANA_CAP := 7
+## F8 測卡沙盒的獨立上限。正式規則仍是 7；這個值不會進入線上或 Release 對局。
+const DEBUG_MANA_CAP := 10
 ## 卡槽群組(player_board 生成卡槽時分好的):查單位在哪個槽、站哪邊都靠它。
 const SLOT_GROUPS: Array[String] = [
 	"player_front", "player_back", "enemy_front", "enemy_back"]
@@ -53,6 +62,8 @@ class SideState:
 	var grave: Array[CardData] = []
 	## 丟牌回魔冷卻(§1.1):0=可用;使用設 2、自己回合開始 -1 → 隔回合一次。
 	var discard_cd: int = 0
+	## F8 沙盒只掛在被準備的側別：固定 10 上限，並開放墓地直接捨棄。
+	var debug_test_mode: bool = false
 
 var turn: int = 1
 var active_side: String = "player"   # 現在輪到誰行動(回合歸屬)
@@ -86,9 +97,12 @@ func _active() -> SideState:
 	return sides[active_side]
 
 
-## 輪到某一側的回合開始:魔力上限 +1(封頂)並回滿(未用不保留,§1)。
+## 輪到某一側的回合開始:正式規則上限 +1；F8 沙盒則固定回滿 10/10。
 func _begin_side_turn(st: SideState) -> void:
-	st.mana_max = mini(MANA_CAP, st.mana_max + 1)
+	if st.debug_test_mode:
+		st.mana_max = DEBUG_MANA_CAP
+	else:
+		st.mana_max = mini(MANA_CAP, st.mana_max + 1)
 	st.mana = st.mana_max
 	st.temp_mana = 0   # 暫時魔力被「回滿」洗掉:帳中帳跟著歸零(§1.1)
 	st.discard_cd = maxi(0, st.discard_cd - 1)   # 丟牌回魔冷卻:自己回合開始 -1(§1.1)
@@ -132,6 +146,79 @@ func hand_of(side: String) -> Array[CardData]:
 	return (sides[side] as SideState).hand
 
 
+## Debug 離線測卡:把指定卡移進手牌，並為該側啟用 10/10 魔力沙盒。
+## 這裡只改「帳」;CardManager 呼叫前會先 stash 視圖、呼叫後再 rebuild。
+## 線上禁用:client 本地塞牌會和權威帳分家,也等同作弊。
+func debug_prepare_card(side: String, card_path: String) -> Dictionary:
+	var result := {
+		"ok": false, "reason": "", "added": false,
+		"replaced": "", "replacement_note": "", "card": null,
+	}
+	if not OS.is_debug_build():
+		result.reason = "僅 Debug 版本可使用測卡功能"
+		return result
+	if NetMatch.is_online or NetMatch.is_dedicated_server:
+		result.reason = "連線對局停用測卡功能,避免雙方帳目不同步"
+		return result
+	if not sides.has(side):
+		result.reason = "找不到測試側別:%s" % side
+		return result
+	if not ResourceLoader.exists(card_path):
+		result.reason = "找不到測試卡:%s" % card_path
+		return result
+	var cd := load(card_path) as CardData
+	if cd == null:
+		result.reason = "測試資源不是 CardData:%s" % card_path
+		return result
+
+	var st := sides[side] as SideState
+	var already_held := false
+	for held in st.hand:
+		if held.resource_path == cd.resource_path:
+			cd = held
+			already_held = true
+			break
+	if not already_held:
+		# 優先把牌堆裡原有的那一份搬進手牌;沒有時移除一張牌堆底卡來維持總張數。
+		var deck_index := -1
+		for i in range(st.deck.size()):
+			if st.deck[i].resource_path == cd.resource_path:
+				deck_index = i
+				break
+		if deck_index >= 0:
+			cd = st.deck[deck_index]
+			st.deck.remove_at(deck_index)
+		elif not st.deck.is_empty():
+			st.deck.pop_front()
+		elif not st.hand.is_empty():
+			# 牌堆已空時改成原位替換一張手牌;不憑空增加這局的總牌數。
+			var displaced: CardData = st.hand.pop_back()
+			result.replaced = displaced.card_name
+			result.replacement_note = "(牌堆已空,以【%s】替換)" % displaced.card_name
+		else:
+			result.reason = "牌堆與手牌都已空,沒有可替換的測試牌位置"
+			return result
+		# 滿手時把最右一張放回牌堆底,測卡不直接燒掉玩家原本的牌。
+		if st.hand.size() >= MAX_HAND:
+			var returned: CardData = st.hand.pop_back()
+			result.replaced = returned.card_name
+			result.replacement_note = "(滿手,已把【%s】放回牌堆底)" % returned.card_name
+			st.deck.push_front(returned)
+		st.hand.append(cd)
+		result.added = true
+
+	st.debug_test_mode = true
+	st.mana_max = DEBUG_MANA_CAP
+	st.mana = DEBUG_MANA_CAP
+	st.temp_mana = 0
+	st.discard_cd = 0
+	result.ok = true
+	result.card = cd
+	if side == active_side:
+		_emit_state()
+	return result
+
+
 func deck_count(side: String) -> int:
 	return (sides[side] as SideState).deck.size() if sides.has(side) else 0
 
@@ -155,6 +242,20 @@ func grave_count(side: String) -> int:
 func grave_top(side: String) -> CardData:
 	var g: Array[CardData] = (sides[side] as SideState).grave
 	return g.back() if not g.is_empty() else null
+
+
+## 只有 F8 離線沙盒可以把手牌直接丟進真正的墓地；不增加魔力、也不碰回魔冷卻。
+func is_debug_test_mode(side: String) -> bool:
+	if not OS.is_debug_build() or NetMatch.is_online or NetMatch.is_dedicated_server:
+		return false
+	return sides.has(side) and (sides[side] as SideState).debug_test_mode
+
+
+func debug_discard_to_grave(side: String, cd: CardData) -> bool:
+	if cd == null or not is_debug_test_mode(side):
+		return false
+	bury(side, cd)
+	return true
 
 
 ## ── 丟牌回魔(§1.1)───────────────────────────────
@@ -186,7 +287,7 @@ func slot_side(slot: CardSlot) -> String:
 
 
 ## ── 回合 ──────────────────────────────────────────
-## 結束回合:回合 +1、魔力上限 +1(封頂 10)並回滿(未用魔力不保留,§1)、
+## 結束回合:回合 +1、魔力上限 +1(封頂 7)並回滿(未用魔力不保留,§1)、
 ## 全場單位的行動旗標歸零。敵方 AI 動工前,這顆按鈕就等於「下一回合」。
 ## 結束回合 = 換邊(熱座):行動方的結束階段 → 換邊 → 新行動方的開始階段+抽牌。
 ## 回傳 {"drawn": CardData|null, "burned": bool} 給 CardManager 做提示。
@@ -206,6 +307,12 @@ func end_turn() -> Dictionary:
 			u.summoned_this_turn = false
 			u.iron_wall_used_this_turn = false
 			u.decay_statuses()
+			# 靈裝的開始階段效果跟著宿主結算；一格只能穿一件，所以逐件寫仍可安全擴充。
+			for equipment in u.equipped_cards:
+				if equipment.turn_start_heal > 0:
+					u.heal(equipment.turn_start_heal)
+				if equipment.turn_start_shield > 0:
+					u.add_shield(equipment.turn_start_shield)
 	# 抽牌階段(§5):走 draw_cards 單一入口——爆牌規則只寫一份,法術抽牌同款。
 	var d := draw_cards(active_side, 1)
 	var result := {"drawn": null, "burned": d.burned > 0}
@@ -307,20 +414,88 @@ func _tick_dot_side(side: String, phase_start: bool) -> void:
 ## 回傳觸發訊息(空字串 = 沒有伏印),CardManager 拿去 flash 給玩家看。
 func mark_summoned(unit: Card) -> String:
 	unit.summoned_this_turn = true
-	var owner_side := "enemy" if active_side == "player" else "player"
+	var summoned_side := side_of(unit)
+	var owner_side := "enemy" if summoned_side == "player" else "player"
+	var summon_counter := quick_candidate(owner_side, &"summon")
+	if summon_counter != null:
+		consume_quick(owner_side, summon_counter)
+		var slot := _find_slot(unit)
+		if slot != null:
+			slot.on_unit_died()
+		bury(summoned_side, unit.data)
+		unit_died.emit(unit)
+		unit.die()
+		return "召喚【%s】被瞬咒【%s】否決！" % [unit.data.card_name, summon_counter.card_name]
+	# 戰吼先於伏印結算。順序有實質差別,不是隨便排的:
+	# 黑騎士 A 的【暗影護甲】(登場 +2 護盾)必須先掛上,才擋得住緊接著引爆的伏印傷害。
+	# 反過來排,「登場就有盾」這句話在最需要它的那一刻剛好沒作用。
+	var msg := _resolve_battlecry(unit)
 	var traps: Array[Dictionary] = (sides[owner_side] as SideState).wards
 	if traps.is_empty():
-		return ""
+		return msg
 	# §5.1 簡化原則:一次觸發一張(先蓋的先發)。
-	var entry: Dictionary = traps.pop_front()
+	var trigger_i := -1
+	for i in range(traps.size()):
+		var candidate: CardData = traps[i].cd
+		# 舊伏印 special_id 為空，維持「敵方召喚時」的既有行為；事件型伏印留待自己的事件。
+		if candidate.special_id == &"":
+			trigger_i = i
+			break
+	if trigger_i < 0:
+		return msg
+	var entry: Dictionary = traps[trigger_i]
+	traps.remove_at(trigger_i)
 	var trap: CardData = entry.cd
 	bury(owner_side, trap)   # 伏印用掉即入土(§7)
 	wards_changed.emit(owner_side, traps.size())
 	var dmg := trap.active_skill.power if trap.active_skill != null else 0
 	_deal_damage(unit, dmg, false)
 	_check_death(unit)
-	return "伏印【%s】觸發:對召喚的【%s】造成 %d 點傷害!" % [
+	var trap_msg := "伏印【%s】觸發:對召喚的【%s】造成 %d 點傷害!" % [
 		trap.card_name, unit.data.card_name, dmg]
+	return trap_msg if msg.is_empty() else msg + "\n" + trap_msg
+
+
+## 戰吼:召喚落地時自動結算一次 data.battlecry(null = 沒有戰吼)。
+## 回傳給 UI 的訊息(空字串 = 沒觸發)。
+##
+## 為什麼掛在 mark_summoned 而不是出牌按鈕那邊:這裡是**所有召喚的必經之路**——
+## 手動出牌、從者的召喚技(_resolve_summon)、召喚系秘術(summon_for_side)、
+## 連線重放端生單位,四條路最後都會經過它。接一個點,四種情境一起生效;
+## 接在出牌按鈕上,則「死靈法師召出來的骷髏」永遠不會觸發自己的戰吼。
+## (和伏印觸發挑同一個點是同一個理由,不是巧合。)
+func _resolve_battlecry(unit: Card) -> String:
+	if unit.data == null or unit.data.battlecry == null:
+		return ""
+	var bc: SkillData = unit.data.battlecry
+	match bc.effect:
+		SkillData.Effect.SUMMON:
+			_resolve_summon(unit, bc)
+		SkillData.Effect.DRAW:
+			draw_requested.emit(bc.amount)   # 視圖那半交給 CardManager(見信號註解)
+		_:
+			_apply_skill_effect(unit, bc, null)
+	var label := bc.description if bc.description != "" else bc.skill_name
+	return "【%s】的戰吼:%s" % [unit.data.card_name, label]
+
+
+## 正對面那一路的敵方前排單位(戰吼指定 LANE_ENEMY 時用;沒有就回 null)。
+## 路線對位一律用 x 座標找最近的對面格,不寫死欄號——和 _lane_blocked 同一把尺。
+func _lane_opposite(unit: Card) -> Card:
+	var my_slot := _find_slot(unit)
+	if my_slot == null:
+		return null
+	var opposing := "enemy_front" if side_of(unit) == "player" else "player_front"
+	var nearest: CardSlot = null
+	var best := INF
+	for slot in get_tree().get_nodes_in_group(opposing):
+		if slot is CardSlot:
+			var dx: float = absf(
+				(slot as CardSlot).global_position.x - my_slot.global_position.x)
+			if dx < best:
+				best = dx
+				nearest = slot
+	return nearest.card_in_slot if nearest != null else null
 
 
 ## ── 法術結算(§7 非從者卡;由 CardManager 的出牌流程呼叫)──────────
@@ -336,6 +511,9 @@ func mark_summoned(unit: Card) -> String:
 func cast_arcana(card: CardData, target: Card) -> String:
 	if not is_instance_valid(target) or card.active_skill == null:
 		return ""
+	var ward_result := trigger_target_ward(target, &"arcana", null)
+	if bool(ward_result.cancelled):
+		return str(ward_result.message)
 	var sk: SkillData = card.active_skill
 	match sk.effect:
 		SkillData.Effect.HEAL:
@@ -349,7 +527,7 @@ func cast_arcana(card: CardData, target: Card) -> String:
 				_resolve_attack(null, target, sk.power, false, sk.modifier, false)
 				msg += "造成 %d 點傷害並" % sk.power
 			if is_instance_valid(target):
-				target.add_status(sk.status, sk.status_turns)
+				_apply_timed_status(target, sk.status, sk.status_turns)
 			return msg + "施加【%s】%d 回合" % [
 				Card.STATUS_NAMES.get(sk.status, "狀態"), sk.status_turns]
 		_:
@@ -391,16 +569,27 @@ func attach_equip(card: CardData, target: Card) -> String:
 		return ""
 	var replaced := ""
 	for old in target.equipped_cards:
-		if old.active_skill != null:
-			target.max_hp_bonus -= old.active_skill.amount
+		target.max_hp_bonus -= _equip_hp_value(old)
+		target.equip_atk_bonus -= old.equip_atk_bonus
 		bury(side_of(target), old)
 		replaced = old.card_name
 	target.equipped_cards.clear()
 	target.clamp_hp()   # 舊裝拆了上限縮水,現血夾回上限(6/6+2 拆裝 → 4/4)
-	target.max_hp_bonus += card.active_skill.amount
-	target.heal(card.active_skill.amount)
+	var hp_bonus := _equip_hp_value(card)
+	target.max_hp_bonus += hp_bonus
+	target.equip_atk_bonus += card.equip_atk_bonus
+	target.heal(hp_bonus)
 	target.equipped_cards.append(card)   # 記在宿主身上:宿主陣亡時靈裝隨葬(§7)
 	return replaced
+
+
+func _equip_hp_value(card: CardData) -> int:
+	# 舊版秘銀胸鎧只把生命加成寫在 active_skill.amount；新卡使用明確欄位。
+	if card == null:
+		return 0
+	if card.equip_hp_bonus != 0 or card.special_id != &"":
+		return card.equip_hp_bonus
+	return card.active_skill.amount if card.active_skill != null else 0
 
 
 ## 伏印(§7 宿主制):埋設在「我方場上從者」底下,等對方召喚時觸發(mark_summoned)。
@@ -423,14 +612,94 @@ func host_has_ward(unit: Card) -> bool:
 	return false
 
 
-## 守方手上第一張「付得起」的瞬咒(§5.1 反制窗口用;沒有就回 null)。
-## 守方用的是帳上的手牌(熱座時他的牌已 stash 回帳)與帳上的剩餘魔力。
-func quick_candidate(defender: String) -> CardData:
-	var st: SideState = sides[defender]
-	for cd in st.hand:
-		if cd.card_type == CardData.CardType.QUICK and st.mana >= cd.cost:
+## 取出並消耗宿主底下指定類型的伏印。回傳 CardData 讓觸發端組訊息；找不到回 null。
+func _take_host_ward(host: Card, special: StringName) -> CardData:
+	if not is_instance_valid(host):
+		return null
+	var side := side_of(host)
+	if side.is_empty():
+		return null
+	var traps: Array[Dictionary] = (sides[side] as SideState).wards
+	for i in range(traps.size()):
+		if traps[i].host == host and (traps[i].cd as CardData).special_id == special:
+			var cd: CardData = traps[i].cd
+			traps.remove_at(i)
+			bury(side, cd)
+			wards_changed.emit(side, traps.size())
 			return cd
 	return null
+
+
+## 指定／受攻擊事件的伏印入口。cancel=true 代表原本的秘術或技能不再結算。
+func trigger_target_ward(host: Card, event: StringName, source: Card) -> Dictionary:
+	var wanted: Array[StringName] = []
+	if event in [&"arcana", &"skill"]:
+		wanted = [&"ward_decoy", &"ward_mirror_prison"]
+	elif event == &"attacked":
+		wanted = [&"ward_bloodthorn"]
+	for special in wanted:
+		var ward := _take_host_ward(host, special)
+		if ward == null:
+			continue
+		var ward_owner := side_of(host)
+		var opposing := "enemy" if ward_owner == "player" else "player"
+		var denial := quick_candidate(opposing, &"ward")
+		if denial != null:
+			consume_quick(opposing, denial)
+			var denied_message := "瞬咒【%s】否決了伏印【%s】的觸發！" % [
+				denial.card_name, ward.card_name]
+			battle_message.emit(denied_message)
+			return {"cancelled": false, "message": denied_message}
+		match special:
+			&"ward_bloodthorn":
+				if is_instance_valid(source):
+					_deal_damage(source, 5, false)
+					if source.current_hp > 0:
+						_apply_timed_status(source, SkillData.Status.POISON, 3)
+					_check_death(source)
+				return {"cancelled": false, "message": "伏印【%s】觸發：攻擊者受到 5 點傷害與中毒 3！" % ward.card_name}
+			&"ward_decoy":
+				var side := side_of(host)
+				var origin := _find_slot(host)
+				var empty := _nearest_empty_slot(side, origin)
+				if empty != null:
+					var decoy := spawn_unit(load("res://data/cards/tokens/decoy_puppet_token.tres"), empty)
+					if decoy != null:
+						mark_summoned(decoy)
+				return {"cancelled": true, "message": "伏印【%s】取消了指定並召喚【替身秘偶】！" % ward.card_name}
+			&"ward_mirror_prison":
+				if is_instance_valid(source):
+					_apply_timed_status(source, SkillData.Status.FREEZE, 1)
+				return {"cancelled": true, "message": "伏印【%s】取消了指定，並凍結來源 1 回合！" % ward.card_name}
+	return {"cancelled": false, "message": ""}
+
+
+## 守方手上第一張「付得起」的瞬咒(§5.1 反制窗口用;沒有就回 null)。
+## 守方用的是帳上的手牌(熱座時他的牌已 stash 回帳)與帳上的剩餘魔力。
+func quick_candidate(defender: String, event: StringName = &"arcana") -> CardData:
+	var st: SideState = sides[defender]
+	for cd in st.hand:
+		if cd.card_type == CardData.CardType.QUICK and st.mana >= cd.cost \
+				and _quick_supports_event(cd, event):
+			return cd
+	return null
+
+
+func _quick_supports_event(card: CardData, event: StringName) -> bool:
+	match card.special_id:
+		&"quick_royal_decree":
+			return event == &"arcana"
+		&"quick_time_gap":
+			return event == &"normal_attack"
+		&"quick_causality":
+			return event == &"attack_skill"
+		&"quick_soul_substitution":
+			return event == &"lethal"
+		&"quick_absolute_denial":
+			return event in [&"arcana", &"summon", &"normal_attack", &"attack_skill", &"skill", &"ward"]
+		_:
+			# 既有三張瞬咒沒有 special_id，仍只反制秘術。
+			return event == &"arcana"
 
 
 ## 守方發動瞬咒:扣魔力、離手(§5.1;抵銷的效果由呼叫端決定「不結算」來實現)。
@@ -440,6 +709,90 @@ func consume_quick(defender: String, quick: CardData) -> void:
 	st.hand.erase(quick)
 	bury(defender, quick)   # 瞬咒用掉即入土(§7);熱座/連線都經過這裡,埋一次就好
 	_emit_state()
+	if quick.special_id == &"quick_royal_decree":
+		draw_cards(defender, 2)
+
+
+## 無目標高階秘術的複合結算。回傳一句公開戰報，資料層仍以 special_id 決定行為。
+func resolve_special_arcana(card: CardData, side: String) -> String:
+	if card == null or side.is_empty():
+		return ""
+	var foe := "enemy" if side == "player" else "player"
+	match card.special_id:
+		&"arcana_skyfire_fall":
+			for unit in _units_of_side(foe):
+				_deal_damage(unit, 4, false)
+				if unit.current_hp > 0:
+					_apply_timed_status(unit, SkillData.Status.BURN, 1)
+				_check_death(unit)
+			return "敵方全體受到 4 點傷害與灼燒 1"
+		&"arcana_allforge":
+			for unit in _units_of_side(side):
+				unit.add_status(SkillData.Status.FORGE, 2)
+				unit.add_shield(2)
+			return "我方全體獲得鍛強 2 與 2 點護盾"
+		&"arcana_eternal_winter":
+			for unit in _units_of_side(foe):
+				_deal_damage(unit, 2, false)
+				if unit.current_hp > 0:
+					_apply_timed_status(unit, SkillData.Status.FREEZE, 1)
+				_check_death(unit)
+			return "敵方全體受到 2 點傷害並凍結 1 回合"
+		&"arcana_soul_harvest":
+			var total_dealt := 0
+			for unit in _units_of_side(foe):
+				total_dealt += _deal_damage(unit, 4, false)
+				_check_death(unit)
+			var healed := mini(total_dealt, 6)
+			var hero := _hero_of(side)
+			if hero != null:
+				hero.heal(healed)
+			return "敵方全體受到 4 點傷害；本體恢復 %d" % healed
+		&"arcana_dead_army_gate":
+			var summoned := 0
+			for slot in get_tree().get_nodes_in_group(side + "_front"):
+				if slot is CardSlot and (slot as CardSlot).is_empty:
+					var unit := spawn_unit(load("res://data/cards/tokens/tomb_guard_token.tres"), slot)
+					if unit != null:
+						mark_summoned(unit)
+						summoned += 1
+			return "前排空位召喚了 %d 名墓衛" % summoned
+		&"arcana_starsea_rewind":
+			var st := sides[side] as SideState
+			var recovered: Array[CardData] = []
+			for i in range(mini(5, st.grave.size())):
+				recovered.append(st.grave.pop_back())
+			# 不用全域 RNG：依資源路徑固定排序後均勻插回，連線兩端結果必定一致。
+			recovered.sort_custom(func(a: CardData, b: CardData) -> bool:
+				return a.resource_path < b.resource_path)
+			for i in range(recovered.size()):
+				var at := int((i + 1) * float(st.deck.size() + 1) / float(recovered.size() + 1))
+				st.deck.insert(clampi(at, 0, st.deck.size()), recovered[i])
+			draw_requested.emit(3)
+			var hero := _hero_of(side)
+			if hero != null:
+				hero.heal(5)
+			return "墓地頂 %d 張洗回牌堆、抽 3、恢復本體 5" % recovered.size()
+		&"arcana_end_ritual":
+			var destroyed := 0
+			var all_units: Array[Card] = []
+			for slot in _all_slots():
+				if slot.card_in_slot != null:
+					all_units.append(slot.card_in_slot)
+			for unit in all_units:
+				if not is_instance_valid(unit):
+					continue
+				unit.current_hp = 0
+				unit.clamp_hp()
+				_check_death(unit)
+				if side_of(unit).is_empty():
+					destroyed += 1
+			var healed := mini(destroyed, 10)
+			var hero := _hero_of(side)
+			if hero != null:
+				hero.heal(healed)
+			return "消滅 %d 名從者；本體恢復 %d" % [destroyed, healed]
+	return ""
 
 
 ## ── 本體與勝負 ─────────────────────────────────────
@@ -468,7 +821,7 @@ func face_block_reason(attacker: Card, hero: Hero, skill: SkillData) -> String:
 	if hero.side == side_of(attacker):
 		return "不能指定自己的本體。"
 	# 【飛行】無視路線阻擋與守護,直擊本體(§8;守護是阻擋的一種,一併無視)。
-	if attacker.data.keywords.has(&"飛行"):
+	if attacker.has_keyword(&"飛行"):
 		return ""
 	# §8.1 守護型嘲諷:嘲諷單位守自己+左右相鄰路線,先打它才能打臉。
 	var guard := _taunt_guarding(attacker)
@@ -487,7 +840,7 @@ func _taunt_guarding(attacker: Card) -> Card:
 	var opposing := "enemy_front" if side_of(attacker) == "player" else "player_front"
 	for slot in get_tree().get_nodes_in_group(opposing):
 		if slot is CardSlot and slot.card_in_slot != null \
-				and slot.card_in_slot.data.keywords.has(&"嘲諷"):
+				and slot.card_in_slot.has_keyword(&"嘲諷"):
 			var dx: float = absf(slot.global_position.x - my_slot.global_position.x)
 			if dx < LANE_ADJACENT_X:
 				return slot.card_in_slot
@@ -522,7 +875,7 @@ func attack_block_reason(unit: Card) -> String:
 		return "凍結中:無法攻擊(§9)。"
 	if unit.attacked_this_turn:
 		return "本回合已攻擊過。"
-	if unit.summoned_this_turn and not unit.data.keywords.has(&"衝鋒"):
+	if unit.summoned_this_turn and not unit.has_keyword(&"衝鋒"):
 		return "召喚暈眩:剛上場,下回合才能攻擊。"
 	return ""
 
@@ -541,7 +894,7 @@ func skill_block_reason(unit: Card) -> String:
 	if skill.kind == SkillData.Kind.ENHANCED_ATTACK and unit.attacked_this_turn:
 		return "強化攻擊需要本回合的攻擊(已用掉)。"
 	if skill.kind == SkillData.Kind.INDEPENDENT_ATTACK \
-			and unit.summoned_this_turn and not unit.data.keywords.has(&"衝鋒"):
+			and unit.summoned_this_turn and not unit.has_keyword(&"衝鋒"):
 		return "召喚暈眩:獨立攻擊視同攻擊,下回合才能用。"
 	if _active().mana < skill.cost:
 		return "魔力不足(需要 ◆%d,現有 %d)。" % [skill.cost, _active().mana]
@@ -560,6 +913,32 @@ func on_action_performed(caster: Card, skill: SkillData, target: Node3D) -> void
 			caster.attacked_this_turn = true   # 強化攻擊 = 用掉本回合的攻擊(§6)
 		_pay(_active(), skill.cost)
 	_emit_state()
+	# 守方的事件型瞬咒。這裡採自動發動，兩端只靠同一份手牌與魔力即可重放，
+	# 不需要在攻擊動畫中途再開一條容易分岔的網路確認流程。
+	var defender_side := ""
+	if target is Card:
+		defender_side = side_of(target as Card)
+	elif target is Hero:
+		defender_side = (target as Hero).side
+	var action_event: StringName = &"normal_attack" if skill == null else \
+		(&"skill" if skill.kind == SkillData.Kind.NON_ATTACK else &"attack_skill")
+	var reaction: CardData = quick_candidate(defender_side, action_event) \
+		if not defender_side.is_empty() else null
+	var time_gap := false
+	if reaction != null:
+		consume_quick(defender_side, reaction)
+		battle_message.emit("瞬咒【%s】發動！" % reaction.card_name)
+		if reaction.special_id == &"quick_absolute_denial":
+			return
+		time_gap = reaction.special_id == &"quick_time_gap"
+
+	# 指向從者的技能先檢查鏡牢／替身；普通攻擊則檢查血棘。
+	if target is Card:
+		var ward_event: StringName = &"attacked" if skill == null else &"skill"
+		var ward_result := trigger_target_ward(target as Card, ward_event, caster)
+		if bool(ward_result.cancelled):
+			battle_message.emit(str(ward_result.message))
+			return
 	# 2) 等攻擊動畫揮到一半再扣血,數字跟拳頭一起落地。
 	await get_tree().create_timer(0.35).timeout
 	if not is_instance_valid(caster) or not is_instance_valid(target):
@@ -576,26 +955,104 @@ func on_action_performed(caster: Card, skill: SkillData, target: Node3D) -> void
 	elif skill.kind == SkillData.Kind.INDEPENDENT_ATTACK:
 		dmg = skill.power   # 額外攻擊:不觸發反擊
 	else:
-		# 非攻擊技:治療 / 上狀態 / 召喚(§6【非攻擊】)。
-		match skill.effect:
-			SkillData.Effect.HEAL:
-				if target is Card:
-					(target as Card).heal(skill.amount)
-			SkillData.Effect.APPLY_STATUS:
-				if target is Card:
-					(target as Card).add_status(skill.status, skill.status_turns)
-			SkillData.Effect.SUMMON:
-				_resolve_summon(caster, skill)
+		# 非攻擊技:治療 / 護盾 / 上狀態 / 召喚(§6【非攻擊】)。
+		if skill.effect == SkillData.Effect.SUMMON:
+			_resolve_summon(caster, skill)
+		else:
+			_apply_skill_effect(caster, skill, target)
 		return
+	if reaction != null and reaction.special_id == &"quick_causality":
+		_deal_damage(caster, dmg, false)
+		_check_death(caster)
+		return
+	if time_gap:
+		dmg = 0
 	if target is Hero:
 		(target as Hero).take_damage(dmg)   # 打臉不吃反擊(§4.2)
 		return
 	var mod := SkillData.Modifier.NONE if skill == null else skill.modifier
+	if skill == null and caster.has_equipped_lifesteal():
+		mod = SkillData.Modifier.LIFESTEAL
 	_resolve_attack(caster, target as Card, dmg, retaliate, mod)
-	# 攻擊技的附帶狀態(火球術的灼燒):傷害落地後、目標還活著才上。
-	if skill != null and skill.effect == SkillData.Effect.APPLY_STATUS \
-			and is_instance_valid(target) and target is Card:
-		(target as Card).add_status(skill.status, skill.status_turns)
+	# 攻擊技的附帶效果(火球術的灼燒、戰騎突擊的自身護盾、狂暴衝鋒的自身鍛強):
+	# 一律等傷害落地才結算——打敵方的 debuff 要目標還活著才上,不然是替屍體掛狀態。
+	if skill != null and skill.effect != SkillData.Effect.NONE:
+		_apply_skill_effect(caster, skill, target)
+
+
+## 技能效果的統一結算:**做什麼**由 skill.effect 決定、**對誰做**由 skill.effect_target 決定。
+## 非攻擊技的主體效果、攻擊技的附帶效果、戰吼,三條路都走這一份——
+## 分開寫的話,每加一種 Effect 就得記得改三個地方(這次加護盾就是被這件事逼出來的)。
+func _apply_skill_effect(caster: Card, skill: SkillData, target: Node3D) -> void:
+	for who in _effect_recipients(caster, skill, target):
+		if not is_instance_valid(who):
+			continue
+		match skill.effect:
+			SkillData.Effect.HEAL:
+				if who is Card:
+					(who as Card).heal(skill.amount)
+				elif who is Hero:
+					(who as Hero).heal(skill.amount)
+			SkillData.Effect.SHIELD:
+				if who is Card:
+					(who as Card).add_shield(skill.amount)
+			SkillData.Effect.APPLY_STATUS:
+				if who is Card:
+					_apply_timed_status(who as Card, skill.status, skill.status_turns)
+
+
+## 凍結 1 回合若施加在「下一個才要行動」的敵人身上,不能在它緊接著的開始階段
+## 立刻 -1 消失。用一次性旗標跳過那次遞減,資料與狀態列仍能如實保持「1」。
+func _apply_timed_status(target: Card, status: SkillData.Status, turns: int) -> void:
+	var target_side := side_of(target)
+	var defer_first_decay := status == SkillData.Status.FREEZE \
+		and not target_side.is_empty() and target_side != active_side
+	target.add_status(status, turns, defer_first_decay)
+
+
+## 效果的收受者清單。回傳陣列而不是單一節點,是因為 ADJACENT_ALLIES 一次打到好幾個;
+## 其餘型別就是「只有一個元素的陣列」——呼叫端不必為多目標另開一條路。
+func _effect_recipients(caster: Card, skill: SkillData, target: Node3D) -> Array[Node3D]:
+	var out: Array[Node3D] = []
+	match skill.effect_target:
+		SkillData.Target.SELF:
+			if is_instance_valid(caster):
+				out.append(caster)
+		SkillData.Target.ADJACENT_ALLIES:
+			# 騎士【守護】:左右相鄰路線的友軍。_adjacent_lane_units 掃的是「同一排」,
+			# 從我方單位出發掃到的自然是友軍,不必另寫一套敵我判斷。
+			if is_instance_valid(caster):
+				for u in _adjacent_lane_units(caster):
+					out.append(u)
+		SkillData.Target.ALLY_HERO:
+			var hero := _hero_of(side_of(caster))
+			if hero != null:
+				out.append(hero)
+		SkillData.Target.LANE_ENEMY:
+			# 主動技:玩家(或 AI)在宣告階段指定的那一個目標。
+			# 戰吼沒有宣告階段(target 傳 null)→ 退回「正對面那一路的敵人」。
+			# 設計稿原文是「敵方**隨機**一個單位」,這裡刻意去隨機:連線對戰要兩台
+			# 同步 RNG seed 才不會讓帳分岔,成本遠大於隨機買到的那點刺激(同【不滅】的取捨)。
+			if is_instance_valid(target):
+				out.append(target)
+			elif is_instance_valid(caster):
+				var opp := _lane_opposite(caster)
+				if opp != null:
+					out.append(opp)
+		_:
+			# ALLY:玩家指定的友軍(治療系)。
+			if is_instance_valid(target):
+				out.append(target)
+	return out
+
+
+## 某一側的本體節點(戰吼「恢復己方英雄」用)。
+func _hero_of(side: String) -> Hero:
+	if side == "player":
+		return player_hero
+	if side == "enemy":
+		return enemy_hero
+	return null
 
 
 ## §4.2 雙向傷害交換:「同時結算」——反擊值用交戰前的數值先記下、再一起扣,
@@ -624,6 +1081,12 @@ func _resolve_attack(attacker: Card, defender: Card, dmg: int, retaliate: bool,
 		for u in _adjacent_lane_units(defender):
 			_deal_damage(u, dmg, minion_attack)
 			_check_death(u)
+	# 全體:守方場上所有其他單位各吃一份(前後排都算)。
+	# 和橫掃共用「副目標不反擊、不吃附帶狀態」的規矩——差別只在取目標的範圍。
+	if mod == SkillData.Modifier.SPREAD_ALL:
+		for u in _other_units_of_side(defender):
+			_deal_damage(u, dmg, minion_attack)
+			_check_death(u)
 	# 貫穿:同路線的後排也吃一份。
 	if mod == SkillData.Modifier.PIERCE:
 		var back := _unit_behind(defender)
@@ -635,8 +1098,18 @@ func _resolve_attack(attacker: Card, defender: Card, dmg: int, retaliate: bool,
 		_check_death(attacker)
 
 
-## 傷害管線:夜幕減半(§9)→ 鐵壁首傷 -1(§8,播 Block)→ 扣血+受擊演出。
-## 回傳「實際傷害」給吸血用。minion_attack = 這是從者攻擊(鐵壁只擋這種)。
+## 傷害管線:夜幕減半(§9)→ 鐵壁首傷 -1(§8,播 Block)→ 護盾吸收 → 扣血+受擊演出。
+## 回傳「實際扣掉的血」給吸血用。minion_attack = 這是從者攻擊(鐵壁只擋這種)。
+##
+## ⚠ 護盾為什麼排在減免「之後」而不是之前——這個順序不會報錯,只會讓數值默默不對:
+##   10 點傷害打在「3 盾 + 夜幕 + 鐵壁」的目標上
+##   ‧ 盾先吸:10 −3(盾)=7 → 夜幕減半 4 → 鐵壁 −1 → 掉 3 血,盾全空
+##   ‧ 盾後吸:10 → 夜幕減半 5 → 鐵壁 −1 = 4 → 盾吸 3 → 掉 1 血,盾也全空
+##   同樣一面盾,擺錯位置就少擋 2 點。通則:**減免先做、吸收後做**,
+##   每一層減免才會作用在「還沒被盾墊掉」的完整數字上,兩層都拿到最大價值。
+##
+## ⚠ 回傳值的語意:吸血回的是「HP 真的少了多少」,不含被盾吃掉的部分——
+##   盾不是血,砍在盾上沒有血可吸。5 點吸血打 3 盾的滿血目標 → 掉 2 血、攻擊者回 2。
 func _deal_damage(unit: Card, amount: int, minion_attack: bool) -> int:
 	if not is_instance_valid(unit):
 		return 0
@@ -645,14 +1118,30 @@ func _deal_damage(unit: Card, amount: int, minion_attack: bool) -> int:
 		dmg = int(ceil(dmg / 2.0))   # 夜幕:首次受傷減半(進位),用掉即消
 		unit.remove_status(SkillData.Status.NIGHT_VEIL)
 	var blocked := false
-	if minion_attack and unit.data.keywords.has(&"鐵壁") \
+	if minion_attack and unit.has_keyword(&"鐵壁") \
 			and not unit.iron_wall_used_this_turn:
 		unit.iron_wall_used_this_turn = true
 		dmg = maxi(0, dmg - 1)
 		blocked = true
+	# 護盾在最後一道:減免完的數字先砍盾,穿透的部分才進 HP。
+	# 盾擋掉全部時 dmg 會是 0 → take_damage 不播爆點也不掉血,但盾的消耗有自己的飄字。
+	var shielded := unit.shield > 0
+	dmg = unit.absorb_with_shield(dmg)
+	# 靈魂置換只在真正會穿盾致死時發動；取消該次致命傷並把宿主補滿。
+	if dmg >= unit.current_hp:
+		var victim_side := side_of(unit)
+		if not victim_side.is_empty():
+			var rescue := quick_candidate(victim_side, &"lethal")
+			if rescue != null:
+				consume_quick(victim_side, rescue)
+				unit.heal(unit.data.hp + unit.max_hp_bonus)
+				battle_message.emit("瞬咒【%s】阻止了【%s】的死亡！" % [
+					rescue.card_name, unit.data.card_name])
+				return 0
 	unit.take_damage(dmg)
 	# 演出:格擋播 Block(沒有該表就退回 Hurt);其餘吃到傷害才縮。
-	if blocked:
+	# 盾擋下全部也算「擋住了」——有 Block 表就播,讓玩家看得出盾有作用。
+	if blocked or (shielded and dmg == 0):
 		if not unit.play_one_shot_anim("Block"):
 			unit.play_one_shot_anim("Hurt")
 	elif dmg > 0:
@@ -663,11 +1152,18 @@ func _deal_damage(unit: Card, amount: int, minion_attack: bool) -> int:
 func _check_death(unit: Card) -> void:
 	if not is_instance_valid(unit) or unit.current_hp > 0:
 		return
-	# 【不滅】:首次陣亡以 1 HP 復活,每場一次(§8;骷髏家族,播 Summon 復活動畫)。
-	# 規格寫「以指定 HP 復活」但數值未定案 → 先用 1,要調就改這一行。
-	if unit.data.keywords.has(&"不滅") and not unit.revived:
+	# 死亡替代伏印先於【不滅】；伏印是一次性資源，不會白白浪費宿主本身的復活。
+	var reincarnation := _take_host_ward(unit, &"ward_reincarnation")
+	if reincarnation != null:
+		unit.heal(unit.data.hp + unit.max_hp_bonus)
+		unit.add_shield(5)
+		battle_message.emit("伏印【%s】觸發：【%s】完全恢復並獲得 5 點護盾！" % [
+			reincarnation.card_name, unit.data.card_name])
+		return
+	# 【不滅】:首次陣亡以資料指定 HP 復活,每場一次。
+	if unit.has_keyword(&"不滅") and not unit.revived:
 		unit.revived = true
-		unit.heal(1)
+		unit.heal(maxi(unit.data.revive_hp, 1))
 		if not unit.play_one_shot_anim("Summon"):
 			unit.play_one_shot_anim("Summon(With magic effects)")
 		return
@@ -679,6 +1175,7 @@ func _check_death(unit: Card) -> void:
 		# 連線重放端會打到,而且錯誤訊息('Dictionary' 上用 String 存取)完全看不出根因。
 		return
 	var slot := _find_slot(unit)
+	var death_ward := _take_host_ward(unit, &"ward_royal_tomb")
 	if slot != null:
 		slot.on_unit_died()   # 先清位:死亡演出期間這格就能再放牌
 	bury(side, unit.data)
@@ -696,6 +1193,11 @@ func _check_death(unit: Card) -> void:
 		wards_changed.emit(side, side_wards.size())
 	unit_died.emit(unit)
 	unit.die()
+	if death_ward != null and slot != null and slot.is_empty:
+		var guard := spawn_unit(load("res://data/cards/tokens/royal_tomb_guard_token.tres"), slot)
+		if guard != null:
+			mark_summoned(guard)
+			battle_message.emit("伏印【%s】觸發：召喚【王墓守衛】！" % death_ward.card_name)
 
 
 ## ── 召喚系技能(§6.1 死靈法師):在施放者那側找空槽生一張新卡 ─────
@@ -804,6 +1306,21 @@ func _adjacent_lane_units(target: Card) -> Array[Card]:
 	return out
 
 
+## 和 target 同一側、但不是 target 本人的所有場上單位(全體技的副目標)。
+## 前後排都掃 —— 後排站得了從者(前排滿了 AI 就往後放),只有伏印是住側帳不佔槽。
+func _other_units_of_side(target: Card) -> Array[Card]:
+	var out: Array[Card] = []
+	var side := side_of(target)
+	if side.is_empty():
+		return out
+	for group in [side + "_front", side + "_back"]:
+		for slot in get_tree().get_nodes_in_group(group):
+			if slot is CardSlot and slot.card_in_slot != null \
+					and slot.card_in_slot != target:
+				out.append(slot.card_in_slot)
+	return out
+
+
 ## 同路線的後排單位(貫穿的第二目標);目標已在後排就沒有更後面。
 func _unit_behind(target: Card) -> Card:
 	var slot := _find_slot(target)
@@ -846,6 +1363,28 @@ func _first_empty_slot(side: String) -> CardSlot:
 			if slot is CardSlot and slot.is_empty:
 				return slot
 	return null
+
+
+func _nearest_empty_slot(side: String, origin: CardSlot) -> CardSlot:
+	var best: CardSlot = null
+	var best_distance := INF
+	for slot in _all_slots():
+		if slot_side(slot) != side or not slot.is_empty:
+			continue
+		var distance := absf(slot.global_position.x - origin.global_position.x) \
+			if origin != null else 0.0
+		if distance < best_distance:
+			best_distance = distance
+			best = slot
+	return best
+
+
+func _units_of_side(side: String) -> Array[Card]:
+	var out: Array[Card] = []
+	for slot in _all_slots():
+		if slot.card_in_slot != null and slot_side(slot) == side:
+			out.append(slot.card_in_slot)
+	return out
 
 
 ## ── 查詢工具 ───────────────────────────────────────

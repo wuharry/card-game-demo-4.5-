@@ -1,18 +1,27 @@
-[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3 uid="uid://4k6lv2swpv8o"]
+[gd_resource type="Resource" script_class="CardData" load_steps=8 format=3 uid="uid://4k6lv2swpv8o"]
 
 [ext_resource type="Script" uid="uid://cxot3rc105cul" path="res://src/card/card_data.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://cvpd8fe4gjo7w" path="res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Knight Templar/Knight Templar/Knight Templar_Idle.png" id="2_sheet"]
 [ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/knight_templar_card_art.png" id="4_card_art"]
 
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
-skill_name = "聖盾祝福"
-description = "賦予一名友軍夜幕(下回合首次受到的傷害減半)。"
+skill_name = "神聖屏障"
+description = "使自身獲得 5 點護盾。"
 kind = 2
-cost = 2
-effect = 2
-effect_target = 1
-status = 4
+cost = 3
+effect = 7
+effect_target = 0
+amount = 5
+
+[sub_resource type="Resource" id="Skill_battlecry"]
+script = ExtResource("3_skill")
+skill_name = "聖光庇護"
+description = "登場時,恢復己方英雄 3 點生命。"
+effect = 1
+effect_target = 4
+amount = 3
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
 atlas = ExtResource("2_sheet")
@@ -21,10 +30,12 @@ region = Rect2(0, 0, 100, 100)
 [resource]
 script = ExtResource("1_script")
 card_name = "聖殿騎士"
-cost = 5
+cost = 6
 atk = 4
 hp = 7
-art = SubResource("AtlasTexture_frame")
+art = ExtResource("4_card_art")
+use_dedicated_art = true
 standee = ExtResource("2_sheet")
 active_skill = SubResource("Skill_main")
 keywords = Array[StringName]([&"嘲諷"])
+battlecry = SubResource("Skill_battlecry")

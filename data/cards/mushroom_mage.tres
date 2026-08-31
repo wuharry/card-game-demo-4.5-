@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://src/card/card_data.gd" id="1_card"]
+[ext_resource type="Texture2D" path="res://assets/characters/generated/mushroom_mage/Mushroom_Mage_Idle.png" id="2_sheet"]
+[ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/mushroom_mage_card_art.png" id="4_art"]
+
+[sub_resource type="Resource" id="Skill_main"]
+script = ExtResource("3_skill")
+skill_name = "迷幻孢子"
+description = "獨立攻擊造成 1 點橫掃傷害，並施加中毒 1 回合。"
+kind = 1
+cost = 2
+anim = "Attack02"
+power = 1
+modifier = 1
+effect = 2
+effect_target = 2
+status = 3
+status_turns = 1
+
+[resource]
+script = ExtResource("1_card")
+card_name = "蘑菇術士"
+cost = 2
+atk = 1
+hp = 3
+art = ExtResource("4_art")
+use_dedicated_art = true
+standee = ExtResource("2_sheet")
+active_skill = SubResource("Skill_main")

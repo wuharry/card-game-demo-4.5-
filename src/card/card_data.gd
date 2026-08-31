@@ -10,9 +10,8 @@
 extends Resource
 class_name CardData   # 註冊全域型別:Inspector 的「新增資源」搜尋得到、變數能寫 var d: CardData
 
-## §7 卡牌類型。目前只有從者卡有實作;其餘型別素材未到、行為未寫,
-## 但欄位先立好:新型別卡進來只是「加 .tres + 實作該型的結算」,舊卡一張不用回頭改。
-## MINION 排第 0 = 預設值,所以現有 24 張 .tres 不需要任何改動。
+## §7 卡牌類型。從者／靈裝／秘術／瞬咒／伏印已接上結算；本版不使用領域。
+## MINION 排第 0 = 預設值，早期未明寫 card_type 的從者資源仍能相容載入。
 enum CardType {
 	MINION,   ## 從者:場上戰鬥單位(ATK/HP),召喚進卡槽
 	EQUIP,    ## 靈裝:附著從者的裝備,宿主離場通常一併離場
@@ -27,15 +26,31 @@ enum CardType {
 @export var cost: int = 1                  # 召喚費用(左上 CostLabel)
 @export var atk: int = 1                   # 攻擊力(左下 ATKLabel)
 @export var hp: int = 1                    # 生命值(右下 HPLabel)
-@export var art: Texture2D                 # 卡圖(備用):AI 繪圖路線已棄用,現行
-                                           # 卡圖由 card.gd 從 standee 掃第 0 幀放大;
-                                           # 這欄留給未來真的有手繪卡圖時替換
-@export var standee: Texture2D             # 立牌動畫表:card.gd 的卡圖與召喚立牌
-                                           # 都讀這欄(show_standee 切幀播待機動畫)
+@export var art: Texture2D                 # 卡面靜態圖;舊從者仍可放 standee 第 0 幀的 AtlasTexture
+@export var use_dedicated_art: bool = false # true = 卡面/預覽讀 art,召喚立牌仍只讀 standee
+@export var standee: Texture2D             # 立牌動畫表(show_standee 切幀播待機動畫)
 @export var active_skill: SkillData        # 主動技能(預設 Attack02 動畫;null = 無主動技,
                                            # 見 README §6.1 與 docs/skills_design.md)
+## 戰吼:召喚落地時自動結算一次的效果(null = 沒有戰吼)。
+## 刻意「復用 SkillData」而不是另開 BattlecryData——它要的欄位(effect / effect_target /
+## amount / status / summon_card)一個不多一個不少,新型別只會多一份要同步維護的合約。
+## 差別只在「誰觸發」:主動技由玩家點、戰吼由 BattleManager.mark_summoned 自動跑,
+## 所以 kind / cost / anim 這幾欄對戰吼沒有意義,填了也不讀。
+@export var battlecry: SkillData
 @export var keywords: Array[StringName] = []   # 被動關鍵字(README §8):
                                                # &"飛行"、&"不滅"、&"鐵壁"、&"衝鋒"…
+
+## 高階卡的資料驅動欄位。舊卡全部使用預設值，行為完全不變；新卡則不用把
+## 卡名硬寫進戰鬥系統。special_id 只標記無法由 SkillData 單一效果表達的複合結算。
+@export_group("高階卡效果")
+@export var special_id: StringName = &""
+@export var equip_atk_bonus: int = 0
+@export var equip_hp_bonus: int = 0
+@export var equip_keywords: Array[StringName] = []
+@export var equip_lifesteal: bool = false
+@export var turn_start_heal: int = 0
+@export var turn_start_shield: int = 0
+@export var revive_hp: int = 1
 
 
 ## 從 standee 的路徑推「同資料夾的兄弟動畫表」,例:get_anim_sheet("Attack02")。

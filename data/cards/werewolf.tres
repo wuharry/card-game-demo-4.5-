@@ -1,14 +1,17 @@
-[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3 uid="uid://ci0vxhdutm7we"]
+[gd_resource type="Resource" script_class="CardData" load_steps=7 format=3 uid="uid://ci0vxhdutm7we"]
 
 [ext_resource type="Script" uid="uid://cxot3rc105cul" path="res://src/card/card_data.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://bvkg7od6ikpoe" path="res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Werewolf/Werewolf/Werewolf_Idle.png" id="2_sheet"]
 [ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/werewolf_card_art.png" id="4_card_art"]
 
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
-skill_name = "嗜血撕咬"
-description = "撕咬吸血,回復等同傷害的生命。"
+skill_name = "血怒"
+description = "造成 3 點傷害,並回復等量生命。"
+kind = 1
 cost = 2
+power = 3
 modifier = 4
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_frame"]
@@ -19,9 +22,10 @@ region = Rect2(0, 0, 100, 100)
 script = ExtResource("1_script")
 card_name = "狼人"
 cost = 5
-atk = 7
-hp = 3
-art = SubResource("AtlasTexture_frame")
+atk = 4
+hp = 5
+art = ExtResource("4_card_art")
+use_dedicated_art = true
 standee = ExtResource("2_sheet")
 active_skill = SubResource("Skill_main")
 keywords = Array[StringName]([&"衝鋒"])

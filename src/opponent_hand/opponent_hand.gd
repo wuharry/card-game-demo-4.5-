@@ -46,6 +46,7 @@ func update_count(n: int) -> void:
 func _make_back(order: int) -> Sprite3D:
 	var s := Sprite3D.new()
 	s.texture = BACK_TEXTURE
+	s.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
 	s.pixel_size = BACK_WIDTH / maxf(float(BACK_TEXTURE.get_width()), 1.0)
 	s.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
 	s.alpha_cut = SpriteBase3D.ALPHA_CUT_OPAQUE_PREPASS   # 寫深度,DOF 才不會拿背後森林糊它

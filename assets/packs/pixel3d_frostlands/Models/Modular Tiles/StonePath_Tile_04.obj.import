@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://do6fjcw3mvhso"
+path="res://.godot/imported/StonePath_Tile_04.obj-d5db975ba56be8d15ecda8b9ae2b62d1.mesh"
+
+[deps]
+
+files=["res://.godot/imported/StonePath_Tile_04.obj-d5db975ba56be8d15ecda8b9ae2b62d1.mesh"]
+
+source_file="res://assets/packs/pixel3d_frostlands/Models/Modular Tiles/StonePath_Tile_04.obj"
+dest_files=["res://.godot/imported/StonePath_Tile_04.obj-d5db975ba56be8d15ecda8b9ae2b62d1.mesh", "res://.godot/imported/StonePath_Tile_04.obj-d5db975ba56be8d15ecda8b9ae2b62d1.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

@@ -17,6 +17,8 @@ extends Node3D
 ## 好處：其他腳本可以寫 var c: Card，並享有自動補全與型別檢查。
 class_name Card
 
+const SETTINGS: GDScript = preload("res://src/settings/app_settings.gd")
+
 
 ## ── 信號 (signal) ──────────────────────────────
 ## 信號就像「廣播」：這張卡不直接去呼叫別人，而是大喊一聲，
@@ -64,6 +66,9 @@ const FRAME_BACK_REGION := Rect2(336.0, 16.0, 64.0, 96.0)
 const ART_WINDOW_CENTER := Vector2(0.0, 0.35)      # 窗中心(卡片本地 x/y)
 const ART_WINDOW_SIZE := Vector2(1.600, 0.850)     # 窗寬高(世界單位)
 const ART_ICON_SIDE_MARGIN := 0.040                # 法術圖示每側留白
+## 卡圖向框底多延伸 1.2%:覆蓋縮放/旋轉時可能露出的次像素細縫,仍完全藏在框條下。
+const ART_WINDOW_OVERSCAN := 1.012
+const ART_WINDOW_SHADER: Shader = preload("res://src/card/card_art_window.gdshader")
 const FRAME_COST_Y := 0.975      # 卡頂裝飾帶
 const FRAME_NAME_Y := -0.262     # 卡名木牌中心
 const FRAME_DESC_Y := -0.762     # 描述木框中心(高 0.425、寬 1.05)
@@ -76,16 +81,17 @@ const STATUS_NAMES := {
 	SkillData.Status.POISON: "中毒",
 	SkillData.Status.NIGHT_VEIL: "夜幕",
 	SkillData.Status.FORGE: "鍛強",
+	SkillData.Status.WEAKEN: "衰弱",
 }
 
 ## §7 卡型章:非從者卡的底部印「卡型名 + 印章色」(從者卡的那個位置是攻血數字)。
-## 色調刻意壓暗:要像蓋在羊皮紙上的印泥,不是螢光標籤。
+## 深色寒鐵文字區上的分類色:提高明度維持辨識,彩度仍收斂避免螢光感。
 const TYPE_BADGES := {
-	CardData.CardType.EQUIP: ["靈裝", Color(0.5, 0.36, 0.1)],
-	CardData.CardType.ARCANA: ["秘術", Color(0.4, 0.18, 0.5)],
-	CardData.CardType.QUICK: ["瞬咒", Color(0.12, 0.32, 0.55)],
-	CardData.CardType.WARD: ["伏印", Color(0.16, 0.4, 0.18)],
-	CardData.CardType.DOMAIN: ["領域", Color(0.35, 0.35, 0.35)],
+	CardData.CardType.EQUIP: ["靈裝", Color("d8bd78")],
+	CardData.CardType.ARCANA: ["秘術", Color("9a7ac7")],
+	CardData.CardType.QUICK: ["瞬咒", Color("c1a9e8")],
+	CardData.CardType.WARD: ["伏印", Color("807091")],
+	CardData.CardType.DOMAIN: ["領域", Color("aaa6b2")],
 }
 
 ## 立牌「角色可見高度」(世界單位)。召喚時會掃描角色圖的不透明範圍,
@@ -113,13 +119,18 @@ var current_hp: int = 0
 var attacked_this_turn: bool = false
 var skill_used_this_turn: bool = false
 var summoned_this_turn: bool = false
-## 場上的狀態效果:[{id: SkillData.Status, turns: int}, ...](§9)。
+## 場上的狀態效果:[{id, turns, skip_next_decay}, ...](§9)。
 ## 鍛強在 atk_total() 生效;夜幕/鐵壁在 BattleManager 的傷害管線裡消耗。
 var statuses: Array[Dictionary] = []
 var iron_wall_used_this_turn: bool = false   # 【鐵壁】本回合的首傷減免用掉了?
 var revived: bool = false                    # 【不滅】每場一次的復活用掉了?
+## 護盾:先於 HP 被扣掉的暫時層(不隨回合遞減,吸完為止)。
+## 和 current_hp 同族——存在「場上這個實例」身上,絕不寫回共享的 CardData,
+## 否則同名卡會共用同一面盾。消耗在 BattleManager 的傷害管線裡(_deal_damage)。
+var shield: int = 0
 ## HPLabel 進場時的原色(受傷變紅、補滿要變得回來——基準先快照)。
 var _hp_label_color: Color = Color.WHITE
+var _hp_flash_tween: Tween = null
 
 
 ## _ready() 是 Godot 的生命週期函式：節點一進入場景、準備好時自動執行一次。
@@ -169,7 +180,7 @@ func _apply_frame() -> void:
 func setup(card_data: CardData) -> void:
 	data = card_data
 	_apply_frame()          # 卡框先換:下面擺卡圖與文字都以新版面的座標為準
-	$NameLabel.text = data.card_name
+	$NameLabel.text = SETTINGS.current().card_name(data)
 	$CostLabel.text = str(data.cost)   # Label3D 的 text 只吃字串，int 要用 str() 轉
 	$ATKLabel.text = str(data.atk)
 	$HPLabel.text = str(data.hp)
@@ -179,14 +190,35 @@ func setup(card_data: CardData) -> void:
 	var is_minion := data.card_type == CardData.CardType.MINION
 	$ATKLabel.visible = is_minion
 	$HPLabel.visible = is_minion
-	# ── 卡圖:像素角色第 0 幀「放大」塞進卡框挖空窗 ──────────────
-	# (AI 繪圖卡圖已棄用:和像素立牌風格打架。卡圖=立牌同一張動畫表,全場統一。)
+	# ── 卡圖:有專用插畫就用插畫;舊從者仍用立牌第 0 幀 ───────────
 	# 100×100 的格子裡角色本體只佔中間約 30px:整格塞窗,角色會小得像圖示。
 	# 所以先掃出第 0 幀的「可見範圍」(和 show_standee 共用同一把尺),
 	# 用 region 只裁出本體、等比放大進窗;NEAREST 讓放大後的像素塊保持銳利。
 	# 卡圖擺在卡框「後面」(z = -0.01),從透明挖空處露出來——
 	# 框的邊飾永遠畫在圖上面,所以不管圖放多大,卡框美術都不會被壓到。
-	if data.standee != null:
+	if data.use_dedicated_art and data.art != null:
+		# 真正的 cover-crop：先在來源圖中央裁出與卡窗完全相同的比例，再讓裁切後
+		# 的矩形精確貼齊卡窗。舊版只放大整張圖、靠卡框「看起來像裁切」，不同
+		# 長寬比會讓 Sprite 實體尺寸溢出，還可能從框外透明區漏出。
+		var crop := _cover_crop_rect(data.art, ART_WINDOW_SIZE.x / ART_WINDOW_SIZE.y)
+		var target := ART_WINDOW_SIZE * ART_WINDOW_OVERSCAN
+		$CardArt.texture = data.art
+		$CardArt.region_enabled = true
+		$CardArt.region_rect = crop
+		$CardArt.pixel_size = target.x / maxf(crop.size.x, 1.0)
+		$CardArt.scale = Vector3.ONE
+		var art_mat := ShaderMaterial.new()
+		art_mat.shader = ART_WINDOW_SHADER
+		art_mat.set_shader_parameter("art_texture", data.art)
+		var tex_size := Vector2(
+			maxf(float(data.art.get_width()), 1.0),
+			maxf(float(data.art.get_height()), 1.0))
+		art_mat.set_shader_parameter("source_uv_rect", Vector4(
+			crop.position.x / tex_size.x, crop.position.y / tex_size.y,
+			crop.size.x / tex_size.x, crop.size.y / tex_size.y))
+		$CardArt.material_override = art_mat
+	elif data.standee != null:
+		$CardArt.material_override = null
 		var cell := maxf(float(data.standee.get_height()), 1.0)
 		var bounds := visible_bounds_of_frame0(data.standee)
 		# grow(2):四周留 2px 呼吸邊;再夾回格子範圍,region 才不會取樣到界外。
@@ -198,6 +230,7 @@ func setup(card_data: CardData) -> void:
 			ART_WINDOW_SIZE.y / bounds.size.y)   # contain:整個本體進窗,不裁到肉
 		$CardArt.scale = Vector3.ONE   # 從者卡維持等比,別吃到法術卡分支的拉伸
 	elif data.art != null:
+		$CardArt.material_override = null
 		# 法術卡的主要路徑:卡圖是 1:1 圖示(AtlasTexture 從圖示表切格),窗是橫向。
 		# fill/stretch:高度等比貼齊窗高,寬度用 scale.x 拉寬到「窗寬 − 兩側呼吸邊」——
 		# 不裁圖、不凸框,兩側各留 ≤5px 留白換較小的變形率(定案 2026-07-11)。
@@ -212,6 +245,19 @@ func setup(card_data: CardData) -> void:
 	# 擺到窗中心、退到卡框後 0.01(透明物件由遠到近畫:後面的圖先畫、框蓋在上)。
 	$CardArt.position = Vector3(ART_WINDOW_CENTER.x, ART_WINDOW_CENTER.y, -0.01)
 	_update_skill_label()
+
+
+## 回傳來源圖中央的最大矩形，使其比例精確等於 target_aspect（CSS cover 同語意）。
+## Sprite3D 的 region 真的只生成這塊幾何，卡圖不再依賴框圖替它裁掉多餘部分。
+static func _cover_crop_rect(texture: Texture2D, target_aspect: float) -> Rect2:
+	var source_size := Vector2(
+		maxf(float(texture.get_width()), 1.0), maxf(float(texture.get_height()), 1.0))
+	var crop_size := source_size
+	if source_size.x / source_size.y > target_aspect:
+		crop_size.x = source_size.y * target_aspect
+	else:
+		crop_size.y = source_size.x / target_aspect
+	return Rect2((source_size - crop_size) * 0.5, crop_size)
 
 
 ## ── 技能描述(卡框下半的文字區)────────────────────────────
@@ -260,18 +306,25 @@ func _update_skill_label() -> void:
 		lb.modulate = Color(0.90, 0.84, 0.72)
 		lb.outline_size = 2
 		lb.outline_modulate = Color(0.05, 0.03, 0.02)
+	var parts: PackedStringArray = []
 	if data != null and data.active_skill != null:
 		var s := data.active_skill
 		if data.card_type == CardData.CardType.MINION:
 			# 【技能名】◆費用·三分類 + 換行描述;◆ 與指令選單同符號。
 			# 三分類(強化/獨立/非攻擊)決定行動經濟,桌遊試玩回饋:卡面要標出來。
-			lb.text = _fit_card_text("【%s】◆%d·%s\n%s" % [
-				s.skill_name, s.cost, SkillData.KIND_NAMES[s.kind], s.description])
+			parts.append("【%s】◆%d·%s\n%s" % [
+				SETTINGS.current().skill_name(data, s), s.cost, SETTINGS.current().kind_name(s.kind),
+				SETTINGS.current().skill_description(s)])
 		else:
 			# 法術卡:卡名/費用已在卡框上緣,文字區只印效果,不重複報頭。
-			lb.text = _fit_card_text(s.description)
-	else:
-		lb.text = ""   # 沒有主動技的白板(骷髏弓手):留白
+			parts.append(SETTINGS.current().skill_description(s))
+	# 戰吼排在主動技之後:主動技是玩家每回合要決策的東西,戰吼登場跑完就結束了,
+	# 文字區只有 5 行,先印要反覆讀的那個。兩個都有時超出的部分由 _fit_card_text 截斷。
+	if data != null and data.battlecry != null:
+		parts.append("【%s】%s" % [SETTINGS.current().text("battlecry"),
+			SETTINGS.current().skill_description(data.battlecry)])
+	# 沒有主動技也沒有戰吼的白板:留白。
+	lb.text = _fit_card_text("\n".join(parts)) if not parts.is_empty() else ""
 	_update_type_label()
 
 
@@ -293,10 +346,10 @@ func _update_type_label() -> void:
 		lb.render_priority = 1
 		lb.outline_size = 0
 	var badge: Array = TYPE_BADGES.get(data.card_type, ["?", Color(0.2, 0.2, 0.2)])
-	lb.text = "‧ %s ‧" % badge[0]
-	# TYPE_BADGES 的顏色是為舊框的淺色底調的「暗印泥」;新框的卡底是深色,
-	# 原色會糊成一團 → 提亮後再用。基準色只有一份,亮度調整留在使用端(§3 基準/即時之分)。
-	lb.modulate = (badge[1] as Color).lightened(0.55)
+	lb.text = "‧ %s ‧" % SETTINGS.current().type_name(data.card_type)
+	# TYPE_BADGES 的基準色已在 battle-core 直接調成「深色卡底上的亮版」,
+	# 不再需要使用端提亮——再 lightened() 一次會把五型的分色一起洗白。
+	lb.modulate = badge[1]
 
 
 ## ── 召喚立牌:像素角色站在卡片上(遊戲王式)────────────
@@ -338,10 +391,12 @@ func show_standee() -> void:
 	# 召喚彈出:從極小放大回 1;BACK + EASE_OUT = 微微過衝再回彈,有「登場」感。
 	_standee.scale = Vector3.ONE * 0.05
 	var pop := _standee.create_tween()
-	pop.tween_property(_standee, "scale", Vector3.ONE, 0.3)\
+	pop.tween_property(_standee, "scale", Vector3.ONE, SETTINGS.current().motion_duration(0.3))\
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	# 待機動畫:交給共用的循環播放器(見下方 _play_sheet_loop)。
-	_play_sheet_loop(frame_count)
+	# 有 Summon 兄弟表就先完整播一次,播完由 play_one_shot_anim 自動回 Idle;
+	# 沒有的舊角色維持原本直接播待機。這讓新增素材不必再改召喚流程。
+	if not play_one_shot_anim("Summon"):
+		_play_sheet_loop(frame_count)
 
 
 ## ── 立牌動畫工具組 ────────────────────────────────────────
@@ -351,6 +406,9 @@ func show_standee() -> void:
 func _play_sheet_loop(frame_count: int) -> void:
 	if _standee_anim != null:
 		_standee_anim.kill()
+	if SETTINGS.current().reduce_motion:
+		_standee.frame = 0
+		return
 	_standee_anim = _standee.create_tween().set_loops()
 	for f in range(frame_count):
 		_standee_anim.tween_callback(func() -> void: _standee.frame = f).set_delay(0.12)
@@ -381,7 +439,8 @@ func play_one_shot_anim(suffix: String) -> bool:
 		_standee_anim.kill()
 	_standee_anim = _standee.create_tween()
 	for f in range(frames):
-		_standee_anim.tween_callback(func() -> void: _standee.frame = f).set_delay(0.1)
+		_standee_anim.tween_callback(func() -> void: _standee.frame = f)\
+			.set_delay(SETTINGS.current().motion_duration(0.1))
 	_standee_anim.tween_callback(_restore_idle)   # 最後一格播完 → 回待機
 	return true
 
@@ -484,14 +543,15 @@ func animate_hover(zoom: float = 1.35) -> void:
 	# create_tween() 會建立一個補間動畫器：在一段時間內把某個屬性平滑地變化。
 	var tw := create_tween()
 	# 把 scale 在 0.15 秒內，從現在平滑變到「原始大小 × zoom」(基準用快照,見 original_scale)。
-	tw.tween_property(self, "scale", original_scale * zoom, 0.15)
+	tw.tween_property(self, "scale", original_scale * zoom, SETTINGS.current().motion_duration(0.15))
 	# 手牌卡同步抬升+微微向前(local +Z 朝鏡頭),蓋過鄰卡;上桌單位不抬(它們沒被遮)。
 	# 目標是「絕對位置」(基準+固定偏移),連打多少次 hover 都收斂到同一點,不累積。
 	if not is_on_board and _has_hand_base:
 		stop_hover_motion()
 		_pos_tween = create_tween().set_parallel(true)
 		var lift := Vector3(0.0, HOVER_LIFT, 0.05)
-		_pos_tween.tween_property(self, "position", hand_base_pos + lift, 0.15)
+		_pos_tween.tween_property(self, "position", hand_base_pos + lift,
+			SETTINGS.current().motion_duration(0.15))
 		# 判定與演出分離:視覺抬上去,碰撞箱反向補償「釘在扇形原位」——
 		# hover 演出若把判定幾何一起搬走,游標下一幀就不再指到這張卡,
 		# exit→歸位→又 enter→又抬……enter/exit 迴圈 = 卡片閃爍。
@@ -500,20 +560,23 @@ func animate_hover(zoom: float = 1.35) -> void:
 		var rot := transform.basis.orthonormalized()
 		var s := original_scale.x * zoom
 		_pos_tween.tween_property($Area3D, "position",
-			_area_base_pos + (rot.inverse() * -lift) / s, 0.15)
+			_area_base_pos + (rot.inverse() * -lift) / s,
+			SETTINGS.current().motion_duration(0.15))
 
 
 func animate_unhover() -> void:
 	var tw := create_tween()
 	# 0.15 秒內縮回原始大小。
-	tw.tween_property(self, "scale", original_scale, 0.15)
+	tw.tween_property(self, "scale", original_scale, SETTINGS.current().motion_duration(0.15))
 	if not is_on_board and _has_hand_base:
 		stop_hover_motion()
 		_pos_tween = create_tween().set_parallel(true)
-		_pos_tween.tween_property(self, "position", hand_base_pos, 0.15)
+		_pos_tween.tween_property(self, "position", hand_base_pos,
+			SETTINGS.current().motion_duration(0.15))
 		# 歸位途中補償也同步收回:兩條補間淨效果 = 碰撞箱全程釘在原位,
 		# 卡片下降「掃過」游標時才不會又觸發 enter(反向的閃爍迴圈)。
-		_pos_tween.tween_property($Area3D, "position", _area_base_pos, 0.15)
+		_pos_tween.tween_property($Area3D, "position", _area_base_pos,
+			SETTINGS.current().motion_duration(0.15))
 
 
 ## ── 公開方法:上桌 / 回手 ─────────────────────────
@@ -532,6 +595,8 @@ func exit_board_mode() -> void:
 ## 靈裝加成(§7):生命上限增量,記在「節點」不記在共享的 CardData 上——
 ## 一份資料生多張卡,寫回 data.hp 會讓全場同名卡一起變厚;宿主離場加成隨節點消失。
 var max_hp_bonus: int = 0
+## 靈裝攻擊加成同樣放在實例，不能改共享 CardData.atk。
+var equip_atk_bonus: int = 0
 
 ## 裝備中的靈裝「卡」(§7):加成數值在上面,這裡記的是卡本身——
 ## 宿主陣亡時要知道「哪幾張」跟著入墓(BattleManager._check_death 隨葬用)。
@@ -559,6 +624,29 @@ func heal(amount: int) -> void:
 		_popup_number("+%d" % healed, Color(0.45, 1.0, 0.5))
 
 
+## 上護盾:盾值「疊加」而非取大值(治療是補到上限,護盾沒有上限概念)。
+## 刻意和 heal() 分開:護盾不是血,不吃 max_hp、不會被 clamp_hp 夾掉,
+## 死亡判定也只看 current_hp——把兩者混在一起就會出現「盾滿了不能再上盾」這種怪規則。
+func add_shield(amount: int) -> void:
+	if amount <= 0:
+		return
+	shield += amount
+	_update_status_label()
+	_popup_number(SETTINGS.current().text("shield_gain") % amount, Color(0.55, 0.8, 1.0))
+
+
+## 護盾吸收:回傳「穿透護盾、真正要扣血的量」。
+## 由 BattleManager 的傷害管線呼叫——放在減免之後、扣血之前(順序見 _deal_damage 註解)。
+func absorb_with_shield(amount: int) -> int:
+	if shield <= 0 or amount <= 0:
+		return amount
+	var absorbed := mini(shield, amount)
+	shield -= absorbed
+	_update_status_label()
+	_popup_number(SETTINGS.current().text("shield_loss") % absorbed, Color(0.55, 0.8, 1.0))
+	return amount - absorbed
+
+
 ## 飄浮戰鬥數字:冒出 → 上飄 → 淡出 → 自毀。
 ## 掉血看 HP 小字太吃力,尤其反擊是「攻擊的同時自己也掉血」,
 ## 沒有這個數字,反擊看起來就像沒發生(驗收時的真實回饋)。
@@ -575,8 +663,9 @@ func _popup_number(text_value: String, color: Color) -> void:
 	# 上桌的卡躺平,local +Z = 世界正上方(同 show_standee 的座標邏輯)。
 	lb.position = Vector3(0.0, 0.0, 1.1)
 	var tw := lb.create_tween().set_parallel(true)
-	tw.tween_property(lb, "position:z", 2.0, 0.8)
-	tw.tween_property(lb, "modulate:a", 0.0, 0.8).set_ease(Tween.EASE_IN)
+	tw.tween_property(lb, "position:z", 2.0, SETTINGS.current().motion_duration(0.8))
+	tw.tween_property(lb, "modulate:a", 0.0, SETTINGS.current().motion_duration(0.8))\
+		.set_ease(Tween.EASE_IN)
 	tw.chain().tween_callback(lb.queue_free)
 
 
@@ -586,17 +675,39 @@ func clamp_hp() -> void:
 	_refresh_hp_label()
 
 
+## 關鍵字來源 = 從者本身 + 當前靈裝。裝備授予的鐵壁／不滅不能寫回共享模板。
+func has_keyword(keyword: StringName) -> bool:
+	if data != null and data.keywords.has(keyword):
+		return true
+	for equipment in equipped_cards:
+		if equipment.equip_keywords.has(keyword):
+			return true
+	return false
+
+
+func has_equipped_lifesteal() -> bool:
+	for equipment in equipped_cards:
+		if equipment.equip_lifesteal:
+			return true
+	return false
+
+
 func _refresh_hp_label() -> void:
 	$HPLabel.text = str(current_hp)
-	# 殘血紅字:一眼掃出誰快死了;補滿就恢復原色。
+	# 綠晶體已承擔「生命」語意；數字常駐米白融入卡框，受傷只短暫閃紅。
+	if _hp_flash_tween != null and _hp_flash_tween.is_valid():
+		_hp_flash_tween.kill()
+	$HPLabel.modulate = _hp_label_color
 	if current_hp < data.hp:
-		$HPLabel.modulate = Color(1.0, 0.32, 0.28)
-	else:
-		$HPLabel.modulate = _hp_label_color
+		$HPLabel.modulate = Color(1.0, 0.52, 0.43)
+		_hp_flash_tween = create_tween()
+		_hp_flash_tween.tween_property($HPLabel, "modulate", _hp_label_color,
+			SETTINGS.current().motion_duration(0.32))\
+			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 
 ## ── 狀態效果(§9;由 BattleManager 讀寫)──────────────
-func add_status(id: SkillData.Status, turns: int) -> void:
+func add_status(id: SkillData.Status, turns: int, skip_next_decay: bool = false) -> void:
 	# 灼燒/凍結互斥(§9):新狀態把對立的舊狀態擠掉。
 	if id == SkillData.Status.BURN:
 		remove_status(SkillData.Status.FREEZE)
@@ -605,9 +716,10 @@ func add_status(id: SkillData.Status, turns: int) -> void:
 	for s in statuses:
 		if s.id == id:
 			s.turns = maxi(int(s.turns), turns)   # 重複上同狀態:刷新回合數,不疊加
+			s.skip_next_decay = bool(s.get("skip_next_decay", false)) or skip_next_decay
 			_update_status_label()
 			return
-	statuses.append({"id": id, "turns": turns})
+	statuses.append({"id": id, "turns": turns, "skip_next_decay": skip_next_decay})
 	_update_status_label()
 
 
@@ -628,15 +740,28 @@ func remove_status(id: SkillData.Status) -> void:
 ## 回合開始:所有狀態剩餘回合 -1,歸零解除(§5 開始階段「解除凍結等狀態」)。
 func decay_statuses() -> void:
 	for i in range(statuses.size() - 1, -1, -1):
+		# 凍結若在受害者回合開始前才剛施加,那一次開始階段不能立刻把它消掉;
+		# 先吃掉這枚旗標,下一次自己的開始階段才正常遞減。
+		if bool(statuses[i].get("skip_next_decay", false)):
+			statuses[i].skip_next_decay = false
+			continue
 		statuses[i].turns = int(statuses[i].turns) - 1
 		if int(statuses[i].turns) <= 0:
 			statuses.remove_at(i)
 	_update_status_label()
 
 
-## 目前攻擊力 = 基礎 + 鍛強(§9:ATK +2)。傷害計算一律用這個,別直接讀 data.atk。
+## 目前攻擊力 = 基礎 + 鍛強(§9:ATK +2)- 衰弱(ATK -1)。
+## 傷害計算一律用這個,別直接讀 data.atk。
+## 鍛強與衰弱「不」互斥(§9 只有灼燒/凍結互斥),同時在身上就是淨 +1;
+## 夾在 0 以上——負攻擊力會讓反擊變成「打自己補血」。
 func atk_total() -> int:
-	return data.atk + (2 if has_status(SkillData.Status.FORGE) else 0)
+	var total := data.atk + equip_atk_bonus
+	if has_status(SkillData.Status.FORGE):
+		total += 2
+	if has_status(SkillData.Status.WEAKEN):
+		total -= 1
+	return maxi(0, total)
 
 
 ## 卡面頂緣的狀態列(程式生成 Label3D,同 SkillLabel 的規矩):「灼燒2 中毒3」。
@@ -652,8 +777,13 @@ func _update_status_label() -> void:
 		lb.modulate = Color(1.0, 0.62, 0.2)   # 橘=「有事發生中」的警示色
 		lb.outline_size = 8
 	var parts: PackedStringArray = []
+	# 護盾排最前:它是「還能擋幾點」的即時資訊,比 debuff 剩幾回合更影響當下決策。
+	# 用「盾N」而不是 🛡 符號:專案字型是 Noto Serif TC,不含 emoji 區段(U+1F6E1),
+	# 貼上去只會是豆腐框。狀態列本來就是「名字+數字」,這樣反而一致。
+	if shield > 0:
+		parts.append(SETTINGS.current().text("status_shield") % shield)
 	for s in statuses:
-		parts.append("%s%d" % [STATUS_NAMES.get(s.id, "?"), int(s.turns)])
+		parts.append("%s%d" % [SETTINGS.current().status_name(s.id), int(s.turns)])
 	lb.text = " ".join(parts)
 
 
@@ -667,8 +797,9 @@ func die() -> void:
 		shape.set_deferred("disabled", true)
 	var played := _play_death_anim()
 	var tw := create_tween()
-	tw.tween_interval(0.65 if played else 0.1)   # 讓倒地動畫(6 格 × 0.1s)播完
-	tw.tween_property(self, "scale", Vector3.ONE * 0.01, 0.25)\
+	tw.tween_interval(SETTINGS.current().motion_duration(0.65 if played else 0.1))
+	tw.tween_property(self, "scale", Vector3.ONE * 0.01,
+		SETTINGS.current().motion_duration(0.25))\
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
 	tw.tween_callback(queue_free)
 
@@ -688,5 +819,6 @@ func _play_death_anim() -> bool:
 		_standee_anim.kill()
 	_standee_anim = _standee.create_tween()
 	for f in range(frames):
-		_standee_anim.tween_callback(func() -> void: _standee.frame = f).set_delay(0.1)
+		_standee_anim.tween_callback(func() -> void: _standee.frame = f)\
+			.set_delay(SETTINGS.current().motion_duration(0.1))
 	return true
