@@ -108,6 +108,7 @@ func _ready() -> void:
 	battle_manager = BattleManager.new()
 	battle_manager.hand_node = player_hand   # spawn_unit 的掛點(召喚技/連線重放生單位)
 	battle_manager.state_changed.connect(battle_ui.update_hud)
+	battle_manager.state_changed.connect(_sync_vs_ai_player_hand_on_state)
 	battle_manager.unit_died.connect(_on_unit_died)
 	battle_manager.card_buried.connect(_on_card_buried)
 	battle_manager.wards_changed.connect(_on_wards_changed)
@@ -731,14 +732,15 @@ func _resolve_arcana(card: Card, target: Card) -> void:
 
 
 ## 守方反制窗口(§5.1 STEP 2;熱座/單機共用,傷害秘術與抽濾秘術同一個口):
-## 有付得起的瞬咒就問,AI 自動抵銷。抵銷成立時瞬咒消耗與提示都在這裡做完。
+## 有付得起的瞬咒就問；單人局只有「AI 守方」會自動抵銷。
+## AI 施法時守方是玩家，仍要把反制決定留給玩家。
 func _ask_counter_hotseat(spell_name: String) -> bool:
 	var defender := "enemy" if battle_manager.active_side == "player" else "player"
 	var quick: CardData = battle_manager.quick_candidate(defender)
 	if quick == null:
 		return false
 	var used := false
-	if MatchMode.is_vs_ai():
+	if MatchMode.is_vs_ai() and defender == "enemy":
 		# 單人:守方是 AI,自動決策(有付得起的瞬咒就抵銷),不開人類面板——
 		# 面板一開等於把 AI 的手牌資訊攤給玩家,還得由玩家替 AI 按鈕。
 		used = true
@@ -754,6 +756,91 @@ func _ask_counter_hotseat(spell_name: String) -> bool:
 		battle_manager.consume_quick(defender, quick)
 		battle_ui.flash_message("【%s】被【%s】抵銷了!" % [spell_name, quick.card_name])
 	return used
+
+
+## 單人 AI 的秘術入口。AI 沒有可拖曳的手牌 Card 節點，所以以帳面索引完成
+## 「付費→玩家反制窗口→離手入墓→效果」，其餘規則仍交給 BattleManager。
+func ai_play_arcana(hand_idx: int, target: Card = null, scry_pick: int = 0,
+		swap_discard_path: String = "") -> bool:
+	if not MatchMode.is_vs_ai() or battle_manager.active_side != "enemy":
+		return false
+	var hand := battle_manager.hand_of("enemy")
+	if hand_idx < 0 or hand_idx >= hand.size():
+		return false
+	var cd: CardData = hand[hand_idx]
+	if cd == null or cd.card_type != CardData.CardType.ARCANA \
+			or not battle_manager.can_afford(cd.cost):
+		return false
+	if _spell_needs_target(cd):
+		if target == null or not is_instance_valid(target) or not target.is_on_board:
+			return false
+		var wanted_side := "enemy" \
+			if cd.active_skill.effect_target == SkillData.Target.ALLY else "player"
+		if battle_manager.side_of(target) != wanted_side or target.has_keyword(&"潛行"):
+			return false
+
+	battle_manager.spend(cd.cost)
+	Sfx.play(Sfx.SPELL_CAST, -2.0)
+	var countered: bool = await _ask_counter_hotseat(cd.card_name)
+
+	# 反制可能讓守方手牌變動，但不應影響 AI 手牌；仍以 Resource 身分
+	# 再對一次索引，讓未來新增「反制後抽對手牌」也不會棄錯牌。
+	hand = battle_manager.hand_of("enemy")
+	var live_idx := hand.find(cd)
+	if live_idx < 0:
+		return false
+	battle_manager.remove_from_hand("enemy", live_idx)
+	battle_manager.bury("enemy", cd)
+
+	if not countered:
+		if _spell_needs_target(cd):
+			if is_instance_valid(target):
+				var msg: String = battle_manager.cast_arcana(cd, target)
+				if msg != "":
+					battle_ui.flash_message(msg)
+		else:
+			_resolve_ai_effect_arcana(cd, scry_pick, swap_discard_path)
+	_update_deck_labels()
+	_refresh_opp_hud()
+	return true
+
+
+func _resolve_ai_effect_arcana(cd: CardData, scry_pick: int,
+		swap_discard_path: String) -> void:
+	if cd.special_id != &"":
+		var report := battle_manager.resolve_special_arcana(cd, "enemy")
+		if not report.is_empty():
+			battle_ui.flash_message("【%s】：%s" % [cd.card_name, report])
+		return
+	var sk := cd.active_skill
+	if sk == null:
+		return
+	match sk.effect:
+		SkillData.Effect.DRAW:
+			_apply_draw(sk.amount)
+			battle_ui.flash_message("對手施放【%s】：抽 %d 張" % [cd.card_name, sk.amount])
+		SkillData.Effect.SCRY:
+			var res: Dictionary = battle_manager.scry_pick("enemy", sk.amount, scry_pick)
+			if res.picked != null:
+				battle_ui.flash_message("對手透過【%s】檢視牌堆並取得 1 張牌" % cd.card_name)
+		SkillData.Effect.DISCARD_DRAW:
+			var hand := battle_manager.hand_of("enemy")
+			var dump_idx := -1
+			for i in range(hand.size()):
+				if (hand[i] as CardData).resource_path == swap_discard_path:
+					dump_idx = i
+					break
+			if dump_idx < 0 and not hand.is_empty():
+				dump_idx = hand.size() - 1
+			if dump_idx >= 0:
+				var dumped := battle_manager.discard_from_hand("enemy", dump_idx)
+				if dumped != null:
+					battle_ui.flash_message("對手換掉【%s】" % dumped.card_name)
+			_apply_draw(sk.amount)
+		SkillData.Effect.SUMMON:
+			var msg: String = battle_manager.summon_for_side("enemy", sk)
+			if msg != "":
+				battle_ui.flash_message("【%s】：%s" % [cd.card_name, msg])
 
 
 ## 抽濾系秘術的熱座/單機結算:付費 → 反制窗口 → 牌離手入墓 → 效果落地。
@@ -1271,6 +1358,27 @@ func _hand_view_shows_active_side() -> bool:
 	if MatchMode.is_vs_ai():
 		return battle_manager.active_side == "player"
 	return not NetMatch.is_online or battle_manager.active_side == NetMatch.my_side
+
+
+## VS AI 的手牌視圖始終鎖在 player。AI 回合觸發的瞬咒可能在
+## BattleManager 內直接離手（召喚/攻擊/技能/伏印/瀕死反應）；這些入口都會
+## 發 state_changed，所以在單一出口比對帳與視圖，只有真的不同才重建。
+func _sync_vs_ai_player_hand_on_state(_turn: int, _side: String, _mana: int,
+		_mana_max: int, _temp_mana: int) -> void:
+	if not MatchMode.is_vs_ai() or battle_manager.active_side != "enemy":
+		return
+	var account := battle_manager.hand_of("player")
+	var visible := player_hand.hand_data()
+	if account.size() == visible.size():
+		var same := true
+		for i in range(account.size()):
+			if account[i] != visible[i]:
+				same = false
+				break
+		if same:
+			return
+	player_hand.rebuild_from(account, false)
+	_update_deck_labels()
 
 
 ## 開局同步:手牌視圖餵「這台機器該看的那側」+ 掛上牌堆剩量標籤。
