@@ -7,6 +7,8 @@
 extends Node3D
 class_name Hero
 
+const SETTINGS: GDScript = preload("res://src/settings/app_settings.gd")
+
 signal hero_hovered(hero: Hero)
 signal hero_unhovered(hero: Hero)
 signal died(hero: Hero)
@@ -69,12 +71,12 @@ func _die() -> void:
 ## ── 指定目標的高亮(借卡片同一套手感)─────────────────
 func animate_hover(zoom: float = 1.15) -> void:
 	var tw := create_tween()
-	tw.tween_property(self, "scale", _base_scale * zoom, 0.15)
+	tw.tween_property(self, "scale", _base_scale * zoom, SETTINGS.current().motion_duration(0.15))
 
 
 func animate_unhover() -> void:
 	var tw := create_tween()
-	tw.tween_property(self, "scale", _base_scale, 0.15)
+	tw.tween_property(self, "scale", _base_scale, SETTINGS.current().motion_duration(0.15))
 
 
 ## ── 組裝 ─────────────────────────────────────────────
@@ -160,8 +162,10 @@ func _popup_number(text_value: String, color: Color) -> void:
 	add_child(lb)
 	lb.position = Vector3(0.0, CHAR_HEIGHT * 0.7, 0.0)
 	var tw := lb.create_tween().set_parallel(true)
-	tw.tween_property(lb, "position:y", CHAR_HEIGHT * 0.7 + 0.9, 0.8)
-	tw.tween_property(lb, "modulate:a", 0.0, 0.8).set_ease(Tween.EASE_IN)
+	tw.tween_property(lb, "position:y", CHAR_HEIGHT * 0.7 + 0.9,
+		SETTINGS.current().motion_duration(0.8))
+	tw.tween_property(lb, "modulate:a", 0.0, SETTINGS.current().motion_duration(0.8))\
+		.set_ease(Tween.EASE_IN)
 	tw.chain().tween_callback(lb.queue_free)
 
 
@@ -170,6 +174,9 @@ func _play_idle() -> void:
 	var frames := _apply_sheet(data.standee)
 	if _anim != null:
 		_anim.kill()
+	if SETTINGS.current().reduce_motion:
+		_sprite.frame = 0
+		return
 	_anim = _sprite.create_tween().set_loops()
 	for f in range(frames):
 		_anim.tween_callback(func() -> void: _sprite.frame = f).set_delay(0.12)
@@ -193,7 +200,8 @@ func _play_one_shot(suffix: String, back_to_idle: bool = true) -> bool:
 		_anim.kill()
 	_anim = _sprite.create_tween()
 	for f in range(frames):
-		_anim.tween_callback(func() -> void: _sprite.frame = f).set_delay(0.1)
+		_anim.tween_callback(func() -> void: _sprite.frame = f)\
+			.set_delay(SETTINGS.current().motion_duration(0.1))
 	if back_to_idle:
 		_anim.tween_callback(_play_idle)
 	return true

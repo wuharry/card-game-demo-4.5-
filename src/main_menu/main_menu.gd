@@ -13,6 +13,8 @@
 ## 按鈕)+ 四周壓暗的 vignette;被選中的選項會亮起、底下浮出一條金線。
 extends Node3D
 
+const SETTINGS: GDScript = preload("res://src/settings/app_settings.gd")
+
 ## ── Inspector 可調參數 ──────────────────────────────
 @export var game_title: String = "卡牌對決"                      # 主標題(改名不用動 code)
 @export var game_subtitle: String = "CardGame Demo · Godot 4.5"  # 底部小字
@@ -40,6 +42,7 @@ const NET_CLIENT_SCRIPT: GDScript = preload("res://src/net/net_client.gd")
 
 ## 牌庫圖鑑(src/card_gallery/card_gallery.gd)。同樣走 preload 路徑實例化(§19)。
 const CARD_GALLERY_SCRIPT: GDScript = preload("res://src/card_gallery/card_gallery.gd")
+const SETTINGS_PANEL_SCRIPT: GDScript = preload("res://src/settings/settings_panel.gd")
 
 ## ── 字型 ────────────────────────────────────────────
 ## 思源宋體(Noto Serif TC)= 中文襯線主角:標題與選單都用它,氣質靠它撐;
@@ -72,6 +75,7 @@ var _host_btn: Button            # 尋找對手鈕(排隊中鎖住,返回才解�
 
 ## 牌庫圖鑑(全螢幕疊層,自成 CanvasLayer):平時藏著,按「牌庫圖鑑」才 open。
 var _card_gallery: CanvasLayer
+var _settings_panel: CanvasLayer
 
 
 func _ready() -> void:
@@ -89,10 +93,16 @@ func _ready() -> void:
 	_card_gallery.name = "CardGallery"
 	add_child(_card_gallery)
 	_card_gallery.closed.connect(_on_gallery_closed)
+	_settings_panel = SETTINGS_PANEL_SCRIPT.new()
+	_settings_panel.name = "SettingsPanel"
+	add_child(_settings_panel)
+	_settings_panel.closed.connect(_on_settings_closed)
+	_settings_panel.settings_saved.connect(_on_settings_saved)
 	_start_button.grab_focus()   # 給鍵盤焦點:開場直接按 Enter 就能開始
 	# 開場從全黑淡入:黑幕 alpha 1 → 0。黑幕蓋得住 3D 和 UI,整個畫面一起浮現。
 	_fade_rect.color.a = 1.0
-	create_tween().tween_property(_fade_rect, "color:a", 0.0, 0.8)
+	create_tween().tween_property(
+		_fade_rect, "color:a", 0.0, SETTINGS.current().motion_duration(0.8))
 
 
 ## ── 3D 背景:實例化城鎮 + 固定構圖鏡頭 ──────────────────
@@ -169,9 +179,18 @@ func _build_menu_sigil(ui: Control) -> void:
 
 ## ── 選單主體:置中一欄(標題 → 金線 → 選項)──────────────
 func _build_menu_column(ui: Control) -> void:
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	scroll.scroll_vertical_custom_step = 48
+	scroll.follow_focus = true
+	ui.add_child(scroll)
+	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
 	var center_box := CenterContainer.new()
-	ui.add_child(center_box)
-	center_box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	center_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	center_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.add_child(center_box)
 
 	var stage := PanelContainer.new()
 	stage.custom_minimum_size = Vector2(430, 0)
@@ -196,7 +215,7 @@ func _build_menu_column(ui: Control) -> void:
 
 	# 標題:襯線粗體 + 往下柔影。陰影比粗描邊高級:大字配粗描邊會有「貼紙感」。
 	var title := Label.new()
-	title.text = game_title
+	title.text = SETTINGS.current().text("game_title")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_override("font", FONT_TITLE)
 	title.add_theme_font_size_override("font_size", 66)
@@ -217,23 +236,27 @@ func _build_menu_column(ui: Control) -> void:
 
 	col.add_child(_make_spacer(20))
 
-	_start_button = _make_menu_option("開始遊戲")
+	_start_button = _make_menu_option(SETTINGS.current().text("menu_start"))
 	_start_button.pressed.connect(_on_start_pressed)
 	col.add_child(_start_button)
 
-	_practice_button = _make_menu_option("單人練習")
+	_practice_button = _make_menu_option(SETTINGS.current().text("menu_practice"))
 	_practice_button.pressed.connect(_on_practice_pressed)
 	col.add_child(_practice_button)
 
-	var net_btn := _make_menu_option("連線對戰")
+	var net_btn := _make_menu_option(SETTINGS.current().text("menu_online"))
 	net_btn.pressed.connect(_open_lobby)
 	col.add_child(net_btn)
 
-	var gallery_btn := _make_menu_option("牌庫圖鑑")
+	var gallery_btn := _make_menu_option(SETTINGS.current().text("menu_gallery"))
 	gallery_btn.pressed.connect(_open_gallery)
 	col.add_child(gallery_btn)
 
-	var quit_btn := _make_menu_option("離開遊戲")
+	var settings_btn := _make_menu_option(SETTINGS.current().text("menu_settings"))
+	settings_btn.pressed.connect(_open_settings)
+	col.add_child(settings_btn)
+
+	var quit_btn := _make_menu_option(SETTINGS.current().text("menu_quit"))
 	quit_btn.pressed.connect(func() -> void: get_tree().quit())   # 直接關閉遊戲
 	col.add_child(quit_btn)
 
@@ -243,6 +266,10 @@ func _build_menu_column(ui: Control) -> void:
 
 ## ── 底部小字:版本行,像標題畫面角落的版權訊息 ─────────────
 func _build_footer(ui: Control) -> void:
+	# 放大 UI 時把垂直空間全留給可操作選項；版本字是裝飾資訊，
+	# 不應與「設定／離開遊戲」爭搶無障礙空間。
+	if SETTINGS.current().ui_scale > 1.0:
+		return
 	var sub := Label.new()
 	sub.text = game_subtitle
 	sub.add_theme_font_override("font", FONT_SUB)
@@ -283,7 +310,7 @@ func _lock_entry_buttons() -> void:
 func _enter_game() -> void:
 	# 淡出到全黑(純手感)。await = 停在這行,等 tween 的 finished 信號發出才繼續。
 	var tw := create_tween()
-	tw.tween_property(_fade_rect, "color:a", 1.0, 0.35)
+	tw.tween_property(_fade_rect, "color:a", 1.0, SETTINGS.current().motion_duration(0.35))
 	await tw.finished
 	# change_scene_to_file:卸載目前場景,載入並切換到指定路徑的場景。
 	var err := get_tree().change_scene_to_file(GAME_SCENE)
@@ -303,7 +330,7 @@ func _build_lobby_column(parent: Container) -> void:
 	parent.add_child(_lobby_col)
 
 	var title := Label.new()
-	title.text = "連線對戰"
+	title.text = SETTINGS.current().text("menu_online")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_override("font", FONT_TITLE)
 	title.add_theme_font_size_override("font_size", 44)
@@ -329,7 +356,7 @@ func _build_lobby_column(parent: Container) -> void:
 	_lobby_col.add_child(row)
 
 	_ip_edit = LineEdit.new()
-	_ip_edit.placeholder_text = "伺服器位址(本機測試 127.0.0.1)"
+	_ip_edit.placeholder_text = SETTINGS.current().text("lobby_address")
 	_ip_edit.text = NetMatch.server_host
 	_ip_edit.custom_minimum_size = Vector2(300, 44)
 	_ip_edit.add_theme_font_override("font", FONT_MENU)
@@ -347,7 +374,7 @@ func _build_lobby_column(parent: Container) -> void:
 
 	# 只剩一顆按鈕:ADR-002 之後玩家不再需要決定「當房主還是加入」——
 	# 兩邊都是 client,伺服器負責配對與指派先後手。
-	_host_btn = _make_menu_option("尋找對手")
+	_host_btn = _make_menu_option(SETTINGS.current().text("lobby_find"))
 	_host_btn.pressed.connect(_on_find_match_pressed)
 	_lobby_col.add_child(_host_btn)
 
@@ -364,7 +391,7 @@ func _build_lobby_column(parent: Container) -> void:
 
 	_lobby_col.add_child(_make_spacer(20))
 
-	var back_btn := _make_menu_option("返回")
+	var back_btn := _make_menu_option(SETTINGS.current().text("back"))
 	back_btn.pressed.connect(_close_lobby)
 	_lobby_col.add_child(back_btn)
 
@@ -381,10 +408,26 @@ func _on_gallery_closed() -> void:
 	_start_button.grab_focus()
 
 
+func _open_settings() -> void:
+	_menu_col.visible = false
+	_settings_panel.open()
+
+
+func _on_settings_closed() -> void:
+	_menu_col.visible = true
+	_start_button.grab_focus()
+
+
+func _on_settings_saved() -> void:
+	# 語言、UI 比例與高對比都在建立 Control 時決定。主選單沒有局內狀態，
+	# 重建當前場景可讓所有既有面板一次沿用新設定，不留半新半舊 UI。
+	get_tree().call_deferred("reload_current_scene")
+
+
 func _open_lobby() -> void:
 	_menu_col.visible = false
 	_lobby_col.visible = true
-	_lobby_status.text = "按「尋找對手」連上伺服器排配對,湊到兩人就自動開局。"
+	_lobby_status.text = SETTINGS.current().text("lobby_help")
 	_ip_edit.grab_focus()
 
 
@@ -421,7 +464,8 @@ func _make_menu_option(text_value: String) -> Button:
 	btn.custom_minimum_size = Vector2(300, 46)
 	btn.add_theme_font_override("font", FONT_MENU)
 	btn.add_theme_font_size_override("font_size", 22)
-	btn.add_theme_color_override("font_color", GOLD_DIM)
+	btn.add_theme_color_override(
+		"font_color", UI_STYLE.GOLD_BRIGHT if SETTINGS.current().high_contrast else GOLD_DIM)
 	btn.add_theme_color_override("font_hover_color", UI_STYLE.GOLD_BRIGHT)
 	btn.add_theme_color_override("font_focus_color", UI_STYLE.GOLD_BRIGHT)
 	btn.add_theme_color_override("font_pressed_color", GOLD)

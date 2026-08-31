@@ -17,6 +17,8 @@ extends Node3D
 ## 好處：其他腳本可以寫 var c: Card，並享有自動補全與型別檢查。
 class_name Card
 
+const SETTINGS: GDScript = preload("res://src/settings/app_settings.gd")
+
 
 ## ── 信號 (signal) ──────────────────────────────
 ## 信號就像「廣播」：這張卡不直接去呼叫別人，而是大喊一聲，
@@ -116,7 +118,7 @@ func _ready() -> void:
 ## 一份資料可以餵給很多張卡(資料與場上物件分離，見 card_data.gd 開頭的說明)。
 func setup(card_data: CardData) -> void:
 	data = card_data
-	$NameLabel.text = data.card_name
+	$NameLabel.text = SETTINGS.current().card_name(data)
 	$CostLabel.text = str(data.cost)   # Label3D 的 text 只吃字串，int 要用 str() 轉
 	$ATKLabel.text = str(data.atk)
 	$HPLabel.text = str(data.hp)
@@ -245,14 +247,16 @@ func _update_skill_label() -> void:
 			# 【技能名】◆費用·三分類 + 換行描述;◆ 與指令選單同符號。
 			# 三分類(強化/獨立/非攻擊)決定行動經濟,桌遊試玩回饋:卡面要標出來。
 			parts.append("【%s】◆%d·%s\n%s" % [
-				s.skill_name, s.cost, SkillData.KIND_NAMES[s.kind], s.description])
+				SETTINGS.current().skill_name(data, s), s.cost, SETTINGS.current().kind_name(s.kind),
+				SETTINGS.current().skill_description(s)])
 		else:
 			# 法術卡:卡名/費用已在卡框上緣,文字區只印效果,不重複報頭。
-			parts.append(s.description)
+			parts.append(SETTINGS.current().skill_description(s))
 	# 戰吼排在主動技之後:主動技是玩家每回合要決策的東西,戰吼登場跑完就結束了,
 	# 文字區只有 5 行,先印要反覆讀的那個。兩個都有時超出的部分由 _fit_card_text 截斷。
 	if data != null and data.battlecry != null:
-		parts.append("【戰吼】%s" % data.battlecry.description)
+		parts.append("【%s】%s" % [SETTINGS.current().text("battlecry"),
+			SETTINGS.current().skill_description(data.battlecry)])
 	# 沒有主動技也沒有戰吼的白板:留白。
 	lb.text = _fit_card_text("\n".join(parts)) if not parts.is_empty() else ""
 	_update_type_label()
@@ -276,7 +280,7 @@ func _update_type_label() -> void:
 		lb.render_priority = 1
 		lb.outline_size = 0
 	var badge: Array = TYPE_BADGES.get(data.card_type, ["?", Color(0.2, 0.2, 0.2)])
-	lb.text = "‧ %s ‧" % badge[0]
+	lb.text = "‧ %s ‧" % SETTINGS.current().type_name(data.card_type)
 	lb.modulate = badge[1]
 
 
@@ -319,7 +323,7 @@ func show_standee() -> void:
 	# 召喚彈出:從極小放大回 1;BACK + EASE_OUT = 微微過衝再回彈,有「登場」感。
 	_standee.scale = Vector3.ONE * 0.05
 	var pop := _standee.create_tween()
-	pop.tween_property(_standee, "scale", Vector3.ONE, 0.3)\
+	pop.tween_property(_standee, "scale", Vector3.ONE, SETTINGS.current().motion_duration(0.3))\
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	# 有 Summon 兄弟表就先完整播一次,播完由 play_one_shot_anim 自動回 Idle;
 	# 沒有的舊角色維持原本直接播待機。這讓新增素材不必再改召喚流程。
@@ -334,6 +338,9 @@ func show_standee() -> void:
 func _play_sheet_loop(frame_count: int) -> void:
 	if _standee_anim != null:
 		_standee_anim.kill()
+	if SETTINGS.current().reduce_motion:
+		_standee.frame = 0
+		return
 	_standee_anim = _standee.create_tween().set_loops()
 	for f in range(frame_count):
 		_standee_anim.tween_callback(func() -> void: _standee.frame = f).set_delay(0.12)
@@ -364,7 +371,8 @@ func play_one_shot_anim(suffix: String) -> bool:
 		_standee_anim.kill()
 	_standee_anim = _standee.create_tween()
 	for f in range(frames):
-		_standee_anim.tween_callback(func() -> void: _standee.frame = f).set_delay(0.1)
+		_standee_anim.tween_callback(func() -> void: _standee.frame = f)\
+			.set_delay(SETTINGS.current().motion_duration(0.1))
 	_standee_anim.tween_callback(_restore_idle)   # 最後一格播完 → 回待機
 	return true
 
@@ -467,14 +475,15 @@ func animate_hover(zoom: float = 1.35) -> void:
 	# create_tween() 會建立一個補間動畫器：在一段時間內把某個屬性平滑地變化。
 	var tw := create_tween()
 	# 把 scale 在 0.15 秒內，從現在平滑變到「原始大小 × zoom」(基準用快照,見 original_scale)。
-	tw.tween_property(self, "scale", original_scale * zoom, 0.15)
+	tw.tween_property(self, "scale", original_scale * zoom, SETTINGS.current().motion_duration(0.15))
 	# 手牌卡同步抬升+微微向前(local +Z 朝鏡頭),蓋過鄰卡;上桌單位不抬(它們沒被遮)。
 	# 目標是「絕對位置」(基準+固定偏移),連打多少次 hover 都收斂到同一點,不累積。
 	if not is_on_board and _has_hand_base:
 		stop_hover_motion()
 		_pos_tween = create_tween().set_parallel(true)
 		var lift := Vector3(0.0, HOVER_LIFT, 0.05)
-		_pos_tween.tween_property(self, "position", hand_base_pos + lift, 0.15)
+		_pos_tween.tween_property(self, "position", hand_base_pos + lift,
+			SETTINGS.current().motion_duration(0.15))
 		# 判定與演出分離:視覺抬上去,碰撞箱反向補償「釘在扇形原位」——
 		# hover 演出若把判定幾何一起搬走,游標下一幀就不再指到這張卡,
 		# exit→歸位→又 enter→又抬……enter/exit 迴圈 = 卡片閃爍。
@@ -483,20 +492,23 @@ func animate_hover(zoom: float = 1.35) -> void:
 		var rot := transform.basis.orthonormalized()
 		var s := original_scale.x * zoom
 		_pos_tween.tween_property($Area3D, "position",
-			_area_base_pos + (rot.inverse() * -lift) / s, 0.15)
+			_area_base_pos + (rot.inverse() * -lift) / s,
+			SETTINGS.current().motion_duration(0.15))
 
 
 func animate_unhover() -> void:
 	var tw := create_tween()
 	# 0.15 秒內縮回原始大小。
-	tw.tween_property(self, "scale", original_scale, 0.15)
+	tw.tween_property(self, "scale", original_scale, SETTINGS.current().motion_duration(0.15))
 	if not is_on_board and _has_hand_base:
 		stop_hover_motion()
 		_pos_tween = create_tween().set_parallel(true)
-		_pos_tween.tween_property(self, "position", hand_base_pos, 0.15)
+		_pos_tween.tween_property(self, "position", hand_base_pos,
+			SETTINGS.current().motion_duration(0.15))
 		# 歸位途中補償也同步收回:兩條補間淨效果 = 碰撞箱全程釘在原位,
 		# 卡片下降「掃過」游標時才不會又觸發 enter(反向的閃爍迴圈)。
-		_pos_tween.tween_property($Area3D, "position", _area_base_pos, 0.15)
+		_pos_tween.tween_property($Area3D, "position", _area_base_pos,
+			SETTINGS.current().motion_duration(0.15))
 
 
 ## ── 公開方法:上桌 / 回手 ─────────────────────────
@@ -552,7 +564,7 @@ func add_shield(amount: int) -> void:
 		return
 	shield += amount
 	_update_status_label()
-	_popup_number("盾+%d" % amount, Color(0.55, 0.8, 1.0))
+	_popup_number(SETTINGS.current().text("shield_gain") % amount, Color(0.55, 0.8, 1.0))
 
 
 ## 護盾吸收:回傳「穿透護盾、真正要扣血的量」。
@@ -563,7 +575,7 @@ func absorb_with_shield(amount: int) -> int:
 	var absorbed := mini(shield, amount)
 	shield -= absorbed
 	_update_status_label()
-	_popup_number("盾-%d" % absorbed, Color(0.55, 0.8, 1.0))
+	_popup_number(SETTINGS.current().text("shield_loss") % absorbed, Color(0.55, 0.8, 1.0))
 	return amount - absorbed
 
 
@@ -583,8 +595,9 @@ func _popup_number(text_value: String, color: Color) -> void:
 	# 上桌的卡躺平,local +Z = 世界正上方(同 show_standee 的座標邏輯)。
 	lb.position = Vector3(0.0, 0.0, 1.1)
 	var tw := lb.create_tween().set_parallel(true)
-	tw.tween_property(lb, "position:z", 2.0, 0.8)
-	tw.tween_property(lb, "modulate:a", 0.0, 0.8).set_ease(Tween.EASE_IN)
+	tw.tween_property(lb, "position:z", 2.0, SETTINGS.current().motion_duration(0.8))
+	tw.tween_property(lb, "modulate:a", 0.0, SETTINGS.current().motion_duration(0.8))\
+		.set_ease(Tween.EASE_IN)
 	tw.chain().tween_callback(lb.queue_free)
 
 
@@ -620,7 +633,8 @@ func _refresh_hp_label() -> void:
 	if current_hp < data.hp:
 		$HPLabel.modulate = Color(1.0, 0.52, 0.43)
 		_hp_flash_tween = create_tween()
-		_hp_flash_tween.tween_property($HPLabel, "modulate", _hp_label_color, 0.32)\
+		_hp_flash_tween.tween_property($HPLabel, "modulate", _hp_label_color,
+			SETTINGS.current().motion_duration(0.32))\
 			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 
@@ -699,9 +713,9 @@ func _update_status_label() -> void:
 	# 用「盾N」而不是 🛡 符號:專案字型是 Noto Serif TC,不含 emoji 區段(U+1F6E1),
 	# 貼上去只會是豆腐框。狀態列本來就是「名字+數字」,這樣反而一致。
 	if shield > 0:
-		parts.append("盾%d" % shield)
+		parts.append(SETTINGS.current().text("status_shield") % shield)
 	for s in statuses:
-		parts.append("%s%d" % [STATUS_NAMES.get(s.id, "?"), int(s.turns)])
+		parts.append("%s%d" % [SETTINGS.current().status_name(s.id), int(s.turns)])
 	lb.text = " ".join(parts)
 
 
@@ -715,8 +729,9 @@ func die() -> void:
 		shape.set_deferred("disabled", true)
 	var played := _play_death_anim()
 	var tw := create_tween()
-	tw.tween_interval(0.65 if played else 0.1)   # 讓倒地動畫(6 格 × 0.1s)播完
-	tw.tween_property(self, "scale", Vector3.ONE * 0.01, 0.25)\
+	tw.tween_interval(SETTINGS.current().motion_duration(0.65 if played else 0.1))
+	tw.tween_property(self, "scale", Vector3.ONE * 0.01,
+		SETTINGS.current().motion_duration(0.25))\
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
 	tw.tween_callback(queue_free)
 
@@ -736,5 +751,6 @@ func _play_death_anim() -> bool:
 		_standee_anim.kill()
 	_standee_anim = _standee.create_tween()
 	for f in range(frames):
-		_standee_anim.tween_callback(func() -> void: _standee.frame = f).set_delay(0.1)
+		_standee_anim.tween_callback(func() -> void: _standee.frame = f)\
+			.set_delay(SETTINGS.current().motion_duration(0.1))
 	return true

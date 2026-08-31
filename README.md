@@ -80,6 +80,8 @@ main.tscn  ← 牌桌主場景 (MainScene, Node3D)  [src/main_scene/main_scene.g
 | [src/environment/arena_pool.gd](src/environment/arena_pool.gd) | 戰場抽籤桶（static 純工具，不進場景樹）：主選單抽路徑 → `main_scene.gd` 讀取決定換不換環境 |
 | [src/main_scene/main_scene.gd](src/main_scene/main_scene.gd) | 牌桌環境切換器：依 ArenaPool 抽籤結果，`_ready` 時把烤死的森林換成抽到的戰場（用 `free()` 避免兩個 WorldEnvironment 並存） |
 | [src/main_menu/main_menu.gd](src/main_menu/main_menu.gd) | 主選單：3D 城鎮背景 + 固定鏡頭 + 歧路旅人式純文字選單（UI 全由程式組裝，CanvasLayer 疊在 3D 上） |
+| [src/settings/app_settings.gd](src/settings/app_settings.gd) | 全域設定 Autoload：`user://settings.cfg` 持久化、視窗／全螢幕、解析度、三檔畫質、繁中／英文 UI 與無障礙參數 |
+| [src/settings/settings_panel.gd](src/settings/settings_panel.gd) | 主選單設定疊層：套用／取消／恢復預設，大字模式可捲動且鍵盤焦點會自動跟隨 |
 | [src/battle_ui/battle_ui.gd](src/battle_ui/battle_ui.gd) | 指令選單（歧路旅人式）：點擊上桌單位 → 攻擊/技能/取消 + 效果描述列；指定目標時出提示字；戰況 HUD（回合/魔力/結束回合/提示訊息）。全程式生成，由 CardManager 掛載並訂閱信號 |
 | [src/battle_manager/battle_manager.gd](src/battle_manager/battle_manager.gd) | 戰鬥帳房：魔力/回合/行動經濟（§1/§3/§6）與真結算（§4.2 雙向傷害交換、死亡清位、打臉與路線阻擋 §4.1、勝負判定）。訂閱 `CardManager.action_performed`；規則只寫這一份，UI 轉述 |
 | [src/hero/hero.gd](src/hero/hero.gd) | 本體（玩家/敵方的「臉」）：像素立牌呈現（同卡牌角色、無卡槽）、HP 20、受擊/死亡動畫；程式生成、站位由卡槽群組實際位置推算 |
@@ -416,6 +418,7 @@ func apply_freeze(unit, turns := 1) -> void:
 - [x] 程序化森林散佈（成簇樹叢、內圈淨空、PSX alpha 鏤空材質）+ 地形整修（溪流凹進地形、樹木落地、地景小物散佈、遠景土丘、世界邊界推遠配霧）
 - [x] 牌堆視覺（玩家右側卡背堆疊）
 - [x] 主選單（歧路旅人式：3D 城鎮背景 + 固定鏡頭 + 純文字選單）
+- [x] **完整設定系統（2026-08-31）**：視窗／全螢幕與 720p–1440p 解析度；低／中／高畫質實際調整 3D 渲染比例、MSAA、FXAA 與陰影圖；繁體中文／English 切換主選單、圖鑑分類、戰鬥 UI 與資料化卡牌效果；無障礙含 UI 100/125/150%、高對比、減少動態（主選單／設定面板皆可捲動與鍵盤導覽）。全部保存至 `user://settings.cfg`；`tests/settings_test.gd` 自動驗收加 720p 中英文／150% 實機截圖檢查。
 - [x] 戰場家族：洞窟 / 冰原 / 城鎮（ArenaBase 繼承 + ArenaPool 隨機輪替）
 - [x] 卡槽高亮著色器（鈴蘭之劍式：圓角雙框 SDF + 內緣漸層 + 拖曳懸停呼吸脈動發光；執行期掛材質、場景檔零改動）
 - [x] **牌桌構圖改版（2026-07-14）**：鏡頭沿中線一眼看穿「我方本體→我方卡槽→溪流→敵方卡槽→敵方本體」，歧路旅人式斜視角（俯角 36°、fov 50，截圖 harness 迭代定案後烘進 main.tscn）；手牌壓在畫面下緣只露卡頂、面向鏡頭攤開（hand 傾 -108° 與每張卡自帶 +55° 合成後法線對準視線），hover 抬升整張浮出（爐石式，`HOVER_LIFT`）；敵方卡槽改**鏡像**（前排貼中線——修正舊版「敵方前排反而離玩家更遠」的語意顛倒，全場 mid_z 歸 0）；本體改巫師 vs 死靈法師、鏡像站各自後排正後方 2.2；溪流置中 z=0（Stream 節點/ground_generator/forest_scatter 三處同步）、岸線蜿蜒收斂（bank_jitter 0.9→0.4）保證水帶最寬 ±1.7 不進前排卡槽（槽緣 ±1.74）；forest/caverns/frostlands 與 client 翻轉視角構圖皆截圖驗證

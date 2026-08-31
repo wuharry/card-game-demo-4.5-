@@ -11,6 +11,8 @@
 class_name CardGallery
 extends CanvasLayer
 
+const SETTINGS: GDScript = preload("res://src/settings/app_settings.gd")
+
 ## 關閉圖鑑(把焦點交還給主選單)。main_menu 訂閱這條決定收尾動作。
 signal closed
 
@@ -27,22 +29,22 @@ const LINE_GOLD := Color(UI_STYLE.GOLD, 0.76)
 
 ## 卡型顯示名 + 印章色(和 card.gd 的 TYPE_BADGES 同語彙;MINION 另給「從者」)。
 const TYPE_INFO := {
-	CardData.CardType.MINION: ["從者", UI_STYLE.GOLD_DIM],
-	CardData.CardType.EQUIP: ["靈裝", UI_STYLE.GOLD],
-	CardData.CardType.ARCANA: ["秘術", UI_STYLE.AMETHYST],
-	CardData.CardType.QUICK: ["瞬咒", UI_STYLE.AMETHYST_BRIGHT],
-	CardData.CardType.WARD: ["伏印", Color("75658f")],
-	CardData.CardType.DOMAIN: ["領域", UI_STYLE.TEXT_DIM],
+	CardData.CardType.MINION: ["type_minion", UI_STYLE.GOLD_DIM],
+	CardData.CardType.EQUIP: ["type_equip", UI_STYLE.GOLD],
+	CardData.CardType.ARCANA: ["type_arcana", UI_STYLE.AMETHYST],
+	CardData.CardType.QUICK: ["type_quick", UI_STYLE.AMETHYST_BRIGHT],
+	CardData.CardType.WARD: ["type_ward", Color("75658f")],
+	CardData.CardType.DOMAIN: ["type_domain", UI_STYLE.TEXT_DIM],
 }
 
 ## 篩選分頁:全部 + 五種在用的卡型(順序即分頁順序;-1 = 全部)。
 const FILTER_TABS: Array = [
-	[-1, "全部"],
-	[CardData.CardType.MINION, "從者"],
-	[CardData.CardType.ARCANA, "秘術"],
-	[CardData.CardType.EQUIP, "靈裝"],
-	[CardData.CardType.QUICK, "瞬咒"],
-	[CardData.CardType.WARD, "伏印"],
+	[-1, "filter_all"],
+	[CardData.CardType.MINION, "type_minion"],
+	[CardData.CardType.ARCANA, "type_arcana"],
+	[CardData.CardType.EQUIP, "type_equip"],
+	[CardData.CardType.QUICK, "type_quick"],
+	[CardData.CardType.WARD, "type_ward"],
 ]
 
 const GRID_COLUMNS := 5
@@ -141,7 +143,7 @@ func _build_header(col: VBoxContainer) -> void:
 	col.add_child(row)
 
 	var title := Label.new()
-	title.text = "牌庫圖鑑"
+	title.text = SETTINGS.current().text("gallery_title")
 	title.add_theme_font_override("font", FONT_TITLE)
 	title.add_theme_font_size_override("font_size", 40)
 	title.add_theme_color_override("font_color", GOLD)
@@ -158,7 +160,7 @@ func _build_header(col: VBoxContainer) -> void:
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(spacer)
 
-	_back_btn = _make_text_button("返回", 24)
+	_back_btn = _make_text_button(SETTINGS.current().text("back"), 24)
 	_back_btn.pressed.connect(close)
 	row.add_child(_back_btn)
 
@@ -177,7 +179,7 @@ func _build_tabs(col: VBoxContainer) -> void:
 	col.add_child(_tab_row)
 	for tab in FILTER_TABS:
 		var type_id: int = tab[0]
-		var btn := _make_text_button(tab[1], 20)
+		var btn := _make_text_button(SETTINGS.current().text(tab[1]), 20)
 		btn.pressed.connect(func() -> void:
 			_active_filter = type_id
 			_refresh_grid()
@@ -195,7 +197,7 @@ func _refresh_grid() -> void:
 			continue
 		_grid.add_child(_make_card_tile(cd))
 		shown += 1
-	_count_label.text = "  共 %d 張" % shown
+	_count_label.text = "  " + (SETTINGS.current().text("gallery_count") % shown)
 
 
 ## 分頁高亮:當前分頁的字轉亮金,其餘沉金(靠字色區分,不做底色按鈕)。
@@ -231,7 +233,7 @@ func _make_card_tile(d: CardData) -> Control:
 	name_l.add_theme_color_override("font_color", GOLD)
 	name_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	name_l.text = "%s  ◆%d" % [d.card_name, d.cost]
+	name_l.text = "%s  ◆%d" % [SETTINGS.current().card_name(d), d.cost]
 	col.add_child(name_l)
 
 	var info: Array = TYPE_INFO.get(d.card_type, ["?", GOLD_DIM])
@@ -241,9 +243,10 @@ func _make_card_tile(d: CardData) -> Control:
 	badge.add_theme_color_override("font_color", (info[1] as Color).lightened(0.35))
 	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	if d.card_type == CardData.CardType.MINION:
-		badge.text = "從者  攻 %d / 血 %d" % [d.atk, d.hp]
+		badge.text = ("%s  ATK %d / HP %d" if SETTINGS.current().language == "en" \
+			else "%s  攻 %d / 血 %d") % [SETTINGS.current().type_name(d.card_type), d.atk, d.hp]
 	else:
-		badge.text = info[0]
+		badge.text = SETTINGS.current().text(info[0])
 	col.add_child(badge)
 
 	var desc := Label.new()
@@ -265,16 +268,18 @@ func _skill_text(d: CardData) -> String:
 	if d.active_skill != null:
 		var s := d.active_skill
 		if d.card_type == CardData.CardType.MINION:
-			parts.append("【%s】%s" % [s.skill_name, s.description])
+			parts.append("【%s】%s" % [
+				SETTINGS.current().skill_name(d, s), SETTINGS.current().skill_description(s)])
 		else:
-			parts.append(s.description)
+			parts.append(SETTINGS.current().skill_description(s))
 	if d.battlecry != null:
-		parts.append("【戰吼】%s" % d.battlecry.description)
+		parts.append("【%s】%s" % [
+			SETTINGS.current().text("battlecry"), SETTINGS.current().skill_description(d.battlecry)])
 	if not d.keywords.is_empty():
 		var words: PackedStringArray = []
 		for w in d.keywords:
-			words.append(String(w))
-		parts.append("關鍵字:" + "、".join(words))
+			words.append(SETTINGS.current().keyword_name(w))
+		parts.append(SETTINGS.current().text("keywords") + ": " + ", ".join(words))
 	if parts.is_empty():
 		return "—"
 	return "\n".join(parts)

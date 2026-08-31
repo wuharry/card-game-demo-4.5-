@@ -9,6 +9,8 @@
 extends Node3D
 class_name PlayerHand
 
+const SETTINGS: GDScript = preload("res://src/settings/app_settings.gd")
+
 ## ── 可在 Inspector 調整的參數(@export)──────────────
 ## @export 變數會出現在右側 Inspector 面板，可直接拖拉數值即時調整，不必改程式。
 ## card_scene：手牌要生成的卡片藍圖。preload() = 在遊戲啟動前就先把這個場景檔載入備用。
@@ -201,11 +203,12 @@ func _arrange_fan(stagger: float = 0.0, instant: bool = false) -> void:
 
 		# 用 Tween 平滑移動到新位置，所以出牌後重排會有流暢的滑動動畫。
 		# set_parallel(true) 讓位置、旋轉、縮放三個動畫「同時」進行。
-		var delay := stagger * float(i)   # 依序起飛:第 i 張多等 i 份延遲
+		var delay: float = float(SETTINGS.current().motion_duration(stagger * float(i)))
 		var tw := cards[i].create_tween().set_parallel(true)
-		tw.tween_property(cards[i], "position", target_pos, 0.2)\
+		tw.tween_property(cards[i], "position", target_pos, SETTINGS.current().motion_duration(0.2))\
 			.set_delay(delay)                                       # 0.2 秒移到定位
-		tw.tween_property(cards[i], "rotation_degrees", target_rot, 0.2)\
+		tw.tween_property(cards[i], "rotation_degrees", target_rot, SETTINGS.current().motion_duration(0.2))\
 			.set_delay(delay)                                       # 同步轉到目標角度
-		tw.tween_property(cards[i], "scale", Vector3.ONE * card_uniform_scale, 0.2)\
+		tw.tween_property(cards[i], "scale", Vector3.ONE * card_uniform_scale,
+			SETTINGS.current().motion_duration(0.2))\
 			.set_delay(delay)                                       # 回到手牌標準大小
