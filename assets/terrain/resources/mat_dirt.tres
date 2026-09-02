@@ -1,7 +1,7 @@
 [gd_resource type="StandardMaterial3D" load_steps=3 format=3 uid="uid://17fp88e1x4hq"]
 
-[ext_resource type="Texture2D" uid="uid://chq78sh0lxf34" path="res://assets/terrain/pixel_3d_grasslands/landscape_tiles/Grassland_Dirt_Tile_01.png" id="1_v2mc1"]
-[ext_resource type="Texture2D" uid="uid://56d45ugeg3h6" path="res://assets/terrain/pixel_3d_grasslands/landscape_tiles/Grassland_Dirt_Tile_N_01.png" id="2_jawre"]
+[ext_resource type="Texture2D" uid="uid://d06b6v737vtwc" path="res://assets/terrain/pixel_3d_grasslands/landscape_tiles/Grassland_Dirt_Tile_01.png" id="1_v2mc1"]
+[ext_resource type="Texture2D" uid="uid://cl438spo5ddue" path="res://assets/terrain/pixel_3d_grasslands/landscape_tiles/Grassland_Dirt_Tile_N_01.png" id="2_jawre"]
 
 [resource]
 albedo_texture = ExtResource("1_v2mc1")

@@ -31,4 +31,4 @@
 
 ## 引擎
 
-- Godot Engine 4.5 — MIT License(發佈時依官方指引附上 https://godotengine.org/license)
+- Godot Engine 4.7 — MIT License(發佈時依官方指引附上 https://godotengine.org/license)

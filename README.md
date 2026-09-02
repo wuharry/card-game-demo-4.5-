@@ -1,10 +1,10 @@
-# CardGame Demo (Godot 4.5)
+# CardGame Demo (Godot 4.7)
 
 3D 卡牌遊戲原型，走 HD-2D 風格。實作卡片拖曳、懸停放大、爐石式扇形手牌、卡槽放置、
 CardData 資料層（24 張卡、隨機發牌）、卡圖挖空窗與遊戲王式召喚立牌，
 以及主選單（歧路旅人式介面）與多張程序生成戰場（森林 / 洞窟 / 冰原隨機輪替，城鎮作主選單背景）。
 
-- 引擎：Godot **4.5**，算繪器 **Forward+**（bloom / SSAO / SSR / 霧；後製集中在各戰場場景的 WorldEnvironment）
+- 引擎：Godot **4.7**，算繪器 **Forward+**（bloom / SSAO / SSR / 霧；後製集中在各戰場場景的 WorldEnvironment）
 - 進入點：`scenes/main_menu.tscn`（主選單）→「開始遊戲」→ `scenes/main.tscn`（牌桌）
 
 > 📖 **遊戲規則設計規格**請見下方「[遊戲規則設計規格 (Gameplay Spec)](#-遊戲規則設計規格-gameplay-spec)」。
@@ -460,9 +460,10 @@ func apply_freeze(unit, turns := 1) -> void:
 
 - **回歸測試在 [tests/](tests/)**（headless SceneTree 腳本，曾放系統暫存被清掉兩次，故落籍版控）：
   `Godot --headless --path . -s tests/spell_smoke.gd`（法術結算 14 斷言）、`tests/ai_turn_test.gd`（單人 vs AI 完整回合）、`tests/ai_strategy_test.gd`（AI 秘術/靈裝/伏印/技能/棄牌回魔與優先級）、`tests/hover_spam_test.gd`（手牌 hover 漂移/碰撞箱釘位）、`tests/grave_test.gd`（墓地＋丟牌回魔 14 斷言）、`tests/net_battle_test.gd`（雙進程連線 loopback：先開 host，再帶 `-- client` 開第二個進程，比對兩端簽名）。
-  另有幾支**非 CI 的工具腳本**：`tests/screenshot.gd` / `tests/screenshot_summon.gd`（非 headless 跑遊戲存 PNG，驗純視覺改動）、`tests/screenshot_leave.gd`（拍「離開對戰」確認窗，並印出面板實際尺寸；加 `-- <png> online` 拍連線版的長文案）、`tests/upnp_probe.gd`（實測目前網路的 UPnP 打洞，結果依環境而異）。
+  另有幾支**非 CI 的工具腳本**：`tests/screenshot.gd` / `tests/screenshot_summon.gd`（非 headless 跑遊戲存 PNG，驗純視覺改動）、`tests/screenshot_leave.gd`（拍「離開對戰」確認窗，並印出面板實際尺寸；加 `-- <png> online` 拍連線版的長文案）、`tests/upnp_probe.gd`（實測目前網路的 UPnP 打洞，結果依環境而異）、`tests/fix_stale_uids.gd`（掃全專案 `.tres`/`.tscn`，把失效的 `ext_resource` UID 換成引擎當前的正確值；`-- --dry` 只報告不寫入，`-- --drop-dangling` 連「目標根本沒有 UID」的懸空引用一起拆成純路徑）。
 - 在編輯器**外**新建帶 `class_name` 的腳本後，headless 跑會報「Identifier not declared」——全域類別註冊表（`.godot/global_script_class_cache.cfg`）由編輯器掃描生成，跑一次 `Godot --headless --editor --quit` 重掃即可。
 - `ground_generator.gd` 與 `forest_scatter.gd` 皆為 `@tool` 腳本：在編輯器調整 `@export` 後勾選 `regenerate` 即可即時重新生成，不必執行遊戲。
 - 刪除無用資源時，建議在 Godot 編輯器「FileSystem → 右鍵 → Delete」，讓引擎同步清除 `.import` 快取與 UID 記錄，避免 Finder/Terminal 直接刪除留下殘留。
+- **UID 失效**（`invalid UID ... using text path instead`）：資產重新匯入會拿到新 UID，但引用它的 `.tres`/`.tscn` 還留著舊的。能載是因為引擎退回字串路徑比對——慢，而且那組舊 ID 一旦被配給別的資源就會**默默載到錯的東西**。跑 `tests/fix_stale_uids.gd` 修（2026-09-01 一次修掉 111 處）。
 - **規則同步提醒**：本 README 的 [Gameplay Spec](#-遊戲規則設計規格-gameplay-spec) 已調整灼燒 / 中毒 / 嘲諷 / 丟牌回魔，與既有桌遊說明書（docx）不一致。若要更新桌遊說明書請以本檔為準。
 - **學習債清單**：逃生艙（AI 代工）產出的觀念、等級評等與複習考題在 [docs/LEARNING_LEDGER.md](docs/LEARNING_LEDGER.md)——複習時由 agent 從該表出題並更新等級。

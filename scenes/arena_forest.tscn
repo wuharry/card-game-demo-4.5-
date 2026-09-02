@@ -1,9 +1,9 @@
 [gd_scene load_steps=11 format=3 uid="uid://chgkpoxgxfare"]
 
-[ext_resource type="MeshLibrary" uid="uid://bhkww34j8tya5" path="res://assets/mesh_libraries/grasslands/grassland_tiles.meshlib" id="1_uyk6n"]
+[ext_resource type="MeshLibrary" path="res://assets/mesh_libraries/grasslands/grassland_tiles.meshlib" id="1_uyk6n"]
 [ext_resource type="Script" path="res://src/environment/forest_scatter.gd" id="2_scatter"]
 [ext_resource type="Shader" path="res://assets/water/stream_water.gdshader" id="3_stream"]
-[ext_resource type="Texture2D" uid="uid://cc7bu8k61vqmr" path="res://assets/water/psx_ocean_surface/clear+sea+water-2048x2048.png" id="4_watertex"]
+[ext_resource type="Texture2D" uid="uid://dv0ykqufmc67n" path="res://assets/water/psx_ocean_surface/clear+sea+water-2048x2048.png" id="4_watertex"]
 [ext_resource type="Script" path="res://src/environment/ground_generator.gd" id="5_ground"]
 
 [sub_resource type="Environment" id="Environment_5nbl3"]

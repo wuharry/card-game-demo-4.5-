@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="CardData" load_steps=8 format=3 uid="uid://btvxtn2b5hipw"]
 
 [ext_resource type="Script" uid="uid://cxot3rc105cul" path="res://src/card/card_data.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://dhj8n1g3cfdai" path="res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Priest/Priest/Priest_Idle.png" id="2_sheet"]
+[ext_resource type="Texture2D" uid="uid://rum4vn6rtuqo" path="res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Priest/Priest/Priest_Idle.png" id="2_sheet"]
 [ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
 [ext_resource type="Texture2D" path="res://assets/ui/card_art/priest_card_art.png" id="4_card_art"]
 

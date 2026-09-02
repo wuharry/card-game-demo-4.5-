@@ -7,6 +7,7 @@ extends Node
 signal settings_changed
 
 const CONFIG_PATH := "user://settings.cfg"
+const SELF_PATH := "res://src/settings/app_settings.gd"
 const SECTION := "settings"
 
 const MODE_WINDOWED := 0
@@ -26,10 +27,39 @@ var ui_scale: float = 1.0
 var high_contrast: bool = false
 var reduce_motion: bool = false
 
+## 編輯器 / 沒有 autoload 的環境下的備援實例(見 current())。
+static var _fallback: Node
 
+
+## 取得目前的設定。**保證不回傳 null。**
+##
+## 遊戲中回傳 autoload 節點。但 @tool 腳本在「編輯器裡」跑時場景樹上沒有 autoload,
+## 這時改回傳一個只帶預設值的備援實例——因為全專案 146 個呼叫點沒有半個做 null 檢查,
+## 回傳 null 等於在每支 @tool 腳本裡埋地雷(2026-09-01 升 4.7 時 player_hand.gd
+## 的扇形預覽就是踩到這個:`SETTINGS.current().motion_duration()` 打在 null 上)。
+##
+## 備援實例不掛在場景樹上,只供讀預設值;它不會存檔,也碰不到玩家真正的設定。
 static func current() -> Node:
 	var loop := Engine.get_main_loop() as SceneTree
-	return loop.root.get_node_or_null("AppSettings") if loop != null else null
+	var node: Node = loop.root.get_node_or_null("AppSettings") if loop != null else null
+	if node != null:
+		return node
+	if _fallback == null:
+		# 這裡不能 preload 自己(會變循環引用),也不能加 class_name(會和同名 autoload 打架),
+		# 所以走執行期 load——腳本早就在記憶體裡,實際上是快取命中。
+		_fallback = (load(SELF_PATH) as GDScript).new()
+		# Node 不是 RefCounted,放在 static var 裡沒人會回收它;
+		# 掛在場景樹關閉時一起 free,才不會每次關編輯器都噴 "instances were leaked"。
+		if loop != null:
+			loop.root.tree_exiting.connect(_free_fallback, CONNECT_ONE_SHOT)
+	return _fallback
+
+
+## 釋放 current() 建出來的備援實例(場景樹關閉時觸發)。
+static func _free_fallback() -> void:
+	if _fallback != null:
+		_fallback.free()
+		_fallback = null
 
 const ZH := {
 	"game_title": "卡牌對決",

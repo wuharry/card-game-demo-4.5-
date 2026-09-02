@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="CardData" load_steps=7 format=3 uid="uid://dqjlwob62d7fs"]
 
 [ext_resource type="Script" uid="uid://cxot3rc105cul" path="res://src/card/card_data.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://e5fq2dk8ue1o" path="res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Armored Orc/Armored Orc/Armored Orc_Idle.png" id="2_sheet"]
+[ext_resource type="Texture2D" uid="uid://be37g3kibub74" path="res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 01 v2.0 -Full 22 Characters/Characters(100x100 split)/Armored Orc/Armored Orc/Armored Orc_Idle.png" id="2_sheet"]
 [ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
 [ext_resource type="Texture2D" path="res://assets/ui/card_art/armored_orc_card_art.png" id="4_card_art"]
 

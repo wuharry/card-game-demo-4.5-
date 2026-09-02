@@ -119,6 +119,14 @@ func _spawn_card(card_data: CardData) -> Card:
 	card.scale = Vector3.ONE * card_uniform_scale
 	add_child(card)        # 掛進場景樹才會顯示
 	cards.append(card)     # 記進手牌陣列
+
+	# 編輯器預覽的天花板:card.gd 沒有 @tool,所以編輯器裡實體化出來的卡是
+	# 「placeholder instance」——Node3D 那層是真的,腳本那層是空殼。
+	# 碰它的 setup() 或信號都會噴 "Attempt to call a method on a placeholder instance"。
+	# 而扇形預覽只用到 transform(那是 Node3D 的,placeholder 也有),所以編輯器裡到此為止。
+	if Engine.is_editor_hint():
+		return card
+
 	if card_data != null:
 		card.setup(card_data)
 	# 把每張卡的 hover 信號「轉發」成 PlayerHand 自己的信號。
@@ -192,7 +200,9 @@ func _arrange_fan(stagger: float = 0.0, instant: bool = false) -> void:
 
 		# 同步 hover 抬升的基準位:扇形位是卡片「真位置」的唯一權威,
 		# 抬升/歸位都以它為準(細節見 card.gd 的 sync_hand_base)。
-		cards[i].sync_hand_base(target_pos)
+		# 編輯器預覽時卡是 placeholder(理由見 _spawn_card),沒有這個方法可呼叫。
+		if not Engine.is_editor_hint():
+			cards[i].sync_hand_base(target_pos)
 
 		# instant:不補間、直接就位(換邊重建用——動畫留給「新抽那張」單獨演)。
 		if instant:

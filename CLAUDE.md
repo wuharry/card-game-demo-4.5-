@@ -204,11 +204,15 @@
 - [docs/LEARNING_LEDGER.md](docs/LEARNING_LEDGER.md) 是**逃生艙學習債清單**(AI 代工過、Harvey 未必懂的觀念 × 三級評等 × 考題方向)。Harvey 主動要求「複習/考我/學以前的東西」時→從該表挑等級最低者出題並更新等級;每次逃生艙任務收尾→把新觀念記進去(預設初階/未驗)。
 
 ## 專案速覽
-- **引擎**:Godot **4.5**,語言 **GDScript**(無 C#)。
+- **引擎**:Godot **4.7**(2026-09-01 由 4.5 升級),語言 **GDScript**(無 C#)。
 - **進入點**:`scenes/main_menu.tscn`(主選單)→「開始遊戲」→ `scenes/main.tscn`(牌桌;`main_scene.gd` 依 ArenaPool 抽籤抽換戰場)。
 - **程式碼都在 [src/](src/)**:每個功能一個資料夾(`card/`、`card_manager/`、`card_slot/`、`play_hand/`、`player_board/`、`environment/`、`main_menu/`、`main_scene/`)。
-- **目前沒有 autoload / 單例**:狀態都掛在節點上,互動中樞是 `CardManager`;跨場景傳值用 `ArenaPool`(static 類別,見 `src/environment/arena_pool.gd`),別為此開 autoload。
-- 算繪器:**Forward+**(2026-07-02 已在編輯器右上角切換器確認)。`project.godot` 的 `config/features` 殘留過時標籤 "GL Compatibility"——那只是中繼資料非開關;真正的設定鍵 `rendering/renderer/rendering_method` 不存在 = 吃預設 `forward_plus`。標籤別手改,留給編輯器同步。
+- **只有一個 autoload:`AppSettings`**(`src/settings/app_settings.gd`,全域設定/語言/無障礙)。其餘狀態一律掛在節點上,互動中樞是 `CardManager`;跨場景傳值用 `ArenaPool`(static 類別,見 `src/environment/arena_pool.gd`),別為此再開 autoload。
+  `AppSettings.current()` **保證不回傳 null**:編輯器裡沒有 autoload 時會給一個只帶預設值的備援實例——因為 146 個呼叫點沒有半個做 null 檢查。
+- 算繪器:**Forward+**。`project.godot` 的 `config/features` 已於 2026-09-01 更新為 `("4.7", "Forward Plus")`(先前殘留 `"4.5", "GL Compatibility"` 的過時標籤)。
+  **實測:編輯器不會自己同步這個標籤**(跑 `--import` 兩次 project.godot 零 diff),要改就用引擎 API 寫,別手編檔案:
+  `ProjectSettings.set_setting("application/config/features", PackedStringArray([...]))` + `ProjectSettings.save()`。
+  真正的設定鍵 `rendering/renderer/rendering_method` 仍不存在 = 吃預設 `forward_plus`,與標籤一致。
 - 後製/燈光都在 `scenes/arena_forest.tscn`(被 main.tscn 實例化):WorldEnvironment(ACES/SSAO/SSR/霧/**glow 已啟用**,`glow_hdr_threshold=0.95`)+ 暖色 DirectionalLight3D。**main.tscn 自己沒有環境節點,別在那裡找。**
 
 ## 關鍵慣例(改 code 前先記住)
