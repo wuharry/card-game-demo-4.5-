@@ -572,8 +572,14 @@ func _on_left_released_drag() -> void:
 			_try_attach_equip(card)
 		CardData.CardType.WARD:
 			_try_set_ward(card)
+		CardData.CardType.QUICK:
+			var rule := card.data.active_skill.description \
+				if card.data.active_skill != null else "符合卡面所寫事件時發動。"
+			battle_ui.flash_message(
+				"瞬咒是反應牌，請留在手中並保留 ◆%d；%s" % [card.data.cost, rule])
+			organize_hand()
 		_:
-			battle_ui.flash_message("瞬咒不能主動施放:對方施放秘術時會自動詢問反制(§7)")
+			battle_ui.flash_message("這種卡型目前尚未開放")
 			organize_hand()
 
 
@@ -1011,7 +1017,9 @@ func _net_swap_pick(hand_idx: int, draw_n: int) -> void:
 
 ## 靈裝:放開在我方從者身上 = 裝備(§7:宿主離場一併離場)。
 func _try_attach_equip(card: Card) -> void:
-	var target := raycast_check_for_card()
+	# 拖曳中的卡和場上單位都在碰撞 Layer 1。若不排除手上的卡，攝影機射線
+	# 會先撞到離鏡頭較近的「裝備本身」，永遠拿不到下方的宿主。
+	var target := raycast_check_for_card(card)
 	if target == null or not target.is_on_board \
 			or battle_manager.side_of(target) != battle_manager.active_side:
 		battle_ui.flash_message("靈裝要放到「我方」場上從者身上")
@@ -1034,7 +1042,14 @@ func _try_attach_equip(card: Card) -> void:
 ## 伏印(§7 宿主制):放開在「我方場上從者」身上 = 埋設在它底下。
 ## 埋好後我方整排卡槽泛紅警戒——對手知道「有陷阱」,但不知道埋在誰底下(威懾)。
 func _try_set_ward(card: Card) -> void:
-	var host := raycast_check_for_card()
+	_try_set_ward_at(card, get_viewport().get_mouse_position())
+
+
+## 把座標拆成參數，讓 headless 回歸可以走和真實放開事件同一條操作邏輯。
+func _try_set_ward_at(card: Card, mouse_pos: Vector2) -> void:
+	# 同靈裝：放開時伏印仍停在游標射線上，必須排除它自己的 Area3D，
+	# 射線才會繼續往下找到真正要埋設的場上從者。
+	var host := _raycast_card_at(mouse_pos, card)
 	if host == null or not host.is_on_board \
 			or battle_manager.side_of(host) != battle_manager.active_side:
 		battle_ui.flash_message("伏印要埋設在「我方」場上從者底下(宿主制)")
@@ -1560,8 +1575,11 @@ func _do_execute_action(caster: Card, skill: SkillData, target: Node3D) -> void:
 
 
 ## ── 射線：找滑鼠下方的「卡片」(第 1 層)──────────────
-func raycast_check_for_card() -> Card:
-	var mouse_pos := get_viewport().get_mouse_position()
+func raycast_check_for_card(exclude_card: Card = null) -> Card:
+	return _raycast_card_at(get_viewport().get_mouse_position(), exclude_card)
+
+
+func _raycast_card_at(mouse_pos: Vector2, exclude_card: Card = null) -> Card:
 
 	# 射線起點 = 攝影機；終點 = 往滑鼠方向延伸 1000 單位(夠長即可)。
 	var from := camera.project_ray_origin(mouse_pos)
@@ -1575,6 +1593,12 @@ func raycast_check_for_card() -> Card:
 	query.collide_with_areas = true   # 卡片用的是 Area3D，必須打開才掃得到
 	query.collide_with_bodies = true
 	query.collision_mask = COLLISION_MASK_CARD  # 只掃第 1 層(卡片)
+	# 靈裝／伏印放開時，拖曳牌本身正好擋在游標射線最前面。PhysicsRayQuery
+	# 排除的是 CollisionObject3D 的 RID，因此取 Card 底下 Area3D 的 RID。
+	if is_instance_valid(exclude_card):
+		var excluded_area := exclude_card.get_node_or_null("Area3D") as Area3D
+		if excluded_area != null:
+			query.exclude = [excluded_area.get_rid()]
 
 	# 執行射線。打中東西時 result 是一個字典，沒打中是空的。
 	var result := space_state.intersect_ray(query)
