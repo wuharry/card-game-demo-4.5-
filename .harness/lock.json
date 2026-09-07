@@ -3,14 +3,16 @@
   "target": "card-game-demo-4.5--main",
   "source": "ai-wrapper/rules/_targets.json",
   "files": {
+    ".claude/rules/mentor-claude-harness.md": "139753b80e8d83653006987540180182e7567f6b84d3765208b47ecec737e8d5",
     ".claude/rules/mentor-godot.md": "b092e500a9c1bf3ed733e81e2bb8e255545b2b78cb81d628997011b85c6ed342",
     ".claude/settings.json": "9eaa7225840a58f73ecf328d0b9f2ac8b51e06a8e300d221a217e1a7583d9a24",
     ".harness/claude_hook.py": "defbac902d0a9419f47c8552be34a21d3589ade3e7e75f70dd45ffecac092a60",
     ".harness/learning-event.schema.json": "81a9c22d16b5e0f16b45bc9cbc5ad024d054bf8244fb012de1e6031e0b257dda",
     ".harness/learning-sources.json": "a3f62419040a7057db51bd6f09b8b63a59434ac02291539fd58286638d84369d",
+    ".harness/policies/claude-harness.md": "891306755f6f8b3a6d6bad3117573686bbccaa6b73f432dc60c79629c05f8070",
     ".harness/policies/godot.md": "6112469b0b78f6d9bb4d9cb7512c4067e4d5793c482fe56fd98577a8b542ec5a",
     ".harness/verify.py": "516a41a2e2ea86d8a9f57f0ad860f6c52c204fd2fca60f8b9bc827c3b5a0551a",
-    "AGENTS.md": "75d2948cf1179ddf0ea3555b784ddc2fa03f0523bf72697cfa9854bda5a833a4",
-    "CLAUDE.md": "7e8dd94be8001862540399d7cc1299a162204f24fa65d882f6cec76a09e54dc5"
+    "AGENTS.md": "a45775522911592100e030478deaed312b9e563900ba714b866bbb19748eb8eb",
+    "CLAUDE.md": "62c566e2c0291d79d86df113798beef5fe63f99b293fc723e7b39aef82039840"
   }
 }
