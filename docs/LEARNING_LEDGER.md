@@ -1,5 +1,7 @@
 # 學習債清單(Learning Ledger)
 
+> Harness v2 對照：下文 CLAUDE.md §1a／§3／§6 分別對應現行入口的模式分派／Teaching／Learning；signal 中繼鏈移至 `.harness/project.md`。本帳本仍是 `godot.cardgame.*` 的權威，原有關卡、證據及退關紀錄完整保留。
+
 > **這是什麼**:逃生艙 / AI 代工做出來、但 Harvey(Godot 新手)未必理解的觀念總帳。
 > 建帳日 2026-07-06;主帳範圍 = commit `cbb80f4`…`f11931d`(Harvey 指定的逃生艙區間)。
 >
@@ -639,4 +641,3 @@ shader 家族(§1、§17、§35、§38)、DOF 與透明深度(§32 景深)、粒
 | **GDScript 的 lambda 是傳值捕獲**:寫 `func(): changed = true` 想在 lambda 裡改外層變數,外層**不會**變。修 UID 的腳本第一版就踩這個,改成「比較回傳值和原值」才對 | 初階/未驗(逃生艙自踩自修) | 「那要怎樣才能讓 lambda 真的改到外面的狀態?為什麼 GDScript 選傳值而不是傳參考?」 |
 | **一個會回傳 null 的存取器 × 146 個沒做 null 檢查的呼叫點 = 埋在每支 `@tool` 腳本裡的地雷**:`AppSettings.current()` 在遊戲裡永遠不是 null(autoload 一定在),所以這顆雷躺了很久。修法選「讓 `current()` 保證不回傳 null」而不是「在呼叫點加 146 個 if」——**在源頭修一次 vs 在下游修 146 次** | 初階/未驗(逃生艙) | 「什麼情況下『回傳 null 讓呼叫端判斷』才是對的設計?這次為什麼不是?備援實例如果拿去存檔會發生什麼事?」 |
 | **`static var` 裝 Node 會洩漏**:Node 不是 RefCounted,沒人 free 它。修完 null 那顆雷之後,匯入日誌從 0 條變成 2 條 leak 警告——**修一個問題製造另一個**。接 `root.tree_exiting` + `CONNECT_ONE_SHOT` 才歸零 | 初階/未驗(逃生艙自踩自修) | 「如果那個備援實例改成 `RefCounted` 而不是 `Node`,還需要手動 free 嗎?為什麼 `AppSettings` 不能改成 RefCounted?」 |
-

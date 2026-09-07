@@ -1,0 +1,70 @@
+{
+  "name": "card-game-demo-4.5--main",
+  "godot": true,
+  "required_docs": [
+    ".harness/project.md"
+  ],
+  "context_docs": [],
+  "checks": [
+    {
+      "id": "card_pool_verify",
+      "argv": [
+        "godot",
+        "--headless",
+        "--path",
+        ".",
+        "--script",
+        "res://tests/card_pool_verify.gd"
+      ],
+      "timeout": 90
+    },
+    {
+      "id": "high_tier_cards_verify",
+      "argv": [
+        "godot",
+        "--headless",
+        "--path",
+        ".",
+        "--script",
+        "res://tests/high_tier_cards_verify.gd"
+      ],
+      "timeout": 90
+    },
+    {
+      "id": "generated_minions_verify",
+      "argv": [
+        "godot",
+        "--headless",
+        "--path",
+        ".",
+        "--script",
+        "res://tests/generated_minions_verify.gd"
+      ],
+      "timeout": 90
+    },
+    {
+      "id": "visual",
+      "manual": "跑與改動相關的 tests/*visual_capture.tscn／capture 腳本，固定 renderer 與 viewport，檢視圖片或互動結果。"
+    }
+  ],
+  "adopt": {
+    "CLAUDE.md": "cc01a4f946348f6ccb185560a80d0cb19e2320dc5fbab4b4e0a7b5ab99cda3f9"
+  },
+  "remove": {},
+  "retired_hook_commands": [],
+  "package_manager": "npm",
+  "learning_sources": {
+    "learner": "harvey",
+    "canonical_events": "../ai-wrapper/docs/learning/events.jsonl",
+    "ledger": {
+      "concept_prefix": "godot.cardgame.",
+      "path": "docs/LEARNING_LEDGER.md",
+      "authority": "existing ledger, preserve demotion"
+    },
+    "profile": {
+      "path": "../ai-wrapper/docs/learning-profile.md",
+      "authority": "historical advisory, not mastery"
+    },
+    "missing_source": "unknown; propose an event in handoff, do not create conflicting local scores"
+  }
+}

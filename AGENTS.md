@@ -45,6 +45,6 @@
 
 - `**/*.gd`, `**/*.tscn`, `**/*.tres`, `**/*.gdshader`, `project.godot` → `.harness/policies/godot.md`
 
-## Claude adapter
+## Codex adapter
 
-本入口與 Codex 使用相同 Mentor Core。`.claude/rules/mentor-*.md` 以 paths 限定領域；hooks 從 stdin JSON 讀事件，permissions 的實際效果受 Claude runtime／組織設定控制。檢查 `/memory` 與 `/hooks` 才能確認新 session 實際載入；靜態測試不證明 live 觸發。
+本入口內嵌 Mentor Core，不假設 Codex 支援 Claude 的 @import 或 hooks。動到索引列出的領域／巢狀目錄前，主動讀對應 policy 及更深層 AGENTS.md；session 起始的 discovery 與 runtime sandbox／approval 由 Codex 負責。Claude permissions 不會變成 Codex 的檔案 ACL。

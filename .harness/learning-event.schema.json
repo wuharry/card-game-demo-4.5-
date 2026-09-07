@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mentor learning evidence event",
+  "type": "object",
+  "required": [
+    "id",
+    "learner",
+    "concept",
+    "date",
+    "repo",
+    "status",
+    "evidence"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "learner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "concept": {
+      "type": "string",
+      "minLength": 1,
+      "not": {
+        "pattern": "^godot\\.cardgame\\."
+      }
+    },
+    "date": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "repo": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "minLength": 1,
+      "enum": ["unverified", "practicing", "passed", "mastered", "regressed"]
+    },
+    "evidence": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reconstruction": {
+      "type": "string",
+      "minLength": 1
+    },
+    "transfer": {
+      "type": "string",
+      "minLength": 1
+    },
+    "supersedes": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": ["passed", "mastered"]
+          }
+        }
+      },
+      "then": {
+        "required": ["reconstruction"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "mastered"
+          }
+        }
+      },
+      "then": {
+        "required": ["transfer"]
+      }
+    }
+  ]
+}

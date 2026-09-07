@@ -1,0 +1,14 @@
+{
+  "learner": "harvey",
+  "canonical_events": "../ai-wrapper/docs/learning/events.jsonl",
+  "ledger": {
+    "concept_prefix": "godot.cardgame.",
+    "path": "docs/LEARNING_LEDGER.md",
+    "authority": "existing ledger, preserve demotion"
+  },
+  "profile": {
+    "path": "../ai-wrapper/docs/learning-profile.md",
+    "authority": "historical advisory, not mastery"
+  },
+  "missing_source": "unknown; propose an event in handoff, do not create conflicting local scores"
+}
