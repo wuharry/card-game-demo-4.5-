@@ -39,6 +39,10 @@ def handle(payload, root):
     if event == 'UserPromptSubmit':
         prompt = payload.get('prompt', '')
         hints = []
+        if re.search(r'太長|精簡|短一點|骨架|直接說|簡單講|講重點|too long|shorter|tl;?dr', prompt, re.I):
+            hints.append('回覆預算：只答被問的那件事；事實問題最多三個 bullet，'
+                         '判斷問題結論加最多三個理由；不寫總結段與「還可以…」清單。'
+                         '這是常設偏好，不是這一輪的例外。')
         if re.search(r'還債|考我|教我|學習|learning', prompt, re.I):
             hints.append('學習證據索引：.harness/learning-sources.json；一次一個概念。')
         if re.search(r'bug|修|錯誤|決策|regression|review', prompt, re.I):

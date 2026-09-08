@@ -2,7 +2,7 @@
 
 # Claude Code Harness
 
-談 harness（政策層 + 驗證層）時，這個領域的名詞先落地再往下講。輸出格式規則見 Mentor Core「輸出格式」；本檔提供這些名詞的白話定義與真實例子。
+談 harness（政策層 + 驗證層）時，這個領域的名詞先落地再往下講。輸出格式規則見 Mentor Core「輸出格式」與 CLAUDE.md 的「回覆預算」（Claude 專屬）；本檔提供這些名詞的白話定義與真實例子。
 
 ## Hook 事件順序（先給圖，再談細節）
 
@@ -30,6 +30,17 @@
 | import 樁           | 只有 `@` 引用的薄檔，讓內容維持單一來源又能依目錄載入            | `apps/client/CLAUDE.md` 8 行                            |
 | domain（條件領域）  | 依 glob 命中才進 context 的規則，避免常駐吃 token                | `rules/domains/godot.md` 只在 Godot repo 掛載           |
 | 逃生艙              | 明示繞過學習協定的開關，要求標註而非禁止                         | 「直接做」/「正常模式」                                 |
+
+## 為什麼「請你講短一點」只有效幾輪
+
+```text
+在對話裡要求  ──► 活在 transcript ──► compaction 摘要掉 ──► 失效
+寫進 core     ──► 每個 session 重新注入 ──► 常駐 ──────────► 不失效
+寫進 hook     ──► 每次事件重新執行 ──────► 每輪重注 ──────► 不失效
+```
+
+- 所以精簡有兩層，兩層都不是圍籬：`rules/adapters/claude.md` 的「回覆預算」把短設成預設（紀律，只掛 Claude 入口，不進 core 也不進 `AGENTS.md`）；`claude_hook.py` 的 `UserPromptSubmit` 命中「太長／精簡／骨架／直接說」時重新注入回覆預算（機制，但只是注入文字）。
+- 這裡**沒有** `exit 2` 可用：hook 看不到我輸出的散文，只看得到事件與工具輸入。長篇回覆無法被機械攔阻，只能靠常駐規則加上 Harvey 指出來就退關處理。
 
 ## 談這些名詞時的紀律
 
