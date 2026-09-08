@@ -202,7 +202,6 @@ func on_card_hovered(card: Card) -> void:
 	# 記住目前放大的是這張，並播放它的放大動畫。
 	currently_hovered_card = card
 	card.animate_hover()
-	# (未來可在這裡讓卡片往前移一點，避免被旁邊的牌擋住)
 
 
 ## ── 收到「滑鼠離開某張卡」事件 ──────────────────

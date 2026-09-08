@@ -69,6 +69,7 @@ const ART_ICON_SIDE_MARGIN := 0.040                # 法術圖示每側留白
 ## 卡圖向框底多延伸 1.2%:覆蓋縮放/旋轉時可能露出的次像素細縫,仍完全藏在框條下。
 const ART_WINDOW_OVERSCAN := 1.012
 const ART_WINDOW_SHADER: Shader = preload("res://src/card/card_art_window.gdshader")
+const ART_WINDOW_HOVER_SHADER: Shader = preload("res://src/card/card_art_window_hover.gdshader")
 const FRAME_COST_Y := 0.975      # 卡頂裝飾帶
 const FRAME_NAME_Y := -0.262     # 卡名木牌中心
 const FRAME_DESC_Y := -0.762     # 描述木框中心(高 0.425、寬 1.05)
@@ -508,6 +509,9 @@ func _on_area_3d_mouse_exited() -> void:
 ## 手牌卡 hover 抬升距離(手牌局部座標的 +Y = 沿扇形面往畫面上方)。
 ## 手牌平時縮在畫面下緣只露卡頂(爐石式),hover 要整張浮出來才讀得到。
 const HOVER_LIFT := 1.8
+## hover 卡獨佔高於普通手牌的排序區間，卡內仍維持「圖 → 框 → 字外框 → 字」。
+const HOVER_RENDER_PRIORITY := 10
+var _hover_render_restore: Array[Dictionary] = []
 
 ## 扇形基準位:由 PlayerHand 的 _arrange_fan 寫入,是抬升/歸位唯一的「真位置」。
 ## 第一版曾在 hover 當下快照 position 當基準——hover/unhover 快速交錯時,
@@ -521,6 +525,7 @@ var _area_base_pos := Vector3.ZERO   # $Area3D 在卡片 local 的原位(_ready 
 
 ## PlayerHand 排扇形時同步基準位,並殺掉進行中的抬升/歸位補間(別跟扇形動畫搶)。
 func sync_hand_base(p: Vector3) -> void:
+	_set_hand_hover_priority(false)
 	hand_base_pos = p
 	_has_hand_base = true
 	stop_hover_motion()
@@ -539,14 +544,47 @@ func reset_pick_area() -> void:
 	$Area3D.position = _area_base_pos
 
 
+func _set_hand_hover_priority(enabled: bool) -> void:
+	if not enabled:
+		for entry in _hover_render_restore:
+			if is_instance_valid(entry.target):
+				entry.target.set(entry.property, entry.value)
+		_hover_render_restore.clear()
+		return
+	if not _hover_render_restore.is_empty():
+		return
+	for child in get_children():
+		if child is Sprite3D:
+			var priority := HOVER_RENDER_PRIORITY + (0 if child == $CardArt else 1)
+			_override_hover_property(child, &"render_priority", priority)
+			_override_hover_property(child, &"no_depth_test", true)
+			# 專用卡圖有自己的 ShaderMaterial，Sprite 的排序不會代它修改。
+			if child.material_override != null:
+				_override_hover_property(child.material_override, &"render_priority", priority)
+				if child.material_override is ShaderMaterial \
+						and child.material_override.shader == ART_WINDOW_SHADER:
+					# 普通卡圖的 depth prepass 會遮住鄰卡；hover 暫用同一遮罩的前景版本。
+					_override_hover_property(child.material_override, &"shader", ART_WINDOW_HOVER_SHADER)
+		elif child is Label3D:
+			_override_hover_property(child, &"outline_render_priority", HOVER_RENDER_PRIORITY + 2)
+			_override_hover_property(child, &"render_priority", HOVER_RENDER_PRIORITY + 3)
+			_override_hover_property(child, &"no_depth_test", true)
+
+
+func _override_hover_property(target: Object, property: StringName, value: Variant) -> void:
+	_hover_render_restore.append({"target": target, "property": property, "value": target.get(property)})
+	target.set(property, value)
+
+
 func animate_hover(zoom: float = 1.35) -> void:
 	# create_tween() 會建立一個補間動畫器：在一段時間內把某個屬性平滑地變化。
 	var tw := create_tween()
 	# 把 scale 在 0.15 秒內，從現在平滑變到「原始大小 × zoom」(基準用快照,見 original_scale)。
 	tw.tween_property(self, "scale", original_scale * zoom, SETTINGS.current().motion_duration(0.15))
-	# 手牌卡同步抬升+微微向前(local +Z 朝鏡頭),蓋過鄰卡;上桌單位不抬(它們沒被遮)。
+	# 手牌卡同步抬升，遮擋由整張卡的繪製設定處理；上桌單位只放大。
 	# 目標是「絕對位置」(基準+固定偏移),連打多少次 hover 都收斂到同一點,不累積。
 	if not is_on_board and _has_hand_base:
+		_set_hand_hover_priority(true)
 		stop_hover_motion()
 		_pos_tween = create_tween().set_parallel(true)
 		var lift := Vector3(0.0, HOVER_LIFT, 0.05)
@@ -565,6 +603,7 @@ func animate_hover(zoom: float = 1.35) -> void:
 
 
 func animate_unhover() -> void:
+	_set_hand_hover_priority(false)
 	var tw := create_tween()
 	# 0.15 秒內縮回原始大小。
 	tw.tween_property(self, "scale", original_scale, SETTINGS.current().motion_duration(0.15))
@@ -584,6 +623,7 @@ func animate_unhover() -> void:
 ## 需要「點得到上桌的卡」,所以改成:碰撞永遠開著,用旗標讓 CardManager 分流
 ## (手牌點擊=拖曳、上桌點擊=開選單)。
 func enter_board_mode() -> void:
+	_set_hand_hover_priority(false)
 	is_on_board = true
 	print("[狀態] 卡片上桌:拖曳關閉,點擊改開指令選單")
 
