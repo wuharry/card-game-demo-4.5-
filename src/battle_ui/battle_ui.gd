@@ -51,7 +51,8 @@ var _skill: SkillData = null   # 目前選單主角的主動技(null = 這隻沒
 var _attack_note: String = ""  # 攻擊被擋的理由("" = 可以攻擊);描述列顯示用
 var _skill_note: String = ""   # 技能被擋的理由(同上)
 
-## 戰況 HUD(常駐):右上回合+魔力、右下結束回合、畫面中下的提示訊息。
+## 戰況 HUD(常駐):上中回合、右上魔力、右中結束回合、畫面中下提示。
+var _hud_turn_panel: PanelContainer
 var _hud_panel: PanelContainer
 var _hud_turn: Label
 # 魔力列拆四段 Label 排一列(藍◆正常/黃◆暫時/藍◇+數字/黃「+n」):
@@ -288,10 +289,27 @@ func _make_panel_style() -> StyleBoxFlat:
 
 
 ## ── 戰況 HUD ─────────────────────────────────────────
-## 右上:回合數+魔力(◆現有 ◇已用);右下:結束回合;中下:短暫提示。
+## 上中:回合;右上:魔力(◆現有 ◇已用);右中:結束回合;中下:短暫提示。
 func _build_hud() -> void:
+	# 回合資訊獨立置中：它屬於全場狀態，不和右上的玩家資源綁在一起。
+	_hud_turn_panel = PanelContainer.new()
+	_hud_turn_panel.add_theme_stylebox_override("panel", UI_STYLE.battle_strip())
+	add_child(_hud_turn_panel)
+	_hud_turn_panel.set_anchors_and_offsets_preset(
+		Control.PRESET_CENTER_TOP, Control.PRESET_MODE_MINSIZE, 18)
+	_hud_turn_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_hud_turn_panel.grow_vertical = Control.GROW_DIRECTION_END
+
+	_hud_turn = Label.new()
+	_hud_turn.custom_minimum_size = Vector2(300, 0)
+	_hud_turn.add_theme_font_override("font", FONT_TITLE)
+	_hud_turn.add_theme_font_size_override("font_size", 18)
+	_hud_turn.add_theme_color_override("font_color", GOLD)
+	_hud_turn.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_hud_turn_panel.add_child(_hud_turn)
+
 	_hud_panel = PanelContainer.new()
-	_hud_panel.add_theme_stylebox_override("panel", _make_panel_style())
+	_hud_panel.add_theme_stylebox_override("panel", UI_STYLE.battle_strip())
 	add_child(_hud_panel)
 	_hud_panel.set_anchors_and_offsets_preset(
 		Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 24)
@@ -301,14 +319,6 @@ func _build_hud() -> void:
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 2)
 	_hud_panel.add_child(col)
-
-	_hud_turn = Label.new()
-	_hud_turn.add_theme_font_override("font", FONT_TITLE)
-	_hud_turn.add_theme_font_size_override("font_size", 18)
-	_hud_turn.add_theme_color_override("font_color", GOLD)
-	# 置中:面板寬度由魔力列(◆…)撐開,回合字不管魔力多長都站中線。
-	_hud_turn.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(_hud_turn)
 
 	# 魔力用冷色:和整片暮色金區隔,一眼找得到資源在哪。
 	# 暫時魔力(丟牌回魔 §1.1)用暖黃:回合末就蒸發的錢,顏色先說。
@@ -332,13 +342,14 @@ func _build_hud() -> void:
 
 	_end_turn_btn = Button.new()
 	_end_turn_btn.text = SETTINGS.current().text("battle_end_turn")
+	_end_turn_btn.custom_minimum_size = Vector2(124, 124)
 	_end_turn_btn.add_theme_font_override("font", FONT_TITLE)
-	_end_turn_btn.add_theme_font_size_override("font_size", 18)
-	_end_turn_btn.add_theme_color_override("font_color", GOLD_DIM)
+	_end_turn_btn.add_theme_font_size_override("font_size", 22)
+	_end_turn_btn.add_theme_color_override("font_color", UI_STYLE.TEXT)
 	_end_turn_btn.add_theme_color_override("font_hover_color", UI_STYLE.GOLD_BRIGHT)
 	_end_turn_btn.add_theme_color_override("font_focus_color", UI_STYLE.GOLD_BRIGHT)
-	_end_turn_btn.add_theme_stylebox_override("normal", UI_STYLE.button(false))
-	var lit: StyleBoxFlat = UI_STYLE.button(false)
+	_end_turn_btn.add_theme_stylebox_override("normal", UI_STYLE.battle_round_button(false))
+	var lit: StyleBoxFlat = UI_STYLE.battle_round_button(true)
 	_end_turn_btn.add_theme_stylebox_override("hover", lit)
 	_end_turn_btn.add_theme_stylebox_override("focus", lit)
 	_end_turn_btn.add_theme_stylebox_override("pressed", lit)
@@ -347,21 +358,22 @@ func _build_hud() -> void:
 		end_turn_pressed.emit())
 	add_child(_end_turn_btn)
 	_end_turn_btn.set_anchors_and_offsets_preset(
-		Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE, 24)
+		Control.PRESET_CENTER_RIGHT, Control.PRESET_MODE_MINSIZE, 24)
 	_end_turn_btn.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	_end_turn_btn.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_end_turn_btn.grow_vertical = Control.GROW_DIRECTION_BOTH
 
 	# 中途離開:擺左上角,和右側的「結束回合/魔力」隔一整個畫面寬——
 	# 誤點的代價是「退出整局」,所以位置先隔開,再由確認窗攔一次(show_leave_confirm)。
 	_leave_btn = Button.new()
-	_leave_btn.text = SETTINGS.current().text("battle_leave")
+	_leave_btn.text = "☰  %s" % SETTINGS.current().text("battle_leave")
+	_leave_btn.custom_minimum_size = Vector2(116, 46)
 	_leave_btn.add_theme_font_override("font", FONT_BODY)
-	_leave_btn.add_theme_font_size_override("font_size", 15)
-	_leave_btn.add_theme_color_override("font_color", GOLD_DIM)
-	_leave_btn.add_theme_color_override("font_hover_color", UI_STYLE.GOLD_BRIGHT)
-	_leave_btn.add_theme_color_override("font_focus_color", UI_STYLE.GOLD_BRIGHT)
-	_leave_btn.add_theme_stylebox_override("normal", UI_STYLE.button(true))
-	var leave_lit: StyleBoxFlat = UI_STYLE.button(false)
+	_leave_btn.add_theme_font_size_override("font_size", 17)
+	_leave_btn.add_theme_color_override("font_color", UI_STYLE.TEXT_DIM)
+	_leave_btn.add_theme_color_override("font_hover_color", UI_STYLE.TEXT)
+	_leave_btn.add_theme_color_override("font_focus_color", UI_STYLE.TEXT)
+	_leave_btn.add_theme_stylebox_override("normal", UI_STYLE.battle_leave_button(false))
+	var leave_lit: StyleBoxFlat = UI_STYLE.battle_leave_button(true)
 	_leave_btn.add_theme_stylebox_override("hover", leave_lit)
 	_leave_btn.add_theme_stylebox_override("focus", leave_lit)
 	_leave_btn.add_theme_stylebox_override("pressed", leave_lit)

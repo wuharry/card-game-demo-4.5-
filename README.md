@@ -5,7 +5,7 @@ CardData 資料層（24 張卡、隨機發牌）、卡圖挖空窗與遊戲王�
 以及主選單（歧路旅人式介面）與多張程序生成戰場（森林 / 洞窟 / 冰原隨機輪替，城鎮作主選單背景）。
 
 - 引擎：Godot **4.7**，算繪器 **Forward+**（bloom / SSAO / SSR / 霧；後製集中在各戰場場景的 WorldEnvironment）
-- 進入點：`scenes/main_menu.tscn`（主選單）→「開始遊戲」→ `scenes/main.tscn`（牌桌）
+- 進入點：`scenes/main_menu.tscn`（主選單）→「單人遊戲」或「多人遊戲」→ `scenes/main.tscn`（牌桌）
 
 > 📖 **遊戲規則設計規格**請見下方「[遊戲規則設計規格 (Gameplay Spec)](#-遊戲規則設計規格-gameplay-spec)」。
 > 該章節由桌遊原型規則整理而來，作為 PC / Mobile 版實作的**單一事實來源 (single source of truth)**。
@@ -17,7 +17,7 @@ CardData 資料層（24 張卡、隨機發牌）、卡圖挖空窗與遊戲王�
 
 ```
 main.tscn  ← 牌桌主場景 (MainScene, Node3D)  [src/main_scene/main_scene.gd]
-│   (進入點是 main_menu.tscn 主選單；開始遊戲後切到這裡。
+│   (進入點是 main_menu.tscn 主選單；選擇遊戲模式後切到這裡。
 │    _ready 依 ArenaPool 抽籤抽換戰場——場景裡烤死的預設是森林)
 │
 ├── CardManger (Node3D)              [src/card_manager/card_manager.gd]
@@ -404,7 +404,7 @@ func apply_freeze(unit, turns := 1) -> void:
 - [x] 手牌上限 8：滿手抽牌直接燒掉（§1，爆牌制）；卡牌類型欄位預留（§7：`CardData.card_type`，非從者卡擋在卡槽外）
 - [x] 真牌堆（`deck.gd`）：雙方各一副 **60 張**（同名上限 3，§1）、抽完即空、兩疊牌堆掛剩量數字
 - [x] 熱座雙人（連線前置，ADR-001 後果清單完成）：雙方獨立魔力/牌堆/手牌帳（`SideState`）、回合歸屬（非行動方單位不能動、只能召喚自己那側）、結束回合＝換邊＋換手牌視圖；狀態效果改在持有者自己的回合階段 tick
-- [x] 連線 2a 大廳與骨架（`src/net/`）：主選單「連線對戰」→ 大廳欄（開房顯示本機 IP／輸 IP 加入）；ENet 建線、`_start_match` 握手 RPC（host 抽牌桌廣播 index）、host=player / client=enemy 寫進 `NetMatch`；headless 雙分支 loopback 實連驗證通過
+- [x] 連線 2a 大廳與骨架（`src/net/`）：主選單「多人遊戲」→ 大廳欄（開房顯示本機 IP／輸 IP 加入）；ENet 建線、`_start_match` 握手 RPC（host 抽牌桌廣播 index）、host=player / client=enemy 寫進 `NetMatch`；headless 雙分支 loopback 實連驗證通過
 - [x] 五類卡池完成（領域不啟用）：從者 66／靈裝 5／秘術 33／瞬咒 8／伏印 8，共 120 張；非從者卡面＝圖示卡圖＋藏攻血＋卡型印章（`card.gd`）。像素圖示包歸位 `assets/ui/icons/`（Shikashi v1/v2 免署名；Antahonist **CC-BY 4.0 發佈時需掛名 "Icons by Andrey Kalyuzhnyy"**，見 [CREDITS.md](CREDITS.md)）
 - [x] **9–13 費高階卡（2026-08-28）**：新增 28 張（9 費 7／10 費 6／11 費 6／12 費 6／13 費 3），包含從者、秘術、瞬咒、伏印與靈裝；自然魔力維持 7，終結卡靠丟牌回魔支付。六名新從者必有普通攻擊 `Attack01`，只有具主動技能者才另有 `Attack02`。
 - [x] **法術結算層（§7）**：秘術＝拖到敵方從者即結算（宣告即付費 §5.1 STEP1、潛行不可指定 §8）；**守方瞬咒反制窗口**（施放秘術時熱座面板詢問守方，發動＝抵銷、扣守方剩餘魔力並離手）；靈裝＝拖到我方從者附著（生命上限加成記在單位節點，宿主離場隨亡）；伏印＝蓋放進側帳資料層（§2 後排、不佔格），敵方召喚從者時觸發傷害。headless 驗收 14 斷言全過
@@ -433,7 +433,7 @@ func apply_freeze(unit, turns := 1) -> void:
 ## 🚧 待辦（接下來的步驟）
 
 > 🎯 **目標(2026-07-10 定向)**:朋友從網站下載遊戲、彼此連線對戰。
-> 對手 = 真人 → 連線取代敵方 AI 成為關鍵路徑;AI 降級為之後的單人練習模式。
+> 對手 = 真人 → 連線取代敵方 AI 成為關鍵路徑;AI 保留為單人遊戲模式。
 > 連線選型與取捨見 [docs/adr-001-network-multiplayer.md](docs/adr-001-network-multiplayer.md)。
 
 依優先順序：
@@ -449,7 +449,7 @@ func apply_freeze(unit, turns := 1) -> void:
    - **實機驗收待做**：本機開兩個遊戲視窗走大廳連 `127.0.0.1` 對打一局（headless 已驗邏輯,UI/視角要人眼）；家用網路跑 `upnp_probe` 驗 UPnP 成功路徑＋真異地連入一局。
 3. **打磨與試玩** — 連線實測抓蟲、音效（出牌/攻擊/受擊至少三個）、數值平衡。
 4. **發佈** — Windows 匯出 preset（icon/版本號）＋ itch.io 或 GitHub Releases 下載頁。
-5. ~~**敵方 AI（單人練習模式）**~~ ✅ 完成（2026-08-31 強化）：主選單「單人練習」→ `MatchMode.VS_AI`（static 旗標，仿 ArenaPool）；`EnemyAI` 走玩家同一條結算路，對手手牌仍以卡背與張數隱藏。AI 現會把手牌、全場技能與可攻擊目標生成合法候選並評分：施放目標/無目標/高階秘術，使用抽濾、靈裝、伏印與主動技能，優先斬殺、有利交換、受傷治療與高價值宿主；瞬咒保留反制，棄牌回魔只在能當回合解鎖更強行動時使用。AI 施法時的玩家瞬咒反制仍由玩家決定；AI 守方才自動反制。`tests/ai_turn_test.gd` 驗收完整回合，`tests/ai_strategy_test.gd` 以固定局面驗收秘術/靈裝/伏印/技能/棄牌回魔與優先級。
+5. ~~**敵方 AI（單人遊戲模式）**~~ ✅ 完成（2026-08-31 強化）：主選單「單人遊戲」→ `MatchMode.VS_AI`（static 旗標，仿 ArenaPool）；`EnemyAI` 走玩家同一條結算路，對手手牌仍以卡背與張數隱藏。AI 現會把手牌、全場技能與可攻擊目標生成合法候選並評分：施放目標/無目標/高階秘術，使用抽濾、靈裝、伏印與主動技能，優先斬殺、有利交換、受傷治療與高價值宿主；瞬咒保留反制，棄牌回魔只在能當回合解鎖更強行動時使用。AI 施法時的玩家瞬咒反制仍由玩家決定；AI 守方才自動反制。`tests/ai_turn_test.gd` 驗收完整回合，`tests/ai_strategy_test.gd` 以固定局面驗收秘術/靈裝/伏印/技能/棄牌回魔與優先級。
 6. **卡片從卡槽取回** — `card_slot.gd` 的 `remove_card()` 已寫好，但尚未接上互動（例如再次拖出或右鍵取消）。
 7. **CardData 欄位擴充** — 技能資料層與 24 張接線已完成；剩 `attack_range` / `Sacrifice`（[§4.1](#41-攻擊範圍-數位調整)、[§3](#3-召喚)）。
 8. **地形收尾** — meshlib 純草磚問題與空的 `Terrain` / `Cliffs` 節點；地形整修 commit（04f8bbf）後需重驗哪些仍存在。

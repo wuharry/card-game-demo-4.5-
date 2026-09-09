@@ -1,7 +1,7 @@
-## main_menu.gd — 遊戲主畫面(3D 城鎮背景 + 標題 + 開始遊戲 / 離開遊戲)
+## main_menu.gd — 遊戲主畫面(3D 城鎮背景 + 標題 + 單人／多人遊戲選單)
 ##
 ## 掛在 scenes/main_menu.tscn 的根 Node3D 上;project.godot 的 run/main_scene
-## 已指向該場景,所以遊戲一啟動就是這個畫面,按「開始遊戲」才進牌桌。
+## 已指向該場景,所以遊戲一啟動就是這個畫面,再選單人或多人遊戲。
 ##
 ## 結構(全部由程式組裝,場景檔只有一個空根節點):
 ##   MainMenu (Node3D, 本腳本)
@@ -61,13 +61,13 @@ const GOLD := UI_STYLE.GOLD
 const GOLD_DIM := UI_STYLE.GOLD_DIM
 const LINE_GOLD := Color(UI_STYLE.GOLD, 0.76)
 
-var _start_button: Button    # 記住開始鈕,換場景前要鎖它防連點
-var _practice_button: Button # 單人練習鈕(和開始鈕一起鎖,兩顆都能進牌桌)
+var _single_player_button: Button # 單人遊戲鈕,換場景前鎖住以免連點
+var _multiplayer_button: Button   # 多人遊戲鈕,單人遊戲進場期間一起鎖住
 var _fade_rect: ColorRect    # 蓋在最上層的黑幕:開場淡入、換場景淡出都靠它
 
 ## ── 連線大廳(ADR-002):選單欄 ↔ 大廳欄互斥顯示,連線邏輯全在 NetClient ──
 var _net_client: Node            # NetClient 實例(連線邏輯,無 UI)
-var _menu_col: VBoxContainer     # 選單欄(開始遊戲/連線對戰/離開遊戲)
+var _menu_col: VBoxContainer     # 選單欄(單人遊戲/多人遊戲/圖鑑/設定/離開)
 var _lobby_col: VBoxContainer    # 大廳欄(伺服器位址+尋找對手/狀態字/返回)
 var _lobby_status: Label         # 大廳狀態字(排隊中/配對成功/失敗原因…)
 var _ip_edit: LineEdit           # 伺服器位址(正式版會填死網域並隱藏這格)
@@ -98,7 +98,7 @@ func _ready() -> void:
 	add_child(_settings_panel)
 	_settings_panel.closed.connect(_on_settings_closed)
 	_settings_panel.settings_saved.connect(_on_settings_saved)
-	_start_button.grab_focus()   # 給鍵盤焦點:開場直接按 Enter 就能開始
+	_single_player_button.grab_focus() # 給鍵盤焦點:開場按 Enter 進單人遊戲
 	# 開場從全黑淡入:黑幕 alpha 1 → 0。黑幕蓋得住 3D 和 UI,整個畫面一起浮現。
 	_fade_rect.color.a = 1.0
 	create_tween().tween_property(
@@ -236,17 +236,13 @@ func _build_menu_column(ui: Control) -> void:
 
 	col.add_child(_make_spacer(20))
 
-	_start_button = _make_menu_option(SETTINGS.current().text("menu_start"))
-	_start_button.pressed.connect(_on_start_pressed)
-	col.add_child(_start_button)
+	_single_player_button = _make_menu_option(SETTINGS.current().text("menu_single"))
+	_single_player_button.pressed.connect(_on_single_player_pressed)
+	col.add_child(_single_player_button)
 
-	_practice_button = _make_menu_option(SETTINGS.current().text("menu_practice"))
-	_practice_button.pressed.connect(_on_practice_pressed)
-	col.add_child(_practice_button)
-
-	var net_btn := _make_menu_option(SETTINGS.current().text("menu_online"))
-	net_btn.pressed.connect(_open_lobby)
-	col.add_child(net_btn)
+	_multiplayer_button = _make_menu_option(SETTINGS.current().text("menu_multiplayer"))
+	_multiplayer_button.pressed.connect(_open_lobby)
+	col.add_child(_multiplayer_button)
 
 	var gallery_btn := _make_menu_option(SETTINGS.current().text("menu_gallery"))
 	gallery_btn.pressed.connect(_open_gallery)
@@ -281,28 +277,19 @@ func _build_footer(ui: Control) -> void:
 		Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 18)
 
 
-## ── 按下「開始遊戲」:抽牌桌環境,淡出後進入遊戲 ──
-func _on_start_pressed() -> void:
-	_lock_entry_buttons()   # 先鎖按鈕:淡出期間連點也不會觸發第二次
-	# MatchMode 是 static:上一局若玩過單人練習,值會留著——每個入口都明確設定。
-	MatchMode.mode = MatchMode.Mode.HOTSEAT
+## ── 按下「單人遊戲」:設定成對 AI,抽牌桌後進入遊戲 ──
+func _on_single_player_pressed() -> void:
+	_lock_entry_buttons()
+	MatchMode.mode = MatchMode.Mode.VS_AI
 	# 抽這一局的牌桌環境(森林/洞窟/冰原,均等機率)。結果存在 ArenaPool 的
 	# static 變數上——static 活在類別上、不隨場景切換消失,main.tscn 載入後讀得到。
 	ArenaPool.pick_random()
 	await _enter_game()
 
 
-## ── 按下「單人練習」:同一條進場路,只差把玩法設成 vs AI ──
-func _on_practice_pressed() -> void:
-	_lock_entry_buttons()
-	MatchMode.mode = MatchMode.Mode.VS_AI
-	ArenaPool.pick_random()
-	await _enter_game()
-
-
 func _lock_entry_buttons() -> void:
-	_start_button.disabled = true
-	_practice_button.disabled = true
+	_single_player_button.disabled = true
+	_multiplayer_button.disabled = true
 
 
 ## 淡出到黑 → 切進牌桌。單機與連線共用同一段演出;呼叫前牌桌環境要先定案
@@ -318,7 +305,8 @@ func _enter_game() -> void:
 		# 換場景失敗(路徑打錯/檔案壞了)時別讓玩家卡在黑畫面:報錯並還原選單。
 		push_error("進入牌桌失敗:%s(錯誤碼 %d)" % [GAME_SCENE, err])
 		_fade_rect.color.a = 0.0
-		_start_button.disabled = false
+		_single_player_button.disabled = false
+		_multiplayer_button.disabled = false
 
 
 ## ── 大廳欄(2a):建立房間 / 輸 IP 加入 / 狀態字 / 返回 ──────────
@@ -326,11 +314,11 @@ func _enter_game() -> void:
 func _build_lobby_column(parent: Container) -> void:
 	_lobby_col = VBoxContainer.new()
 	_lobby_col.add_theme_constant_override("separation", 10)
-	_lobby_col.visible = false   # 平時藏著,按「連線對戰」才現身
+	_lobby_col.visible = false   # 平時藏著,按「多人遊戲」才現身
 	parent.add_child(_lobby_col)
 
 	var title := Label.new()
-	title.text = SETTINGS.current().text("menu_online")
+	title.text = SETTINGS.current().text("menu_multiplayer")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_override("font", FONT_TITLE)
 	title.add_theme_font_size_override("font_size", 44)
@@ -405,7 +393,7 @@ func _open_gallery() -> void:
 
 func _on_gallery_closed() -> void:
 	_menu_col.visible = true
-	_start_button.grab_focus()
+	_single_player_button.grab_focus()
 
 
 func _open_settings() -> void:
@@ -415,7 +403,7 @@ func _open_settings() -> void:
 
 func _on_settings_closed() -> void:
 	_menu_col.visible = true
-	_start_button.grab_focus()
+	_single_player_button.grab_focus()
 
 
 func _on_settings_saved() -> void:
@@ -436,7 +424,7 @@ func _close_lobby() -> void:
 	_host_btn.disabled = false
 	_lobby_col.visible = false
 	_menu_col.visible = true
-	_start_button.grab_focus()
+	_single_player_button.grab_focus()
 
 
 ## 排配對。失敗原因會經 status_changed 顯示;「返回」退出佇列並解鎖按鈕。

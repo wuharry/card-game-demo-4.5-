@@ -15,6 +15,10 @@ const AMETHYST_BRIGHT := Color("c9b2ef")
 const TEXT := Color("eee9df")
 const TEXT_DIM := Color("b8b2bd")
 const DANGER := Color("d06e72")
+const STEEL := Color("989b99")
+const STEEL_DIM := Color("666b70")
+const TURN_BLUE := Color("17334a")
+const TURN_BLUE_LIT := Color("214c69")
 
 
 static func panel(accent: Color = GOLD, strong: bool = false) -> StyleBoxFlat:
@@ -50,6 +54,48 @@ static func button(resting: bool = true, danger: bool = false) -> StyleBoxFlat:
 	if not resting:
 		sb.shadow_color = Color(0.40, 0.22, 0.64, 0.42)
 		sb.shadow_size = 8
+	return sb
+
+
+## 戰鬥 HUD 的窄條：只有一層霧黑底與細銀線，不使用寶石或顆粒紋理。
+static func battle_strip() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	var contrast: bool = SETTINGS.current().high_contrast
+	sb.bg_color = Color(0.015, 0.018, 0.026, 0.98) if contrast \
+		else Color(0.035, 0.04, 0.055, 0.90)
+	sb.border_color = Color(STEEL, 1.0 if contrast else 0.68)
+	sb.set_border_width_all(2 if contrast else 1)
+	sb.set_corner_radius_all(3)
+	sb.set_content_margin_all(10.0)
+	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.32)
+	sb.shadow_size = 4
+	return sb
+
+
+## 左上離開鍵：小塊深鐵框，刻意與右側的回合操作隔開。
+static func battle_leave_button(lit: bool = false) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.055, 0.06, 0.075, 0.96) if lit \
+		else Color(0.028, 0.032, 0.043, 0.92)
+	sb.border_color = STEEL if lit else STEEL_DIM
+	sb.set_border_width_all(2 if lit else 1)
+	sb.set_corner_radius_all(3)
+	sb.set_content_margin_all(10.0)
+	return sb
+
+
+## 簡化圓形回合鍵：保留藍心與金屬環，不畫 PP 珠列、翅膀或紋章。
+static func battle_round_button(lit: bool = false) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = TURN_BLUE_LIT if lit else TURN_BLUE
+	sb.border_color = Color(STEEL, 0.95 if lit else 0.72)
+	sb.set_border_width_all(4 if lit else 3)
+	sb.set_corner_radius_all(64)
+	sb.corner_detail = 12
+	sb.set_content_margin_all(14.0)
+	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.48)
+	sb.shadow_size = 7 if lit else 5
+	sb.anti_aliasing = true
 	return sb
 
 

@@ -54,7 +54,7 @@ var _active_filter: int = -1
 var _grid: GridContainer = null
 var _count_label: Label = null
 var _tab_row: HBoxContainer = null
-var _back_btn: Button = null   # 開啟時搶焦點:別讓 Enter 漏到選單的「開始遊戲」
+var _back_btn: Button = null   # 開啟時搶焦點:別讓 Enter 漏到選單的「單人遊戲」
 var _built := false
 
 

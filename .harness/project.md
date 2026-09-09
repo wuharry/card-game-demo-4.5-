@@ -8,7 +8,7 @@
 
 ## 專案速覽
 - **引擎**:Godot **4.7**(2026-09-01 由 4.5 升級),語言 **GDScript**(無 C#)。
-- **進入點**:`scenes/main_menu.tscn`(主選單)→「開始遊戲」→ `scenes/main.tscn`(牌桌;`main_scene.gd` 依 ArenaPool 抽籤抽換戰場)。
+- **進入點**:`scenes/main_menu.tscn`(主選單)→「單人遊戲」進 AI 對戰，或「多人遊戲」進網路大廳；配對後進入 `scenes/main.tscn`(牌桌;`main_scene.gd` 依 ArenaPool 抽籤抽換戰場)。
 - **程式碼都在 [src/](src/)**:每個功能一個資料夾(`card/`、`card_manager/`、`card_slot/`、`play_hand/`、`player_board/`、`environment/`、`main_menu/`、`main_scene/`)。
 - **只有一個 autoload:`AppSettings`**(`src/settings/app_settings.gd`,全域設定/語言/無障礙)。其餘狀態一律掛在節點上,互動中樞是 `CardManager`;跨場景傳值用 `ArenaPool`(static 類別,見 `src/environment/arena_pool.gd`),別為此再開 autoload。
   `AppSettings.current()` **保證不回傳 null**:編輯器裡沒有 autoload 時會給一個只帶預設值的備援實例——因為 146 個呼叫點沒有半個做 null 檢查。

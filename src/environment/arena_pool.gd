@@ -2,7 +2,7 @@ class_name ArenaPool
 extends RefCounted
 # arena_pool.gd — 牌桌環境抽籤桶(純靜態工具,不實例化、不進場景樹)
 #
-# 流程:主選單按「開始遊戲」→ pick_random() 抽一個環境路徑存進 next_arena_path
+# 流程:主選單按「單人遊戲」→ pick_random() 抽一個環境路徑存進 next_arena_path
 #       → 切到 main.tscn → main_scene.gd 在 _ready 讀它,決定要不要換環境。
 #
 # 為什麼用 static 而不用 autoload 單例?

@@ -2049,7 +2049,7 @@ func _leave_warning_text() -> String:
 	if NetMatch.is_online:
 		return "離開連線對戰等同認輸:對手會立刻看到「對方已離線」並被送回主選單,這一局無法回來。"
 	if MatchMode.is_vs_ai():
-		return "這一局的進度不會保留(單人練習沒有存檔),離開後回到主選單。"
+		return "這一局的進度不會保留(單人遊戲沒有存檔),離開後回到主選單。"
 	return "這一局的進度不會保留(雙人熱座沒有存檔),離開後回到主選單。"
 
 
