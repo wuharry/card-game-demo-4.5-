@@ -2,7 +2,7 @@
 
 # Claude Code Harness
 
-談 harness（政策層 + 驗證層）時，這個領域的名詞先落地再往下講。輸出格式規則見 Mentor Core「輸出格式」與 CLAUDE.md 的「回覆預算」（Claude 專屬）；本檔提供這些名詞的白話定義與真實例子。
+談 harness（政策層 + 驗證層）時，這個領域的名詞先落地再往下講。輸出格式規則見 Mentor Core「文字輸出格式」與 CLAUDE.md 的「回覆預算」（Claude 專屬）；本檔提供這些名詞的白話定義與真實例子。
 
 ## Hook 事件順序（先給圖，再談細節）
 
