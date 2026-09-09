@@ -1,0 +1,497 @@
+{
+  "date": "2026-09-09",
+  "tool_mode": "built-in image_gen.imagegen",
+  "reference_pack": "assets/packs/tiny_rpg_characters",
+  "cell_size": 100,
+  "frames": 6,
+  "palette_limit": 28,
+  "ground_row": 59,
+  "base_prompts": {
+    "v1": "Use case: style-transfer. Production game sprite animation sheet. The reference image is the ART STYLE AUTHORITY: existing Tiny RPG sprites enlarged by nearest-neighbor. Match its EXTREMELY SMALL native pixel scale, chunky 1-pixel near-black outline, broad flat color clusters, large head, tiny short legs, modest 3/4 side view facing RIGHT, and about 20-28 palette colors for the entire character. Draw like a 20-pixel-tall original sprite enlarged exactly 8x, NOT detailed high-resolution pixel art. No subpixel details, texture, antialiasing, gradients, realism, rimlight, glow, painterly shading, or extra accessories. Color contrast and one-pixel shapes must have the same tiny-game readability as the reference. Keep character identity and scale consistent across every frame.\nOUTPUT: one transparent PNG sprite sheet, precisely SIX equally spaced columns by FIVE equally spaced rows (30 poses). No text, labels, grid, borders, checkerboard, shadows, floor, scenery, or reference characters in the output. Every equal square cell contains ONE complete character, centered horizontally in neutral frames, same foot baseline, plenty of transparent space, never crosses cell boundaries. Show deliberate articulated poses, no scaling or whole-body sliding disguised as animation.\nROWS top to bottom:\n1 IDLE: six very subtle breathing frames, feet planted, tiny torso motion, seamless cycle.\n2 BASIC ATTACK: ready, anticipation, fast strike toward RIGHT, maximum extension/compact white impact crescent, recoil, ready. Peak strike at column 3 to match damage timing.\n3 SKILL: ready, anticipation, signature skill peak, clear follow-through, settle, ready; visually distinct from basic attack.\n4 HURT: ready, initial backward flinch, deepest recoil, recovery, settle, ready.\n5 DEATH: ready, stagger, kneel/fall, collapse, motion settling, fully collapsed final pose without recovery.\nPreserve exact limited pixel-art rendering in the falling poses and effects too. The neutral poses throughout should be identical. Genuine alpha background.",
+    "v2": "Use case: style-transfer. Production game sprite animation sheet. The reference image is the ART STYLE AUTHORITY: existing Tiny RPG sprites enlarged by nearest-neighbor. Match its EXTREMELY SMALL native pixel scale, chunky 1-pixel near-black outline, broad flat color clusters, large head, tiny short legs, modest 3/4 side view facing RIGHT, and about 20-28 palette colors for the entire character. Draw like a 20-pixel-tall original sprite enlarged exactly 8x, NOT detailed high-resolution pixel art. No subpixel details, texture, antialiasing, gradients, realism, rimlight, glow, painterly shading, or extra accessories. Color contrast and one-pixel shapes must have the same tiny-game readability as the reference. Keep character identity and scale consistent across every frame.\nOUTPUT: one transparent PNG sprite sheet, precisely SIX equally spaced columns by FIVE equally spaced rows (30 poses). No text, labels, grid, borders, checkerboard, shadows, floor, scenery, or reference characters in the output. Every equal square cell contains ONE complete character, centered horizontally in neutral frames, same foot baseline, plenty of transparent space, never crosses cell boundaries. Show deliberate articulated poses, no scaling or whole-body sliding disguised as animation.\nROWS top to bottom:\n1 IDLE: six very subtle breathing frames, feet planted, tiny torso motion, seamless cycle.\n2 BASIC ATTACK: ready, anticipation, fast strike toward RIGHT, maximum extension/compact white impact crescent, recoil, ready. Peak strike at column 3 to match damage timing.\n3 SKILL: ready, anticipation, signature skill peak, clear follow-through, settle, ready; visually distinct from basic attack.\n4 HURT: ready, initial backward flinch, deepest recoil, recovery, settle, ready.\n5 DEATH: ready, stagger, kneel/fall, collapse, motion settling, fully collapsed final pose without recovery.\nPreserve exact limited pixel-art rendering in the falling poses and effects too. The neutral poses throughout should be identical. Genuine alpha background.\nLAYOUT CRITICAL: Character and effects must occupy only the central 60% of every cell; keep a broad empty gutter on all four sides. Equal sized square cells in an exact 6 by 5 grid. The first row must be a nearly unchanged pose. Use only a few solid colors per material, with no microtexture.",
+    "v3": "Use case: style-transfer. Production game sprite animation sheet. The reference image is the ART STYLE AUTHORITY: existing Tiny RPG sprites enlarged by nearest-neighbor. Match its EXTREMELY SMALL native pixel scale, chunky 1-pixel near-black outline, broad flat color clusters, large head, tiny short legs, modest 3/4 side view facing RIGHT, and about 20-28 palette colors for the entire character. Draw like a 20-pixel-tall original sprite enlarged exactly 8x, NOT detailed high-resolution pixel art. No subpixel details, texture, antialiasing, gradients, realism, rimlight, glow, painterly shading, or extra accessories. Color contrast and one-pixel shapes must have the same tiny-game readability as the reference. Keep character identity and scale consistent across every frame.\nOUTPUT: one PNG sprite sheet on a perfectly solid flat #FF00FF magenta background for game-engine chroma key extraction, precisely SIX equally spaced columns by FIVE equally spaced rows (30 poses). No text, labels, grid, borders, checkerboard, shadows, floor, scenery, or reference characters in the output. Every equal square cell contains ONE complete character, centered horizontally in neutral frames, same foot baseline, plenty of transparent space, never crosses cell boundaries. Show deliberate articulated poses, no scaling or whole-body sliding disguised as animation.\nROWS top to bottom:\n1 IDLE: six very subtle breathing frames, feet planted, tiny torso motion, seamless cycle.\n2 BASIC ATTACK: ready, anticipation, fast strike toward RIGHT, maximum extension/compact white impact crescent, recoil, ready. Peak strike at column 3 to match damage timing.\n3 SKILL: ready, anticipation, signature skill peak, clear follow-through, settle, ready; visually distinct from basic attack.\n4 HURT: ready, initial backward flinch, deepest recoil, recovery, settle, ready.\n5 DEATH: ready, stagger, kneel/fall, collapse, motion settling, fully collapsed final pose without recovery.\nPreserve exact limited pixel-art rendering in the falling poses and effects too. The neutral poses throughout should be identical. Background must be uniform pure magenta #FF00FF, absolutely NO checkerboard or gradient. Do not use magenta in the character.\nLAYOUT CRITICAL: Character and effects must occupy only the central 60% of every cell; keep a broad empty gutter on all four sides. Equal sized square cells in an exact 6 by 5 grid. The first row must be a nearly unchanged pose. Use only a few solid colors per material, with no microtexture.",
+    "v5": "Use case: style-transfer. Production game sprite animation sheet. The reference image is the ART STYLE AUTHORITY: existing Tiny RPG sprites enlarged by nearest-neighbor. Match its EXTREMELY SMALL native pixel scale, chunky 1-pixel near-black outline, broad flat color clusters, large head, tiny short legs, modest 3/4 side view facing RIGHT, and about 20-28 palette colors for the entire character. Draw like a 20-pixel-tall original sprite enlarged exactly 8x, NOT detailed high-resolution pixel art. No subpixel details, texture, antialiasing, gradients, realism, rimlight, glow, painterly shading, or extra accessories. Color contrast and one-pixel shapes must have the same tiny-game readability as the reference. Keep character identity and scale consistent across every frame.\nOUTPUT: one PNG sprite sheet on a perfectly solid flat #FF00FF magenta background for game-engine chroma key extraction, precisely SIX equally spaced columns by FIVE equally spaced rows (30 poses). No text, labels, grid, borders, checkerboard, shadows, floor, scenery, or reference characters in the output. Every equal square cell contains ONE complete character, centered horizontally in neutral frames, same foot baseline, plenty of transparent space, never crosses cell boundaries. Show deliberate articulated poses, no scaling or whole-body sliding disguised as animation.\nROWS top to bottom:\n1 IDLE: six very subtle breathing frames, feet planted, tiny torso motion, seamless cycle.\n2 BASIC ATTACK: ready, anticipation, fast strike toward RIGHT, maximum extension/compact white impact crescent, recoil, ready. Peak strike at column 3 to match damage timing.\n3 SKILL: ready, anticipation, signature skill peak, clear follow-through, settle, ready; visually distinct from basic attack.\n4 HURT: ready, initial backward flinch, deepest recoil, recovery, settle, ready.\n5 DEATH: ready, stagger, kneel/fall, collapse, motion settling, fully collapsed final pose without recovery.\nPreserve exact limited pixel-art rendering in the falling poses and effects too. The neutral poses throughout should be identical. Background must be uniform pure magenta #FF00FF, absolutely NO checkerboard or gradient. Do not use magenta in the character.\nLAYOUT CRITICAL: Character and effects must occupy only the central 60% of every cell; keep a broad empty gutter on all four sides. Equal sized square cells in an exact 6 by 5 grid. The first row must be a nearly unchanged pose. Use only a few solid colors per material, with no microtexture.\nMANDATORY: The complete character remains visible in EVERY cell, especially during projectile spells, bomb throws and explosions. Never replace the character with an isolated projectile or effect. Effects must appear beside the still-visible casting character. No musical notes except for a bard. Do not show hurt impact symbols. Death settles flat; the final dead body retains all identity details.\nREFERENCES: Image 1 is the rendering-style authority. Image 2 is the specific existing character's identity only: preserve its species, characteristic anatomy, costume and colors, but redraw it with Image 1's tiny chunky simplified pixels. Do not substitute a reference knight, goblin, werebear or human for the requested species. Reference faces/costumes must never replace this character's own."
+  },
+  "characters": [
+    {
+      "id": "adventurer",
+      "stem": "Adventurer",
+      "height": 20,
+      "description": "See initial_prompt",
+      "no_skill": false,
+      "base_prompt": "v1",
+      "initial_prompt": "Use case: style-transfer. Production game sprite animation sheet. The reference image is the ART STYLE AUTHORITY: existing Tiny RPG sprites enlarged by nearest-neighbor. Match its EXTREMELY SMALL native pixel scale, chunky 1-pixel near-black outline, broad flat color clusters, large head, tiny short legs, modest 3/4 side view facing RIGHT, and about 20-28 palette colors for the entire character. Draw like a 20-pixel-tall original sprite enlarged exactly 8x, NOT detailed high-resolution pixel art. No subpixel details, texture, antialiasing, gradients, realism, rimlight, glow, painterly shading, or extra accessories. Color contrast and one-pixel shapes must have the same tiny-game readability as the reference. Keep character identity and scale consistent across every frame.\nOUTPUT: one transparent PNG sprite sheet, precisely SIX equally spaced columns by FIVE equally spaced rows (30 poses). No text, labels, grid, borders, checkerboard, shadows, floor, scenery, or reference characters in the output. Every equal square cell contains ONE complete character, centered horizontally in neutral frames, same foot baseline, plenty of transparent space, never crosses cell boundaries. Show deliberate articulated poses, no scaling or whole-body sliding disguised as animation.\nROWS top to bottom:\n1 IDLE: six very subtle breathing frames, feet planted, tiny torso motion, seamless cycle.\n2 BASIC ATTACK: ready, anticipation, fast strike toward RIGHT, maximum extension/compact white impact crescent, recoil, ready. Peak strike at column 3 to match damage timing.\n3 SKILL: ready, anticipation, signature skill peak, clear follow-through, settle, ready; visually distinct from basic attack.\n4 HURT: ready, initial backward flinch, deepest recoil, recovery, settle, ready.\n5 DEATH: ready, stagger, kneel/fall, collapse, motion settling, fully collapsed final pose without recovery.\nPreserve exact limited pixel-art rendering in the falling poses and effects too. The neutral poses throughout should be identical. Genuine alpha background.\nCHARACTER: Adventurer, a young brown-haired human with a short moss-green cape, simple tan leather tunic, short steel sword and small round wooden shield. A head about as large as the torso, face just a skin patch and tiny eye; no realistic anatomy. Basic attack is a compact sword slash. Skill is a stronger overhead sword chop with a larger cream-white crescent. Favor the knight and soldier from the reference; only change costume/helmet into this adventurer.",
+      "final_edit_prompt": "Edit the provided 6-column by 5-row pixel sprite sheet. Preserve all 30 existing character poses, exact identity, colors, cell positions and tiny chunky pixel-art style. Replace ALL the baked gray-white checkerboard background with completely uniform solid pure magenta #FF00FF, including enclosed holes between arms, weapons and body. Restore the white/cream weapon crescents as continuous clean pixel-art shapes. Absolutely NO checkerboard, gradient, grid, text, shadows, added characters or altered costume. Every cell must still contain its original complete character. Preserve six equal columns and five equal rows. Leave a clear gutter between cells; compact effects slightly if necessary to avoid crossing into the next cell. Output the entire sheet.",
+      "source_file": "/Users/harvey/.codex/generated_images/01a07e91-8df3-7b80-bd3f-4ec2ad293bb8/exec-20c9b1e4-f9a0-4f69-87d0-621fd8569d0f.png",
+      "destination": "assets/characters/generated/adventurer",
+      "draft": "build/sprite-style-20260909/drafts/adventurer.png",
+      "source_sha256": "60c311de7a8181d0cd847f555907884603ac70dfd918e9f1b50920868343866a",
+      "output_sha256": {
+        "Adventurer_Attack01.png": "c3e056905e155d7f9bb8d2605fabab8bbc42b720bee301ae2cc91c7030d218fe",
+        "Adventurer_Attack02.png": "5b2aa463bc6ded11dd11f1f85f4559f29578229999f4ed6b210ecde436c42933",
+        "Adventurer_Death.png": "fbb3cb20e519e46e29d8dd45a92351a7b2493c070a72224dc68d1019ccf8adde",
+        "Adventurer_Hurt.png": "16d918403d0386b9d755b861725603211a225a159e063bbfad6b4070713a74f4",
+        "Adventurer_Idle.png": "8d13c590547981d7ea43edec1e8b0ba785416b47d06eb60fd71b8da1c33a9805"
+      }
+    },
+    {
+      "id": "alchemist",
+      "height": 20,
+      "description": "Small orange-haired human alchemist, goggles on forehead, teal coat, brown satchel and green potion. BASIC: swing bottle. SKILL: throw small green acid splash.",
+      "no_skill": false,
+      "stem": "Alchemist",
+      "base_prompt": "v2",
+      "final_edit_prompt": "Edit the provided 6-column by 5-row pixel sprite sheet. Preserve all 30 existing character poses, exact identity, colors, cell positions and tiny chunky pixel-art style. Replace ALL the baked gray-white checkerboard background with completely uniform solid pure magenta #FF00FF, including enclosed holes between arms, weapons and body. Restore the white/cream weapon crescents as continuous clean pixel-art shapes. Absolutely NO checkerboard, gradient, grid, text, shadows, added characters or altered costume. Every cell must still contain its original complete character. Preserve six equal columns and five equal rows. Leave a clear gutter between cells; compact effects slightly if necessary to avoid crossing into the next cell. Output the entire sheet.",
+      "source_file": "/Users/harvey/.codex/generated_images/01a07e91-8df3-7b80-bd3f-4ec2ad293bb8/exec-41f1dcd1-cd9f-4f8c-bac6-df69830860f1.png",
+      "destination": "assets/characters/generated/alchemist",
+      "draft": "build/sprite-style-20260909/drafts/alchemist.png",
+      "source_sha256": "017dbe64806494c57a22c6930ae908d82dcae9334f019117bcd57a9e4d9edcb9",
+      "output_sha256": {
+        "Alchemist_Attack01.png": "973e1fecf969ac7399467526745985b8f23b6be997564760fcb4ccc352ff8517",
+        "Alchemist_Attack02.png": "2057119b7df6bf3cde3d7d6359cce9e2c822be04f0acbd1d717e024f2b148dae",
+        "Alchemist_Death.png": "c20882900fad6d91b8a49014df79251f56b060ba4893ef9d3dacbff6a0f6f2d6",
+        "Alchemist_Hurt.png": "7da539fe50e4cd60efa4b0f9f0f8e5f39e1509656bb5cc458153b456a249f6e3",
+        "Alchemist_Idle.png": "57e83f5abab03e98f2e55be93692862b8e63f582797a48bb360b9d7f2f43874d"
+      }
+    },
+    {
+      "id": "catfolk_rogue",
+      "height": 20,
+      "description": "Dark gray catfolk rogue, triangular ears, tan leather tunic, two short steel daggers. BASIC: right dagger stab. SKILL: crossed dual dagger slash.",
+      "no_skill": false,
+      "stem": "Catfolk_Rogue",
+      "base_prompt": "v2",
+      "final_edit_prompt": "Edit the provided 6-column by 5-row pixel sprite sheet. Preserve all 30 existing character poses, exact identity, colors, cell positions and tiny chunky pixel-art style. Replace ALL the baked gray-white checkerboard background with completely uniform solid pure magenta #FF00FF, including enclosed holes between arms, weapons and body. Restore the white/cream weapon crescents as continuous clean pixel-art shapes. Absolutely NO checkerboard, gradient, grid, text, shadows, added characters or altered costume. Every cell must still contain its original complete character. Preserve six equal columns and five equal rows. Leave a clear gutter between cells; compact effects slightly if necessary to avoid crossing into the next cell. Output the entire sheet.",
+      "source_file": "/Users/harvey/.codex/generated_images/01a07e91-8df3-7b80-bd3f-4ec2ad293bb8/exec-fd3a99ea-6701-4497-a7f9-1bfb86864f2f.png",
+      "destination": "assets/characters/generated/catfolk_rogue",
+      "draft": "build/sprite-style-20260909/drafts/catfolk_rogue.png",
+      "source_sha256": "43837a37cd20031fbb7a483d265531ccca7c324b886d65b4c29238c3dca014ae",
+      "output_sha256": {
+        "Catfolk_Rogue_Attack01.png": "90635a5bab4112a25d0c3fd6273d7b52283224e14dc2dc6086eeb88c46c757ed",
+        "Catfolk_Rogue_Attack02.png": "7dcee668299ddd8779622bc62bac4569456c45e72a3be6cb64b083b9b3ee8b67",
+        "Catfolk_Rogue_Death.png": "adc92c08623e5ef705ee433577f3273b2b71288e3d882bfc4c45a40903909cf3",
+        "Catfolk_Rogue_Hurt.png": "0700c8e93ca673f7da10ff25187bff59afa315b96a9ae25ca79ea677d6ebee08",
+        "Catfolk_Rogue_Idle.png": "afdf69f35bb1a471c3b51df0447a474262738c8a63c6d16f105d056290094d61"
+      }
+    },
+    {
+      "id": "desert_nomad",
+      "height": 22,
+      "description": "Desert nomad, navy turban and scarf, tan robe, curved steel scimitar. BASIC: compact scimitar slash. SKILL: broad sweeping crescent slash.",
+      "no_skill": false,
+      "stem": "Desert_Nomad",
+      "base_prompt": "v2",
+      "final_edit_prompt": "Edit the provided 6-column by 5-row pixel sprite sheet. Preserve all 30 existing character poses, exact identity, colors, cell positions and tiny chunky pixel-art style. Replace ALL the baked gray-white checkerboard background with completely uniform solid pure magenta #FF00FF, including enclosed holes between arms, weapons and body. Restore the white/cream weapon crescents as continuous clean pixel-art shapes. Absolutely NO checkerboard, gradient, grid, text, shadows, added characters or altered costume. Every cell must still contain its original complete character. Preserve six equal columns and five equal rows. Leave a clear gutter between cells; compact effects slightly if necessary to avoid crossing into the next cell. Output the entire sheet.",
+      "source_file": "/Users/harvey/.codex/generated_images/01a07e91-8df3-7b80-bd3f-4ec2ad293bb8/exec-a05f52cf-e194-4b02-817b-469cdff92d6b.png",
+      "destination": "assets/characters/generated/desert_nomad",
+      "draft": "build/sprite-style-20260909/drafts/desert_nomad.png",
+      "source_sha256": "c032c640999c703eddaac5799acb8c28f77f2a46a78ba41e029b6461376d6a15",
+      "output_sha256": {
+        "Desert_Nomad_Attack01.png": "8e22fbc2372254dfb4483a2a5cb0d2c0565807de90afc879adc956ede944fdb8",
+        "Desert_Nomad_Attack02.png": "d0947a3259519bf1355de0cce683c53b7d34afce2deaf031fe55092c0949d733",
+        "Desert_Nomad_Death.png": "c0d091c039e3eec392077b83caf6b2912c1d3672823549402a7eeefcc9030313",
+        "Desert_Nomad_Hurt.png": "4034a6ee19411fe9693e9b4751703930d717724fa9c32c30aa5f1854b3fc33e8",
+        "Desert_Nomad_Idle.png": "8652eef16f86a2362d5c3db530057967db7968ea755d4e7a1222a9b94becd8e7"
+      }
+    },
+    {
+      "id": "dwarf_smith",
+      "height": 19,
+      "description": "Short stout dwarf smith with large orange beard, blue tunic, dark leather apron, square steel hammer. BASIC: hammer strike. SKILL: raise hammer with a few small golden forging sparks.",
+      "no_skill": false,
+      "stem": "Dwarf_Smith",
+      "base_prompt": "v3",
+      "source_file": "/Users/harvey/.codex/generated_images/01a07e91-8df3-7b80-bd3f-4ec2ad293bb8/exec-b3d5c06a-11f4-46c0-9704-e63499a7f209.png",
+      "destination": "assets/characters/generated/dwarf_smith",
+      "draft": "build/sprite-style-20260909/drafts/dwarf_smith.png",
+      "source_sha256": "1551c9bc681374e04ab5523d6e958677b2f0468452a186bfac7280540ced9048",
+      "output_sha256": {
+        "Dwarf_Smith_Attack01.png": "dafb0b89628ed4036cda3c21a3b4ffc8381609496878bc6ba32b260b17810f9e",
+        "Dwarf_Smith_Attack02.png": "7b4a2810e96d3d07fe310a2cda9ec6477601aa86383c10167c06798e17e367d9",
+        "Dwarf_Smith_Death.png": "f4d62440d5070da70f1f075ecd6575febec26970042a448d19b57d5d3ad06981",
+        "Dwarf_Smith_Hurt.png": "37f5ad39486630dba2367e5e5561cf9bc8c1ac884043f6b2b2fa8f603cc822fc",
+        "Dwarf_Smith_Idle.png": "5e7c2d433a8b244fd77a1ed7b21c56dd44a77aaaa2096ae69688c660ff25f2b9"
+      }
+    },
+    {
+      "id": "frog_shaman",
+      "height": 20,
+      "description": "Small turquoise-green frog shaman, large round frog eyes, simple brown robe and wooden staff. BASIC: staff jab. SKILL: compact pale blue water orb.",
+      "no_skill": false,
+      "stem": "Frog_Shaman",
+      "base_prompt": "v3",
+      "initial_prompt": "Use case: style-transfer. Production game sprite animation sheet. The reference image is the ART STYLE AUTHORITY: existing Tiny RPG sprites enlarged by nearest-neighbor. Match its EXTREMELY SMALL native pixel scale, chunky 1-pixel near-black outline, broad flat color clusters, large head, tiny short legs, modest 3/4 side view facing RIGHT, and about 20-28 palette colors for the entire character. Draw like a 20-pixel-tall original sprite enlarged exactly 8x, NOT detailed high-resolution pixel art. No subpixel details, texture, antialiasing, gradients, realism, rimlight, glow, painterly shading, or extra accessories. Color contrast and one-pixel shapes must have the same tiny-game readability as the reference. Keep character identity and scale consistent across every frame.\nOUTPUT: one PNG sprite sheet on a perfectly solid flat #FF00FF magenta background for game-engine chroma key extraction, precisely SIX equally spaced columns by FIVE equally spaced rows (30 poses). No text, labels, grid, borders, checkerboard, shadows, floor, scenery, or reference characters in the output. Every equal square cell contains ONE complete character, centered horizontally in neutral frames, same foot baseline, plenty of transparent space, never crosses cell boundaries. Show deliberate articulated poses, no scaling or whole-body sliding disguised as animation.\nROWS top to bottom:\n1 IDLE: six very subtle breathing frames, feet planted, tiny torso motion, seamless cycle.\n2 BASIC ATTACK: ready, anticipation, fast strike toward RIGHT, maximum extension/compact white impact crescent, recoil, ready. Peak strike at column 3 to match damage timing.\n3 SKILL: ready, anticipation, signature skill peak, clear follow-through, settle, ready; visually distinct from basic attack.\n4 HURT: ready, initial backward flinch, deepest recoil, recovery, settle, ready.\n5 DEATH: ready, stagger, kneel/fall, collapse, motion settling, fully collapsed final pose without recovery.\nPreserve exact limited pixel-art rendering in the falling poses and effects too. The neutral poses throughout should be identical. Background must be uniform pure magenta #FF00FF, absolutely NO checkerboard or gradient. Do not use magenta in the character.\nLAYOUT CRITICAL: Character and effects must occupy only the central 60% of every cell; keep a broad empty gutter on all four sides. Equal sized square cells in an exact 6 by 5 grid. The first row must be a nearly unchanged pose. Use only a few solid colors per material, with no microtexture.\nMANDATORY: The complete character remains visible in EVERY cell, especially during projectile spells, bomb throws and explosions. Never replace the character with an isolated projectile or effect. Effects must appear beside the still-visible casting character. No musical notes except for a bard. Do not show hurt impact symbols. Death settles flat; the final dead body retains all identity details.\nREFERENCES: Image 1 is the rendering-style authority. Image 2 is the specific existing character's identity only: preserve its species, characteristic anatomy, costume and colors, but redraw it with Image 1's tiny chunky simplified pixels. Do not substitute a reference knight, goblin, werebear or human for the requested species. Reference faces/costumes must never replace this character's own.\nCHARACTER: Small turquoise-green frog shaman, large round frog eyes, simple brown robe and wooden staff. BASIC: staff jab. SKILL: compact pale blue water orb.\nSPECIES CRITICAL: Clearly an amphibian FROG, smooth turquoise skin, wide flat smiling mouth and TWO LARGE BULGING EYES ON TOP OF HEAD. No ears, no nose, no horns, no goblin face. Large webbed feet. NO pointy ears. Keep the frog species unmistakable.",
+      "source_file": "/Users/harvey/.codex/generated_images/01a07e91-8df3-7b80-bd3f-4ec2ad293bb8/exec-c996768c-f94c-46ea-9761-34169965031d.png",
+      "destination": "assets/characters/generated/frog_shaman",
+      "draft": "build/sprite-style-20260909/drafts/frog_shaman.png",
+      "source_sha256": "af190cc787b5394875bcba0102762ed94a5f07af4dceab9a15c9f5085212da6c",
+      "output_sha256": {
+        "Frog_Shaman_Attack01.png": "2cb9f16fd1e22f87bcd232880909b379dba73bca4ce17341fd733e91cac91a18",
+        "Frog_Shaman_Attack02.png": "63932d2cc88c875406c68a10775be9baa424397fc575c600c637217ef08ff70d",
+        "Frog_Shaman_Death.png": "9927d9fb5eacdc608b28f850e4b0426dd12dd10cfdc165b3800713e6e2212404",
+        "Frog_Shaman_Hurt.png": "810718d100786a7bf44a3196b4b7460254e4a1713ca07cac50eb7cee8441cd75",
+        "Frog_Shaman_Idle.png": "38db5f1a9a5d319f4e0ae881b4015fdb1c158777c52552f282e87d39353f4dc7"
+      }
+    },
+    {
+      "id": "gargoyle_sentinel",
+      "height": 23,
+      "description": "Squat gray stone gargoyle sentinel with two small horns and folded bat wings, chunky short limbs, stone shield. BASIC: stone fist punch. SKILL: brace stone shield with small gold guard flash.",
+      "no_skill": false,
+      "stem": "Gargoyle_Sentinel",
+      "base_prompt": "v3",
+      "initial_prompt": "Use case: style-transfer. Production game sprite animation sheet. The reference image is the ART STYLE AUTHORITY: existing Tiny RPG sprites enlarged by nearest-neighbor. Match its EXTREMELY SMALL native pixel scale, chunky 1-pixel near-black outline, broad flat color clusters, large head, tiny short legs, modest 3/4 side view facing RIGHT, and about 20-28 palette colors for the entire character. Draw like a 20-pixel-tall original sprite enlarged exactly 8x, NOT detailed high-resolution pixel art. No subpixel details, texture, antialiasing, gradients, realism, rimlight, glow, painterly shading, or extra accessories. Color contrast and one-pixel shapes must have the same tiny-game readability as the reference. Keep character identity and scale consistent across every frame.\nOUTPUT: one PNG sprite sheet on a perfectly solid flat #FF00FF magenta background for game-engine chroma key extraction, precisely SIX equally spaced columns by FIVE equally spaced rows (30 poses). No text, labels, grid, borders, checkerboard, shadows, floor, scenery, or reference characters in the output. Every equal square cell contains ONE complete character, centered horizontally in neutral frames, same foot baseline, plenty of transparent space, never crosses cell boundaries. Show deliberate articulated poses, no scaling or whole-body sliding disguised as animation.\nROWS top to bottom:\n1 IDLE: six very subtle breathing frames, feet planted, tiny torso motion, seamless cycle.\n2 BASIC ATTACK: ready, anticipation, fast strike toward RIGHT, maximum extension/compact white impact crescent, recoil, ready. Peak strike at column 3 to match damage timing.\n3 SKILL: ready, anticipation, signature skill peak, clear follow-through, settle, ready; visually distinct from basic attack.\n4 HURT: ready, initial backward flinch, deepest recoil, recovery, settle, ready.\n5 DEATH: ready, stagger, kneel/fall, collapse, motion settling, fully collapsed final pose without recovery.\nPreserve exact limited pixel-art rendering in the falling poses and effects too. The neutral poses throughout should be identical. Background must be uniform pure magenta #FF00FF, absolutely NO checkerboard or gradient. Do not use magenta in the character.\nLAYOUT CRITICAL: Character and effects must occupy only the central 60% of every cell; keep a broad empty gutter on all four sides. Equal sized square cells in an exact 6 by 5 grid. The first row must be a nearly unchanged pose. Use only a few solid colors per material, with no microtexture.\nMANDATORY: The complete character remains visible in EVERY cell, especially during projectile spells, bomb throws and explosions. Never replace the character with an isolated projectile or effect. Effects must appear beside the still-visible casting character. No musical notes except for a bard. Do not show hurt impact symbols. Death settles flat; the final dead body retains all identity details.\nREFERENCES: Image 1 is the rendering-style authority. Image 2 is the specific existing character's identity only: preserve its species, characteristic anatomy, costume and colors, but redraw it with Image 1's tiny chunky simplified pixels. Do not substitute a reference knight, goblin, werebear or human for the requested species. Reference faces/costumes must never replace this character's own.\nCHARACTER: Squat gray stone gargoyle sentinel with two small horns and folded bat wings, chunky short limbs, stone shield. BASIC: stone fist punch. SKILL: brace stone shield with small gold guard flash.\nANATOMY CRITICAL: Entire body, face and shield are uniform gray carved STONE, NO leather clothes, NO fur, NO cat ears. Small swept-back curved horns, angular stone snout, stone bat wings. Nude stone statue body, dark gray cracks, compact stone fists.",
+      "source_file": "/Users/harvey/.codex/generated_images/01a07e91-8df3-7b80-bd3f-4ec2ad293bb8/exec-54ef52a9-8900-425a-880b-14658c1abad9.png",
+      "destination": "assets/characters/generated/gargoyle_sentinel",
+      "draft": "build/sprite-style-20260909/drafts/gargoyle_sentinel.png",
+      "source_sha256": "f4622c8cd8f61b524fdb84f99c726c74e199ec573f932fe957fc4976e7fca31e",
+      "output_sha256": {
+        "Gargoyle_Sentinel_Attack01.png": "e84e3ce7d7e917f431945c70996b43edd913aacd8e8d7f70491cd49d658c0873",
+        "Gargoyle_Sentinel_Attack02.png": "c8d0a288b3b3e91986757e42e5529960141b3ec609e6f595f376362fda2e6564",
+        "Gargoyle_Sentinel_Death.png": "3fce298bdb69f9c262e068c5b2f452ccc3074d5423097503b83f5f23ede2d944",
+        "Gargoyle_Sentinel_Hurt.png": "3a8af271327095718c4d33cbc8c8dc972819440e2045bc04653a9aa5b989fdf7",
+        "Gargoyle_Sentinel_Idle.png": "d2882c78b3057160f4398d04059eb4a4cfc8f76abc856e9eb367ad6d292c8bfe"
+      }
+    },
+    {
+      "id": "goblin_bomber",
+      "height": 20,
+      "description": "Small green goblin, pointy ears, brown leather clothing, round black bomb with small orange fuse. BASIC: swing bomb. SKILL: lob bomb with a compact orange explosion.",
+      "no_skill": false,
+      "stem": "Goblin_Bomber",
+      "base_prompt": "v3",
+      "initial_prompt": "Use case: style-transfer. Production game sprite animation sheet. The reference image is the ART STYLE AUTHORITY: existing Tiny RPG sprites enlarged by nearest-neighbor. Match its EXTREMELY SMALL native pixel scale, chunky 1-pixel near-black outline, broad flat color clusters, large head, tiny short legs, modest 3/4 side view facing RIGHT, and about 20-28 palette colors for the entire character. Draw like a 20-pixel-tall original sprite enlarged exactly 8x, NOT detailed high-resolution pixel art. No subpixel details, texture, antialiasing, gradients, realism, rimlight, glow, painterly shading, or extra accessories. Color contrast and one-pixel shapes must have the same tiny-game readability as the reference. Keep character identity and scale consistent across every frame.\nOUTPUT: one PNG sprite sheet on a perfectly solid flat #FF00FF magenta background for game-engine chroma key extraction, precisely SIX equally spaced columns by FIVE equally spaced rows (30 poses). No text, labels, grid, borders, checkerboard, shadows, floor, scenery, or reference characters in the output. Every equal square cell contains ONE complete character, centered horizontally in neutral frames, same foot baseline, plenty of transparent space, never crosses cell boundaries. Show deliberate articulated poses, no scaling or whole-body sliding disguised as animation.\nROWS top to bottom:\n1 IDLE: six very subtle breathing frames, feet planted, tiny torso motion, seamless cycle.\n2 BASIC ATTACK: ready, anticipation, fast strike toward RIGHT, maximum extension/compact white impact crescent, recoil, ready. Peak strike at column 3 to match damage timing.\n3 SKILL: ready, anticipation, signature skill peak, clear follow-through, settle, ready; visually distinct from basic attack.\n4 HURT: ready, initial backward flinch, deepest recoil, recovery, settle, ready.\n5 DEATH: ready, stagger, kneel/fall, collapse, motion settling, fully collapsed final pose without recovery.\nPreserve exact limited pixel-art rendering in the falling poses and effects too. The neutral poses throughout should be identical. Background must be uniform pure magenta #FF00FF, absolutely NO checkerboard or gradient. Do not use magenta in the character.\nLAYOUT CRITICAL: Character and effects must occupy only the central 60% of every cell; keep a broad empty gutter on all four sides. Equal sized square cells in an exact 6 by 5 grid. The first row must be a nearly unchanged pose. Use only a few solid colors per material, with no microtexture.\nMANDATORY: The complete character remains visible in EVERY cell, especially during projectile spells, bomb throws and explosions. Never replace the character with an isolated projectile or effect. Effects must appear beside the still-visible casting character. No musical notes except for a bard. Do not show hurt impact symbols. Death settles flat; the final dead body retains all identity details.\nREFERENCES: Image 1 is the rendering-style authority. Image 2 is the specific existing character's identity only: preserve its species, characteristic anatomy, costume and colors, but redraw it with Image 1's tiny chunky simplified pixels. Do not substitute a reference knight, goblin, werebear or human for the requested species. Reference faces/costumes must never replace this character's own.\nCHARACTER: Small green goblin, pointy ears, brown leather clothing, round black bomb with small orange fuse. BASIC: swing bomb. SKILL: lob bomb with a compact orange explosion.\nSKILL CRITICAL: In column 3 the goblin remains fully visible with throwing arm extended, bomb flying just beside him. Column 4 the goblin remains fully visible recoiling while a SMALL orange explosion occurs just to his right. NEVER show a bomb-only or explosion-only cell.",
+      "source_file": "/Users/harvey/.codex/generated_images/01a07e91-8df3-7b80-bd3f-4ec2ad293bb8/exec-4251100f-1012-4860-aa54-1973a7688ac1.png",
+      "destination": "assets/characters/generated/goblin_bomber",
+      "draft": "build/sprite-style-20260909/drafts/goblin_bomber.png",
+      "source_sha256": "c737a5409c950a525d3dc62ba1902c9fb3ece7386e86741b708367dccf955a7c",
+      "output_sha256": {
+        "Goblin_Bomber_Attack01.png": "83333fcb7ffc97d721db6585ae88a4929004f9eea507df66425fe95e144dfa56",
+        "Goblin_Bomber_Attack02.png": "8c4506ce11148878504b1e4fc472238c769029ea005ce2562369dbffe01c5a62",
+        "Goblin_Bomber_Death.png": "0f632eb0bb19f1f92fdad068d924ed21b7b1dd961f96075803ecf89564a5bec6",
+        "Goblin_Bomber_Hurt.png": "d1fe998b3561fe04304d1a7a525ac134fae67931ac8db27afbce725170c17ca0",
+        "Goblin_Bomber_Idle.png": "01bb881ffe51adaddc984459c31cae9895a7fc7a099621d66b6b8967b73ae5c4"
+      }
+    },
+    {
+      "id": "halfling_scout",
+      "height": 18,
+      "description": "Very short brown curly-haired halfling scout, green cape, tan tunic, brown shorts, small slingshot. BASIC: release small stone from slingshot. SKILL: deeper pull and stronger stone shot.",
+      "no_skill": false,
+      "stem": "Halfling_Scout",
+      "base_prompt": "v3",
+      "source_file": "/Users/harvey/.codex/generated_images/01a07e91-8df3-7b80-bd3f-4ec2ad293bb8/exec-d341a73d-f991-420a-98c2-fcf9ff1a92e5.png",
+      "destination": "assets/characters/generated/halfling_scout",
+      "draft": "build/sprite-style-20260909/drafts/halfling_scout.png",
+      "source_sha256": "3917ed7b6e21cae364f239856cffe6c4fd5384f9134b129b9f78eb32ec15bf21",
+      "output_sha256": {
+        "Halfling_Scout_Attack01.png": "88711ee6f8cbab10828e7a9183b6d7c394d0785154def97e897febc1fbcbf55a",
+        "Halfling_Scout_Attack02.png": "283724e5270f58c90cce70cdf1a9e5661c340e7a00322212166646c895af83c7",
+        "Halfling_Scout_Death.png": "fe87db77130e8ff728fa507a776090253afb7f083de906b3ed7daa86dd02b472",
+        "Halfling_Scout_Hurt.png": "49fb37c7dea6a4da9e70a641c3447560ee16c120eb3fcd1b0d7aa4d4781ace0e",
+        "Halfling_Scout_Idle.png": "a73361ff23824fa34e8c9b75fa792baa7dbef4f176dd1ee3880c32c0c76d02ba"
+      }
+    },
+    {
+      "id": "harpy_hunter",
+      "height": 23,
+      "description": "Compact orange-brown harpy hunter, bird woman with broad brown feather wings as arms, cream face, short taloned legs. BASIC: wing swipe. SKILL: low forward dive claw strike, return to standing.",
+      "no_skill": false,
+      "stem": "Harpy_Hunter",
+      "base_prompt": "v5",
+      "source_file": "/Users/harvey/.codex/generated_images/01a07e91-8df3-7b80-bd3f-4ec2ad293bb8/exec-dfab53f9-ead6-4917-9c74-3758edb6193f.png",
+      "destination": "assets/characters/generated/harpy_hunter",
+      "draft": "build/sprite-style-20260909/drafts/harpy_hunter.png",
+      "source_sha256": "7d957cb4b771b9ac319e41e787dd6c4f6fc3802b40d04f2e74db6f31ca542446",
+      "output_sha256": {
+        "Harpy_Hunter_Attack01.png": "3f0f1ee2650b4112f2d3a8766047f4cb84a303c22a7603fc701b442721713444",
+        "Harpy_Hunter_Attack02.png": "dcc94d5da14699065f8d10884b3a372a7e67e8e28db043f524d61c09107d0dfe",
+        "Harpy_Hunter_Death.png": "cfdaac98547f7a18e3c5fe423e4aafcb31b3d80b8b2c67e7c39a8a88a0b3a1a1",
+        "Harpy_Hunter_Hurt.png": "1848e01d30bdcb9486db349b40d7dfed7f1e65e2625002b0845df84aa5ed1a5f",
+        "Harpy_Hunter_Idle.png": "bed6311b5b59598139d7a5463ca93803251b83cb1d2e4ec256122ebf924217c8"
+      }
+    },
+    {
+      "id": "kobold_miner",
+      "height": 20,
+      "description": "Small orange kobold with short reptilian snout and tail, mustard miner helmet, brown backpack, short steel pickaxe. BASIC: pickaxe swing. SKILL: overhead mining strike with a few small rock chips.",
+      "no_skill": false,
+      "stem": "Kobold_Miner",
+      "base_prompt": "v5",
+      "source_file": "/Users/harvey/.codex/generated_images/01a07e91-8df3-7b80-bd3f-4ec2ad293bb8/exec-95168b05-1202-44b1-a5f9-3cbdc9aa1027.png",
+      "destination": "assets/characters/generated/kobold_miner",
+      "draft": "build/sprite-style-20260909/drafts/kobold_miner.png",
+      "source_sha256": "a00d233fcc66f153664eb17949e2e9a60afb059f4c35e3915945d67109196d48",
+      "output_sha256": {
+        "Kobold_Miner_Attack01.png": "a9eb9279e8a2f96d9fa3afc8916712f783f84e8ebdded5d5fc26b4aea31877ac",
+        "Kobold_Miner_Attack02.png": "e18d762299ce12f273185ba459f6cb27a457e7644f08d66282a3b7aa6c7b55fd",
+        "Kobold_Miner_Death.png": "0cdadafaaca3be1eb82696fe24a0155d7eb14fc2b0fad405385478759fe334f6",
+        "Kobold_Miner_Hurt.png": "71a89e63d66a5eec15982f3521f61fb74b25ef1d08e3f8a09d1f3479109b49fd",
+        "Kobold_Miner_Idle.png": "a2e9ea84fd4e8010de48f8ec43558905898110bd0e9b9c73b6212abad8311d3e"
+      }
+    },
+    {
+      "id": "lizard_warrior",
+      "height": 22,
+      "description": "Small green lizard warrior, yellow head spines, tan leather chest armor, short gray spear. BASIC: spear jab. SKILL: deep forward spear thrust.",
+      "no_skill": false,
+      "stem": "Lizard_Warrior",
+      "base_prompt": "v5",
+      "source_file": "/Users/harvey/.codex/generated_images/01a07e91-8df3-7b80-bd3f-4ec2ad293bb8/exec-c8d77661-1d8c-4ee0-97f1-950270666da6.png",
+      "destination": "assets/characters/generated/lizard_warrior",
+      "draft": "build/sprite-style-20260909/drafts/lizard_warrior.png",
+      "source_sha256": "6864459a9b7bdce790e9fc715d184ef3d688d172c71ec2b4ce69b9afb7b613b7",
+      "output_sha256": {
+        "Lizard_Warrior_Attack01.png": "9e33d4de3f4a4d5e074edb4f5ecbfca2a255bee29eff1b0cf8a336c8c2f55e88",
+        "Lizard_Warrior_Attack02.png": "d843a61e73c0f0188da73227c9109c6b9494eff5ca7edeb426471ca1da6e06b5",
+        "Lizard_Warrior_Death.png": "ef2bde98f59d1a083a99a6973dfc1b26c42b035b30d5e7bd1d9f984d95e78a4c",
+        "Lizard_Warrior_Hurt.png": "de8334aa87ce89b59e42ebc054d2199314910437307804c452a40ab32ab03021",
+        "Lizard_Warrior_Idle.png": "eff9817258f95e34b06a105f53e665e6a5eb42a2e0225bbd3e88b056c0f4934d"
+      }
+    },
+    {
+      "id": "mushroom_mage",
+      "height": 21,
+      "description": "Small mushroom mage, oversized red mushroom cap with cream spots, cream face and short body, little brown staff. BASIC: staff bonk. SKILL: small muted green spore puff.",
+      "no_skill": false,
+      "stem": "Mushroom_Mage",
+      "base_prompt": "v5",
+      "source_file": "/Users/harvey/.codex/generated_images/01a07e91-8df3-7b80-bd3f-4ec2ad293bb8/exec-8c8c700b-c7cf-48d2-8e12-fe51c2617bf7.png",
+      "destination": "assets/characters/generated/mushroom_mage",
+      "draft": "build/sprite-style-20260909/drafts/mushroom_mage.png",
+      "source_sha256": "aea9374aa17c6108eb5e6dc009785d0e7e58c42b8d4a5a7a60d3edf85f3bcf02",
+      "output_sha256": {
+        "Mushroom_Mage_Attack01.png": "378b2dc1b5bd9e8f42a6ea5930a31edd28166b4079cc921d8692bd20be250c99",
+        "Mushroom_Mage_Attack02.png": "3b214dba330efe1cfe2ab5968a1d2cf18ad8bbd9306db19c785c512f080b0927",
+        "Mushroom_Mage_Death.png": "55b90756a3887cf3231e8b337b1b41a860a70cd9b5e947be8c8069bc3dd60631",
+        "Mushroom_Mage_Hurt.png": "43ce9ea03a25666058944980713dc351d0e0a4d348326cc416c1d8544e404587",
+        "Mushroom_Mage_Idle.png": "916efe913738fd9267af6d02d3c68599baed40e05d70838a4e9d726ee41633e3"
+      }
+    },
+    {
+      "id": "pirate_captain",
+      "height": 22,
+      "description": "Small pirate captain, black tricorne with gold trim and red feather, dark mustache, red coat, steel saber. BASIC: saber slash. SKILL: lunging saber thrust.",
+      "no_skill": false,
+      "stem": "Pirate_Captain",
+      "base_prompt": "v5",
+      "source_file": "/Users/harvey/.codex/generated_images/01a07e91-8df3-7b80-bd3f-4ec2ad293bb8/exec-ae036fb8-ab27-4ca1-a7f4-320de055c5c3.png",
+      "destination": "assets/characters/generated/pirate_captain",
+      "draft": "build/sprite-style-20260909/drafts/pirate_captain.png",
+      "source_sha256": "44dbb5238a7c4b71662b153744c3f8110981c806d63f731d4e5923ba132fb12d",
+      "output_sha256": {
+        "Pirate_Captain_Attack01.png": "60551a39991923270c0aae2ea962c3d16540cce84c142853b1d006dd00c341ce",
+        "Pirate_Captain_Attack02.png": "550f551f16f7c572f7ce4e799b159813707bf573d394b114baf39a2a2dc726e5",
+        "Pirate_Captain_Death.png": "d57325eb0c697b61fb8c99c2c6435b2af3b7733db27ea78d5cc1faa9a5554e94",
+        "Pirate_Captain_Hurt.png": "566b5878475c7ff178bf90c9b0c6f9fde08a11504dbd34746b8b65ff831d5fe9",
+        "Pirate_Captain_Idle.png": "efe25a65d4737c0b5057c60b27b985cd97567c9d345be15d2926a1fea280b4d4"
+      }
+    },
+    {
+      "id": "ratfolk_plague_doctor",
+      "height": 22,
+      "description": "Small gray-brown ratfolk plague doctor, green hood, cream long beak mask, thin rat tail, brown staff and small potion flask. BASIC: staff jab. SKILL: green poison puff from flask.",
+      "no_skill": false,
+      "stem": "Ratfolk_Plague_Doctor",
+      "base_prompt": "v5",
+      "source_file": "/Users/harvey/.codex/generated_images/01a07e91-8df3-7b80-bd3f-4ec2ad293bb8/exec-3a462663-2015-41bd-b03e-99717872a893.png",
+      "destination": "assets/characters/generated/ratfolk_plague_doctor",
+      "draft": "build/sprite-style-20260909/drafts/ratfolk_plague_doctor.png",
+      "source_sha256": "1f3f5b63919883cd5fdb16a263faab93abf359181c94005289311a1939d435e2",
+      "output_sha256": {
+        "Ratfolk_Plague_Doctor_Attack01.png": "fadb5ab42e40855832c70da94d7094b6c1da6db1c28e055dcc626b5b3fa6f24a",
+        "Ratfolk_Plague_Doctor_Attack02.png": "5324dbfb983695bfb3a122a129a068525214aa928a002589703385deef74ed6c",
+        "Ratfolk_Plague_Doctor_Death.png": "56f774d444038cfe735f885ae8d3cb4a57e37fa9580654663c47faa892fe9efc",
+        "Ratfolk_Plague_Doctor_Hurt.png": "63e5ef52fea149aec6ac70cc1d35093b3ba1576bdf95f2dd78b02ee5c69fcf75",
+        "Ratfolk_Plague_Doctor_Idle.png": "3a54e63d321bdd76a80d883ed5a8818ade7d0e82602c1db41d3f9646475ea848"
+      }
+    },
+    {
+      "id": "red_obsidian_ancient_dragon",
+      "height": 29,
+      "description": "Squat small dark charcoal and brick-red ancient dragon, orange horns, compact folded red bat wings, thick tail, four short legs, no rider. BASIC: claw slash. SKILL: compact orange-red flame breath to right.",
+      "no_skill": false,
+      "stem": "Red_Obsidian_Ancient_Dragon",
+      "base_prompt": "v5",
+      "source_file": "/Users/harvey/.codex/generated_images/01a07e91-8df3-7b80-bd3f-4ec2ad293bb8/exec-251e9703-314f-468d-a243-d889125d3013.png",
+      "destination": "assets/characters/generated/red_obsidian_ancient_dragon",
+      "draft": "build/sprite-style-20260909/drafts/red_obsidian_ancient_dragon.png",
+      "source_sha256": "e463c58cc5083d1a6985994bde851f328b487a57c3d344834bee09e565d541a0",
+      "output_sha256": {
+        "Red_Obsidian_Ancient_Dragon_Attack01.png": "217438a4586fd3ba36d4e9d5640a04d914cd7727e058bb9b18d8e5f0b39dbe17",
+        "Red_Obsidian_Ancient_Dragon_Attack02.png": "fc26e4caae80caaf3caadb1839fda729ac82148ec0dfbfaba24ce4ac0daee7e8",
+        "Red_Obsidian_Ancient_Dragon_Death.png": "8a1c8e1cf03d016ebd0cd288eec86e265f00c93305ff2dc37bfeb684345397f1",
+        "Red_Obsidian_Ancient_Dragon_Hurt.png": "b180eda284172e01e493b1556295ee807891d7219350e46614423d1675475270",
+        "Red_Obsidian_Ancient_Dragon_Idle.png": "6fc4bfd81baef980ceb459b50309a43af3383005339eaaace86ee2750ae59bac"
+      }
+    },
+    {
+      "id": "abyss_devourer",
+      "height": 27,
+      "description": "Squat dark navy abyss monster, hunched rounded body, small horns, huge open toothy jaw, short clawed legs, sparse pale cyan markings. BASIC: forward bite. SKILL: compact violet-cyan soul drain puff at mouth.",
+      "no_skill": false,
+      "stem": "Abyss_Devourer",
+      "base_prompt": "v5",
+      "source_file": "/Users/harvey/.codex/generated_images/01a07e91-8df3-7b80-bd3f-4ec2ad293bb8/exec-798168b9-8ade-4098-a446-25fa31638295.png",
+      "destination": "assets/characters/generated/abyss_devourer",
+      "draft": "build/sprite-style-20260909/drafts/abyss_devourer.png",
+      "source_sha256": "54f754c97b8931c31937957fabb8d979f10e8f5c2f086eb3b2ece247de247347",
+      "output_sha256": {
+        "Abyss_Devourer_Attack01.png": "c966d52a44fbb1afe8915428e6d7618bf0f4d1179265ec219d1317a0ea3388fd",
+        "Abyss_Devourer_Attack02.png": "1ca8e1c21c6f1e13b4d1989792e83fb5c65cb0239840bdb9017cd203912817d2",
+        "Abyss_Devourer_Death.png": "75dfc9f55ad5ae93df43ba0692690ca3fd4bb0903474adc66e8f2f3ea0afb3dc",
+        "Abyss_Devourer_Hurt.png": "d46afc587b7e7700a67e51ceee0a0d526d113602391c442de2ef96c02bce7caa",
+        "Abyss_Devourer_Idle.png": "f8228092faf0e4650dcf95341200d2648d89460cb20212c57a67042e2da0bfbf"
+      }
+    },
+    {
+      "id": "sky_leviathan",
+      "height": 25,
+      "description": "Small floating blue-white sky whale leviathan, round pale belly, deep blue back, tiny gold fins and tail, tiny eye. BASIC: forward body ram and tail swipe. SKILL row: defensive fin spread. DEATH: sink gently and rest fully on ground.",
+      "no_skill": true,
+      "stem": "Sky_Leviathan",
+      "base_prompt": "v5",
+      "source_file": "/Users/harvey/.codex/generated_images/01a07e91-8df3-7b80-bd3f-4ec2ad293bb8/exec-ecde7de0-1514-4424-a55e-1cb0c3fe59b6.png",
+      "destination": "assets/characters/generated/sky_leviathan",
+      "draft": "build/sprite-style-20260909/drafts/sky_leviathan.png",
+      "source_sha256": "556aa6a636bf346ae57b2a43815f8c71323fdca6519714494c39b847489a1225",
+      "output_sha256": {
+        "Sky_Leviathan_Attack01.png": "6384d9417af2eb92169c05f6d62de13eeb8b4926ce9f8e2eed884c2a0a176366",
+        "Sky_Leviathan_Death.png": "c6d0070cb92dabf65c39503fa5878b44cfb4b15ce0aac6d2887c4b1ea9492d20",
+        "Sky_Leviathan_Hurt.png": "da06afc80edcf92887b3188477e92eaa3f882149517996bc77b70421fe781078",
+        "Sky_Leviathan_Idle.png": "59f45346b532bf1bfc05d57df00239c85c23b80fbfaf47332906e36b37aa220f"
+      }
+    },
+    {
+      "id": "steel_forge_titan",
+      "height": 28,
+      "description": "Squat dark iron forge golem titan, huge square shoulder plates and fists, short legs, small square head, a single orange furnace square in chest. BASIC: heavy fist punch. SKILL row: crossed-arm guard. Keep extremely simple broad metal shapes.",
+      "no_skill": true,
+      "stem": "Steel_Forge_Titan",
+      "base_prompt": "v5",
+      "initial_prompt": "Use case: style-transfer. Production game sprite animation sheet. The reference image is the ART STYLE AUTHORITY: existing Tiny RPG sprites enlarged by nearest-neighbor. Match its EXTREMELY SMALL native pixel scale, chunky 1-pixel near-black outline, broad flat color clusters, large head, tiny short legs, modest 3/4 side view facing RIGHT, and about 20-28 palette colors for the entire character. Draw like a 20-pixel-tall original sprite enlarged exactly 8x, NOT detailed high-resolution pixel art. No subpixel details, texture, antialiasing, gradients, realism, rimlight, glow, painterly shading, or extra accessories. Color contrast and one-pixel shapes must have the same tiny-game readability as the reference. Keep character identity and scale consistent across every frame.\nOUTPUT: one PNG sprite sheet on a perfectly solid flat #FF00FF magenta background for game-engine chroma key extraction, precisely SIX equally spaced columns by FIVE equally spaced rows (30 poses). No text, labels, grid, borders, checkerboard, shadows, floor, scenery, or reference characters in the output. Every equal square cell contains ONE complete character, centered horizontally in neutral frames, same foot baseline, plenty of transparent space, never crosses cell boundaries. Show deliberate articulated poses, no scaling or whole-body sliding disguised as animation.\nROWS top to bottom:\n1 IDLE: six very subtle breathing frames, feet planted, tiny torso motion, seamless cycle.\n2 BASIC ATTACK: ready, anticipation, fast strike toward RIGHT, maximum extension/compact white impact crescent, recoil, ready. Peak strike at column 3 to match damage timing.\n3 SKILL: ready, anticipation, signature skill peak, clear follow-through, settle, ready; visually distinct from basic attack.\n4 HURT: ready, initial backward flinch, deepest recoil, recovery, settle, ready.\n5 DEATH: ready, stagger, kneel/fall, collapse, motion settling, fully collapsed final pose without recovery.\nPreserve exact limited pixel-art rendering in the falling poses and effects too. The neutral poses throughout should be identical. Background must be uniform pure magenta #FF00FF, absolutely NO checkerboard or gradient. Do not use magenta in the character.\nLAYOUT CRITICAL: Character and effects must occupy only the central 60% of every cell; keep a broad empty gutter on all four sides. Equal sized square cells in an exact 6 by 5 grid. The first row must be a nearly unchanged pose. Use only a few solid colors per material, with no microtexture.\nMANDATORY: The complete character remains visible in EVERY cell, especially during projectile spells, bomb throws and explosions. Never replace the character with an isolated projectile or effect. Effects must appear beside the still-visible casting character. No musical notes except for a bard. Do not show hurt impact symbols. Death settles flat; the final dead body retains all identity details.\nREFERENCES: Image 1 is the rendering-style authority. Image 2 is the specific existing character's identity only: preserve its species, characteristic anatomy, costume and colors, but redraw it with Image 1's tiny chunky simplified pixels. Do not substitute a reference knight, goblin, werebear or human for the requested species. Reference faces/costumes must never replace this character's own.\nCHARACTER: Squat dark iron forge golem titan, huge square shoulder plates and fists, short legs, small square head, a single orange furnace square in chest. BASIC: heavy fist punch. SKILL row: crossed-arm guard. Keep extremely simple broad metal shapes.\nANATOMY CRITICAL: A rectangular flat-topped iron golem head, NO ears or horns, NO animal face, NO fur, NO leather straps. Huge square gray shoulders, block fists, horizontal orange eye slit, orange furnace chest. Entirely mechanical boxy golem.",
+      "source_file": "/Users/harvey/.codex/generated_images/01a07e91-8df3-7b80-bd3f-4ec2ad293bb8/exec-8ba59df6-42ce-4846-918b-fa9db43c871b.png",
+      "destination": "assets/characters/generated/steel_forge_titan",
+      "draft": "build/sprite-style-20260909/drafts/steel_forge_titan.png",
+      "source_sha256": "a36eec328ecbb4481be094b16ac9914b9441321cade61818cec4fe91cd1aedc3",
+      "output_sha256": {
+        "Steel_Forge_Titan_Attack01.png": "d0a552bddc9865454e00fd9bcde8a3ca184dc1cf4283c0c549a3e2faddf2e9b2",
+        "Steel_Forge_Titan_Death.png": "5abda513f7ba27b613190a7ca75160367f8c0f46709b6e0fef75f141f9fd3bc6",
+        "Steel_Forge_Titan_Hurt.png": "84b99a095261c5f30ab3f6e29e0eedb3c90834d5f2b9c802e5f729cf58433943",
+        "Steel_Forge_Titan_Idle.png": "198e11375f7b77ba7a19fac9888169bca731292bf466ab801083a23542a2f5f1"
+      }
+    },
+    {
+      "id": "thunderhorn_behemoth",
+      "height": 27,
+      "description": "Squat slate-gray rhinoceros behemoth, short thick legs, broad armored body, short golden horn and sparse gold lightning markings. BASIC: horn ram. SKILL: deeper charging ram with two small angular golden lightning bolts.",
+      "no_skill": false,
+      "stem": "Thunderhorn_Behemoth",
+      "base_prompt": "v5",
+      "source_file": "/Users/harvey/.codex/generated_images/01a07e91-8df3-7b80-bd3f-4ec2ad293bb8/exec-205455dd-50dd-4dba-a824-0a95c3aa44d0.png",
+      "destination": "assets/characters/generated/thunderhorn_behemoth",
+      "draft": "build/sprite-style-20260909/drafts/thunderhorn_behemoth.png",
+      "source_sha256": "b4fd4cc1eaa41643ca2dc3c38b1b7c7cf6b7ac6c94a551c465212ad7ee4b3494",
+      "output_sha256": {
+        "Thunderhorn_Behemoth_Attack01.png": "f9909bb5efb9a6e7ec9d34fb122f399f43bd39764671a85f52629a3732c38ed4",
+        "Thunderhorn_Behemoth_Attack02.png": "9e5f4d70f38a2e457f185118a7cfa5750c315ee433ad6a32094cde30788a28fe",
+        "Thunderhorn_Behemoth_Death.png": "f5a51b4f48ccdf615af4fe8c28cc96e31d1efa6e061725651493856495c35060",
+        "Thunderhorn_Behemoth_Hurt.png": "808b5c5598905dd768afcf4a5b5e9693d02bb2fc8a9a2ab098a58425b95cfcc2",
+        "Thunderhorn_Behemoth_Idle.png": "5860480db67bd52341582e8b585230ed395de8d25352f90f7cf36609ee984773"
+      }
+    },
+    {
+      "id": "tombsea_colossus",
+      "height": 28,
+      "description": "Squat dark teal tombsea colossus, ancient stone and bone golem, broad shoulders, small skull-like face, short thick legs, sparse dull green seaweed hanging at shoulders. BASIC: heavy downward arm slam. SKILL row: raise stone arms.",
+      "no_skill": true,
+      "stem": "Tombsea_Colossus",
+      "base_prompt": "v5",
+      "source_file": "/Users/harvey/.codex/generated_images/01a07e91-8df3-7b80-bd3f-4ec2ad293bb8/exec-75b54d49-1677-4707-881b-5699e33a7e83.png",
+      "destination": "assets/characters/generated/tombsea_colossus",
+      "draft": "build/sprite-style-20260909/drafts/tombsea_colossus.png",
+      "source_sha256": "1f0af5abdaa3462c0f76cc812c532ade572448c43daac9df2e3660ed8cfc2d52",
+      "output_sha256": {
+        "Tombsea_Colossus_Attack01.png": "ad9d7a1152c0c74f9de71ab21c0d3a70eae0f45dbbcd85958cc2e800cb3ccc5d",
+        "Tombsea_Colossus_Death.png": "95aed39e9243e5ae9d69710dd035ad3935ce98636fb01142261c6f86bc6b58de",
+        "Tombsea_Colossus_Hurt.png": "d7a1570f7ce097cfea20bb2feae289ab96e8d895741b32158bbafa1fefd8c7c3",
+        "Tombsea_Colossus_Idle.png": "82c6f36af6ba2474ee594e7db0a3782ba8cf86366fdd6eb01a6eab9329f267c3"
+      }
+    },
+    {
+      "id": "treant_guardian",
+      "height": 25,
+      "description": "Squat brown tree guardian, chunky bark trunk body with two tiny dark eyes, broad compact dark green leaf canopy, short root legs and thick branch arms. BASIC: wooden arm swing. SKILL: brace arms as small green leaves appear.",
+      "no_skill": false,
+      "stem": "Treant_Guardian",
+      "base_prompt": "v5",
+      "initial_prompt": "Use case: style-transfer. Production game sprite animation sheet. The reference image is the ART STYLE AUTHORITY: existing Tiny RPG sprites enlarged by nearest-neighbor. Match its EXTREMELY SMALL native pixel scale, chunky 1-pixel near-black outline, broad flat color clusters, large head, tiny short legs, modest 3/4 side view facing RIGHT, and about 20-28 palette colors for the entire character. Draw like a 20-pixel-tall original sprite enlarged exactly 8x, NOT detailed high-resolution pixel art. No subpixel details, texture, antialiasing, gradients, realism, rimlight, glow, painterly shading, or extra accessories. Color contrast and one-pixel shapes must have the same tiny-game readability as the reference. Keep character identity and scale consistent across every frame.\nOUTPUT: one PNG sprite sheet on a perfectly solid flat #FF00FF magenta background for game-engine chroma key extraction, precisely SIX equally spaced columns by FIVE equally spaced rows (30 poses). No text, labels, grid, borders, checkerboard, shadows, floor, scenery, or reference characters in the output. Every equal square cell contains ONE complete character, centered horizontally in neutral frames, same foot baseline, plenty of transparent space, never crosses cell boundaries. Show deliberate articulated poses, no scaling or whole-body sliding disguised as animation.\nROWS top to bottom:\n1 IDLE: six very subtle breathing frames, feet planted, tiny torso motion, seamless cycle.\n2 BASIC ATTACK: ready, anticipation, fast strike toward RIGHT, maximum extension/compact white impact crescent, recoil, ready. Peak strike at column 3 to match damage timing.\n3 SKILL: ready, anticipation, signature skill peak, clear follow-through, settle, ready; visually distinct from basic attack.\n4 HURT: ready, initial backward flinch, deepest recoil, recovery, settle, ready.\n5 DEATH: ready, stagger, kneel/fall, collapse, motion settling, fully collapsed final pose without recovery.\nPreserve exact limited pixel-art rendering in the falling poses and effects too. The neutral poses throughout should be identical. Background must be uniform pure magenta #FF00FF, absolutely NO checkerboard or gradient. Do not use magenta in the character.\nLAYOUT CRITICAL: Character and effects must occupy only the central 60% of every cell; keep a broad empty gutter on all four sides. Equal sized square cells in an exact 6 by 5 grid. The first row must be a nearly unchanged pose. Use only a few solid colors per material, with no microtexture.\nMANDATORY: The complete character remains visible in EVERY cell, especially during projectile spells, bomb throws and explosions. Never replace the character with an isolated projectile or effect. Effects must appear beside the still-visible casting character. No musical notes except for a bard. Do not show hurt impact symbols. Death settles flat; the final dead body retains all identity details.\nREFERENCES: Image 1 is the rendering-style authority. Image 2 is the specific existing character's identity only: preserve its species, characteristic anatomy, costume and colors, but redraw it with Image 1's tiny chunky simplified pixels. Do not substitute a reference knight, goblin, werebear or human for the requested species. Reference faces/costumes must never replace this character's own.\nCHARACTER: Squat brown tree guardian, chunky bark trunk body with two tiny dark eyes, broad compact dark green leaf canopy, short root legs and thick branch arms. BASIC: wooden arm swing. SKILL: brace arms as small green leaves appear.\n",
+      "source_file": "/Users/harvey/.codex/generated_images/01a07e91-8df3-7b80-bd3f-4ec2ad293bb8/exec-8106173f-10b1-4892-952c-63782448a276.png",
+      "destination": "assets/characters/generated/treant_guardian",
+      "draft": "build/sprite-style-20260909/drafts/treant_guardian.png",
+      "source_sha256": "efc88fab560948421fb8f207f0c0e9759cfcfd1ff83d5ecef0b18dd9bf9674a7",
+      "output_sha256": {
+        "Treant_Guardian_Attack01.png": "3caeba6be34a62c31d7fe719ccbd1886c828bf2f834f9cb457d3ccc4e84b10cf",
+        "Treant_Guardian_Attack02.png": "8f0437c286f12511a8069899c7b76945277c4db0267e2d908b0d265f589bf5fc",
+        "Treant_Guardian_Death.png": "8d5596bbcd52ea17d099e4de56e171e4fba0b60548a845c1c03d155127d6f077",
+        "Treant_Guardian_Hurt.png": "5788ed1250b41d5e1f81351d7a055155ae54d8fbfabd62cea6c4428d83029a33",
+        "Treant_Guardian_Idle.png": "c7042a6b0dba856436fdcf45314486935937fd05a0f622fba2deb674dfb5bb6f"
+      }
+    },
+    {
+      "id": "wandering_bard",
+      "height": 21,
+      "description": "Small blonde wandering bard with burgundy feather hat, muted green cape and brown tunic, small wooden lute. BASIC: swing lute sideways. SKILL: pluck lute with two tiny golden music notes.",
+      "no_skill": false,
+      "stem": "Wandering_Bard",
+      "base_prompt": "v5",
+      "initial_prompt": "Use case: style-transfer. Production game sprite animation sheet. The reference image is the ART STYLE AUTHORITY: existing Tiny RPG sprites enlarged by nearest-neighbor. Match its EXTREMELY SMALL native pixel scale, chunky 1-pixel near-black outline, broad flat color clusters, large head, tiny short legs, modest 3/4 side view facing RIGHT, and about 20-28 palette colors for the entire character. Draw like a 20-pixel-tall original sprite enlarged exactly 8x, NOT detailed high-resolution pixel art. No subpixel details, texture, antialiasing, gradients, realism, rimlight, glow, painterly shading, or extra accessories. Color contrast and one-pixel shapes must have the same tiny-game readability as the reference. Keep character identity and scale consistent across every frame.\nOUTPUT: one PNG sprite sheet on a perfectly solid flat #FF00FF magenta background for game-engine chroma key extraction, precisely SIX equally spaced columns by FIVE equally spaced rows (30 poses). No text, labels, grid, borders, checkerboard, shadows, floor, scenery, or reference characters in the output. Every equal square cell contains ONE complete character, centered horizontally in neutral frames, same foot baseline, plenty of transparent space, never crosses cell boundaries. Show deliberate articulated poses, no scaling or whole-body sliding disguised as animation.\nROWS top to bottom:\n1 IDLE: six very subtle breathing frames, feet planted, tiny torso motion, seamless cycle.\n2 BASIC ATTACK: ready, anticipation, fast strike toward RIGHT, maximum extension/compact white impact crescent, recoil, ready. Peak strike at column 3 to match damage timing.\n3 SKILL: ready, anticipation, signature skill peak, clear follow-through, settle, ready; visually distinct from basic attack.\n4 HURT: ready, initial backward flinch, deepest recoil, recovery, settle, ready.\n5 DEATH: ready, stagger, kneel/fall, collapse, motion settling, fully collapsed final pose without recovery.\nPreserve exact limited pixel-art rendering in the falling poses and effects too. The neutral poses throughout should be identical. Background must be uniform pure magenta #FF00FF, absolutely NO checkerboard or gradient. Do not use magenta in the character.\nLAYOUT CRITICAL: Character and effects must occupy only the central 60% of every cell; keep a broad empty gutter on all four sides. Equal sized square cells in an exact 6 by 5 grid. The first row must be a nearly unchanged pose. Use only a few solid colors per material, with no microtexture.\nMANDATORY: The complete character remains visible in EVERY cell, especially during projectile spells, bomb throws and explosions. Never replace the character with an isolated projectile or effect. Effects must appear beside the still-visible casting character. No musical notes except for a bard. Do not show hurt impact symbols. Death settles flat; the final dead body retains all identity details.\nREFERENCES: Image 1 is the rendering-style authority. Image 2 is the specific existing character's identity only: preserve its species, characteristic anatomy, costume and colors, but redraw it with Image 1's tiny chunky simplified pixels. Do not substitute a reference knight, goblin, werebear or human for the requested species. Reference faces/costumes must never replace this character's own.\nCHARACTER: Small blonde wandering bard with burgundy feather hat, muted green cape and brown tunic, small wooden lute. BASIC: swing lute sideways. SKILL: pluck lute with two tiny golden music notes.\n",
+      "source_file": "/Users/harvey/.codex/generated_images/01a07e91-8df3-7b80-bd3f-4ec2ad293bb8/exec-29c9171a-cc96-42d0-ac40-b5c75a37995a.png",
+      "destination": "assets/characters/generated/wandering_bard",
+      "draft": "build/sprite-style-20260909/drafts/wandering_bard.png",
+      "source_sha256": "b3274d6fb6292ffb68a5a38f3d184e6cb75f1b38d66a385cc5ad9b8f0d38ce86",
+      "output_sha256": {
+        "Wandering_Bard_Attack01.png": "7e86764b069054d17a9b500fec71cb0dd0354cc28a2f6b7a1087bcec24b001a2",
+        "Wandering_Bard_Attack02.png": "d0d475311b3b34c2f5aaebbf8002a9417509551d443d47948ac057e8db20f0ca",
+        "Wandering_Bard_Death.png": "a2debc7ff07639f5202d5774968890d7b0deb6bf7b0ba5d404849f3c122ca399",
+        "Wandering_Bard_Hurt.png": "a41f6a48d7ae4817623d8b465217d43710d9d9b80d59005f818e0e268991d30d",
+        "Wandering_Bard_Idle.png": "b70591051c6084a0c3263d75bd76b60e73cbed0fcaad4e3d007cb5a9bbf8cf46"
+      }
+    },
+    {
+      "id": "frost_witch",
+      "height": 23,
+      "description": "Small frost witch like reference Wizard: oversized navy pointed hat, white hair, short navy robe, wooden staff tipped with a tiny cyan ice crystal. BASIC: staff swipe with tiny ice chip. SKILL: compact cyan ice crescent blast. No elaborate dress, no gradients, no glow.",
+      "no_skill": false,
+      "stem": "Frost_Witch",
+      "base_prompt": "v5",
+      "initial_prompt": "Use case: style-transfer. Production game sprite animation sheet. The reference image is the ART STYLE AUTHORITY: existing Tiny RPG sprites enlarged by nearest-neighbor. Match its EXTREMELY SMALL native pixel scale, chunky 1-pixel near-black outline, broad flat color clusters, large head, tiny short legs, modest 3/4 side view facing RIGHT, and about 20-28 palette colors for the entire character. Draw like a 20-pixel-tall original sprite enlarged exactly 8x, NOT detailed high-resolution pixel art. No subpixel details, texture, antialiasing, gradients, realism, rimlight, glow, painterly shading, or extra accessories. Color contrast and one-pixel shapes must have the same tiny-game readability as the reference. Keep character identity and scale consistent across every frame.\nOUTPUT: one PNG sprite sheet on a perfectly solid flat #FF00FF magenta background for game-engine chroma key extraction, precisely SIX equally spaced columns by FIVE equally spaced rows (30 poses). No text, labels, grid, borders, checkerboard, shadows, floor, scenery, or reference characters in the output. Every equal square cell contains ONE complete character, centered horizontally in neutral frames, same foot baseline, plenty of transparent space, never crosses cell boundaries. Show deliberate articulated poses, no scaling or whole-body sliding disguised as animation.\nROWS top to bottom:\n1 IDLE: six very subtle breathing frames, feet planted, tiny torso motion, seamless cycle.\n2 BASIC ATTACK: ready, anticipation, fast strike toward RIGHT, maximum extension/compact white impact crescent, recoil, ready. Peak strike at column 3 to match damage timing.\n3 SKILL: ready, anticipation, signature skill peak, clear follow-through, settle, ready; visually distinct from basic attack.\n4 HURT: ready, initial backward flinch, deepest recoil, recovery, settle, ready.\n5 DEATH: ready, stagger, kneel/fall, collapse, motion settling, fully collapsed final pose without recovery.\nPreserve exact limited pixel-art rendering in the falling poses and effects too. The neutral poses throughout should be identical. Background must be uniform pure magenta #FF00FF, absolutely NO checkerboard or gradient. Do not use magenta in the character.\nLAYOUT CRITICAL: Character and effects must occupy only the central 60% of every cell; keep a broad empty gutter on all four sides. Equal sized square cells in an exact 6 by 5 grid. The first row must be a nearly unchanged pose. Use only a few solid colors per material, with no microtexture.\nMANDATORY: The complete character remains visible in EVERY cell, especially during projectile spells, bomb throws and explosions. Never replace the character with an isolated projectile or effect. Effects must appear beside the still-visible casting character. No musical notes except for a bard. Do not show hurt impact symbols. Death settles flat; the final dead body retains all identity details.\nREFERENCES: Image 1 is the rendering-style authority. Image 2 is the specific existing character's identity only: preserve its species, characteristic anatomy, costume and colors, but redraw it with Image 1's tiny chunky simplified pixels. Do not substitute a reference knight, goblin, werebear or human for the requested species. Reference faces/costumes must never replace this character's own.\nCHARACTER: Small frost witch like reference Wizard: oversized navy pointed hat, white hair, short navy robe, wooden staff tipped with a tiny cyan ice crystal. BASIC: staff swipe with tiny ice chip. SKILL: compact cyan ice crescent blast. No elaborate dress, no gradients, no glow.\n",
+      "source_file": "/Users/harvey/.codex/generated_images/01a07e91-8df3-7b80-bd3f-4ec2ad293bb8/exec-9dd4fb90-b6fe-45e6-985e-7561b3442b9a.png",
+      "destination": "assets/characters/frost_witch",
+      "draft": "build/sprite-style-20260909/drafts/frost_witch.png",
+      "source_sha256": "1c63f981c8eae6fd45559f401f9a4adfb58c04759a3b2ddf47cbffa8d0bc8656",
+      "output_sha256": {
+        "Frost_Witch_Attack01.png": "99f080510c099166c90353c70e0d10ab93afbcb21d5a1e306d6b4a640e56a2d4",
+        "Frost_Witch_Attack02.png": "f44304f8d777e7c39e78ddf836fa68f00bb8e4fb4ebc6fe85e9542bf4941afa2",
+        "Frost_Witch_Death.png": "c81ea6b7a8c4f5c408524a84ee91058e95233f6165e264257127c45543452703",
+        "Frost_Witch_Hurt.png": "e569bd163d0b2de117a0d4ef19996d650c4cf824f4e0b765d32ec4ff9318b2b6",
+        "Frost_Witch_Idle.png": "0c8bae1bfc8aeaa17abc4b5c74a943265d1eb35160883710bbac88eb7860287f",
+        "Frost_Witch_Idle_Static.png": "4f42031dbe1872ae0a6d9475f69a986379c986a02251d17b99100de7be237117",
+        "Frost_Witch_Summon.png": "4552ab379f720b112b025176adeadf3836015838776fe476d276ef8f580a79a7",
+        "Frost_Witch_Walk.png": "bf9100659dc17fcb35076505f0e63089e7696902e2262b9ef56a2288eeced84a"
+      }
+    }
+  ],
+  "frost_companion": {
+    "prompt": "Use case: style-transfer. Production game sprite animation sheet. The reference image is the ART STYLE AUTHORITY: existing Tiny RPG sprites enlarged by nearest-neighbor. Match its EXTREMELY SMALL native pixel scale, chunky 1-pixel near-black outline, broad flat color clusters, large head, tiny short legs, modest 3/4 side view facing RIGHT, and about 20-28 palette colors for the entire character. Draw like a 20-pixel-tall original sprite enlarged exactly 8x, NOT detailed high-resolution pixel art. No subpixel details, texture, antialiasing, gradients, realism, rimlight, glow, painterly shading, or extra accessories. Color contrast and one-pixel shapes must have the same tiny-game readability as the reference. Keep character identity and scale consistent across every frame.\nOUTPUT: one PNG sprite sheet on a perfectly solid flat #FF00FF magenta background for game-engine chroma key extraction, precisely SIX equally spaced columns by FIVE equally spaced rows (30 poses). No text, labels, grid, borders, checkerboard, shadows, floor, scenery, or reference characters in the output. Every equal square cell contains ONE complete character, centered horizontally in neutral frames, same foot baseline, plenty of transparent space, never crosses cell boundaries. Show deliberate articulated poses, no scaling or whole-body sliding disguised as animation.\nROWS top to bottom:\n1 IDLE: six very subtle breathing frames, feet planted, tiny torso motion, seamless cycle.\n2 WALK: six-frame seamless walk-in-place cycle facing RIGHT, alternate short legs and gentle counter-swing of staff, no whole-body sliding.\n3 SUMMON: standing witch with a few ice crystals at feet, lift staff, small rising ice shards beside body, settle staff, crystals fade, exact idle ready. Whole witch remains visible in every frame.\n4 HURT: ready, initial backward flinch, deepest recoil, recovery, settle, ready.\n5 DEATH: ready, stagger, kneel/fall, collapse, motion settling, fully collapsed final pose without recovery.\nPreserve exact limited pixel-art rendering in the falling poses and effects too. The neutral poses throughout should be identical. Background must be uniform pure magenta #FF00FF, absolutely NO checkerboard or gradient. Do not use magenta in the character.\nLAYOUT CRITICAL: Character and effects must occupy only the central 60% of every cell; keep a broad empty gutter on all four sides. Equal sized square cells in an exact 6 by 5 grid. The first row must be a nearly unchanged pose. Use only a few solid colors per material, with no microtexture.\nMANDATORY: The complete character remains visible in EVERY cell, especially during projectile spells, bomb throws and explosions. Never replace the character with an isolated projectile or effect. Effects must appear beside the still-visible casting character. No musical notes except for a bard. Do not show hurt impact symbols. Death settles flat; the final dead body retains all identity details.\nREFERENCES: Image 1 is the rendering-style authority. Image 2 is the specific existing character's identity only: preserve its species, characteristic anatomy, costume and colors, but redraw it with Image 1's tiny chunky simplified pixels. Do not substitute a reference knight, goblin, werebear or human for the requested species. Reference faces/costumes must never replace this character's own.\nCHARACTER: Frost witch. Image 2 is the APPROVED NEW CHARACTER SHEET; preserve exactly that same navy hat, white hair, short blue robe, small face, cyan crystal staff, proportions and rendering. Create companion WALK and SUMMON animations in rows 2 and 3; keep rows 1,4,5 consistent with existing Idle,Hurt,Death. No redesign.",
+    "source_file": "/Users/harvey/.codex/generated_images/01a07e91-8df3-7b80-bd3f-4ec2ad293bb8/exec-2694460c-6430-419d-8b29-8c49479df280.png",
+    "rows": {
+      "1": "Idle reference",
+      "2": "Walk",
+      "3": "Summon",
+      "4": "unused",
+      "5": "unused"
+    }
+  },
+  "scope_baseline_commit": "0803e5f2f5ebe3c51af0497a702c6b0e10883599"
+}

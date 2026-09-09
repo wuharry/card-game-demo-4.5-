@@ -1,5 +1,24 @@
 # Frost Witch asset generation
 
+## Current sprite set — 2026-09-09
+
+The character sprites were redrawn to the Tiny RPG scale and palette. The current
+runtime sheets use six 100×100 frames for Idle, Walk, Attack01, Attack02, Hurt,
+Death and Summon; Idle_Static is the exact first Idle frame. The standing body is
+23 pixels high, its ground row is 59, and each sheet uses at most 28 opaque colors.
+Walk and Attack02 are prepared assets; the present Frost Witch battle flow does
+not request them. Card-art illustrations retain their previous design.
+
+Current prompts, source paths and file hashes are in
+[the shared generation manifest](../style_generation_20260909.json).
+The current normalizer is `tests/normalize_character_animation.gd`.
+
+The sections below document the superseded sprite set and the retained card-art
+illustration. Their old frame counts, 44-pixel body and ground row 86 are history,
+not the current sprite contract.
+
+## Previous generation record
+
 - Generator mode: Codex built-in `imagegen`
 - Final card art: `res://assets/ui/card_art/Frost_Witch_CardArt.png`
 - Accepted character-only card-art source: `res://assets/ui/card_art/Frost_Witch_CardArt_Source.png`

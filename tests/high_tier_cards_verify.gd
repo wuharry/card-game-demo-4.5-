@@ -61,10 +61,10 @@ func _check_minion(id: String, skilled: bool) -> void:
 	if cd == null:
 		failures.append("%s 無法載入" % id)
 		return
-	for suffix in ["Idle", "Attack01"]:
+	for suffix in ["Idle", "Attack01", "Hurt", "Death"]:
 		var tex := cd.standee if suffix == "Idle" else cd.get_anim_sheet(suffix)
-		if tex == null or tex.get_width() != 300 or tex.get_height() != 100:
-			failures.append("%s 的 %s 缺少或尺寸不是 300x100" % [id, suffix])
+		if tex == null or tex.get_width() != 600 or tex.get_height() != 100:
+			failures.append("%s 的 %s 缺少或尺寸不是 600x100" % [id, suffix])
 	if skilled:
 		if cd.active_skill == null or cd.active_skill.anim != "Attack02":
 			failures.append("%s 應有 Attack02 主動技" % id)
