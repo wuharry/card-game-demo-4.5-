@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://src/card/card_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/characters/time_fantasy/tide_healer/TF_tide_healer_Idle.png" id="2_sheet"]
+[ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/time_fantasy/tf_tide_healer.png" id="4_art"]
+
+[sub_resource type="Resource" id="Skill_main"]
+script = ExtResource("3_skill")
+skill_name = "潮生祈禱"
+description = "恢復一名友軍 3 點生命。"
+anim = "Attack02"
+kind = 2
+cost = 2
+effect = 1
+effect_target = 1
+amount = 3
+
+[resource]
+script = ExtResource("1_script")
+card_name = "潮汐祭司"
+cost = 3
+atk = 1
+hp = 5
+art = ExtResource("4_art")
+use_dedicated_art = true
+standee = ExtResource("2_sheet")
+active_skill = SubResource("Skill_main")

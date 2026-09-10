@@ -97,7 +97,7 @@ main.tscn  ← 牌桌主場景 (MainScene, Node3D)  [src/main_scene/main_scene.g
 | [scenes/arena_forest.tscn](scenes/arena_forest.tscn) | 森林戰場（預設）：程序地板 + 森林散佈 + 溪流 + 燈光環境 |
 | [scenes/arena_caverns.tscn](scenes/arena_caverns.tscn) / [scenes/arena_frostlands.tscn](scenes/arena_frostlands.tscn) | 洞窟 / 冰原戰場（繼承 ArenaBase 程式生成，進牌桌時隨機輪替） |
 | [scenes/arena_town.tscn](scenes/arena_town.tscn) | 黃昏城鎮廣場（主選單背景） |
-| [src/card/card.tscn](src/card/card.tscn) | 可實例化的 3D 卡片預製件（卡面用 `NewCard_fixed.png`）|
+| [src/card/card.tscn](src/card/card.tscn) | 可實例化的 3D 卡片預製件（卡面用 `assets/ui/card_frames/NewCard_fixed.png`）|
 | [src/card_slot/card_slot.tscn](src/card_slot/card_slot.tscn) | 可實例化的 3D 卡槽預製件（卡槽外觀由 `slot_tile.gdshader` 程序生成）|
 | [src/player_board/player_board.tscn](src/player_board/player_board.tscn) | 棋盤場景，`@export card_slot_scene` 指向 `card_slot.tscn` |
 
@@ -105,7 +105,7 @@ main.tscn  ← 牌桌主場景 (MainScene, Node3D)  [src/main_scene/main_scene.g
 
 | 路徑 | 用途 |
 |------|------|
-| `NewCard_fixed.png` | 目前卡框圖（已清除白色 matte，上半透明窗由 CardArt 遮罩填入）|
+| `assets/ui/card_frames/NewCard_fixed.png` | 目前卡框圖（已清除白色 matte，上半透明窗由 CardArt 遮罩填入）|
 | `data/cards/*.tres` | 24 張 CardData 卡片資料（名稱 / 費用 / 攻血 / 立牌動畫表）|
 | `assets/packs/tiny_rpg_characters` | 像素角色動畫表（卡圖取第 0 幀、召喚立牌播待機動畫）|
 | `assets/packs/pixel3d_{caverns,frostlands,town}` | 洞窟 / 冰原 / 城鎮 像素 3D 環境素材包（第三方素材包統一收 `assets/packs/`，資料夾 snake_case、包內保留原始結構利於對照授權） |
@@ -142,7 +142,7 @@ main.tscn  ← 牌桌主場景 (MainScene, Node3D)  [src/main_scene/main_scene.g
 | 魔力上限 | 起始 0，每回合開始 +1（上限 7），並回滿至上限 |
 | 魔力累積 | 未使用魔力**不**保留到下回合 |
 | 手牌上限 | **8**：手牌滿時抽到的牌**直接銷毀**（爆牌，雙方可見；同爐石／暗影詩章。棄牌價值另有 §1.1 丟牌回魔） |
-| 牌堆 | **60 張**／副，同名卡最多 **3** 份（現階段由 120 種卡隨機組成；抽空後不再抽、無疲勞傷害） |
+| 牌堆 | **60 張**／副，同名卡最多 **3** 份（現階段由 132 種卡隨機組成；抽空後不再抽、無疲勞傷害） |
 
 ### 1.1 丟牌回魔（含冷卻）`[數位調整]`
 
@@ -388,10 +388,10 @@ func apply_freeze(unit, turns := 1) -> void:
 - [x] 棋盤程序生成：5×2 卡槽自動置中，玩家/敵方分別擺位並分群
 
 **資料與卡面**
-- [x] CardData 資料層：Resource + 120 張 `.tres`；DirAccess 掃卡池、發牌隨機 `setup()`（資料變、程式不變）
+- [x] CardData 資料層：Resource + 132 張 `.tres`；DirAccess 掃卡池、發牌隨機 `setup()`（資料變、程式不變）
 - [x] 卡片數值 Label3D（爐石式四角配置；z=0.02 + render_priority 解決手牌/上桌兩態的深度浮埋）
 - [x] 卡圖嵌入卡框挖空窗 + 遊戲王式召喚立牌（像素角色第 0 幀卡圖、入槽立牌待機動畫）
-- [x] 動畫驅動技能資料層：120 卡 `active_skill` / `keywords` 全接線（[§6.1](#61-動畫驅動技能animation-driven-skills-數位調整)）；卡面顯示技能名+費用+描述
+- [x] 動畫驅動技能資料層：132 卡 `active_skill` / `keywords` 全接線（[§6.1](#61-動畫驅動技能animation-driven-skills-數位調整)）；卡面顯示技能名+費用+描述
 - [x] 指令選單（純演出版）：點上桌單位 → 歧路旅人式選單 → 指定目標 → 施放/受擊動畫；結算走 `action_performed` 信號留給戰鬥系統
 - [x] 魔力與生命值（BattleManager）：魔力回合成長/召喚與技能費用檢查（§1/§3）、行動分離+召喚暈眩+衝鋒（§6）、雙向傷害交換與治療（§4.2）、死亡演出+卡槽清位；HUD 回合/魔力/結束回合
 - [x] 戰鬥回饋：飄浮傷害/治療數字、反擊受擊動畫、受擊綁「結算」不綁「宣告」
@@ -405,8 +405,9 @@ func apply_freeze(unit, turns := 1) -> void:
 - [x] 真牌堆（`deck.gd`）：雙方各一副 **60 張**（同名上限 3，§1）、抽完即空、兩疊牌堆掛剩量數字
 - [x] 熱座雙人（連線前置，ADR-001 後果清單完成）：雙方獨立魔力/牌堆/手牌帳（`SideState`）、回合歸屬（非行動方單位不能動、只能召喚自己那側）、結束回合＝換邊＋換手牌視圖；狀態效果改在持有者自己的回合階段 tick
 - [x] 連線 2a 大廳與骨架（`src/net/`）：主選單「多人遊戲」→ 大廳欄（開房顯示本機 IP／輸 IP 加入）；ENet 建線、`_start_match` 握手 RPC（host 抽牌桌廣播 index）、host=player / client=enemy 寫進 `NetMatch`；headless 雙分支 loopback 實連驗證通過
-- [x] 五類卡池完成（領域不啟用）：從者 66／靈裝 5／秘術 33／瞬咒 8／伏印 8，共 120 張；非從者卡面＝圖示卡圖＋藏攻血＋卡型印章（`card.gd`）。像素圖示包歸位 `assets/ui/icons/`（Shikashi v1/v2 免署名；Antahonist **CC-BY 4.0 發佈時需掛名 "Icons by Andrey Kalyuzhnyy"**，見 [CREDITS.md](CREDITS.md)）
+- [x] 五類卡池完成（領域不啟用）：從者 78／靈裝 5／秘術 33／瞬咒 8／伏印 8，共 132 張；非從者卡面＝圖示卡圖＋藏攻血＋卡型印章（`card.gd`）。像素圖示包歸位 `assets/ui/icons/`（Shikashi v1/v2 免署名；Antahonist **CC-BY 4.0 發佈時需掛名 "Icons by Andrey Kalyuzhnyy"**，見 [CREDITS.md](CREDITS.md)）
 - [x] **9–13 費高階卡（2026-08-28）**：新增 28 張（9 費 7／10 費 6／11 費 6／12 費 6／13 費 3），包含從者、秘術、瞬咒、伏印與靈裝；自然魔力維持 7，終結卡靠丟牌回魔支付。六名新從者必有普通攻擊 `Attack01`，只有具主動技能者才另有 `Attack02`。
+- [x] **Time Fantasy 新卡（2026-09-10）**：加入 12 名從者，直接使用 `tf_svbattle.zip` 原作者素材，包含待機、普攻、技能、受傷、倒地與登場動畫。[卡牌清單與試玩方式](docs/time_fantasy_cards.md)。
 - [x] **法術結算層（§7）**：秘術＝拖到敵方從者即結算（宣告即付費 §5.1 STEP1、潛行不可指定 §8）；**守方瞬咒反制窗口**（施放秘術時熱座面板詢問守方，發動＝抵銷、扣守方剩餘魔力並離手）；靈裝＝拖到我方從者附著（生命上限加成記在單位節點，宿主離場隨亡）；伏印＝蓋放進側帳資料層（§2 後排、不佔格），敵方召喚從者時觸發傷害。headless 驗收 14 斷言全過
 - [x] 通用命中爆點 3D 特效（`src/fx/fx_burst.gd`）：GPUParticles3D 純程式美術（emission 過 glow 門檻自動泛光），掛在 Card/Hero `take_damage` ＝所有傷害自動觸發
 - [x] 匯出管線（macOS）：export preset ＋ ETC2 ASTC（Universal 必需）＋ 匯出版 headless 啟動驗證；掛名清單 [CREDITS.md](CREDITS.md)（含待查證素材區）

@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://src/card/card_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/characters/time_fantasy/azure_adventurer/TF_azure_adventurer_Idle.png" id="2_sheet"]
+[ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/time_fantasy/tf_azure_adventurer.png" id="4_art"]
+
+[sub_resource type="Resource" id="Skill_main"]
+script = ExtResource("3_skill")
+skill_name = "踏前斬"
+description = "本次攻擊額外造成 2 點傷害。"
+anim = "Attack02"
+kind = 0
+cost = 1
+power = 2
+
+[resource]
+script = ExtResource("1_script")
+card_name = "蒼衣遊俠"
+cost = 2
+atk = 3
+hp = 2
+art = ExtResource("4_art")
+use_dedicated_art = true
+standee = ExtResource("2_sheet")
+active_skill = SubResource("Skill_main")

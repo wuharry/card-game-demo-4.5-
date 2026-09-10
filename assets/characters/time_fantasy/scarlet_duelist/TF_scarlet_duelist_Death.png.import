@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b1u4am7tpv0ci"
-path="res://.godot/imported/ChatGPT Image 2026年8月20日 下午01_09_10.png-e4338b70f1efb33c145e9f61c6eb8884.ctex"
+uid="uid://cqtbcvlu8a754"
+path="res://.godot/imported/TF_scarlet_duelist_Death.png-3ac07226573b1f8307d11849090610f5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ChatGPT Image 2026年8月20日 下午01_09_10.png"
-dest_files=["res://.godot/imported/ChatGPT Image 2026年8月20日 下午01_09_10.png-e4338b70f1efb33c145e9f61c6eb8884.ctex"]
+source_file="res://assets/characters/time_fantasy/scarlet_duelist/TF_scarlet_duelist_Death.png"
+dest_files=["res://.godot/imported/TF_scarlet_duelist_Death.png-3ac07226573b1f8307d11849090610f5.ctex"]
 
 [params]
 

@@ -7,7 +7,7 @@ extends SceneTree
 ## 肉眼看縮圖分辨不出來,放進遊戲才發現——所以先量。
 
 const TARGETS := [
-	["新素材(AI 生成)", "res://assets/ChatGPT Image 2026年8月20日 下午01_09_10.png"],
+	["新素材(AI 生成)", "res://assets/ai_character_sheet_20260820.png"],
 	["對照:Warlock_Idle", "res://assets/packs/tiny_rpg_characters/Tiny RPG Character Asset Pack 02 -Full 20 Characters/Characters(100x100 split)/Warlock/Warlock/Warlock_Idle.png"],
 	["對照:卡框圖集", "res://assets/ui/card_frames/pixel_template/cards_sheet.png"],
 	["對照:法術圖示", "res://assets/ui/icons/antahonist_spells/spell_icons_32x32.png"],

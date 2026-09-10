@@ -32,3 +32,8 @@
 ## 引擎
 
 - Godot Engine 4.7 — MIT License(發佈時依官方指引附上 https://godotengine.org/license)
+
+## Time Fantasy 新卡素材（2026-09-10）
+
+- Time Fantasy: SIDE-VIEW ANIMATED BATTLERS EXPANSION，作者 **finalbossblues**。來源為使用者提供的 `tf_svbattle.zip`；保留包內原始說明於 [SOURCE_README.txt](assets/characters/time_fantasy/SOURCE_README.txt)。
+- 本次從原包選用 12 名角色，僅排列原始動畫幀及裁切、整數倍放大卡圖，沒有 AI 重繪。原包 readme 沒有列出完整授權條款；此記錄只確認來源，不宣稱特定授權。

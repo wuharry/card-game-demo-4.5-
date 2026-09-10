@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://src/card/card_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/characters/time_fantasy/dawn_paladin/TF_dawn_paladin_Idle.png" id="2_sheet"]
+[ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/time_fantasy/tf_dawn_paladin.png" id="4_art"]
+
+[sub_resource type="Resource" id="Skill_main"]
+script = ExtResource("3_skill")
+skill_name = "晨光庇護"
+description = "一名友軍獲得 3 點護盾。"
+anim = "Attack02"
+kind = 2
+cost = 2
+effect = 7
+effect_target = 1
+amount = 3
+
+[sub_resource type="Resource" id="Skill_battlecry"]
+script = ExtResource("3_skill")
+skill_name = "曙光降臨"
+description = "登場時，恢復己方英雄 3 點生命。"
+anim = "Attack02"
+effect = 1
+effect_target = 4
+amount = 3
+
+[resource]
+script = ExtResource("1_script")
+card_name = "曙光聖衛"
+cost = 5
+atk = 3
+hp = 7
+art = ExtResource("4_art")
+use_dedicated_art = true
+standee = ExtResource("2_sheet")
+active_skill = SubResource("Skill_main")
+keywords = Array[StringName]([&"鐵壁"])
+battlecry = SubResource("Skill_battlecry")

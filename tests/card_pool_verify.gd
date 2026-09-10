@@ -64,9 +64,9 @@ func _run() -> void:
 			arcana.append([fn, cd])
 
 	_check(bad == 0, "有 %d 張載入失敗" % bad)
-	_check(total == 120, "卡池應為 120 張，目前 %d" % total)
+	_check(total == 132, "卡池應為 132 張，目前 %d" % total)
 	var expected_counts := {
-		CARD_DATA.CardType.MINION: 66,
+		CARD_DATA.CardType.MINION: 78,
 		CARD_DATA.CardType.EQUIP: 5,
 		CARD_DATA.CardType.ARCANA: 33,
 		CARD_DATA.CardType.QUICK: 8,

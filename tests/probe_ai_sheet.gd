@@ -1,7 +1,7 @@
 extends SceneTree
 ## 這張 AI 素材救不救得回來?量三件事:背景是什麼、像素塊多大、格線在哪。
 ##   godot --headless -s tests/probe_ai_sheet.gd
-const SRC := "res://assets/ChatGPT Image 2026年8月20日 下午01_09_10.png"
+const SRC := "res://assets/ai_character_sheet_20260820.png"
 
 func _initialize() -> void:
 	var img := Image.load_from_file(SRC)

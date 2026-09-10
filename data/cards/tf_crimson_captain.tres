@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://src/card/card_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/characters/time_fantasy/crimson_captain/TF_crimson_captain_Idle.png" id="2_sheet"]
+[ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/time_fantasy/tf_crimson_captain.png" id="4_art"]
+
+[sub_resource type="Resource" id="Skill_main"]
+script = ExtResource("3_skill")
+skill_name = "破陣斬"
+description = "本次攻擊額外造成 1 點傷害。"
+anim = "Attack02"
+kind = 0
+cost = 2
+power = 1
+
+[sub_resource type="Resource" id="Skill_battlecry"]
+script = ExtResource("3_skill")
+skill_name = "進軍號令"
+description = "登場時，左右相鄰友軍獲得【鍛強】2 回合。"
+anim = "Attack02"
+effect = 2
+effect_target = 3
+status = 5
+status_turns = 2
+
+[resource]
+script = ExtResource("1_script")
+card_name = "赤羽統領"
+cost = 5
+atk = 4
+hp = 6
+art = ExtResource("4_art")
+use_dedicated_art = true
+standee = ExtResource("2_sheet")
+active_skill = SubResource("Skill_main")
+battlecry = SubResource("Skill_battlecry")

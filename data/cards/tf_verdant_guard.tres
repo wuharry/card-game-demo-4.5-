@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://src/card/card_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/characters/time_fantasy/verdant_guard/TF_verdant_guard_Idle.png" id="2_sheet"]
+[ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/time_fantasy/tf_verdant_guard.png" id="4_art"]
+
+[sub_resource type="Resource" id="Skill_main"]
+script = ExtResource("3_skill")
+skill_name = "固守"
+description = "自身獲得 2 點護盾。"
+anim = "Attack02"
+kind = 2
+cost = 1
+effect = 7
+effect_target = 0
+amount = 2
+
+[resource]
+script = ExtResource("1_script")
+card_name = "翠甲衛士"
+cost = 2
+atk = 1
+hp = 4
+art = ExtResource("4_art")
+use_dedicated_art = true
+standee = ExtResource("2_sheet")
+active_skill = SubResource("Skill_main")
+keywords = Array[StringName]([&"鐵壁"])

@@ -1,0 +1,291 @@
+[
+  {
+    "id": "verdant_guard",
+    "card_name": "翠甲衛士",
+    "cost": 2,
+    "atk": 1,
+    "hp": 4,
+    "source": "singleframes/military1/military1_3_idle1 (1).png",
+    "death_source": "singleframes/military1/military1_3_dead.png",
+    "attack": "atk1",
+    "special": "crouch",
+    "skill": {
+      "skill_name": "固守",
+      "description": "自身獲得 2 點護盾。",
+      "anim": "Attack02",
+      "kind": 2,
+      "cost": 1,
+      "effect": 7,
+      "effect_target": 0,
+      "amount": 2
+    },
+    "keywords": [
+      "鐵壁"
+    ],
+    "battlecry": null
+  },
+  {
+    "id": "crimson_captain",
+    "card_name": "赤羽統領",
+    "cost": 5,
+    "atk": 4,
+    "hp": 6,
+    "source": "singleframes/military1/military1_8_idle1 (1).png",
+    "death_source": "singleframes/military1/military1_8_dead.png",
+    "attack": "atk1",
+    "special": "atk2",
+    "skill": {
+      "skill_name": "破陣斬",
+      "description": "本次攻擊額外造成 1 點傷害。",
+      "anim": "Attack02",
+      "kind": 0,
+      "cost": 2,
+      "power": 1
+    },
+    "keywords": [],
+    "battlecry": {
+      "skill_name": "進軍號令",
+      "description": "登場時，左右相鄰友軍獲得【鍛強】2 回合。",
+      "anim": "Attack02",
+      "effect": 2,
+      "effect_target": 3,
+      "status": 5,
+      "status_turns": 2
+    }
+  },
+  {
+    "id": "azure_adventurer",
+    "card_name": "蒼衣遊俠",
+    "cost": 2,
+    "atk": 3,
+    "hp": 2,
+    "source": "singleframes/set1/1/1_1_idle1 (1).png",
+    "death_source": "singleframes/set1/1/1_1_down.png",
+    "attack": "atk1",
+    "special": "atk2",
+    "skill": {
+      "skill_name": "踏前斬",
+      "description": "本次攻擊額外造成 2 點傷害。",
+      "anim": "Attack02",
+      "kind": 0,
+      "cost": 1,
+      "power": 2
+    },
+    "keywords": [],
+    "battlecry": null
+  },
+  {
+    "id": "scarlet_duelist",
+    "card_name": "緋紅劍士",
+    "cost": 3,
+    "atk": 3,
+    "hp": 3,
+    "source": "singleframes/set1/3/1_3_idle1 (1).png",
+    "death_source": "singleframes/set1/3/1_3_dead.png",
+    "attack": "atk1",
+    "special": "atk2",
+    "skill": {
+      "skill_name": "雙連斬",
+      "description": "以攻擊力連擊兩次，僅第一次受到反擊。",
+      "anim": "Attack02",
+      "kind": 0,
+      "cost": 2,
+      "modifier": 3
+    },
+    "keywords": [],
+    "battlecry": null
+  },
+  {
+    "id": "dusk_mage",
+    "card_name": "暮色術士",
+    "cost": 4,
+    "atk": 2,
+    "hp": 4,
+    "source": "singleframes/set1/5/1_5_idle1 (1).png",
+    "death_source": "singleframes/set1/5/1_5_dead.png",
+    "attack": "atk1",
+    "special": "magic",
+    "skill": {
+      "skill_name": "暮焰",
+      "description": "造成 3 點傷害，並施加【灼燒】2 回合。",
+      "anim": "Attack02",
+      "kind": 1,
+      "cost": 2,
+      "power": 3,
+      "effect": 2,
+      "status": 1,
+      "status_turns": 2
+    },
+    "keywords": [],
+    "battlecry": null
+  },
+  {
+    "id": "tide_healer",
+    "card_name": "潮汐祭司",
+    "cost": 3,
+    "atk": 1,
+    "hp": 5,
+    "source": "singleframes/set1/8/1_8_idle1 (1).png",
+    "death_source": "singleframes/set1/8/1_8_dead.png",
+    "attack": "atk1",
+    "special": "magic",
+    "skill": {
+      "skill_name": "潮生祈禱",
+      "description": "恢復一名友軍 3 點生命。",
+      "anim": "Attack02",
+      "kind": 2,
+      "cost": 2,
+      "effect": 1,
+      "effect_target": 1,
+      "amount": 3
+    },
+    "keywords": [],
+    "battlecry": null
+  },
+  {
+    "id": "sun_monk",
+    "card_name": "烈陽武僧",
+    "cost": 3,
+    "atk": 3,
+    "hp": 4,
+    "source": "singleframes/set2/7/2_7_idle1 (1).png",
+    "death_source": "singleframes/set2/7/2_7_dead.png",
+    "attack": "atk1",
+    "special": "atk2",
+    "skill": {
+      "skill_name": "回元擊",
+      "description": "本次攻擊額外造成 1 點傷害，吸血。",
+      "anim": "Attack02",
+      "kind": 0,
+      "cost": 2,
+      "power": 1,
+      "modifier": 4
+    },
+    "keywords": [],
+    "battlecry": null
+  },
+  {
+    "id": "wild_champion",
+    "card_name": "荒原鬥士",
+    "cost": 5,
+    "atk": 5,
+    "hp": 5,
+    "source": "singleframes/set4/2/4_2_idle1 (1).png",
+    "death_source": "singleframes/set4/2/4_2_dead.png",
+    "attack": "atk1",
+    "special": "atk2",
+    "skill": {
+      "skill_name": "橫掃重擊",
+      "description": "以攻擊力橫掃目標及左右相鄰路線。",
+      "anim": "Attack02",
+      "kind": 0,
+      "cost": 3,
+      "modifier": 1
+    },
+    "keywords": [],
+    "battlecry": null
+  },
+  {
+    "id": "veil_warlock",
+    "card_name": "幽幕咒師",
+    "cost": 4,
+    "atk": 2,
+    "hp": 5,
+    "source": "singleframes/set4/5/4_5_idle1 (1).png",
+    "death_source": "singleframes/set4/5/4_5_dead.png",
+    "attack": "atk1",
+    "special": "magic",
+    "skill": {
+      "skill_name": "萎靡咒",
+      "description": "使對路敵人獲得【衰弱】2 回合。",
+      "anim": "Attack02",
+      "kind": 2,
+      "cost": 1,
+      "effect": 2,
+      "status": 6,
+      "status_turns": 2
+    },
+    "keywords": [],
+    "battlecry": null
+  },
+  {
+    "id": "dawn_paladin",
+    "card_name": "曙光聖衛",
+    "cost": 5,
+    "atk": 3,
+    "hp": 7,
+    "source": "singleframes/set4/7/4_7_idle1 (1).png",
+    "death_source": "singleframes/set4/7/4_7_dead.png",
+    "attack": "atk1",
+    "special": "magic",
+    "skill": {
+      "skill_name": "晨光庇護",
+      "description": "一名友軍獲得 3 點護盾。",
+      "anim": "Attack02",
+      "kind": 2,
+      "cost": 2,
+      "effect": 7,
+      "effect_target": 1,
+      "amount": 3
+    },
+    "keywords": [
+      "鐵壁"
+    ],
+    "battlecry": {
+      "skill_name": "曙光降臨",
+      "description": "登場時，恢復己方英雄 3 點生命。",
+      "anim": "Attack02",
+      "effect": 1,
+      "effect_target": 4,
+      "amount": 3
+    }
+  },
+  {
+    "id": "feather_bard",
+    "card_name": "赤羽吟遊者",
+    "cost": 2,
+    "atk": 1,
+    "hp": 3,
+    "source": "singleframes/set7/2/7_2_idle1 (1).png",
+    "death_source": "singleframes/set7/2/7_2_dead.png",
+    "attack": "atk1",
+    "special": "cheer",
+    "skill": {
+      "skill_name": "奮起之歌",
+      "description": "使一名友軍獲得【鍛強】2 回合。",
+      "anim": "Attack02",
+      "kind": 2,
+      "cost": 1,
+      "effect": 2,
+      "effect_target": 1,
+      "status": 5,
+      "status_turns": 2
+    },
+    "keywords": [],
+    "battlecry": null
+  },
+  {
+    "id": "grove_ranger",
+    "card_name": "青林獵手",
+    "cost": 3,
+    "atk": 3,
+    "hp": 3,
+    "source": "singleframes/set7/4/7_4_idle1 (1).png",
+    "death_source": "singleframes/set7/4/7_4_dead.png",
+    "attack": "bow",
+    "special": "bow",
+    "skill": {
+      "skill_name": "淬毒箭",
+      "description": "造成 2 點傷害，並施加【中毒】2 回合。",
+      "anim": "Attack02",
+      "kind": 1,
+      "cost": 2,
+      "power": 2,
+      "effect": 2,
+      "status": 3,
+      "status_turns": 2
+    },
+    "keywords": [],
+    "battlecry": null
+  }
+]

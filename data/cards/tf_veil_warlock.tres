@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://src/card/card_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/characters/time_fantasy/veil_warlock/TF_veil_warlock_Idle.png" id="2_sheet"]
+[ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/time_fantasy/tf_veil_warlock.png" id="4_art"]
+
+[sub_resource type="Resource" id="Skill_main"]
+script = ExtResource("3_skill")
+skill_name = "萎靡咒"
+description = "使對路敵人獲得【衰弱】2 回合。"
+anim = "Attack02"
+kind = 2
+cost = 1
+effect = 2
+status = 6
+status_turns = 2
+
+[resource]
+script = ExtResource("1_script")
+card_name = "幽幕咒師"
+cost = 4
+atk = 2
+hp = 5
+art = ExtResource("4_art")
+use_dedicated_art = true
+standee = ExtResource("2_sheet")
+active_skill = SubResource("Skill_main")
