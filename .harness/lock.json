@@ -5,14 +5,16 @@
   "files": {
     ".claude/rules/mentor-claude-harness.md": "139753b80e8d83653006987540180182e7567f6b84d3765208b47ecec737e8d5",
     ".claude/rules/mentor-godot.md": "b092e500a9c1bf3ed733e81e2bb8e255545b2b78cb81d628997011b85c6ed342",
+    ".claude/rules/mentor-python.md": "9cf33bf55b69addef95aa55fa0e1677562bdae7678e2c2159cdd7db9b9d8faed",
     ".claude/settings.json": "9eaa7225840a58f73ecf328d0b9f2ac8b51e06a8e300d221a217e1a7583d9a24",
     ".harness/claude_hook.py": "5aca3437ec68eb38cab2e505bc77b65e8cfbc3fa40ef69dae51cc91054c09fce",
     ".harness/learning-event.schema.json": "81a9c22d16b5e0f16b45bc9cbc5ad024d054bf8244fb012de1e6031e0b257dda",
     ".harness/learning-sources.json": "a3f62419040a7057db51bd6f09b8b63a59434ac02291539fd58286638d84369d",
     ".harness/policies/claude-harness.md": "2426876ad8ea22dd0711662e2acd45bccf2cb25707912d17846d70e6b0c22a3d",
     ".harness/policies/godot.md": "6112469b0b78f6d9bb4d9cb7512c4067e4d5793c482fe56fd98577a8b542ec5a",
+    ".harness/policies/python.md": "e9faf1bf2c64b7fa1bb4ce56c4bba79ff787e53911f9e820e0a9aab9bd2dbe89",
     ".harness/verify.py": "516a41a2e2ea86d8a9f57f0ad860f6c52c204fd2fca60f8b9bc827c3b5a0551a",
-    "AGENTS.md": "c58e7921841fba0f65c2c89464fc2709e349faca2a327517ced9f03f0258c459",
-    "CLAUDE.md": "6dcfa9fdaf3fc9a7897792fd0819be642eef8fce79e956f34bc8f5dde2646694"
+    "AGENTS.md": "a847167cdc2d8f650b02a1227338ef8b17df1836cc1a8ff0c690dd511e19e62d",
+    "CLAUDE.md": "ce880e4f32f8b8dca53b1a0a00b60670ad5af883e59a2c1e59a3e41ea7c22188"
   }
 }
