@@ -9,15 +9,14 @@
 ##   ├─ Camera3D          ← 固定鏡頭:站在廣場內側望向對面房屋(不旋轉)
 ##   └─ CanvasLayer/UI    ← 2D 選單疊在 3D 畫面上(CanvasItem 永遠畫在 3D 之上)
 ##
-## 視覺對標歧路旅人的標題畫面:襯線字標題 + 細金線 + 純文字選單(不是色塊
-## 按鈕)+ 四周壓暗的 vignette;被選中的選項會亮起、底下浮出一條金線。
+## 霧黑面板、灰鐵細框與襯線標題；淡金只用在分隔線及選項焦點。
 extends Node3D
 
 const SETTINGS: GDScript = preload("res://src/settings/app_settings.gd")
 
 ## ── Inspector 可調參數 ──────────────────────────────
 @export var game_title: String = "卡牌對決"                      # 主標題(改名不用動 code)
-@export var game_subtitle: String = "CardGame Demo · Godot 4.5"  # 底部小字
+@export var game_subtitle: String = "CardGame Demo"  # 底部小字
 
 @export_group("鏡頭構圖(不滿意就調這裡,不用動 code)")
 ## 房屋圈半徑 13(見 arena_town.gd);舊版鏡頭放在 r=12,等於「站進房子裡」,
@@ -54,7 +53,6 @@ const FONT_MENU: FontFile = preload(
 const FONT_SUB: FontFile = preload(
 	"res://assets/fonts/Playpen_Sans/static/PlaypenSans-Regular.ttf")
 const UI_STYLE: GDScript = preload("res://src/ui/fantasy_ui_theme.gd")
-const MENU_SIGIL_SCRIPT: GDScript = preload("res://src/ui/arcane_sigil.gd")
 
 ## ── 配色:同一組「暮色金」貫穿全畫面,和城鎮的夕陽/窗光同色系 ──
 const GOLD := UI_STYLE.GOLD
@@ -64,6 +62,8 @@ const LINE_GOLD := Color(UI_STYLE.GOLD, 0.76)
 var _single_player_button: Button # 單人遊戲鈕,換場景前鎖住以免連點
 var _multiplayer_button: Button   # 多人遊戲鈕,單人遊戲進場期間一起鎖住
 var _fade_rect: ColorRect    # 蓋在最上層的黑幕:開場淡入、換場景淡出都靠它
+var _entering: bool = false
+var _fade_tween: Tween
 
 ## ── 連線大廳(ADR-002):選單欄 ↔ 大廳欄互斥顯示,連線邏輯全在 NetClient ──
 var _net_client: Node            # NetClient 實例(連線邏輯,無 UI)
@@ -101,7 +101,8 @@ func _ready() -> void:
 	_single_player_button.grab_focus() # 給鍵盤焦點:開場按 Enter 進單人遊戲
 	# 開場從全黑淡入:黑幕 alpha 1 → 0。黑幕蓋得住 3D 和 UI,整個畫面一起浮現。
 	_fade_rect.color.a = 1.0
-	create_tween().tween_property(
+	_fade_tween = create_tween()
+	_fade_tween.tween_property(
 		_fade_rect, "color:a", 0.0, SETTINGS.current().motion_duration(0.8))
 
 
@@ -135,7 +136,6 @@ func _build_ui() -> void:
 	ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	_build_vignette(ui)
-	_build_menu_sigil(ui)
 	_build_menu_column(ui)
 	_build_footer(ui)
 
@@ -152,8 +152,8 @@ func _build_ui() -> void:
 ## (之前的上下漸層只壓天和地,左右兩側壓不住,亮背景時字會浮。)
 func _build_vignette(ui: Control) -> void:
 	var grad := Gradient.new()
-	grad.set_color(0, Color(0.025, 0.02, 0.08, 0.14))
-	grad.set_color(1, Color(0.01, 0.01, 0.035, 0.76))
+	grad.set_color(0, Color(0.025, 0.028, 0.03, 0.08))
+	grad.set_color(1, Color(0.01, 0.012, 0.015, 0.62))
 	var tex := GradientTexture2D.new()
 	tex.gradient = grad
 	tex.fill = GradientTexture2D.FILL_RADIAL
@@ -167,18 +167,9 @@ func _build_vignette(ui: Control) -> void:
 	rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 
-## 原創奧術徽記只當低彩度背光，不承擔資訊；縮放與透明度都刻意壓低。
-func _build_menu_sigil(ui: Control) -> void:
-	var sigil := MENU_SIGIL_SCRIPT.new() as Control
-	sigil.custom_minimum_size = Vector2(660, 660)
-	sigil.modulate = Color(0.84, 0.80, 0.92, 0.44)
-	ui.add_child(sigil)
-	sigil.set_anchors_and_offsets_preset(
-		Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
-
-
 ## ── 選單主體:置中一欄(標題 → 金線 → 選項)──────────────
 func _build_menu_column(ui: Control) -> void:
+	var compact: bool = SETTINGS.current().ui_scale > 1.0
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
@@ -186,6 +177,8 @@ func _build_menu_column(ui: Control) -> void:
 	scroll.follow_focus = true
 	ui.add_child(scroll)
 	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	scroll.offset_top = 20
+	scroll.offset_bottom = -40
 
 	var center_box := CenterContainer.new()
 	center_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -194,7 +187,13 @@ func _build_menu_column(ui: Control) -> void:
 
 	var stage := PanelContainer.new()
 	stage.custom_minimum_size = Vector2(430, 0)
-	stage.add_theme_stylebox_override("panel", UI_STYLE.panel(UI_STYLE.GOLD, true))
+	var panel: StyleBoxFlat = UI_STYLE.panel(UI_STYLE.STEEL_DIM, true)
+	panel.set_border_width_all(1)
+	panel.content_margin_left = 28
+	panel.content_margin_right = 28
+	panel.content_margin_top = 16 if compact else 24
+	panel.content_margin_bottom = 16 if compact else 24
+	stage.add_theme_stylebox_override("panel", panel)
 	center_box.add_child(stage)
 
 	var stack := VBoxContainer.new()
@@ -206,11 +205,11 @@ func _build_menu_column(ui: Control) -> void:
 	_menu_col = col   # 記住選單欄:進大廳時要把它藏起來、返回時再現身
 
 	var eyebrow := Label.new()
-	eyebrow.text = "◆  ARCANE DUEL  ◆"
+	eyebrow.text = "ARCANE DUEL"
 	eyebrow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	eyebrow.add_theme_font_override("font", FONT_SUB)
 	eyebrow.add_theme_font_size_override("font_size", 12)
-	eyebrow.add_theme_color_override("font_color", UI_STYLE.AMETHYST_BRIGHT)
+	eyebrow.add_theme_color_override("font_color", UI_STYLE.TEXT_DIM)
 	col.add_child(eyebrow)
 
 	# 標題:襯線粗體 + 往下柔影。陰影比粗描邊高級:大字配粗描邊會有「貼紙感」。
@@ -218,9 +217,9 @@ func _build_menu_column(ui: Control) -> void:
 	title.text = SETTINGS.current().text("game_title")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_override("font", FONT_TITLE)
-	title.add_theme_font_size_override("font_size", 66)
-	title.add_theme_color_override("font_color", GOLD)
-	title.add_theme_color_override("font_shadow_color", Color(0.18, 0.08, 0.28, 0.52))
+	title.add_theme_font_size_override("font_size", 44 if compact else 56)
+	title.add_theme_color_override("font_color", UI_STYLE.TEXT)
+	title.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.52))
 	title.add_theme_constant_override("shadow_offset_x", 0)
 	title.add_theme_constant_override("shadow_offset_y", 2)
 	col.add_child(title)
@@ -234,25 +233,39 @@ func _build_menu_column(ui: Control) -> void:
 	line.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	col.add_child(line)
 
-	col.add_child(_make_spacer(20))
+	col.add_child(_make_spacer(8 if compact else 20))
 
 	_single_player_button = _make_menu_option(SETTINGS.current().text("menu_single"))
+	_single_player_button.custom_minimum_size.y = 58
+	_single_player_button.add_theme_stylebox_override("normal", UI_STYLE.primary_button())
 	_single_player_button.pressed.connect(_on_single_player_pressed)
 	col.add_child(_single_player_button)
 
 	_multiplayer_button = _make_menu_option(SETTINGS.current().text("menu_multiplayer"))
 	_multiplayer_button.pressed.connect(_open_lobby)
 	col.add_child(_multiplayer_button)
+	col.add_child(_make_spacer(12))
+	var utility_row := HBoxContainer.new()
+	utility_row.add_theme_constant_override("separation", 8)
+	col.add_child(utility_row)
 
 	var gallery_btn := _make_menu_option(SETTINGS.current().text("menu_gallery"))
 	gallery_btn.pressed.connect(_open_gallery)
-	col.add_child(gallery_btn)
+	gallery_btn.custom_minimum_size.x = 0
+	gallery_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	gallery_btn.add_theme_font_size_override("font_size", 18)
+	utility_row.add_child(gallery_btn)
 
 	var settings_btn := _make_menu_option(SETTINGS.current().text("menu_settings"))
 	settings_btn.pressed.connect(_open_settings)
-	col.add_child(settings_btn)
+	settings_btn.custom_minimum_size.x = 0
+	settings_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	settings_btn.add_theme_font_size_override("font_size", 18)
+	utility_row.add_child(settings_btn)
 
 	var quit_btn := _make_menu_option(SETTINGS.current().text("menu_quit"))
+	quit_btn.add_theme_font_size_override("font_size", 16)
+	quit_btn.add_theme_color_override("font_color", UI_STYLE.TEXT_DIM)
 	quit_btn.pressed.connect(func() -> void: get_tree().quit())   # 直接關閉遊戲
 	col.add_child(quit_btn)
 
@@ -295,6 +308,13 @@ func _lock_entry_buttons() -> void:
 ## 淡出到黑 → 切進牌桌。單機與連線共用同一段演出;呼叫前牌桌環境要先定案
 ## (單機:自己 pick_random;連線:伺服器抽好、經 NetClient 的配對 RPC 寫進 ArenaPool)。
 func _enter_game() -> void:
+	if _entering:
+		return
+	_entering = true
+	_lock_entry_buttons()
+	_fade_rect.mouse_filter = Control.MOUSE_FILTER_STOP
+	if _fade_tween != null:
+		_fade_tween.kill()
 	# 淡出到全黑(純手感)。await = 停在這行,等 tween 的 finished 信號發出才繼續。
 	var tw := create_tween()
 	tw.tween_property(_fade_rect, "color:a", 1.0, SETTINGS.current().motion_duration(0.35))
@@ -305,6 +325,8 @@ func _enter_game() -> void:
 		# 換場景失敗(路徑打錯/檔案壞了)時別讓玩家卡在黑畫面:報錯並還原選單。
 		push_error("進入牌桌失敗:%s(錯誤碼 %d)" % [GAME_SCENE, err])
 		_fade_rect.color.a = 0.0
+		_fade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_entering = false
 		_single_player_button.disabled = false
 		_multiplayer_button.disabled = false
 
@@ -351,9 +373,9 @@ func _build_lobby_column(parent: Container) -> void:
 	_ip_edit.add_theme_font_size_override("font_size", 17)
 	_ip_edit.add_theme_color_override("font_color", UI_STYLE.TEXT)
 	_ip_edit.add_theme_color_override("font_placeholder_color", UI_STYLE.TEXT_DIM)
-	_ip_edit.add_theme_color_override("caret_color", UI_STYLE.AMETHYST_BRIGHT)
+	_ip_edit.add_theme_color_override("caret_color", UI_STYLE.TEXT)
 	_ip_edit.add_theme_stylebox_override("normal", UI_STYLE.field())
-	_ip_edit.add_theme_stylebox_override("focus", UI_STYLE.panel(UI_STYLE.AMETHYST_BRIGHT, true))
+	_ip_edit.add_theme_stylebox_override("focus", UI_STYLE.panel(UI_STYLE.GOLD_DIM, true))
 	# 在輸入框按 Enter = 按「尋找對手」:鍵盤派不用伸手拿滑鼠。
 	_ip_edit.text_submitted.connect(func(_text: String) -> void: _on_find_match_pressed())
 	row.add_child(_ip_edit)
@@ -371,7 +393,7 @@ func _build_lobby_column(parent: Container) -> void:
 	_lobby_status = Label.new()
 	_lobby_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_lobby_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_lobby_status.custom_minimum_size = Vector2(460, 0)
+	_lobby_status.custom_minimum_size = Vector2(300, 60)
 	_lobby_status.add_theme_font_override("font", FONT_MENU)
 	_lobby_status.add_theme_font_size_override("font_size", 16)
 	_lobby_status.add_theme_color_override("font_color", UI_STYLE.TEXT_DIM)
@@ -442,8 +464,8 @@ func _on_match_ready() -> void:
 	await _enter_game()
 
 
-## ── 歧路旅人式「文字選單項」────────────────────────────
-## 平常是沉金純文字;滑鼠 hover「或」鍵盤焦點時文字亮起、底下浮出金線。
+## ── 低彩度選單按鈕 ────────────────────────────
+## 平常是米白文字與灰框；hover 或鍵盤焦點時亮起淡金邊框。
 ## 同一份樣式同時接 hover 和 focus:滑鼠派和鍵盤派看到的回饋一致。
 func _make_menu_option(text_value: String) -> Button:
 	var btn := Button.new()
@@ -453,7 +475,7 @@ func _make_menu_option(text_value: String) -> Button:
 	btn.add_theme_font_override("font", FONT_MENU)
 	btn.add_theme_font_size_override("font_size", 22)
 	btn.add_theme_color_override(
-		"font_color", UI_STYLE.GOLD_BRIGHT if SETTINGS.current().high_contrast else GOLD_DIM)
+		"font_color", UI_STYLE.GOLD_BRIGHT if SETTINGS.current().high_contrast else UI_STYLE.TEXT)
 	btn.add_theme_color_override("font_hover_color", UI_STYLE.GOLD_BRIGHT)
 	btn.add_theme_color_override("font_focus_color", UI_STYLE.GOLD_BRIGHT)
 	btn.add_theme_color_override("font_pressed_color", GOLD)
@@ -462,7 +484,7 @@ func _make_menu_option(text_value: String) -> Button:
 	btn.add_theme_stylebox_override("disabled", UI_STYLE.button(true))
 	var lit: StyleBoxFlat = UI_STYLE.button(false)
 	btn.add_theme_stylebox_override("hover", lit)
-	btn.add_theme_stylebox_override("focus", lit)
+	btn.add_theme_stylebox_override("focus", UI_STYLE.focus_ring())
 	btn.add_theme_stylebox_override("pressed", UI_STYLE.button(false))
 	btn.mouse_entered.connect(btn.grab_focus)
 	return btn

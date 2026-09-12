@@ -5,8 +5,8 @@ extends RefCounted
 const SETTINGS: GDScript = preload("res://src/settings/app_settings.gd")
 
 const INK := Color("080a16")
-const INK_GLASS := Color(0.035, 0.04, 0.10, 0.94)
-const INK_SOFT := Color(0.055, 0.06, 0.13, 0.90)
+const INK_GLASS := Color(0.035, 0.04, 0.05, 0.97)
+const INK_SOFT := Color(0.055, 0.06, 0.07, 0.95)
 const GOLD := Color("e3c77d")
 const GOLD_BRIGHT := Color("fff1c7")
 const GOLD_DIM := Color("bba874")
@@ -31,7 +31,7 @@ static func panel(accent: Color = GOLD, strong: bool = false) -> StyleBoxFlat:
 	sb.set_corner_radius_all(5)
 	sb.corner_detail = 7
 	sb.set_content_margin_all(16.0 if strong else 13.0)
-	sb.shadow_color = Color(0.19, 0.10, 0.34, 0.42 if strong else 0.25)
+	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.42 if strong else 0.25)
 	sb.shadow_size = 10 if strong else 6
 	sb.anti_aliasing = true
 	return sb
@@ -39,11 +39,11 @@ static func panel(accent: Color = GOLD, strong: bool = false) -> StyleBoxFlat:
 
 static func button(resting: bool = true, danger: bool = false) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
-	var accent := DANGER if danger else (GOLD_DIM if resting else AMETHYST_BRIGHT)
+	var accent := DANGER if danger else (STEEL_DIM if resting else GOLD_DIM)
 	var contrast: bool = SETTINGS.current().high_contrast
 	sb.bg_color = Color(0.005, 0.006, 0.02, 1.0) if contrast \
-		else (Color(0.045, 0.045, 0.11, 0.78) if resting \
-		else Color(0.14, 0.09, 0.24, 0.94))
+		else (Color(0.045, 0.05, 0.06, 0.94) if resting \
+		else Color(0.10, 0.115, 0.13, 0.98))
 	sb.border_color = Color(accent, 1.0 if contrast else (0.48 if resting else 0.92))
 	sb.border_width_left = 2
 	sb.border_width_right = 2
@@ -52,8 +52,8 @@ static func button(resting: bool = true, danger: bool = false) -> StyleBoxFlat:
 	sb.set_corner_radius_all(3)
 	sb.set_content_margin_all(9.0)
 	if not resting:
-		sb.shadow_color = Color(0.40, 0.22, 0.64, 0.42)
-		sb.shadow_size = 8
+		sb.shadow_color = Color(0.0, 0.0, 0.0, 0.32)
+		sb.shadow_size = 4
 	return sb
 
 
@@ -101,8 +101,26 @@ static func battle_round_button(lit: bool = false) -> StyleBoxFlat:
 
 static func field() -> StyleBoxFlat:
 	var sb := panel(AMETHYST, false)
-	sb.bg_color = Color(0.025, 0.028, 0.07, 0.96)
+	sb.bg_color = Color(0.025, 0.028, 0.035, 0.98)
 	sb.set_content_margin_all(10.0)
+	return sb
+
+
+## 焦點只畫邊框，避免覆蓋按下／停用的底色。
+static func focus_ring() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color.TRANSPARENT
+	sb.border_color = GOLD_BRIGHT
+	sb.set_border_width_all(2)
+	sb.set_corner_radius_all(4)
+	return sb
+
+
+static func primary_button() -> StyleBoxFlat:
+	var sb := button(false)
+	sb.bg_color = Color("273b46")
+	sb.border_color = GOLD_DIM
+	sb.border_width_left = 4
 	return sb
 
 
