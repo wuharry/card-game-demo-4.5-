@@ -73,11 +73,7 @@ var battle_manager: BattleManager = null
 var active_unit: Card = null
 ## 等待指定目標的技能;null 代表等待目標的是「普通攻擊」。
 var pending_skill: SkillData = null
-## 等待指定目標的秘術(從手牌點選、還沒選到目標的那張);
-## 非 null = 現在是「秘術瞄準」模式:箭頭改由玩家本體出發、目標限敵方從者。
-## 用它和「單位攻擊瞄準」(active_unit != null)區分同一個 TARGETING 狀態。
-var pending_spell_card: Card = null
-## TARGETING 狀態下目前亮起的候選目標:Card 或 Hero
+## 拖曳秘術 / TARGETING 狀態下目前亮起的候選目標:Card 或 Hero
 ## (兩者都有 animate_hover/unhover,所以宣告成共同祖先 Node3D)。
 var hovered_target: Node3D = null
 
@@ -103,6 +99,7 @@ func _ready() -> void:
 	battle_ui.cancelled.connect(_cancel_command)
 	battle_ui.end_turn_pressed.connect(_on_end_turn)
 	battle_ui.debug_test_pressed.connect(_prepare_debug_card_test)
+	battle_ui.history_requested.connect(_open_battle_history)
 	# 戰鬥帳房:規則與數值都在它那裡。UI 的決定經中樞轉發給帳房、
 	# 帳的變化再流回 UI——兩端只認識中樞,互不相識(同 hover 中繼鏈的哲學)。
 	battle_manager = BattleManager.new()
@@ -116,6 +113,7 @@ func _ready() -> void:
 	battle_manager.draw_requested.connect(_apply_draw)
 	battle_manager.battle_message.connect(battle_ui.flash_message)
 	battle_manager.arcana_visual_requested.connect(_on_arcana_visual_requested)
+	battle_manager.history_changed.connect(_refresh_battle_archive)
 	battle_manager.game_over.connect(_on_game_over)
 	action_performed.connect(battle_manager.on_action_performed)
 	add_child(battle_manager)
@@ -171,6 +169,8 @@ func _ready() -> void:
 
 ## ── 收到「滑鼠移到某張卡上」事件 ──────────────────
 func on_card_hovered(card: Card) -> void:
+	if battle_ui.archive.is_open():
+		return
 	# 防呆 1：正在拖牌時，不要去放大底下其他的牌。
 	if card_being_dragged != null:
 		return
@@ -182,7 +182,7 @@ func on_card_hovered(card: Card) -> void:
 	# 上桌單位不做「手牌式放大」;只有在指定目標模式、而且是合法目標時,
 	# 才亮起當「候選目標」的視覺回饋(借用同一套放大動畫)。
 	if card.is_on_board:
-		if ui_state == UiState.TARGETING and _is_valid_targeting_target(card):
+		if ui_state == UiState.TARGETING and _is_valid_target(card):
 			if hovered_target != null and hovered_target != card:
 				hovered_target.animate_unhover()
 			hovered_target = card
@@ -214,7 +214,7 @@ func on_card_unhovered(card: Card) -> void:
 		battle_ui.hide_card_preview()
 
 	# 指定目標模式:離開的是亮著的候選目標 → 收掉高亮。
-	if hovered_target == card:
+	if hovered_target == card and card_being_dragged == null:
 		hovered_target = null
 		card.animate_unhover()
 		return
@@ -243,84 +243,141 @@ func _process(_delta: float) -> void:
 	if card_being_dragged == null and _hint_grave != null:
 		_hint_grave.hide_debug_discard_hint()
 		_hint_grave = null
-	# 只有真的抓著卡時才需要處理。
-	if card_being_dragged:
-		# 1. 想像桌面是一個「數學平面」：法線朝上(Vector3.UP)、高度為 drag_plane_height。
-		#    卡片只會在這個水平面上滑動，不會亂飛。
-		var drop_plane := Plane(Vector3.UP, drag_plane_height)
-
-		# 2. 取得滑鼠在螢幕上的像素位置。
-		var mouse_position := get_viewport().get_mouse_position()
-
-		# 3. 從攝影機朝滑鼠方向射線：origin = 起點、normal = 方向。
-		var ray_origin := camera.project_ray_origin(mouse_position)
-		var ray_normal := camera.project_ray_normal(mouse_position)
-
-		# 4. 算出這條射線和桌面平面的交點 = 滑鼠在桌面上對應的 3D 位置。
-		var intersect_pos = drop_plane.intersects_ray(ray_origin, ray_normal)
-
-		if intersect_pos:
-			# 把卡片直接移到該位置(跟著滑鼠走)。
-			card_being_dragged.global_position = intersect_pos
-
-			# ── 拖曳時的卡槽高亮預覽 ──
-			# 順便往下看現在懸停在哪個卡槽上。
-			var found_slot := raycast_check_for_card_slot()
-			# 只有當「懸停的卡槽改變了」才更新，避免每幀重複觸發動畫。
-			if found_slot != currently_hovered_slot:
-				# 先把上一個卡槽的高亮收掉。
-				if currently_hovered_slot != null:
-					currently_hovered_slot.unhighlight()
-				# 若新的是空卡槽，就讓它亮起來。
-				if found_slot != null and found_slot.is_empty:
-					found_slot.highlight()
-				# 更新記錄。
-				currently_hovered_slot = found_slot
-
-			# ── 拖曳時的回魔提示:懸停黑洞 = 轉金 + 「+n ◆」(§1.1)──
-			var well := raycast_check_for_recycle()
-			if not battle_manager.can_discard_for_mana(battle_manager.active_side):
-				well = null   # 冷卻中不亮提示;真丟下去 _try_discard 會用人話拒絕
-			if well != _hint_well:
-				if _hint_well != null:
-					_hint_well.hide_recycle_hint()
-				_hint_well = well
-				if _hint_well != null:
-					_hint_well.show_recycle_hint(
-						floori(card_being_dragged.data.cost / 2.0))
-
-			# F8 沙盒多一個獨立落點：左側墓地只捨棄，不回魔、不吃黑洞冷卻。
-			var debug_grave := raycast_check_for_debug_grave()
-			if debug_grave != _hint_grave:
-				if _hint_grave != null:
-					_hint_grave.hide_debug_discard_hint()
-				_hint_grave = debug_grave
-				if _hint_grave != null:
-					_hint_grave.show_debug_discard_hint()
-
-	# 指定目標中:每幀把「施放者 → 游標」的螢幕座標餵給 BattleUI 畫導引箭頭。
-	# unproject_position 是射線的反運算:3D 世界座標 → 螢幕像素座標。
-	elif ui_state == UiState.TARGETING \
-			and (active_unit != null or pending_spell_card != null):
+	if card_being_dragged != null:
+		_update_drag_at(get_viewport().get_mouse_position())
+	elif ui_state == UiState.TARGETING and active_unit != null:
 		var aim := get_viewport().get_mouse_position()
 		var locked := hovered_target != null
 		if locked:
 			# 鎖定合法目標時,箭頭尖端吸附到目標身上,不再跟著游標抖。
 			aim = camera.unproject_position(
 				hovered_target.global_position + Vector3.UP * 0.5)
-		# 施放者起點:單位攻擊 = 該單位;秘術 = 行動方的本體(§7 箭頭由玩家出發)。
-		var caster_node: Node3D = active_unit
-		if caster_node == null:
-			caster_node = player_hero if battle_manager.active_side == "player" \
-				else enemy_hero
 		var from_px := camera.unproject_position(
-			caster_node.global_position + Vector3.UP * 0.5)
+			active_unit.global_position + Vector3.UP * 0.5)
 		battle_ui.update_arrow(from_px, aim, locked)
+
+
+## 每幀跟手與放開使用同一組螢幕座標；測試也從這裡走真實射線。
+func _update_drag_at(mouse_pos: Vector2) -> void:
+	if not is_instance_valid(card_being_dragged):
+		return
+	var card := card_being_dragged
+	var is_spell := card.data.card_type == CardData.CardType.ARCANA
+	# 秘術縮成游標旁的小卡，讓目標和回收收益保持可見。
+	var visual_pos := mouse_pos + Vector2(64, 48) if is_spell else mouse_pos
+	var intersect_pos = Plane(Vector3.UP, drag_plane_height).intersects_ray(
+		camera.project_ray_origin(visual_pos), camera.project_ray_normal(visual_pos))
+	if intersect_pos != null:
+		card.global_position = intersect_pos
+	if is_spell:
+		card.scale = Vector3.ONE * player_hand.card_uniform_scale * 0.55
+	var blocked := battle_ui.blocks_board_pointer(mouse_pos)
+	var found_slot: CardSlot = null
+	if not is_spell and not blocked:
+		found_slot = _raycast_slot_at(mouse_pos)
+	if found_slot != currently_hovered_slot:
+		if is_instance_valid(currently_hovered_slot):
+			currently_hovered_slot.unhighlight()
+		if found_slot != null and found_slot.is_empty:
+			found_slot.highlight()
+		currently_hovered_slot = found_slot
+
+	var well := _raycast_recycle_at(mouse_pos) if not blocked else null
+	if well != _hint_well:
+		if is_instance_valid(_hint_well):
+			_hint_well.hide_recycle_hint()
+		_hint_well = well
+	if _hint_well != null:
+		_hint_well.show_recycle_hint(floori(card.data.cost / 2.0),
+			battle_manager.can_discard_for_mana(battle_manager.active_side))
+	var grave := _raycast_debug_grave_at(mouse_pos) if not blocked else null
+	if grave != _hint_grave:
+		if is_instance_valid(_hint_grave):
+			_hint_grave.hide_debug_discard_hint()
+		_hint_grave = grave
+		if _hint_grave != null:
+			_hint_grave.show_debug_discard_hint()
+	if is_spell:
+		_update_spell_drag_at(card, mouse_pos, blocked)
+
+
+func _update_spell_drag_at(card: Card, mouse_pos: Vector2, blocked: bool) -> void:
+	var needs_target := _spell_needs_target(card.data)
+	var reason := _spell_cast_block_reason(card.data)
+	var can_cast := reason.is_empty()
+	var hint := "拖到合法目標施放，或拖到回收區回魔；右鍵 / Esc 取消"
+	var target: Card = null
+	var in_zone := battle_ui.spell_drop_contains(mouse_pos)
+	if _hint_grave != null:
+		hint = "放開捨棄【%s】，不回魔" % card.data.card_name
+	elif _hint_well != null:
+		hint = "放開回收【%s】：+%d ◆ 暫時魔力" % [
+			card.data.card_name, floori(card.data.cost / 2.0)] \
+			if battle_manager.can_discard_for_mana(battle_manager.active_side) \
+			else "回收冷卻中，放開會將卡牌放回手中"
+	elif blocked:
+		hint = "此處無法出牌，放開取消；右鍵 / Esc 也可取消"
+	elif not can_cast:
+		hint = reason + "；仍可拖到回收區回魔"
+	elif needs_target:
+		var candidate := _raycast_card_at(mouse_pos, card)
+		var target_reason := _spell_target_block_reason(card.data, candidate)
+		if target_reason.is_empty():
+			target = candidate
+			hint = "放開對【%s】施放【%s】（◆%d）；右鍵 / Esc 取消" % [
+				target.data.card_name, card.data.card_name, card.data.cost]
+		else:
+			hint = target_reason + "；或拖到回收區回魔"
+	else:
+		hint = ("放開施放【%s】（◆%d）" if in_zone \
+			else "將【%s】拖到秘術施放區（◆%d），或拖到回收區回魔") % [
+			card.data.card_name, card.data.cost]
+	if hovered_target != target:
+		if is_instance_valid(hovered_target):
+			hovered_target.animate_unhover()
+		hovered_target = target
+		if target != null:
+			target.animate_hover(1.5)
+	battle_ui.show_spell_drag(hint, not needs_target, in_zone, can_cast)
+	if needs_target and can_cast and not blocked and _hint_well == null \
+			and _hint_grave == null:
+		var hero := player_hero if battle_manager.active_side == "player" else enemy_hero
+		if is_instance_valid(hero):
+			var aim := camera.unproject_position(target.global_position + Vector3.UP * 0.5) \
+				if target != null else mouse_pos
+			battle_ui.update_arrow(camera.unproject_position(
+				hero.global_position + Vector3.UP * 0.5), aim, target != null)
+	else:
+		battle_ui._hide_arrow()
+
+
+## 先收掉所有拖曳提示，再交給施法反制窗，避免提示殘留或覆蓋新面板。
+func _clear_drag_feedback() -> void:
+	if is_instance_valid(_hint_well):
+		_hint_well.hide_recycle_hint()
+	_hint_well = null
+	if is_instance_valid(_hint_grave):
+		_hint_grave.hide_debug_discard_hint()
+	_hint_grave = null
+	if is_instance_valid(currently_hovered_slot):
+		currently_hovered_slot.unhighlight()
+	currently_hovered_slot = null
+	if is_instance_valid(hovered_target):
+		hovered_target.animate_unhover()
+	hovered_target = null
+	battle_ui.hide_spell_drag()
 
 
 ## ── 處理滑鼠輸入:依「互動狀態」分流 ──────────────
 ## _input(event) 在每次有輸入(滑鼠/鍵盤)時被呼叫,event 帶有這次事件的資訊。
 func _input(event: InputEvent) -> void:
+	if battle_ui != null and battle_ui.archive.is_open():
+		if (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE) \
+				or (event is InputEventMouseButton and event.pressed \
+				and event.button_index == MOUSE_BUTTON_RIGHT):
+			battle_ui.archive.close()
+			get_viewport().set_input_as_handled()
+		return
 	# F8 一鍵建立可立即出牌、且正對面有靶的測試情境。只在 Debug build 攔鍵;
 	# Release 完全沒有這條操作,線上則由 helper 明確拒絕以保護權威帳。
 	if OS.is_debug_build() and event is InputEventKey:
@@ -341,7 +398,7 @@ func _input(event: InputEvent) -> void:
 		battle_ui.dismiss_leave_confirm()
 		return
 	if (is_rmb or is_esc) and not _picking \
-			and (ui_state == UiState.MENU_OPEN or ui_state == UiState.TARGETING):
+			and ui_state in [UiState.DRAGGING, UiState.MENU_OPEN, UiState.TARGETING]:
 		_cancel_command()
 		return
 	# 平時(沒選單、沒瞄準、沒拖卡)按 ESC = 想離開,和左上角按鈕同一個入口。
@@ -364,7 +421,7 @@ func _input(event: InputEvent) -> void:
 				return
 			match ui_state:
 				UiState.IDLE:
-					_on_left_pressed_idle()
+					_on_left_pressed_idle_at(event.position)
 				UiState.TARGETING:
 					_on_left_pressed_targeting()
 				_:
@@ -372,7 +429,7 @@ func _input(event: InputEvent) -> void:
 					# 點在 3D 空地不做事——要反悔請按「取消」或右鍵。
 					pass
 		elif ui_state == UiState.DRAGGING:
-			_on_left_released_drag()
+			_on_left_released_drag_at(event.position)
 
 
 ## F8 測卡完整夾具:同步手牌帳 → 注入卡/補魔 → 重建視圖 → 準備同路線敵方靶。
@@ -477,7 +534,17 @@ func _debug_nearest_slot(slots: Array[CardSlot], target_x: float) -> CardSlot:
 
 ## 平時左鍵按下:點手牌 = 抓起拖曳;點上桌單位 = 開指令選單(歧路旅人式:先選人再選招)。
 func _on_left_pressed_idle() -> void:
-	var card := raycast_check_for_card()
+	_on_left_pressed_idle_at(get_viewport().get_mouse_position())
+
+
+func _on_left_pressed_idle_at(mouse_pos: Vector2) -> void:
+	var grave := _raycast_grave_at(mouse_pos)
+	if grave != null:
+		battle_ui.hide_card_preview()
+		battle_ui.archive.show_grave(grave.side, battle_manager.grave_cards(grave.side),
+			"我方" if grave.side == _archive_local_side() else "對手")
+		return
+	var card := _raycast_card_at(mouse_pos)
 	if card == null:
 		return
 	if card.is_on_board:
@@ -501,29 +568,9 @@ func _on_left_pressed_idle() -> void:
 	if MatchMode.is_vs_ai() and battle_manager.active_side != "player":
 		battle_ui.flash_message("對方回合:AI 行動中…")
 		return
-	# ── 秘術:改走「爐石式箭頭瞄準」而非拖放(§7 施放手感)──
-	# 點手牌的秘術 = 選定要施放的卡並進 TARGETING;箭頭由玩家本體射向游標,
-	# 再點敵方從者結算。其餘卡型(從者/靈裝/伏印)仍走原本的拖放。
-	if card.data.card_type == CardData.CardType.ARCANA:
-		if not battle_manager.can_afford(card.data.cost):
-			battle_ui.flash_message("魔力不足:需要 ◆%d(現有 %d)" % [
-				card.data.cost, battle_manager.active_mana()])
-			return
-		# 抽濾系秘術(§抽濾)沒有場上目標:點卡即施放,不走箭頭瞄準。
-		if _is_effect_spell(card.data):
-			if battle_manager.deck_count(battle_manager.active_side) == 0:
-				battle_ui.flash_message("牌堆已空,無牌可抽")
-				return
-			if NetMatch.is_online:
-				_pending_play_card = card
-				var idx := player_hand.cards.find(card)
-				_net_arcana_declare.rpc(idx, card.data.resource_path, NodePath())
-			else:
-				_resolve_effect_arcana(card)
-			return
-		_begin_spell_targeting(card)
+	if not player_hand.cards.has(card):
 		return
-	# ── 抓牌(原本的拖曳邏輯)──
+	# 任何手牌先拿起；施法費用留到放開檢查，付不起的牌也能回收。
 	card_being_dragged = card
 	ui_state = UiState.DRAGGING
 	Sfx.play(Sfx.CARD_PICKUP, -6.0)
@@ -540,24 +587,39 @@ func _on_left_pressed_idle() -> void:
 	# 右側預覽也收:拖曳中視覺焦點在投影落點,資訊卡留著只會擋畫面。
 	_previewed_card = null
 	battle_ui.hide_card_preview()
+	if card.data.card_type == CardData.CardType.ARCANA:
+		battle_ui.show_spell_drag("拖到目標或施放區施放，拖到回收區回魔",
+			not _spell_needs_target(card.data), false, _spell_cast_block_reason(card.data).is_empty())
+	_update_drag_at(mouse_pos)
 
 
 ## 拖曳中左鍵放開 = 嘗試出牌。依卡型分流(§7):從者進卡槽、秘術丟目標、
 ## 靈裝貼我方從者、伏印蓋我方半場;瞬咒不能主動施放(只在反制窗口被詢問)。
 func _on_left_released_drag() -> void:
+	_on_left_released_drag_at(get_viewport().get_mouse_position())
+
+
+func _on_left_released_drag_at(mouse_pos: Vector2) -> void:
 	# 先清空拖曳狀態:秘術的反制窗口是 async(會 await),留著舊狀態會被覆寫打架。
 	var card := card_being_dragged
+	if not is_instance_valid(card):
+		return
+	var in_spell_zone := battle_ui.spell_drop_contains(mouse_pos)
 	card_being_dragged = null
 	ui_state = UiState.IDLE
+	_clear_drag_feedback()
+	if battle_ui.blocks_board_pointer(mouse_pos):
+		organize_hand()
+		return
 	# F8 沙盒墓地是「純清手牌」工具；先於正常卡型與黑洞回魔分流。
-	var debug_grave := raycast_check_for_debug_grave()
+	var debug_grave := _raycast_debug_grave_at(mouse_pos)
 	if debug_grave != null:
 		debug_grave.hide_debug_discard_hint()
 		_hint_grave = null
 		_try_debug_grave_discard(card)
 		return
 	# 丟牌回魔(§1.1):放到黑洞投放區 = 棄牌換魔,任何卡型都可棄——比卡型分流優先。
-	var recycle := raycast_check_for_recycle()
+	var recycle := _raycast_recycle_at(mouse_pos)
 	if recycle != null:
 		recycle.hide_recycle_hint()
 		_hint_well = null
@@ -565,15 +627,13 @@ func _on_left_released_drag() -> void:
 		return
 	match card.data.card_type:
 		CardData.CardType.MINION:
-			_try_summon(card)
+			_try_summon_at(card, mouse_pos)
 		CardData.CardType.ARCANA:
-			# 秘術改走點選+箭頭瞄準(見 _begin_spell_targeting),照理不會走到拖放;
-			# 保險:萬一狀態機漏接,把卡放回扇形,不讓它懸在半空。
-			organize_hand()
+			_try_cast_dragged_arcana_at(card, mouse_pos, in_spell_zone)
 		CardData.CardType.EQUIP:
-			_try_attach_equip(card)
+			_try_attach_equip_at(card, mouse_pos)
 		CardData.CardType.WARD:
-			_try_set_ward(card)
+			_try_set_ward_at(card, mouse_pos)
 		CardData.CardType.QUICK:
 			var rule := card.data.active_skill.description \
 				if card.data.active_skill != null else "符合卡面所寫事件時發動。"
@@ -587,8 +647,12 @@ func _on_left_released_drag() -> void:
 
 ## 從者:入槽召喚(原本的釋放邏輯,原封不動搬進來)。
 func _try_summon(card: Card) -> void:
+	_try_summon_at(card, get_viewport().get_mouse_position())
+
+
+func _try_summon_at(card: Card, mouse_pos: Vector2) -> void:
 	# 往下射線,看看放開的位置下面有沒有卡槽。
-	var found_slot := raycast_check_for_card_slot()
+	var found_slot := _raycast_slot_at(mouse_pos)
 	# 找到卡槽、而且是空的 → 先驗這一側(§3),再過「召喚費」(§1)。
 	if found_slot and found_slot.is_empty:
 		var cost := card.data.cost
@@ -613,95 +677,62 @@ func _try_summon(card: Card) -> void:
 		organize_hand()
 
 
-## 秘術瞄準開始(§7 爐石式):選定手牌那張秘術、進 TARGETING、亮提示。
-## 卡不離手(留在扇形裡),由 _process 每幀從玩家本體畫箭頭到游標;
-## 目標與付費的最終驗證在點目標時(_on_left_pressed_spell_target → _cast_arcana_at)。
-func _begin_spell_targeting(card: Card) -> void:
-	pending_spell_card = card
-	pending_skill = null
-	active_unit = null
-	ui_state = UiState.TARGETING
-	# 收掉這張卡在扇形裡的 hover 放大與右側預覽,瞄準時畫面別再有一張浮著。
-	if currently_hovered_card == card:
-		currently_hovered_card = null
-		card.animate_unhover()
-	_previewed_card = null
-	battle_ui.hide_card_preview()
-	# 提示字跟著 effect_target 走:治療系秘術叫你指敵人是最惱人的那種 bug。
-	var who := "我方從者" if _spell_wants_ally() else "敵方從者"
-	battle_ui.show_targeting("選擇【%s】的目標:%s(點其他地方取消)" % [
-		card.data.card_name, who])
-
-
-## TARGETING 中「懸停高亮」用的合法性:秘術走秘術規則,其餘走單位攻擊規則。
-## (兩者不能共用 _is_valid_target:後者靠 active_unit 判敵我,秘術時它是 null。)
-func _is_valid_targeting_target(card: Card) -> bool:
-	if pending_spell_card != null:
-		return _is_valid_spell_target(card)
-	return _is_valid_target(card)
-
-
-## 秘術的合法目標:在場上、非潛行(§8)、且**敵我由卡的 effect_target 決定**。
-## ALLY = 只能指我方(治療/增益);LANE_ENEMY = 只能指敵方(傷害/debuff)。
-##
-## ⚠ 潛行照 §8 字面「無法被秘術/瞬咒指定」擋掉——連友方治療也指不到。
-## 這是規格的直譯,不是漏想:要開放友方例外,得先改 README §8,不是先改這裡。
-func _is_valid_spell_target(card: Card) -> bool:
-	if card == null or not card.is_on_board:
-		return false
-	if card.has_keyword(&"潛行"):
-		return false
-	var is_ally: bool = battle_manager.side_of(card) == battle_manager.active_side
-	return is_ally if _spell_wants_ally() else not is_ally
-
-
-## 瞄準中的那張秘術,想指的是我方還是敵方?(沒有瞄準中的卡就當敵方,維持舊行為)
-func _spell_wants_ally() -> bool:
-	if pending_spell_card == null or pending_spell_card.data.active_skill == null:
-		return false
-	return pending_spell_card.data.active_skill.effect_target == SkillData.Target.ALLY
-
-
-## 秘術瞄準中左鍵:點到合法敵方從者 = 施放結算;
-## 點到其他任何地方 = 取消施放(爐石/暗影詩章式:沒指定目標就是反悔,
-## 不必特地按右鍵;右鍵/ESC 照舊可用)。點錯「東西」先講原因再收,
-## 點空地/手牌就是想收手,安靜取消不彈訊息。
-func _on_left_pressed_spell_target() -> void:
-	var target := raycast_check_for_card()
-	if target == null:
-		# 點到本體或空白:秘術不能打臉(§7 只指定從者)→ 講原因,一樣取消。
-		if raycast_check_for_hero() != null:
-			battle_ui.flash_message("已取消:秘術只能指定敵方從者,不能打本體")
-		_cancel_command()
+## 拿起卡牌不代表宣告施法；只在合法落點放開後才進既有付費／反制流程。
+func _try_cast_dragged_arcana_at(card: Card, mouse_pos: Vector2, in_zone: bool) -> void:
+	var target: Card = null
+	if _spell_needs_target(card.data):
+		target = _raycast_card_at(mouse_pos, card)
+		var target_reason := _spell_target_block_reason(card.data, target)
+		if not target_reason.is_empty():
+			organize_hand()
+			if target != null and target.is_on_board:
+				battle_ui.flash_message(target_reason)
+			return
+	elif not in_zone:
+		organize_hand()
 		return
-	if not target.is_on_board:
-		# 射線也打得到手牌卡(同一層):side_of 對無槽卡回 "",不擋會被
-		# 誤判成「敵方」而把秘術砸在手牌上——視同點空地,取消。
-		_cancel_command()
+	var reason := _spell_cast_block_reason(card.data)
+	# 等反制時牌也先回手，不把縮小的拖曳卡留在目標上。
+	organize_hand()
+	if not reason.is_empty():
+		battle_ui.flash_message(reason)
 		return
+	if target != null:
+		_cast_arcana_at(card, target)
+	elif NetMatch.is_online:
+		_pending_play_card = card
+		_net_arcana_declare.rpc(player_hand.cards.find(card),
+			card.data.resource_path, NodePath())
+	else:
+		_resolve_effect_arcana(card)
+
+
+## 預覽與放開共用判定，避免「亮著可以治療，放開卻拒絕友軍」。
+func _spell_target_block_reason(cd: CardData, target: Card) -> String:
+	var wants_ally := cd.active_skill != null \
+		and cd.active_skill.effect_target == SkillData.Target.ALLY
+	var side_name := "我方從者" if wants_ally else "敵方從者"
+	if not is_instance_valid(target) or not target.is_on_board:
+		return "請拖到" + side_name
 	if target.has_keyword(&"潛行"):
-		battle_ui.flash_message("已取消:【%s】具有潛行,無法被秘術指定(§8)" % target.data.card_name)
-		_cancel_command()
-		return
-	if battle_manager.side_of(target) == battle_manager.active_side:
-		battle_ui.flash_message("已取消:【%s】只能指定敵方從者" % pending_spell_card.data.card_name)
-		_cancel_command()
-		return
-	# 合法目標:先收瞄準的視覺與狀態,再交給既有結算(反制窗口/連線宣告都在裡面)。
-	var card := pending_spell_card
-	_clear_spell_targeting()
-	_cast_arcana_at(card, target)
+		return "【%s】具有潛行，無法被秘術指定" % target.data.card_name
+	var side := battle_manager.side_of(target)
+	if side.is_empty() or (side == battle_manager.active_side) != wants_ally:
+		return "【%s】只能指定%s" % [cd.card_name, side_name]
+	return ""
 
 
-## 收掉秘術瞄準的視覺與狀態(成功施放前呼叫;取消改走 _cancel_command)。
-## 回到 IDLE 讓後續 _resolve_arcana / 連線宣告自己去設它要的狀態(反制時 MENU_OPEN)。
-func _clear_spell_targeting() -> void:
-	if hovered_target != null and is_instance_valid(hovered_target):
-		hovered_target.animate_unhover()
-	hovered_target = null
-	pending_spell_card = null
-	ui_state = UiState.IDLE
-	battle_ui.close()
+func _spell_cast_block_reason(cd: CardData) -> String:
+	if not battle_manager.can_afford(cd.cost):
+		return "魔力不足：需要 ◆%d（現有 %d）" % [cd.cost, battle_manager.active_mana()]
+	if cd.active_skill == null:
+		return "這張秘術沒有可施放的效果"
+	# 只有抽牌類需要牌堆；召喚等 SELF 秘術不能被空牌堆誤擋。
+	if cd.active_skill.effect in [SkillData.Effect.DRAW, SkillData.Effect.SCRY,
+			SkillData.Effect.DISCARD_DRAW] \
+			and battle_manager.deck_count(battle_manager.active_side) == 0:
+		return "牌堆已空，無牌可抽"
+	return ""
 
 
 ## 秘術結算入口(目標已由瞄準流程驗過):付費宣告 → 反制窗口 → 落地。
@@ -1026,9 +1057,13 @@ func _net_swap_pick(hand_idx: int, draw_n: int) -> void:
 
 ## 靈裝:放開在我方從者身上 = 裝備(§7:宿主離場一併離場)。
 func _try_attach_equip(card: Card) -> void:
+	_try_attach_equip_at(card, get_viewport().get_mouse_position())
+
+
+func _try_attach_equip_at(card: Card, mouse_pos: Vector2) -> void:
 	# 拖曳中的卡和場上單位都在碰撞 Layer 1。若不排除手上的卡，攝影機射線
 	# 會先撞到離鏡頭較近的「裝備本身」，永遠拿不到下方的宿主。
-	var target := raycast_check_for_card(card)
+	var target := _raycast_card_at(mouse_pos, card)
 	if target == null or not target.is_on_board \
 			or battle_manager.side_of(target) != battle_manager.active_side:
 		battle_ui.flash_message("靈裝要放到「我方」場上從者身上")
@@ -1082,7 +1117,7 @@ func _try_set_ward_at(card: Card, mouse_pos: Vector2) -> void:
 		_net_ward(idx, card.data.resource_path, host_np)
 
 
-## 丟牌回魔(§1.1):把手牌拖到墓地放開。回魔 = Cost÷2 捨去;最多隔回合一次。
+## 丟牌回魔(§1.1):把手牌拖到魔力回收區放開。回魔 = Cost÷2 捨去;最多隔回合一次。
 ## 出牌端先驗冷卻(給人話的拒絕理由),真正的帳在 _net_discard 兩台重放。
 func _try_discard(card: Card) -> void:
 	if not battle_manager.can_discard_for_mana(battle_manager.active_side):
@@ -1133,13 +1168,9 @@ func _try_debug_grave_discard(card: Card) -> void:
 
 
 ## 指定目標中左鍵按下:點到合法目標就發動;點到其他任何地方 = 取消
-## (和秘術同一套手感:點空地/非法目標都是反悔;右鍵/ESC 照舊可用)。
+## 點空地/非法目標都是反悔;右鍵/ESC 照舊可用。
 ## 先找從者、再找本體——本體被擋時把理由講出來(路線有人擋、不能打自己人…)。
 func _on_left_pressed_targeting() -> void:
-	# 秘術瞄準:目標限敵方從者、不能打臉,獨立一條處理(見該函式)。
-	if pending_spell_card != null:
-		_on_left_pressed_spell_target()
-		return
 	var card := raycast_check_for_card()
 	if card != null:
 		if _is_valid_target(card):
@@ -1193,11 +1224,14 @@ func _enter_targeting(hint: String) -> void:
 
 ## 反悔 / 收尾共用:清掉所有指令狀態、關 UI、收高亮。
 func _cancel_command() -> void:
+	if is_instance_valid(card_being_dragged):
+		card_being_dragged = null
+		organize_hand()
+	_clear_drag_feedback()
 	if hovered_target != null and is_instance_valid(hovered_target):
 		hovered_target.animate_unhover()
 	hovered_target = null
 	pending_skill = null
-	pending_spell_card = null   # 秘術瞄準中途取消:卡沒離手,清狀態+收箭頭即可
 	active_unit = null
 	ui_state = UiState.IDLE
 	battle_ui.close()
@@ -1297,10 +1331,6 @@ func _on_hero_unhovered(hero: Hero) -> void:
 
 ## 勝負已分(BattleManager 廣播):收指令流程、鎖住 3D 互動、亮勝負畫面。
 func _on_game_over(winner: String) -> void:
-	# 正在拖的卡先放回手牌,別讓它懸在半空(GAME_OVER 後放開事件不會再處理)。
-	if ui_state == UiState.DRAGGING:
-		organize_hand()
-		card_being_dragged = null
 	_cancel_command()
 	ui_state = UiState.GAME_OVER
 	# 勝敗以「本機視角」判定:my_side 離線恆為 "player",熱座語意不變(2b)。
@@ -1342,11 +1372,7 @@ func _net_end_turn() -> void:
 		Sfx.play(Sfx.TURN_FLIP, -2.0)   # 翻頁聲(伺服器沒有音效裝置,別放)
 	# 兩端各自收拾自己的互動狀態:拖到一半的卡先放回扇形——手牌視圖若重建,
 	# 被拖著的卡遭 queue_free 就成懸空參考(摸了就炸);開著的選單一併收掉。
-	if ui_state == UiState.DRAGGING:
-		organize_hand()
-		card_being_dragged = null
-		ui_state = UiState.IDLE
-	if ui_state == UiState.MENU_OPEN or ui_state == UiState.TARGETING:
+	if ui_state in [UiState.DRAGGING, UiState.MENU_OPEN, UiState.TARGETING]:
 		_cancel_command()
 	currently_hovered_card = null
 	# 換邊三步:①視圖上的手牌若正是行動方的帳,現況存回去
@@ -1523,6 +1549,38 @@ func _on_card_buried(side: String, _cd: CardData) -> void:
 	var pile: GravePile = _grave_piles.get(side)
 	if pile != null:
 		pile.refresh(battle_manager.grave_count(side), battle_manager.grave_top(side))
+	_refresh_battle_archive()
+
+
+func _archive_local_side() -> String:
+	return NetMatch.my_side if NetMatch.is_online else "player"
+
+
+func _open_battle_history() -> void:
+	if ui_state != UiState.IDLE or _picking or _leave_pending:
+		return
+	battle_ui.hide_card_preview()
+	battle_ui.archive.show_history(battle_manager.history_entries, _archive_local_side())
+
+
+func _refresh_battle_archive() -> void:
+	if not battle_ui.archive.is_open():
+		return
+	if battle_ui.archive.mode == "history":
+		battle_ui.archive.show_history(battle_manager.history_entries, _archive_local_side())
+	else:
+		var side: String = battle_ui.archive.side
+		battle_ui.archive.show_grave(side, battle_manager.grave_cards(side),
+			"我方" if side == _archive_local_side() else "對手")
+
+
+func _raycast_grave_at(mouse_pos: Vector2) -> GravePile:
+	var origin := camera.project_ray_origin(mouse_pos)
+	var query := PhysicsRayQueryParameters3D.create(origin,
+		origin + camera.project_ray_normal(mouse_pos) * 1000, GravePile.INSPECT_LAYER)
+	query.collide_with_areas = true
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	return (hit.collider as Area3D).get_parent() as GravePile if not hit.is_empty() else null
 
 
 ## 雙方棋盤的中線 z(全部卡槽的平均):鏡射敵方牌堆用。
@@ -1614,9 +1672,7 @@ func _raycast_card_at(mouse_pos: Vector2, exclude_card: Card = null) -> Card:
 
 	if result:
 		# result.collider 是被打中的 Area3D，它的父節點才是 Card 本體。
-		print('點擊在卡片上', result.collider.get_parent())
 		return result.collider.get_parent() as Card
-	print('點擊在卡片外面')
 	return null
 
 
@@ -1637,8 +1693,11 @@ func raycast_check_for_hero() -> Hero:
 ## ── 射線：找滑鼠下方的「卡槽」(第 2 層)──────────────
 ## 回傳型別寫成 -> CardSlot，代表這個函式保證回傳一個卡槽(或 null)。
 func raycast_check_for_card_slot() -> CardSlot:
+	return _raycast_slot_at(get_viewport().get_mouse_position())
+
+
+func _raycast_slot_at(mouse_pos: Vector2) -> CardSlot:
 	var space_state := get_world_3d().direct_space_state
-	var mouse_pos := get_viewport().get_mouse_position()
 
 	var ray_origin := camera.project_ray_origin(mouse_pos)
 	var ray_end := ray_origin + camera.project_ray_normal(mouse_pos) * 1000.0
@@ -1659,11 +1718,14 @@ func raycast_check_for_card_slot() -> CardSlot:
 
 ## ── 射線：F8 沙盒的「墓地直接捨棄」區（第 5 層）────────────
 func raycast_check_for_debug_grave() -> GravePile:
+	return _raycast_debug_grave_at(get_viewport().get_mouse_position())
+
+
+func _raycast_debug_grave_at(mouse_pos: Vector2) -> GravePile:
 	if battle_manager == null or not battle_manager.is_debug_test_mode(
 			battle_manager.active_side):
 		return null
 	var space_state := get_world_3d().direct_space_state
-	var mouse_pos := get_viewport().get_mouse_position()
 	var ray_origin := camera.project_ray_origin(mouse_pos)
 	var ray_end := ray_origin + camera.project_ray_normal(mouse_pos) * 1000.0
 	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_end)
@@ -1679,8 +1741,11 @@ func raycast_check_for_debug_grave() -> GravePile:
 
 ## ── 射線:找滑鼠下方的「回魔黑洞」(第 4 層;丟牌回魔 §1.1)──────
 func raycast_check_for_recycle() -> ManaRecycle:
+	return _raycast_recycle_at(get_viewport().get_mouse_position())
+
+
+func _raycast_recycle_at(mouse_pos: Vector2) -> ManaRecycle:
 	var space_state := get_world_3d().direct_space_state
-	var mouse_pos := get_viewport().get_mouse_position()
 	var ray_origin := camera.project_ray_origin(mouse_pos)
 	var ray_end := ray_origin + camera.project_ray_normal(mouse_pos) * 1000.0
 	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_end)
@@ -2042,11 +2107,7 @@ func _on_leave_requested() -> void:
 		return   # 勝負畫面自己有去向;選牌是義務(費用已付),不讓離開窗插隊
 	# 桌面先收乾淨:拖到一半的卡放回扇形、開著的選單/瞄準取消——
 	# 免得警告窗蓋上來時,底下還懸著一張跟手的卡(同 _net_end_turn 的收拾順序)。
-	if ui_state == UiState.DRAGGING:
-		organize_hand()
-		card_being_dragged = null
-		ui_state = UiState.IDLE
-	elif ui_state == UiState.MENU_OPEN or ui_state == UiState.TARGETING:
+	if ui_state in [UiState.DRAGGING, UiState.MENU_OPEN, UiState.TARGETING]:
 		_cancel_command()
 	_leave_pending = true
 	ui_state = UiState.MENU_OPEN

@@ -74,18 +74,20 @@ func _build_hint_label() -> void:
 	add_child(_hint_label)
 
 
-func show_recycle_hint(gain: int) -> void:
+func show_recycle_hint(gain: int, available: bool = true) -> void:
 	if _pulse_tween != null and _pulse_tween.is_valid():
 		_pulse_tween.kill()
-	_set_tint(Color(1.3, 1.03, 0.48))
-	_sprite.scale = Vector3.ONE * 1.06
-	_hint_label.text = "+%d ◆" % gain
+	_set_tint(Color(1.3, 1.03, 0.48) if available else Color(0.46, 0.5, 0.57))
+	_sprite.scale = Vector3.ONE * (1.06 if available else 1.0)
+	_hint_label.modulate = MANA_GOLD if available else Color(0.7, 0.72, 0.77)
+	_hint_label.text = "回收 +%d ◆" % gain if available else "回收冷卻中"
 	_hint_label.visible = true
 
 
 func hide_recycle_hint() -> void:
 	_set_tint(IDLE_TINT)
 	_sprite.scale = Vector3.ONE
+	_hint_label.modulate = MANA_GOLD
 	_hint_label.visible = false
 
 

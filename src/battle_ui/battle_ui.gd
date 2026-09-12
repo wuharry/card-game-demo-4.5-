@@ -27,6 +27,10 @@ signal leave_requested
 signal leave_decided(confirmed: bool)
 ## 選牌面板(§抽濾)的回答:選了第幾張(索引對齊 show_card_picker 傳入的陣列)。
 signal card_picked(idx: int)
+signal history_requested
+
+const ARCHIVE = preload("res://src/battle_ui/battle_archive.gd")
+var archive: CanvasLayer
 
 const FONT_TITLE: FontFile = preload(
 	"res://assets/fonts/Noto_Serif_TC/static/NotoSerifTC-Bold.ttf")
@@ -45,6 +49,11 @@ var _attack_btn: Button
 var _skill_btn: Button
 var _desc: Label
 var _hint: Label
+var _spell_drop_panel: Panel
+var _spell_drop_title: Label
+var _spell_drop_note: Label
+var _spell_drop_styles: Array[StyleBoxFlat] = []
+var _spell_drop_state: int = -1
 var _arrow_line: Line2D      # 指定目標導引箭頭(爐石式弧線)的線身
 var _arrow_head: Polygon2D   # 箭頭尖端的三角
 var _arrow_shadow: Line2D
@@ -71,11 +80,7 @@ var _leave_btn: Button   # 中途離開(左上角;真正的攔截在確認窗)
 var _debug_test_btn: Button = null   # Debug 離線才生成;Release/連線不存在
 var _toast: Label
 var _toast_tween: Tween
-var _recent_messages: PackedStringArray = []
 var _history_button: Button
-var _history_panel: PanelContainer
-var _history_text: Label
-var _history_scroll: ScrollContainer
 
 ## 勝負畫面(第一次用到才組裝)。
 var _over_dim: ColorRect = null
@@ -91,8 +96,11 @@ var _pick_row: HBoxContainer = null
 
 
 func _ready() -> void:
+	archive = ARCHIVE.new()
+	add_child(archive)
 	_build_panel()
 	_build_hint()
+	_build_spell_drop()
 	_build_arrow()
 	_build_hud()
 	close()
@@ -104,6 +112,7 @@ func _ready() -> void:
 ## attack_note / skill_note = 該行動「被擋的理由」;空字串 = 可以做。
 ## 有理由 → 按鈕灰化、描述列轉述理由(規則在 BattleManager,UI 只負責說人話)。
 func open(card: Card, attack_note: String = "", skill_note: String = "") -> void:
+	hide_spell_drag()
 	_history_button.button_pressed = false
 	# 進入新的指令時收掉上一個提示；訊息仍可從最近訊息重讀。
 	_toast.hide()
@@ -148,10 +157,52 @@ func open(card: Card, attack_note: String = "", skill_note: String = "") -> void
 
 ## 進入指定目標模式:收起面板、亮出提示字。
 func show_targeting(hint_text: String) -> void:
+	_spell_drop_panel.hide()
 	_panel.visible = false
 	_hint.text = hint_text
 	_place_feedback(_hint, 48)
 	_hint.visible = true
+
+
+## 秘術拖曳每幀更新：提示只在文字改變時重新排版，施放區不接收 GUI 輸入。
+## can_cast 只影響施法提示；回收是否可用由 ManaRecycle 各自呈現。
+func show_spell_drag(hint_text: String, show_zone: bool, zone_hovered: bool,
+		can_cast: bool) -> void:
+	_panel.hide()
+	_toast.hide()
+	if _toast_tween != null:
+		_toast_tween.kill()
+		_toast_tween = null
+	if _hint.text != hint_text or not _hint.visible:
+		_hint.text = hint_text
+		_place_feedback(_hint, 48)
+	_hint.show()
+	_spell_drop_panel.visible = show_zone
+	if not show_zone:
+		return
+	var state := 0 if not can_cast else (2 if zone_hovered else 1)
+	if state == _spell_drop_state:
+		return
+	_spell_drop_state = state
+	_spell_drop_panel.add_theme_stylebox_override("panel", _spell_drop_styles[state])
+	var text_color: Color = UI_STYLE.TEXT_DIM if state == 0 \
+		else (UI_STYLE.GOLD_BRIGHT if state == 2 else GOLD)
+	_spell_drop_title.add_theme_color_override("font_color", text_color)
+	_spell_drop_note.add_theme_color_override("font_color", text_color)
+	_spell_drop_note.text = "目前無法施放" if state == 0 \
+		else ("放開施放" if state == 2 else "拖入此處施放")
+
+
+## 以畫面上實際可見的區域判斷落點；縮放視窗後也用相同範圍。
+func spell_drop_contains(point: Vector2) -> bool:
+	return _spell_drop_panel.is_visible_in_tree() \
+		and _spell_drop_panel.get_global_rect().has_point(point)
+
+
+func hide_spell_drag() -> void:
+	_spell_drop_panel.hide()
+	_hint.hide()
+	_hide_arrow()
 
 
 ## 指定目標中,由 CardManager 每幀餵座標:from=施放者、to=游標(或鎖定的目標)。
@@ -183,8 +234,7 @@ func update_arrow(from_px: Vector2, to_px: Vector2, locked: bool) -> void:
 ## 全部收起來(取消或發動完畢)。
 func close() -> void:
 	_panel.visible = false
-	_hint.visible = false
-	_hide_arrow()
+	hide_spell_drag()
 	_skill = null
 
 
@@ -271,6 +321,55 @@ func _build_hint() -> void:
 	_hint.set_anchors_and_offsets_preset(
 		Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 48)
 	_hint.grow_horizontal = Control.GROW_DIRECTION_BOTH   # 文字變長仍保持置中
+
+
+## 無目標秘術有自己的落點，放開前可先看見會採取的動作。
+func _build_spell_drop() -> void:
+	_spell_drop_panel = Panel.new()
+	_spell_drop_panel.name = "SpellDropZone"
+	_spell_drop_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_spell_drop_panel)
+	_spell_drop_panel.anchor_left = 0.5
+	_spell_drop_panel.anchor_right = 0.5
+	_spell_drop_panel.anchor_top = 0.42
+	_spell_drop_panel.anchor_bottom = 0.42
+	for accent: Color in [UI_STYLE.STEEL_DIM, GOLD_DIM, UI_STYLE.GOLD_BRIGHT]:
+		var style: StyleBoxFlat = UI_STYLE.panel(accent, true)
+		style.bg_color = Color(0.025, 0.032, 0.055, 0.93)
+		_spell_drop_styles.append(style)
+	_spell_drop_styles[2].bg_color = Color(0.12, 0.10, 0.06, 0.96)
+	_spell_drop_panel.add_theme_stylebox_override("panel", _spell_drop_styles[1])
+	_spell_drop_title = Label.new()
+	_spell_drop_title.text = "秘術施放區"
+	_spell_drop_title.add_theme_font_override("font", FONT_TITLE)
+	_spell_drop_title.add_theme_font_size_override("font_size", 21)
+	_spell_drop_title.add_theme_color_override("font_color", GOLD)
+	_spell_drop_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_spell_drop_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_spell_drop_panel.add_child(_spell_drop_title)
+	_spell_drop_title.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	_spell_drop_title.offset_top = 12.0
+	_spell_drop_title.offset_bottom = 42.0
+	_spell_drop_note = Label.new()
+	_spell_drop_note.add_theme_font_override("font", FONT_BODY)
+	_spell_drop_note.add_theme_font_size_override("font_size", 16)
+	_spell_drop_note.add_theme_color_override("font_color", GOLD)
+	_spell_drop_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_spell_drop_note.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_spell_drop_panel.add_child(_spell_drop_note)
+	_spell_drop_note.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+	_spell_drop_note.offset_top = -37.0
+	_spell_drop_note.offset_bottom = -10.0
+	_layout_spell_drop()
+	_spell_drop_panel.hide()
+
+
+func _layout_spell_drop() -> void:
+	var width := clampf(get_viewport().get_visible_rect().size.x - 48.0, 160.0, 320.0)
+	_spell_drop_panel.offset_left = -width * 0.5
+	_spell_drop_panel.offset_right = width * 0.5
+	_spell_drop_panel.offset_top = -45.0
+	_spell_drop_panel.offset_bottom = 45.0
 
 
 ## 導引箭頭的兩個零件。CanvasLayer 可以收任何 CanvasItem,Node2D 也行——
@@ -471,43 +570,23 @@ func _build_hud() -> void:
 	get_viewport().size_changed.connect(_layout_hud)
 
 
-## 留下最近訊息，玩家可自行展開，不讓訊息常駐遮住牌桌。
+## 戰報入口；完整回合資料由 CardManager 轉交唯讀視窗。
 func _build_history() -> void:
 	_history_button = _make_option(SETTINGS.current().text("battle_history"))
 	_history_button.add_theme_font_size_override("font_size", 14)
-	_history_button.toggle_mode = true
 	add_child(_history_button)
 	_history_button.set_anchors_and_offsets_preset(
 		Control.PRESET_TOP_LEFT, Control.PRESET_MODE_MINSIZE, 24)
 	_history_button.offset_top = 128
 	_history_button.offset_bottom = 164
-	_history_panel = PanelContainer.new()
-	_history_panel.add_theme_stylebox_override("panel", UI_STYLE.battle_strip())
-	add_child(_history_panel)
-	_history_panel.position = Vector2(24, 174)
-	_history_panel.custom_minimum_size = Vector2(260, 0)
-	var scroll := ScrollContainer.new()
-	_history_scroll = scroll
-	scroll.custom_minimum_size = Vector2(240, 170)
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_history_panel.add_child(scroll)
-	_history_text = Label.new()
-	_history_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_history_text.custom_minimum_size.x = 220
-	_history_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_history_text.add_theme_font_override("font", FONT_BODY)
-	_history_text.add_theme_font_size_override("font_size", 14)
-	_history_text.add_theme_color_override("font_color", UI_STYLE.TEXT)
-	_history_text.text = SETTINGS.current().text("battle_history_empty")
-	scroll.add_child(_history_text)
-	_history_panel.hide()
-	_history_button.toggled.connect(func(shown: bool) -> void:
-		_history_panel.visible = shown)
+	_history_button.pressed.connect(func() -> void: history_requested.emit())
 
 
 ## CardManager 的 _input 先於 GUI；可操作面板上的按下不能同時選到背後卡牌。
 func blocks_board_pointer(point: Vector2) -> bool:
-	for control: Control in [_history_button, _history_panel, _leave_btn,
+	if archive.is_open():
+		return true
+	for control: Control in [_history_button, _leave_btn,
 			_end_turn_btn, _debug_test_btn, _hud_panel, _hud_turn_panel]:
 		if is_instance_valid(control) and control.is_visible_in_tree() \
 				and control.get_global_rect().has_point(point):
@@ -558,13 +637,11 @@ func update_hud(turn: int, side: String, mana: int, mana_max: int, temp_mana: in
 
 
 func _layout_hud() -> void:
+	_layout_spell_drop()
 	# 放大 UI 後的可用寬度變小，資源列換到下一排，避開回合條。
 	var top := 76.0 if get_viewport().get_visible_rect().size.x < 1050.0 else 24.0
 	_hud_panel.offset_top = top
 	_hud_panel.offset_bottom = top + _hud_panel.get_combined_minimum_size().y
-	_history_scroll.custom_minimum_size.y = clampf(
-		get_viewport().get_visible_rect().size.y - 404.0, 60.0, 170.0)
-	_history_panel.reset_size()
 	_place_feedback(_toast, 110)
 	_place_feedback(_hint, 48)
 
@@ -578,13 +655,6 @@ func _place_feedback(label: Label, margin: int) -> void:
 
 ## 短暫提示：依文字長度保留閱讀時間，並存進最近訊息。
 func flash_message(text_value: String) -> void:
-	_recent_messages.append(text_value)
-	if _recent_messages.size() > 5:
-		_recent_messages.remove_at(0)
-	var recent := _recent_messages.duplicate()
-	recent.reverse()
-	_history_text.text = "\n\n".join(recent)
-	_history_panel.reset_size()
 	_toast.text = text_value
 	_toast.visible = true
 	_toast.modulate = Color(1.0, 1.0, 1.0, 1.0)
@@ -601,6 +671,7 @@ func flash_message(text_value: String) -> void:
 ## ── 勝負畫面 ─────────────────────────────────────────
 ## 壓暗全場 + 置中面板:勝利金字/敗北紅字,兩個去向(再戰/回主選單)。
 func show_game_over(victory: bool) -> void:
+	archive.close()
 	Sfx.play(Sfx.VICTORY if victory else Sfx.DEFEAT)
 	close()
 	# 勝負已分 → 收掉中途離開的入口:去向改由勝負畫面的兩顆按鈕提供。
@@ -705,6 +776,7 @@ var _react_body: Label = null
 
 
 func show_reaction(title_text: String, body_text: String) -> void:
+	archive.close()
 	if _react_dim == null:
 		_build_reaction()
 	_react_title.text = title_text
@@ -774,6 +846,7 @@ var _leave_body: Label = null
 ## warning_text 由 CardManager 依連線/單人/熱座組好傳進來:
 ## UI 不判斷模式,只負責把後果說清楚(同 open() 的 note 參數,規則在別處、UI 轉述)。
 func show_leave_confirm(warning_text: String) -> void:
+	archive.close()
 	if _leave_dim == null:
 		_build_leave_confirm()
 	_leave_body.text = warning_text
@@ -1004,6 +1077,7 @@ func update_opp_count(count: int) -> void:
 ## 開著時 CardManager 用 _picking 旗標擋掉取消/結束回合。
 func show_card_picker(title_text: String, hint_text: String,
 		cards: Array[CardData]) -> void:
+	archive.close()
 	if _pick_panel == null:
 		_build_picker()
 	_pick_title.text = title_text

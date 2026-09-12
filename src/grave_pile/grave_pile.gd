@@ -1,7 +1,7 @@
 ## grave_pile.gd — 一側一座的墓地視覺：像素墓碑地標 + 牌疊 + 張數。
 ##
 ## 帳仍在 BattleManager(SideState.grave)，本節點只訂閱刷新。回魔投放已拆到
-## ManaRecycle，墓地因此不再帶碰撞區，也不再用程序化星雲黑洞冒充墓碑。
+## ManaRecycle；墓地使用獨立檢視碰撞層，與 F8 捨棄碰撞分開。
 class_name GravePile
 extends Node3D
 
@@ -11,6 +11,7 @@ const GRAVE_TEXTURE: Texture2D = preload(
 const TEST_FONT: Font = preload(
 	"res://assets/fonts/Noto_Serif_TC/static/NotoSerifTC-Bold.ttf")
 const TEST_DROP_LAYER := 16
+const INSPECT_LAYER := 32
 const TOP_CARD_SCALE := 0.62
 const DROP_HEIGHT := 1.2
 const STACK_STEP := 0.02
@@ -38,6 +39,17 @@ func setup(pile_side: String) -> void:
 	side = pile_side
 	_build_marker()
 	_build_test_drop_area()
+	var inspect := Area3D.new()
+	inspect.name = "GraveInspectArea"
+	inspect.collision_layer = INSPECT_LAYER
+	inspect.collision_mask = 0
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(1.9, 0.8, 1.9)
+	shape.shape = box
+	shape.position.y = 0.4
+	inspect.add_child(shape)
+	add_child(inspect)
 	_build_stack()
 	_build_label()
 	_build_test_hint()
