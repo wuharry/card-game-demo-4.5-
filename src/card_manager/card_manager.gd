@@ -359,6 +359,8 @@ func _input(event: InputEvent) -> void:
 	# 只關心「滑鼠左鍵」事件。
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
+			if battle_ui.blocks_board_pointer(event.position):
+				return
 			match ui_state:
 				UiState.IDLE:
 					_on_left_pressed_idle()

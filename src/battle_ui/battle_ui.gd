@@ -47,6 +47,8 @@ var _desc: Label
 var _hint: Label
 var _arrow_line: Line2D      # 指定目標導引箭頭(爐石式弧線)的線身
 var _arrow_head: Polygon2D   # 箭頭尖端的三角
+var _arrow_shadow: Line2D
+var _cancel_btn: Button
 var _skill: SkillData = null   # 目前選單主角的主動技(null = 這隻沒有)
 var _attack_note: String = ""  # 攻擊被擋的理由("" = 可以攻擊);描述列顯示用
 var _skill_note: String = ""   # 技能被擋的理由(同上)
@@ -69,6 +71,11 @@ var _leave_btn: Button   # 中途離開(左上角;真正的攔截在確認窗)
 var _debug_test_btn: Button = null   # Debug 離線才生成;Release/連線不存在
 var _toast: Label
 var _toast_tween: Tween
+var _recent_messages: PackedStringArray = []
+var _history_button: Button
+var _history_panel: PanelContainer
+var _history_text: Label
+var _history_scroll: ScrollContainer
 
 ## 勝負畫面(第一次用到才組裝)。
 var _over_dim: ColorRect = null
@@ -97,6 +104,12 @@ func _ready() -> void:
 ## attack_note / skill_note = 該行動「被擋的理由」;空字串 = 可以做。
 ## 有理由 → 按鈕灰化、描述列轉述理由(規則在 BattleManager,UI 只負責說人話)。
 func open(card: Card, attack_note: String = "", skill_note: String = "") -> void:
+	_history_button.button_pressed = false
+	# 進入新的指令時收掉上一個提示；訊息仍可從最近訊息重讀。
+	_toast.hide()
+	if _toast_tween != null:
+		_toast_tween.kill()
+	_hide_arrow()
 	_skill = null
 	_attack_note = attack_note
 	_skill_note = skill_note
@@ -105,8 +118,10 @@ func open(card: Card, attack_note: String = "", skill_note: String = "") -> void
 		_title.text = SETTINGS.current().card_name(card.data)
 		# HP 顯示「當前/上限」:掉過血的單位一眼看得出來。
 		_stats.text = "ATK %d ／ HP %d／%d" \
-			% [card.data.atk, card.current_hp, card.data.hp]
+			% [card.atk_total(), card.current_hp, card.data.hp + card.max_hp_bonus]
 	_attack_btn.disabled = attack_note != ""
+	_attack_btn.tooltip_text = attack_note
+	_skill_btn.tooltip_text = skill_note
 	_skill_btn.visible = _skill != null
 	if _skill != null:
 		# 技能鈕直接標費用(◆)+三分類:學費和「佔不佔攻擊機會」都寫在門口。
@@ -123,13 +138,19 @@ func open(card: Card, attack_note: String = "", skill_note: String = "") -> void
 	_panel.reset_size()
 	_panel.set_anchors_and_offsets_preset(
 		Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_MINSIZE, 24)
-	_attack_btn.grab_focus()   # 鍵盤黨:開選單直接上下鍵+Enter
+	if not _attack_btn.disabled:
+		_attack_btn.grab_focus()
+	elif _skill_btn.visible and not _skill_btn.disabled:
+		_skill_btn.grab_focus()
+	else:
+		_cancel_btn.grab_focus()
 
 
 ## 進入指定目標模式:收起面板、亮出提示字。
 func show_targeting(hint_text: String) -> void:
 	_panel.visible = false
 	_hint.text = hint_text
+	_place_feedback(_hint, 48)
 	_hint.visible = true
 
 
@@ -138,6 +159,7 @@ func show_targeting(hint_text: String) -> void:
 func update_arrow(from_px: Vector2, to_px: Vector2, locked: bool) -> void:
 	var color := Color("fff3cf") if locked else GOLD_DIM
 	_arrow_line.default_color = color
+	_arrow_line.width = 6.0 if locked else 3.5
 	_arrow_head.color = color
 	# 二次貝茲弧線:控制點取中點再往上抬(抬升量跟距離走,近了就別拱太高),
 	# 箭頭像被「拋」向目標,比直線更容易看出從誰指向誰。
@@ -148,6 +170,8 @@ func update_arrow(from_px: Vector2, to_px: Vector2, locked: bool) -> void:
 		var t := i / 24.0
 		pts.append(from_px.lerp(ctrl, t).lerp(ctrl.lerp(to_px, t), t))
 	_arrow_line.points = pts
+	_arrow_shadow.points = pts
+	_arrow_shadow.visible = true
 	_arrow_head.position = to_px
 	# 尖端在多邊形原點、身體往 +Y 展開 → 朝行進方向要再轉 +90°。
 	var dir := (to_px - pts[pts.size() - 2]).normalized()
@@ -211,6 +235,7 @@ func _build_panel() -> void:
 	col.add_child(_skill_btn)
 
 	var cancel_btn := _make_option(SETTINGS.current().text("battle_cancel"))
+	_cancel_btn = cancel_btn
 	cancel_btn.pressed.connect(func() -> void: cancelled.emit())
 	cancel_btn.mouse_entered.connect(
 		func() -> void: _desc.text = SETTINGS.current().text("battle_cancel_desc"))
@@ -238,6 +263,10 @@ func _build_hint() -> void:
 	_hint.add_theme_color_override("font_color", GOLD)
 	_hint.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.7))
 	_hint.add_theme_constant_override("outline_size", 5)
+	_hint.add_theme_stylebox_override("normal", UI_STYLE.battle_strip())
+	_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(_hint)
 	_hint.set_anchors_and_offsets_preset(
 		Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 48)
@@ -247,6 +276,13 @@ func _build_hint() -> void:
 ## 導引箭頭的兩個零件。CanvasLayer 可以收任何 CanvasItem,Node2D 也行——
 ## 用現成的 Line2D / Polygon2D 拼,不用自己寫 _draw。
 func _build_arrow() -> void:
+	_arrow_shadow = Line2D.new()
+	_arrow_shadow.width = 10.0
+	_arrow_shadow.default_color = Color(0.02, 0.025, 0.04, 0.8)
+	_arrow_shadow.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	_arrow_shadow.end_cap_mode = Line2D.LINE_CAP_ROUND
+	_arrow_shadow.antialiased = true
+	add_child(_arrow_shadow)
 	_arrow_line = Line2D.new()
 	_arrow_line.width = 5.0
 	_arrow_line.default_color = GOLD_DIM
@@ -266,6 +302,7 @@ func _build_arrow() -> void:
 
 
 func _hide_arrow() -> void:
+	_arrow_shadow.visible = false
 	_arrow_line.visible = false
 	_arrow_head.visible = false
 
@@ -301,7 +338,7 @@ func _build_hud() -> void:
 	_hud_turn_panel.grow_vertical = Control.GROW_DIRECTION_END
 
 	_hud_turn = Label.new()
-	_hud_turn.custom_minimum_size = Vector2(300, 0)
+	_hud_turn.custom_minimum_size = Vector2(240, 0)
 	_hud_turn.add_theme_font_override("font", FONT_TITLE)
 	_hud_turn.add_theme_font_size_override("font_size", 18)
 	_hud_turn.add_theme_color_override("font_color", GOLD)
@@ -353,6 +390,12 @@ func _build_hud() -> void:
 	_end_turn_btn.add_theme_stylebox_override("hover", lit)
 	_end_turn_btn.add_theme_stylebox_override("focus", lit)
 	_end_turn_btn.add_theme_stylebox_override("pressed", lit)
+	var inactive: StyleBoxFlat = UI_STYLE.battle_round_button()
+	inactive.bg_color = Color("24292f")
+	inactive.border_color = UI_STYLE.STEEL_DIM
+	inactive.shadow_size = 0
+	_end_turn_btn.add_theme_stylebox_override("disabled", inactive)
+	_end_turn_btn.add_theme_color_override("font_disabled_color", UI_STYLE.TEXT_DIM)
 	_end_turn_btn.pressed.connect(func() -> void:
 		Sfx.play(Sfx.CLICK, -8.0)
 		end_turn_pressed.emit())
@@ -411,15 +454,65 @@ func _build_hud() -> void:
 	_toast = Label.new()
 	_toast.add_theme_font_override("font", FONT_TITLE)
 	# 提示是「行動被擋下」的當下回饋,要一眼看到:大字、亮色、厚黑邊。
-	_toast.add_theme_font_size_override("font_size", 32)
+	_toast.add_theme_font_size_override("font_size", 20)
 	_toast.add_theme_color_override("font_color", UI_STYLE.GOLD_BRIGHT)
 	_toast.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.85))
-	_toast.add_theme_constant_override("outline_size", 10)
+	_toast.add_theme_constant_override("outline_size", 2)
+	_toast.add_theme_stylebox_override("normal", UI_STYLE.battle_strip())
+	_toast.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_toast.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_toast)
 	_toast.set_anchors_and_offsets_preset(
 		Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 110)
 	_toast.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_toast.visible = false
+	_build_history()
+	get_viewport().size_changed.connect(_layout_hud)
+
+
+## 留下最近訊息，玩家可自行展開，不讓訊息常駐遮住牌桌。
+func _build_history() -> void:
+	_history_button = _make_option(SETTINGS.current().text("battle_history"))
+	_history_button.add_theme_font_size_override("font_size", 14)
+	_history_button.toggle_mode = true
+	add_child(_history_button)
+	_history_button.set_anchors_and_offsets_preset(
+		Control.PRESET_TOP_LEFT, Control.PRESET_MODE_MINSIZE, 24)
+	_history_button.offset_top = 128
+	_history_button.offset_bottom = 164
+	_history_panel = PanelContainer.new()
+	_history_panel.add_theme_stylebox_override("panel", UI_STYLE.battle_strip())
+	add_child(_history_panel)
+	_history_panel.position = Vector2(24, 174)
+	_history_panel.custom_minimum_size = Vector2(260, 0)
+	var scroll := ScrollContainer.new()
+	_history_scroll = scroll
+	scroll.custom_minimum_size = Vector2(240, 170)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_history_panel.add_child(scroll)
+	_history_text = Label.new()
+	_history_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_history_text.custom_minimum_size.x = 220
+	_history_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_history_text.add_theme_font_override("font", FONT_BODY)
+	_history_text.add_theme_font_size_override("font_size", 14)
+	_history_text.add_theme_color_override("font_color", UI_STYLE.TEXT)
+	_history_text.text = SETTINGS.current().text("battle_history_empty")
+	scroll.add_child(_history_text)
+	_history_panel.hide()
+	_history_button.toggled.connect(func(shown: bool) -> void:
+		_history_panel.visible = shown)
+
+
+## CardManager 的 _input 先於 GUI；可操作面板上的按下不能同時選到背後卡牌。
+func blocks_board_pointer(point: Vector2) -> bool:
+	for control: Control in [_history_button, _history_panel, _leave_btn,
+			_end_turn_btn, _debug_test_btn, _hud_panel, _hud_turn_panel]:
+		if is_instance_valid(control) and control.is_visible_in_tree() \
+				and control.get_global_rect().has_point(point):
+			return true
+	return false
 
 
 ## 魔力列的一段:字型/字級一致,只有顏色不同。
@@ -439,6 +532,12 @@ func update_hud(turn: int, side: String, mana: int, mana_max: int, temp_mana: in
 	var side_name: String = SETTINGS.current().text("battle_my_turn") \
 		if side == NetMatch.my_side else SETTINGS.current().text("battle_enemy_turn")
 	_hud_turn.text = SETTINGS.current().text("battle_turn") % [turn, side_name]
+	# 熱座仍可操作雙方；AI／連線依本機回合呈現可用狀態。
+	_end_turn_btn.disabled = (NetMatch.is_online or MatchMode.is_vs_ai()) \
+		and side != NetMatch.my_side
+	_end_turn_btn.tooltip_text = side_name if _end_turn_btn.disabled else ""
+	_end_turn_btn.text = side_name if _end_turn_btn.disabled \
+		else SETTINGS.current().text("battle_end_turn")
 	# 行動方用顏色再講一次:金=我方、緋=對方(熱座換邊要一眼可辨)。
 	_hud_turn.add_theme_color_override(
 		"font_color", GOLD if side == NetMatch.my_side else UI_STYLE.DANGER)
@@ -455,20 +554,45 @@ func update_hud(turn: int, side: String, mana: int, mana_max: int, temp_mana: in
 	_hud_panel.reset_size()
 	_hud_panel.set_anchors_and_offsets_preset(
 		Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 24)
+	_layout_hud()
 
 
-## 短暫提示(魔力不足/回合切換…):畫面中下方停 1 秒後淡出。
+func _layout_hud() -> void:
+	# 放大 UI 後的可用寬度變小，資源列換到下一排，避開回合條。
+	var top := 76.0 if get_viewport().get_visible_rect().size.x < 1050.0 else 24.0
+	_hud_panel.offset_top = top
+	_hud_panel.offset_bottom = top + _hud_panel.get_combined_minimum_size().y
+	_history_scroll.custom_minimum_size.y = clampf(
+		get_viewport().get_visible_rect().size.y - 404.0, 60.0, 170.0)
+	_history_panel.reset_size()
+	_place_feedback(_toast, 110)
+	_place_feedback(_hint, 48)
+
+
+func _place_feedback(label: Label, margin: int) -> void:
+	label.custom_minimum_size.x = minf(620.0, get_viewport().get_visible_rect().size.x - 64.0)
+	label.reset_size()
+	label.set_anchors_and_offsets_preset(
+		Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, margin)
+
+
+## 短暫提示：依文字長度保留閱讀時間，並存進最近訊息。
 func flash_message(text_value: String) -> void:
+	_recent_messages.append(text_value)
+	if _recent_messages.size() > 5:
+		_recent_messages.remove_at(0)
+	var recent := _recent_messages.duplicate()
+	recent.reverse()
+	_history_text.text = "\n\n".join(recent)
+	_history_panel.reset_size()
 	_toast.text = text_value
 	_toast.visible = true
 	_toast.modulate = Color(1.0, 1.0, 1.0, 1.0)
-	_toast.reset_size()
-	_toast.set_anchors_and_offsets_preset(
-		Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 110)
+	_place_feedback(_toast, 110)
 	if _toast_tween != null:
 		_toast_tween.kill()
 	_toast_tween = create_tween()
-	_toast_tween.tween_interval(1.0)
+	_toast_tween.tween_interval(clampf(text_value.length() * 0.075, 1.8, 4.5))
 	_toast_tween.tween_property(
 		_toast, "modulate:a", 0.0, SETTINGS.current().motion_duration(0.35))
 	_toast_tween.tween_callback(func() -> void: _toast.visible = false)
@@ -553,7 +677,7 @@ func _make_option(text_value: String) -> Button:
 	btn.add_theme_stylebox_override("disabled", UI_STYLE.button(true))
 	var lit: StyleBoxFlat = UI_STYLE.button(false)
 	btn.add_theme_stylebox_override("hover", lit)
-	btn.add_theme_stylebox_override("focus", lit)
+	btn.add_theme_stylebox_override("focus", UI_STYLE.focus_ring())
 	btn.add_theme_stylebox_override("pressed", lit)
 	# 游標懸停即奪走焦點:滑鼠與鍵盤共用同一個「亮起」狀態,
 	# 金底線永遠只有一條、跟著游標走(歧路旅人的選單手感)。
@@ -755,7 +879,7 @@ func show_card_preview(card: Card) -> void:
 	if d.card_type == CardData.CardType.MINION:
 		# 桌上單位印當前血/上限(含靈裝加成);手牌印模板值(setup 時 current_hp = hp)。
 		var lines: PackedStringArray = [SETTINGS.current().text("battle_stats") % [
-			d.atk, card.current_hp, d.hp + card.max_hp_bonus]]
+			card.atk_total(), card.current_hp, d.hp + card.max_hp_bonus]]
 		if not d.keywords.is_empty():
 			var words: PackedStringArray = []
 			for w in d.keywords:
@@ -799,7 +923,7 @@ func show_card_preview(card: Card) -> void:
 	_prev_panel.visible = true
 	_prev_panel.reset_size()
 	_prev_panel.set_anchors_and_offsets_preset(
-		Control.PRESET_CENTER_RIGHT, Control.PRESET_MODE_MINSIZE, 24)
+		Control.PRESET_CENTER_RIGHT, Control.PRESET_MODE_MINSIZE, 168)
 
 
 func hide_card_preview() -> void:
