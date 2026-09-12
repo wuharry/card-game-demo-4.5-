@@ -62,6 +62,7 @@ func heal(amount: int) -> void:
 	_refresh_hp()
 	if healed > 0:
 		_popup_number("+%d" % healed, Color(0.45, 1.0, 0.5))
+		preload("res://src/fx/spatial_effect.gd").play_at(self, "heal")
 
 
 func _die() -> void:

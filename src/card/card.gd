@@ -662,6 +662,7 @@ func heal(amount: int) -> void:
 	_refresh_hp_label()
 	if healed > 0:
 		_popup_number("+%d" % healed, Color(0.45, 1.0, 0.5))
+		preload("res://src/fx/spatial_effect.gd").play_at(self, "heal")
 
 
 ## 上護盾:盾值「疊加」而非取大值(治療是補到上限,護盾沒有上限概念)。
@@ -671,6 +672,7 @@ func add_shield(amount: int) -> void:
 	if amount <= 0:
 		return
 	shield += amount
+	preload("res://src/fx/spatial_effect.gd").play_at(self, "shield")
 	_update_status_label()
 	_popup_number(SETTINGS.current().text("shield_gain") % amount, Color(0.55, 0.8, 1.0))
 
@@ -748,6 +750,8 @@ func _refresh_hp_label() -> void:
 
 ## ── 狀態效果(§9;由 BattleManager 讀寫)──────────────
 func add_status(id: SkillData.Status, turns: int, skip_next_decay: bool = false) -> void:
+	if turns > 0:
+		preload("res://src/fx/spatial_effect.gd").status_at(self, id)
 	# 灼燒/凍結互斥(§9):新狀態把對立的舊狀態擠掉。
 	if id == SkillData.Status.BURN:
 		remove_status(SkillData.Status.FREEZE)
