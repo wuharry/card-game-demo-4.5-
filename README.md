@@ -410,6 +410,7 @@ func apply_freeze(unit, turns := 1) -> void:
 - [x] **Time Fantasy 新卡（2026-09-10）**：加入 12 名從者，直接使用 `tf_svbattle.zip` 原作者素材，包含待機、普攻、技能、受傷、倒地與登場動畫。[卡牌清單與試玩方式](docs/time_fantasy_cards.md)。
 - [x] **法術結算層（§7）**：秘術＝拖到敵方從者即結算（宣告即付費 §5.1 STEP1、潛行不可指定 §8）；**守方瞬咒反制窗口**（施放秘術時熱座面板詢問守方，發動＝抵銷、扣守方剩餘魔力並離手）；靈裝＝拖到我方從者附著（生命上限加成記在單位節點，宿主離場隨亡）；伏印＝蓋放進側帳資料層（§2 後排、不佔格），敵方召喚從者時觸發傷害。headless 驗收 14 斷言全過
 - [x] 通用命中爆點 3D 特效（`src/fx/fx_burst.gd`）：GPUParticles3D 純程式美術（emission 過 glow 門檻自動泛光），掛在 Card/Hero `take_damage` ＝所有傷害自動觸發
+- [x] 通用音效層（`src/fx/sfx.gd`）：13 個 Kenney CC0 音效已接抓牌、抽牌、出牌、入墓、受擊、施法、回魔、換回合、UI 與勝負；目前是事件覆蓋完成，效果家族辨識與音量控制仍列入 Demo 打磨
 - [x] 匯出管線（macOS）：export preset ＋ ETC2 ASTC（Universal 必需）＋ 匯出版 headless 啟動驗證；掛名清單 [CREDITS.md](CREDITS.md)（含待查證素材區）
 
 **場景與美術**
@@ -448,7 +449,7 @@ func apply_freeze(unit, turns := 1) -> void:
    - ~~**2e. 斷線與收尾**~~ ✅ 任一方掉線→「對方已離線」→ 收線回主選單；連線時勝負畫面兩顆按鈕都改走收線（單邊 reload 會讓帳分家）。
    - **2f. 異地連線（UPnP 自動打洞）** ✅（2026-07-16）：開房時背景執行緒向路由器申請「UDP 8910 轉發」（`src/net/net_upnp.gd`，static 列管——洞是路由器的狀態，跨場景不消失，回主選單收殘洞），成功後狀態字顯示「同網路朋友連:區網 IP／異地朋友連:對外 IP」；失敗（路由器不支援 UPnP、CGNAT）顯示原因＋備案（手動轉發／Tailscale）。`discover()` 標稱 2 秒實測可拖 ~10 秒 → Thread ＋主執行緒輪詢 `take_result()`（官方 Thread 模式）。**注意**：開發機所在網路不支援 UPnP，fallback 路徑已實測；**成功路徑（真的顯示對外 IP＋異地連入）待有 UPnP 的網路實測**（`tests/upnp_probe.gd` 是換網路先跑的體檢工具）。
    - **實機驗收待做**：本機開兩個遊戲視窗走大廳連 `127.0.0.1` 對打一局（headless 已驗邏輯,UI/視角要人眼）；家用網路跑 `upnp_probe` 驗 UPnP 成功路徑＋真異地連入一局。
-3. **打磨與試玩** — 連線實測抓蟲、音效（出牌/攻擊/受擊至少三個）、數值平衡。
+3. **Demo 打磨與試玩（不含連線）** — 核心規則已可完整對局；公開 Demo 前優先完成效果家族、回魔完整演出、音量控制、UI 行動狀態／可出牌提示／結算紀錄、首局教學、固定試玩牌組及 Windows／授權驗收。完整盤點、素材接法與驗收條件見 [docs/demo_readiness.md](docs/demo_readiness.md)。
 4. **發佈** — Windows 匯出 preset（icon/版本號）＋ itch.io 或 GitHub Releases 下載頁。
 5. ~~**敵方 AI（單人遊戲模式）**~~ ✅ 完成（2026-08-31 強化）：主選單「單人遊戲」→ `MatchMode.VS_AI`（static 旗標，仿 ArenaPool）；`EnemyAI` 走玩家同一條結算路，對手手牌仍以卡背與張數隱藏。AI 現會把手牌、全場技能與可攻擊目標生成合法候選並評分：施放目標/無目標/高階秘術，使用抽濾、靈裝、伏印與主動技能，優先斬殺、有利交換、受傷治療與高價值宿主；瞬咒保留反制，棄牌回魔只在能當回合解鎖更強行動時使用。AI 施法時的玩家瞬咒反制仍由玩家決定；AI 守方才自動反制。`tests/ai_turn_test.gd` 驗收完整回合，`tests/ai_strategy_test.gd` 以固定局面驗收秘術/靈裝/伏印/技能/棄牌回魔與優先級。
 6. **卡片從卡槽取回** — `card_slot.gd` 的 `remove_card()` 已寫好，但尚未接上互動（例如再次拖出或右鍵取消）。

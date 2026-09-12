@@ -1,4 +1,4 @@
-# 素材來源推薦(2026-08-06)
+# 素材來源推薦(2026-08-06；2026-09-12 更新)
 
 > 目標是「朋友從網站下載遊戲」(README 待辦 #4)= **要能商業/公開散布**。
 > 所以下面每一條都標了授權型態;**下載後第一件事是把 LICENSE 收進包內**,
@@ -125,9 +125,12 @@
 | **Bdragon1727**(itch.io) | Free Pixel Effects Pack 系列(爆炸/斬擊/魔法陣/火冰雷) | 免費,多數可商用 |
 | **Ansimuz**(itch.io) | Explosion / Magic 特效包 | 多為 CC0 |
 | **Sanctumpixel** | magic effect sheets | 依包而異 |
+| **finalbossblues — Pixel Animations and Effects** ★ | 90+ 武器、元素、狀態動畫；64×64 幀、spritesheet 與單張 PNG | 付費；可商用、可修改、免權利金／免署名，禁止直接再散布 |
 
 > 用途對照:秘術落地(§7)、狀態施加(§9 灼燒/凍結)、【不滅】復活——
 > 這三個時機現在都只有粒子,補上 sprite 特效表提升最明顯。
+> finalbossblues 效果包與現有 Time Fantasy 角色同系列，優先挑 12–18 個效果覆蓋六個家族；
+> 詳細接線順序見 [Demo 完成度與戰鬥手感計畫](demo_readiness.md)。
 
 ## 3. 卡面圖示(法術卡卡圖;你已有 Shikashi + Antahonist)
 
@@ -136,6 +139,7 @@
 | **game-icons.net** ★ | 4000+ SVG 圖示(法術/武器/狀態/生物) | CC BY 3.0(需掛名) |
 | **Dungeon Crawl Stone Soup tiles**(OpenGameArt) ★ | 大量 32×32 道具/法術圖示 | CC0 |
 | **Kenney.nl** | UI 圖示、按鈕、標記 | CC0 |
+| **finalbossblues — 1000+ Fantasy RPG Icons** ★ | 1000+ 個 UI、技能、狀態、物品、武器與裝備圖示；24×24／32×32、full／limited-color | 付費；作者說明可商用、可修改、免署名，禁止直接再散布 |
 
 > game-icons.net 是**純向量、可任意上色**——非常適合上面那份卡片構思稿:
 > 同一個火焰圖示染紅=灼燒、染藍=凍結,一套圖示撐得起 20 張法術卡。
@@ -147,9 +151,16 @@
 | **Kenney Boardgame Pack** ★ | 卡框、卡背、指示物、骰 | CC0 |
 | **Kenney UI Pack / Fantasy UI** | 面板、按鈕、邊框 | CC0 |
 | **CraftPix free GUI** | 奇幻風 GUI 組 | 自訂免費授權(讀 license) |
+| **RUNEWARD — Dark Fantasy Pixel UI Kit** ★ | 198 件、113 件可 9-slice；面板、四態按鈕、bar、tooltip、游標、狀態圖示，附 slice manifest 與免費 sampler | 付費 USD 5.99（2026-09-12 查詢）；免署名商用、可修改、禁止單獨再散布；No AI |
+| **zLizard — Ornate Fantasy Pixel UI** | 1500+ 件、8 色系、raw PNG；有 9-slice 面板、按鈕、bar、selector 與設定元件 | 付費 USD 7.99（2026-09-12 查詢）；免署名商用、可修改、禁止再散布；No AI |
 
 > 卡型印章(秘術/瞬咒/伏印)現在是程式畫的色塊;有卡框素材後可以四種卡型各一張框,
 > 一眼分得出卡型——這比多加 10 張卡更能改善手感。
+
+> **本專案 UI 決策（2026-09-12）**：現有 `fantasy_ui_theme.gd` 的低彩度暗色金屬 HUD 繼續當主體；
+> finalbossblues 的 Icons＋Effects 已足以完成 Demo。需要像素邊框時才試 RUNEWARD 免費 sampler，
+> 正式採用也只抽 `plain`／`iron`／`arcane`，用在彈窗、按鈕、tooltip 與狀態框。
+> zLizard 比較接近華麗版暗影詩章，但裝飾量較大，只當第二候選，不能整套套上。
 
 ## 5. 音效 / 音樂(README 待辦 #3 點名要「出牌/攻擊/受擊至少三個」)
 
@@ -173,9 +184,27 @@
 
 ## 7. 下載之後的固定流程(別跳)
 
+### 本機解壓紀錄（2026-09-12）
+
+三包完整解壓到 `assets/_Raw_Imports/finalbossblues/`，保留包內結構，不互相覆蓋：
+
+| 原始 zip（位於 assets/） | 解壓子目錄 |
+|---|---|
+| icons_8.13.20.zip | icons_2020_08_13/ |
+| icons_12.26.19.zip | icons_2019_12_26/ |
+| pixel_animations_gfxpack.zip | effects/ |
+
+Icons 的 `readme.txt` 與 `quick_guide.png` 已保留；readme 說明 limited color 是較柔和的 Time Fantasy 配色。
+目前只完成素材整理，尚未接入技能或受擊動畫；主選單仍使用 Godot 原生面板，未套用 RUNEWARD／zLizard。
+主選單改為灰鐵細框、米白標題、淡金焦點，移除背景法陣並區分遊戲入口與其他選項。
+這批包未找到獨立 LICENSE，Icons readme 也未列完整授權條款；正式挑入遊戲前仍須確認購買頁授權。
+原始 zip 留在原位；完整解壓目錄由既有 `.gitignore`／`.gdignore` 排除，不加入遊戲資源掃描。
+
 1. 放進 `assets/packs/<snake_case_包名>/`,**包內保留原始結構**(利於日後對照授權)。
 2. 把 `LICENSE` / `README` 一起留著,不要只拿圖。
 3. 到 [CREDITS.md](../CREDITS.md) 登記一行;CC-BY 類要寫出作者要求的掛名字串。
 4. 刪素材走 **Godot 編輯器 FileSystem → 右鍵 Delete**(讓引擎同步清 `.import` 與 UID)。
 5. 匯出前確認沒有死重:匯出預設會把 `res://` 底下全部打包,沒用到的素材照樣進 zip
    (2026-07-16 那次清了 82M)。
+6. 付費包的原始 zip／完整 spritesheet 不進公開 repo 或遊戲下載包；只抽實際使用的成品，
+   並以下載包內附的 LICENSE／README 作為最終授權依據。
