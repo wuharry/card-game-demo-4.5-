@@ -25,6 +25,8 @@ signal wards_changed(side: String, count: int)
 signal draw_requested(n: int)
 ## 規則層產生的反應訊息（自動伏印／瞬咒等）交給 CardManager 顯示。
 signal battle_message(text: String)
+## 通過反制的指定秘術要求命中演出；位置在傷害／死亡清槽前快照，視圖不回寫規則。
+signal arcana_visual_requested(card: CardData, positions: Array[Vector3])
 ## 勝負已分("player" = 玩家贏)。
 signal game_over(winner: String)
 
@@ -515,6 +517,7 @@ func cast_arcana(card: CardData, target: Card) -> String:
 	if bool(ward_result.cancelled):
 		return str(ward_result.message)
 	var sk: SkillData = card.active_skill
+	arcana_visual_requested.emit(card, _arcana_visual_positions(target, sk))
 	match sk.effect:
 		SkillData.Effect.HEAL:
 			target.heal(sk.amount)
@@ -539,6 +542,25 @@ func cast_arcana(card: CardData, target: Card) -> String:
 			_resolve_attack(null, target, sk.power, false, sk.modifier, false)
 			return "【%s】對【%s】造成 %d 點傷害" % [
 				card.card_name, name_before, sk.power]
+
+
+## 只保存位置，不讓死亡後的動畫再反查已清空的卡槽；副目標沿用真結算的查詢。
+func _arcana_visual_positions(target: Card, skill: SkillData) -> Array[Vector3]:
+	var recipients: Array[Card] = [target]
+	if skill.power > 0 and skill.effect != SkillData.Effect.HEAL:
+		match skill.modifier:
+			SkillData.Modifier.SPREAD_3:
+				recipients.append_array(_adjacent_lane_units(target))
+			SkillData.Modifier.SPREAD_ALL:
+				recipients.append_array(_other_units_of_side(target))
+			SkillData.Modifier.PIERCE:
+				var back := _unit_behind(target)
+				if back != null:
+					recipients.append(back)
+	var positions: Array[Vector3] = []
+	for unit in recipients:
+		positions.append(unit.global_position + Vector3(0, 0.65, 0))
+	return positions
 
 
 ## 召喚系秘術:沒有施法單位,所以空位要用「行動方」來找(對照 _resolve_summon 用 caster)。

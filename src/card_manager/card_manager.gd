@@ -115,6 +115,7 @@ func _ready() -> void:
 	# 戰吼抽牌:帳房只喊「要抽幾張」,視圖那半(stash 對帳 + 飛入動畫)走既有單一入口。
 	battle_manager.draw_requested.connect(_apply_draw)
 	battle_manager.battle_message.connect(battle_ui.flash_message)
+	battle_manager.arcana_visual_requested.connect(_on_arcana_visual_requested)
 	battle_manager.game_over.connect(_on_game_over)
 	action_performed.connect(battle_manager.on_action_performed)
 	add_child(battle_manager)
@@ -736,6 +737,13 @@ func _resolve_arcana(card: Card, target: Card) -> void:
 	battle_manager.bury(battle_manager.active_side, card.data)
 	player_hand.play_card(card)
 	card.queue_free()
+
+
+## 結算核准後即刻播放命中演出；不等待動畫，秘術的扣血與反制維持同步契約。
+func _on_arcana_visual_requested(card: CardData, positions: Array[Vector3]) -> void:
+	if _is_srv():
+		return
+	preload("res://src/fx/spell_effect.gd").play_arcana(self, card, positions)
 
 
 ## 守方反制窗口(§5.1 STEP 2;熱座/單機共用,傷害秘術與抽濾秘術同一個口):
