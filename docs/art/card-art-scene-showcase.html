@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HD-2D 卡牌插畫與多場景背景展示</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #0f1218;
+      color: #e3e8f0;
+    }
+    body {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 30px 24px 60px;
+    }
+    header {
+      border-bottom: 1px solid #283344;
+      padding-bottom: 20px;
+      margin-bottom: 24px;
+    }
+    h1 {
+      font-size: 28px;
+      margin: 0 0 8px;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .badge {
+      font-size: 13px;
+      font-weight: normal;
+      background: #1e3a8a;
+      color: #93c5fd;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid #3b82f6;
+    }
+    p.lead {
+      color: #94a3b8;
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* Toolbar */
+    .toolbar {
+      position: sticky;
+      top: 10px;
+      z-index: 100;
+      background: rgba(23, 29, 39, 0.95);
+      backdrop-filter: blur(8px);
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .filters {
+      display: flex;
+      gap: 8px;
+    }
+    .filter-btn {
+      background: #1e293b;
+      border: 1px solid #475569;
+      color: #cbd5e1;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.15s ease;
+    }
+    .filter-btn:hover {
+      background: #334155;
+      color: #fff;
+    }
+    .filter-btn.active {
+      background: #2563eb;
+      border-color: #60a5fa;
+      color: #fff;
+      font-weight: 600;
+    }
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 14px;
+      color: #cbd5e1;
+    }
+    .toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    /* Grid layout */
+    .showcase-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+      gap: 24px;
+    }
+    .item-card {
+      background: #18202c;
+      border: 1px solid #2d3748;
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    .item-card:hover {
+      transform: translateY(-2px);
+      border-color: #4a5568;
+    }
+    .media-container {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      background: #000;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .media-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      image-rendering: pixelated;
+      transition: transform 0.2s ease;
+    }
+    .media-container.zoom-2x img {
+      transform: scale(1.3);
+    }
+
+    /* Simulated Card Frame Overlay */
+    .card-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border: 12px solid #2b2b36;
+      border-radius: 12px;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.8), inset 0 0 0 2px #4a4a5a;
+      display: none;
+    }
+    body.show-card-frame .card-overlay {
+      display: block;
+    }
+    .card-overlay .mana-gem {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, #38bdf8, #1d4ed8);
+      border: 2px solid #e0f2fe;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 20px;
+      color: #fff;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+    }
+    .card-overlay .atk-badge {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, #f59e0b, #b45309);
+      border: 2px solid #fef3c7;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 20px;
+      color: #fff;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+    }
+    .card-overlay .hp-badge {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, #ef4444, #991b1b);
+      border: 2px solid #fee2e2;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 20px;
+      color: #fff;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+    }
+    .card-overlay .card-title {
+      position: absolute;
+      top: 12px;
+      left: 60px;
+      right: 20px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid #475569;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #f8fafc;
+      letter-spacing: 0.5px;
+    }
+
+    /* Content details */
+    .content-box {
+      padding: 16px 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .content-title {
+      font-size: 17px;
+      font-weight: 600;
+      margin: 0 0 6px;
+      color: #f8fafc;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .content-desc {
+      font-size: 13px;
+      color: #94a3b8;
+      line-height: 1.5;
+      margin: 0 0 12px;
+    }
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 12px;
+    }
+    .tag {
+      background: #243042;
+      color: #93c5fd;
+      border: 1px solid #3b82f640;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+    .tag.env {
+      color: #86efac;
+      border-color: #22c55e40;
+      background: #143522;
+    }
+    .tag.ref {
+      color: #fca5a5;
+      border-color: #ef444440;
+      background: #3b1818;
+    }
+    .file-path {
+      font-family: ui-monospace, monospace;
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 8px;
+      word-break: break-all;
+    }
+
+    footer {
+      margin-top: 50px;
+      border-top: 1px solid #283344;
+      padding-top: 20px;
+      color: #64748b;
+      font-size: 13px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>
+      HD-2D 卡牌插畫與多場景背景展示
+      <span class="badge">16-bit Pixel Art</span>
+    </h1>
+    <p class="lead">
+      本展示頁彙整專案現有風格錨點、新生成的 4 款主題環境背景，以及 2 款候選卡牌插畫。<br>
+      上方開關可模擬開啟「Godot 遊戲內卡框與數值疊合層」，測試插畫視窗裁切與頂部留白效果。
+    </p>
+  </header>
+
+  <div class="toolbar">
+    <div class="filters">
+      <button class="filter-btn active" data-filter="all">全部展示 (8)</button>
+      <button class="filter-btn" data-filter="scenes">4 大主題場景背景 (4)</button>
+      <button class="filter-btn" data-filter="cards">候選卡牌插畫 (2)</button>
+      <button class="filter-btn" data-filter="reference">現有基準參考 (2)</button>
+    </div>
+    <div class="controls">
+      <label class="toggle-label">
+        <input type="checkbox" id="toggle-frame">
+        模擬卡框與數值 (Card Frame Overlay)
+      </label>
+      <label class="toggle-label">
+        <input type="checkbox" id="toggle-zoom">
+        像素放大檢視 (1.3x)
+      </label>
+    </div>
+  </div>
+
+  <div class="showcase-grid" id="grid">
+
+    <!-- 1. 熔岩焦土 -->
+    <div class="item-card" data-category="scenes">
+      <div class="media-container">
+        <img src="candidates/candidate_bg_volcano.png" alt="熔岩焦土">
+        <div class="card-overlay">
+          <div class="mana-gem">6</div>
+          <div class="card-title">【場景】熔岩焦土</div>
+          <div class="atk-badge">5</div>
+          <div class="hp-badge">6</div>
+        </div>
+      </div>
+      <div class="content-box">
+        <div>
+          <div class="content-title">
+            1. 熔岩焦土 (Volcano Inferno - 已重繪修訂)
+            <span class="tag env">環境背景·新版</span>
+          </div>
+          <p class="content-desc">自然斷裂黑曜石熔岩地殼，沸騰翻滾的橙黃岩漿池、升騰的浮游火星餘燼，以及遠方噴發冒煙的火山山脊。徹底擺脫人造石磚感。</p>
+        </div>
+        <div>
+          <div class="meta-row">
+            <span class="tag">4:3 比例</span>
+            <span class="tag">地平線 25%</span>
+            <span class="tag">暗部留白 75%</span>
+          </div>
+          <div class="file-path">docs/art/candidates/candidate_bg_volcano.png</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 幽暗古林 -->
+    <div class="item-card" data-category="scenes">
+      <div class="media-container">
+        <img src="candidates/candidate_bg_forest.png" alt="幽暗古林">
+        <div class="card-overlay">
+          <div class="mana-gem">4</div>
+          <div class="card-title">【場景】幽暗古林</div>
+          <div class="atk-badge">3</div>
+          <div class="hp-badge">5</div>
+        </div>
+      </div>
+      <div class="content-box">
+        <div>
+          <div class="content-title">
+            2. 幽暗古林 (Dark Forest)
+            <span class="tag env">環境背景</span>
+          </div>
+          <p class="content-desc">盤根錯節的古老巨木與深綠苔蘚地面，點綴綠色微光孢子與暗青枯木穹頂。專為樹靈守衛、翠甲衛士與野獸設計。</p>
+        </div>
+        <div>
+          <div class="meta-row">
+            <span class="tag">4:3 比例</span>
+            <span class="tag">地平線 25%</span>
+            <span class="tag">暗部留白 75%</span>
+          </div>
+          <div class="file-path">docs/art/candidates/candidate_bg_forest.png</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. 幽冥墓穴 -->
+    <div class="item-card" data-category="scenes">
+      <div class="media-container">
+        <img src="candidates/candidate_bg_catacombs.png" alt="幽冥墓穴">
+        <div class="card-overlay">
+          <div class="mana-gem">5</div>
+          <div class="card-title">【場景】幽冥墓穴</div>
+          <div class="atk-badge">3</div>
+          <div class="hp-badge">5</div>
+        </div>
+      </div>
+      <div class="content-box">
+        <div>
+          <div class="content-title">
+            3. 幽冥墓穴 (Catacombs)
+            <span class="tag env">環境背景</span>
+          </div>
+          <p class="content-desc">冰冷灰黑石磚地牢，懸浮紫色鬼火粒子與遠處暗紫地底拱門。專為骷髏兵、死靈法師與亡者召集等暗黑流派設計。</p>
+        </div>
+        <div>
+          <div class="meta-row">
+            <span class="tag">4:3 比例</span>
+            <span class="tag">地平線 25%</span>
+            <span class="tag">暗部留白 75%</span>
+          </div>
+          <div class="file-path">docs/art/candidates/candidate_bg_catacombs.png</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. 荒蕪廢墟 -->
+    <div class="item-card" data-category="scenes">
+      <div class="media-container">
+        <img src="candidates/candidate_bg_desert.png" alt="荒蕪廢墟">
+        <div class="card-overlay">
+          <div class="mana-gem">3</div>
+          <div class="card-title">【場景】荒蕪廢墟</div>
+          <div class="atk-badge">4</div>
+          <div class="hp-badge">3</div>
+        </div>
+      </div>
+      <div class="content-box">
+        <div>
+          <div class="content-title">
+            4. 荒蕪廢墟 (Desert Ruins)
+            <span class="tag env">環境背景</span>
+          </div>
+          <p class="content-desc">乾裂風蝕沙礫石板地面，遠處風化殘柱與古老方尖碑剪影，暗暮黃昏天色。專為沙漠遊牧者、戰士與流浪者設計。</p>
+        </div>
+        <div>
+          <div class="meta-row">
+            <span class="tag">4:3 比例</span>
+            <span class="tag">地平線 25%</span>
+            <span class="tag">暗部留白 75%</span>
+          </div>
+          <div class="file-path">docs/art/candidates/candidate_bg_desert.png</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. 霜寒古龍 -->
+    <div class="item-card" data-category="cards">
+      <div class="media-container">
+        <img src="candidates/candidate_frost_dragon.png" alt="霜寒古龍">
+        <div class="card-overlay">
+          <div class="mana-gem">8</div>
+          <div class="card-title">霜寒古龍【飛行·凍結】</div>
+          <div class="atk-badge">6</div>
+          <div class="hp-badge">8</div>
+        </div>
+      </div>
+      <div class="content-box">
+        <div>
+          <div class="content-title">
+            霜寒古龍 (Ancient Frost Dragon)
+            <span class="tag">從者候選</span>
+          </div>
+          <p class="content-desc">傲立冰峰的古代寒霜巨龍，結晶藍雙翼與角質，暗藍夜空。設計為 7-8 費控場龍族，登場凍結對位前後排敵人。</p>
+        </div>
+        <div>
+          <div class="meta-row">
+            <span class="tag">4:3 比例</span>
+            <span class="tag">高階從者</span>
+            <span class="tag">已就緒待轉正</span>
+          </div>
+          <div class="file-path">docs/art/candidates/candidate_frost_dragon.png</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. 天雷貫擊 -->
+    <div class="item-card" data-category="cards">
+      <div class="media-container">
+        <img src="candidates/candidate_thunder_arcana.png" alt="天雷貫擊">
+        <div class="card-overlay">
+          <div class="mana-gem">3</div>
+          <div class="card-title">天雷貫擊【直傷貫穿】</div>
+          <div class="atk-badge">-</div>
+          <div class="hp-badge">-</div>
+        </div>
+      </div>
+      <div class="content-box">
+        <div>
+          <div class="content-title">
+            天雷貫擊 (Thunder Arcana)
+            <span class="tag">秘術候選</span>
+          </div>
+          <p class="content-desc">金色高壓雷球自天際轟擊地表石板，放射金色電弧與等離子火花。可做為 3 費直傷貫穿秘術或替換雙重雷擊。</p>
+        </div>
+        <div>
+          <div class="meta-row">
+            <span class="tag">4:3 比例</span>
+            <span class="tag">元素秘術</span>
+            <span class="tag">已就緒待轉正</span>
+          </div>
+          <div class="file-path">docs/art/candidates/candidate_thunder_arcana.png</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. 基準背景 (原版) -->
+    <div class="item-card" data-category="reference">
+      <div class="media-container">
+        <img src="../../assets/ui/card_art/backgrounds/card_bg_neutral.png" alt="現有中性暗夜地牢">
+        <div class="card-overlay">
+          <div class="mana-gem">2</div>
+          <div class="card-title">【現行基準】中性暗夜地牢</div>
+          <div class="atk-badge">2</div>
+          <div class="hp-badge">3</div>
+        </div>
+      </div>
+      <div class="content-box">
+        <div>
+          <div class="content-title">
+            現有中性地牢背景 (Base Neutral)
+            <span class="tag ref">專案基準</span>
+          </div>
+          <p class="content-desc">全專案目前 118 張卡牌共用的預設背景：大面積深藍近黑夜空 + 底部 1/4 石磚地面與微型暗山剪影。</p>
+        </div>
+        <div>
+          <div class="meta-row">
+            <span class="tag">118 張共用</span>
+            <span class="tag">全秘術/靈裝共用</span>
+          </div>
+          <div class="file-path">assets/ui/card_art/backgrounds/card_bg_neutral.png</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. 冰霜女巫 (原版風格錨點) -->
+    <div class="item-card" data-category="reference">
+      <div class="media-container">
+        <img src="../../assets/ui/card_art/Frost_Witch_CardArt.png" alt="冰霜女巫風格錨點">
+        <div class="card-overlay">
+          <div class="mana-gem">4</div>
+          <div class="card-title">冰霜女巫【風格錨點】</div>
+          <div class="atk-badge">2</div>
+          <div class="hp-badge">4</div>
+        </div>
+      </div>
+      <div class="content-box">
+        <div>
+          <div class="content-title">
+            冰霜女巫 (Frost Witch)
+            <span class="tag ref">風格錨點</span>
+          </div>
+          <p class="content-desc">全專案所有卡圖像素密度、硬邊輪廓、Q 版頭身比例與冰雪地貌的唯一法定 Style Anchor（風格標準）。</p>
+        </div>
+        <div>
+          <div class="meta-row">
+            <span class="tag">4 費 2/4</span>
+            <span class="tag">Style Anchor</span>
+          </div>
+          <div class="file-path">assets/ui/card_art/Frost_Witch_CardArt.png</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    HD-2D Card Game Demo · 本展示頁由 Antigravity 即時生成 · 支援離線與本機直接開啟
+  </footer>
+
+  <script>
+    // Tab filtering
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const items = document.querySelectorAll('.item-card');
+
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const filter = btn.getAttribute('data-filter');
+
+        items.forEach(item => {
+          if (filter === 'all' || item.getAttribute('data-category') === filter) {
+            item.style.display = 'flex';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+      });
+    });
+
+    // Card frame overlay toggle
+    const toggleFrame = document.getElementById('toggle-frame');
+    toggleFrame.addEventListener('change', () => {
+      document.body.classList.toggle('show-card-frame', toggleFrame.checked);
+    });
+
+    // Zoom toggle
+    const toggleZoom = document.getElementById('toggle-zoom');
+    toggleZoom.addEventListener('change', () => {
+      document.querySelectorAll('.media-container').forEach(c => {
+        c.classList.toggle('zoom-2x', toggleZoom.checked);
+      });
+    });
+  </script>
+</body>
+</html>
