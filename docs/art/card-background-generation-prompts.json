@@ -1,0 +1,912 @@
+[
+  {
+    "id": "abyss_devourer",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art abyss_devourer. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/abyss_devourer_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/abyss_devourer_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "adventurer",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art adventurer. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the desert environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/adventurer_card_art.png",
+      "res://docs/art/candidates/candidate_bg_desert.png"
+    ],
+    "output": "res://assets/ui/card_art/adventurer_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "alchemist",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art alchemist. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the forest environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/alchemist_card_art.png",
+      "res://docs/art/candidates/candidate_bg_forest.png"
+    ],
+    "output": "res://assets/ui/card_art/alchemist_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "arcana_abyss_echo",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art arcana_abyss_echo. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/arcana_abyss_echo_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/arcana_abyss_echo_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "arcana_allforge",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art arcana_allforge. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the volcano environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/arcana_allforge_card_art.png",
+      "res://docs/art/candidates/candidate_bg_volcano.png"
+    ],
+    "output": "res://assets/ui/card_art/arcana_allforge_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "arcana_armor_break_ray",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art arcana_armor_break_ray. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the desert environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/arcana_armor_break_ray_card_art.png",
+      "res://docs/art/candidates/candidate_bg_desert.png"
+    ],
+    "output": "res://assets/ui/card_art/arcana_armor_break_ray_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "arcana_arrow_rain",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art arcana_arrow_rain. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the forest environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/arcana_arrow_rain_card_art.png",
+      "res://docs/art/candidates/candidate_bg_forest.png"
+    ],
+    "output": "res://assets/ui/card_art/arcana_arrow_rain_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "arcana_battle_fury",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art arcana_battle_fury. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the desert environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/arcana_battle_fury_card_art.png",
+      "res://docs/art/candidates/candidate_bg_desert.png"
+    ],
+    "output": "res://assets/ui/card_art/arcana_battle_fury_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "arcana_blood_swap",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art arcana_blood_swap. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/arcana_blood_swap_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/arcana_blood_swap_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "arcana_bloodwing_pact",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art arcana_bloodwing_pact. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/arcana_bloodwing_pact_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/arcana_bloodwing_pact_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "arcana_corroding_curse",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art arcana_corroding_curse. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/arcana_corroding_curse_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/arcana_corroding_curse_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "arcana_end_ritual",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art arcana_end_ritual. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/arcana_end_ritual_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/arcana_end_ritual_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "arcana_fireblast",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art arcana_fireblast. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the volcano environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/arcana_fireblast_card_art.png",
+      "res://docs/art/candidates/candidate_bg_volcano.png"
+    ],
+    "output": "res://assets/ui/card_art/arcana_fireblast_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "arcana_flame_staff",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art arcana_flame_staff. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the volcano environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/arcana_flame_staff_card_art.png",
+      "res://docs/art/candidates/candidate_bg_volcano.png"
+    ],
+    "output": "res://assets/ui/card_art/arcana_flame_staff_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "arcana_forged_will",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art arcana_forged_will. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the volcano environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/arcana_forged_will_card_art.png",
+      "res://docs/art/candidates/candidate_bg_volcano.png"
+    ],
+    "output": "res://assets/ui/card_art/arcana_forged_will_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "arcana_gate_of_dead_army",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art arcana_gate_of_dead_army. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/arcana_gate_of_dead_army_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/arcana_gate_of_dead_army_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "arcana_hellhound_call",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art arcana_hellhound_call. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the volcano environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/arcana_hellhound_call_card_art.png",
+      "res://docs/art/candidates/candidate_bg_volcano.png"
+    ],
+    "output": "res://assets/ui/card_art/arcana_hellhound_call_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "arcana_life_spring",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art arcana_life_spring. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the forest environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/arcana_life_spring_card_art.png",
+      "res://docs/art/candidates/candidate_bg_forest.png"
+    ],
+    "output": "res://assets/ui/card_art/arcana_life_spring_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "arcana_raise_dead",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art arcana_raise_dead. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/arcana_raise_dead_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/arcana_raise_dead_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "arcana_shockwave",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art arcana_shockwave. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the desert environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/arcana_shockwave_card_art.png",
+      "res://docs/art/candidates/candidate_bg_desert.png"
+    ],
+    "output": "res://assets/ui/card_art/arcana_shockwave_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "arcana_skeletal_reinforcements",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art arcana_skeletal_reinforcements. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/arcana_skeletal_reinforcements_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/arcana_skeletal_reinforcements_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "arcana_skyfire_fall",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art arcana_skyfire_fall. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the volcano environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/arcana_skyfire_fall_card_art.png",
+      "res://docs/art/candidates/candidate_bg_volcano.png"
+    ],
+    "output": "res://assets/ui/card_art/arcana_skyfire_fall_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "arcana_soul_harvest",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art arcana_soul_harvest. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/arcana_soul_harvest_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/arcana_soul_harvest_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "arcana_toxic_miasma",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art arcana_toxic_miasma. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the forest environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/arcana_toxic_miasma_card_art.png",
+      "res://docs/art/candidates/candidate_bg_forest.png"
+    ],
+    "output": "res://assets/ui/card_art/arcana_toxic_miasma_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "archer",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art archer. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the forest environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/archer_card_art.png",
+      "res://docs/art/candidates/candidate_bg_forest.png"
+    ],
+    "output": "res://assets/ui/card_art/archer_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "armored_axeman",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art armored_axeman. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the desert environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/armored_axeman_card_art.png",
+      "res://docs/art/candidates/candidate_bg_desert.png"
+    ],
+    "output": "res://assets/ui/card_art/armored_axeman_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "armored_orc",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art armored_orc. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the desert environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/armored_orc_card_art.png",
+      "res://docs/art/candidates/candidate_bg_desert.png"
+    ],
+    "output": "res://assets/ui/card_art/armored_orc_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "armored_skeleton",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art armored_skeleton. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/armored_skeleton_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/armored_skeleton_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "bat",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art bat. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the forest environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/bat_card_art.png",
+      "res://docs/art/candidates/candidate_bg_forest.png"
+    ],
+    "output": "res://assets/ui/card_art/bat_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "black_knight_a",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art black_knight_a. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/black_knight_a_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/black_knight_a_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "black_knight_b",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art black_knight_b. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/black_knight_b_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/black_knight_b_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "black_knight_c",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art black_knight_c. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/black_knight_c_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/black_knight_c_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "blood_monster_a",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art blood_monster_a. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/blood_monster_a_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/blood_monster_a_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "blood_monster_b",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art blood_monster_b. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/blood_monster_b_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/blood_monster_b_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "catfolk_rogue",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art catfolk_rogue. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the forest environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/catfolk_rogue_card_art.png",
+      "res://docs/art/candidates/candidate_bg_forest.png"
+    ],
+    "output": "res://assets/ui/card_art/catfolk_rogue_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "demon_a",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art demon_a. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the volcano environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/demon_a_card_art.png",
+      "res://docs/art/candidates/candidate_bg_volcano.png"
+    ],
+    "output": "res://assets/ui/card_art/demon_a_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "demon_b",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art demon_b. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the volcano environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/demon_b_card_art.png",
+      "res://docs/art/candidates/candidate_bg_volcano.png"
+    ],
+    "output": "res://assets/ui/card_art/demon_b_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "demon_c",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art demon_c. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the volcano environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/demon_c_card_art.png",
+      "res://docs/art/candidates/candidate_bg_volcano.png"
+    ],
+    "output": "res://assets/ui/card_art/demon_c_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "demon_d",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art demon_d. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the volcano environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/demon_d_card_art.png",
+      "res://docs/art/candidates/candidate_bg_volcano.png"
+    ],
+    "output": "res://assets/ui/card_art/demon_d_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "demon_e",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art demon_e. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the volcano environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/demon_e_card_art.png",
+      "res://docs/art/candidates/candidate_bg_volcano.png"
+    ],
+    "output": "res://assets/ui/card_art/demon_e_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "demoness_a",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art demoness_a. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/demoness_a_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/demoness_a_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "demoness_b",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art demoness_b. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/demoness_b_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/demoness_b_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "desert_nomad",
+    "prompt": "Use case: compositing. Edit target Image 1 is an existing pixel art game card illustration. Image 2 is the exact replacement environment background. Replace ONLY the navy empty sky and stone-floor background of Image 1 with the environment of Image 2. Keep the foreground character from Image 1 unchanged: identical design, pose, silhouette, weapon/effect, palette, coarse pixel size and proportions. Do not redraw or add any character details. Keep its original relative centered placement and scale, full body visible, feet at about 84% of canvas height. Preserve the original wide landscape canvas aspect ratio. Fit the second environment behind it; environment contrast should be subdued so the existing character is legible. No new effects, glow, particles, borders, card frame, letters or numbers. Retain low-saturation crisp pixel-art rendering, no smoothing or photorealism. Output one finished card illustration only. Target card desert_nomad, background desert.",
+    "inputs": [
+      "res://assets/ui/card_art/desert_nomad_card_art.png",
+      "res://docs/art/candidates/candidate_bg_desert.png"
+    ],
+    "output": "res://assets/ui/card_art/desert_nomad_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "dwarf_smith",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art dwarf_smith. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the volcano environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/dwarf_smith_card_art.png",
+      "res://docs/art/candidates/candidate_bg_volcano.png"
+    ],
+    "output": "res://assets/ui/card_art/dwarf_smith_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "elite_orc",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art elite_orc. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the desert environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/elite_orc_card_art.png",
+      "res://docs/art/candidates/candidate_bg_desert.png"
+    ],
+    "output": "res://assets/ui/card_art/elite_orc_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "equip_blood_pact_greatblade",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art equip_blood_pact_greatblade. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/equip_blood_pact_greatblade_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/equip_blood_pact_greatblade_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "equip_undying_crown",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art equip_undying_crown. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/equip_undying_crown_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/equip_undying_crown_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "eyeball_monster",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art eyeball_monster. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/eyeball_monster_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/eyeball_monster_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "flame_golem",
+    "prompt": "Use case: compositing. Edit target Image 1 is an existing pixel art game card illustration. Image 2 is the exact replacement environment background. Replace ONLY the navy empty sky and stone-floor background of Image 1 with the environment of Image 2. Keep the foreground character from Image 1 unchanged: identical design, pose, silhouette, weapon/effect, palette, coarse pixel size and proportions. Do not redraw or add any character details. Keep its original relative centered placement and scale, full body visible, feet at about 84% of canvas height. Preserve the original wide landscape canvas aspect ratio. Fit the second environment behind it; environment contrast should be subdued so the existing character is legible. No new effects, glow, particles, borders, card frame, letters or numbers. Retain low-saturation crisp pixel-art rendering, no smoothing or photorealism. Output one finished card illustration only. Target card flame_golem, background volcano.",
+    "inputs": [
+      "res://assets/ui/card_art/flame_golem_card_art.png",
+      "res://docs/art/candidates/candidate_bg_volcano.png"
+    ],
+    "output": "res://assets/ui/card_art/flame_golem_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "frog_shaman",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art frog_shaman. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the forest environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/frog_shaman_card_art.png",
+      "res://docs/art/candidates/candidate_bg_forest.png"
+    ],
+    "output": "res://assets/ui/card_art/frog_shaman_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "gargoyle_sentinel",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art gargoyle_sentinel. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the desert environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/gargoyle_sentinel_card_art.png",
+      "res://docs/art/candidates/candidate_bg_desert.png"
+    ],
+    "output": "res://assets/ui/card_art/gargoyle_sentinel_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "ghostfire",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art ghostfire. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/ghostfire_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/ghostfire_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "goblin_bomber",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art goblin_bomber. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the volcano environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/goblin_bomber_card_art.png",
+      "res://docs/art/candidates/candidate_bg_volcano.png"
+    ],
+    "output": "res://assets/ui/card_art/goblin_bomber_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "greatsword_skeleton",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art greatsword_skeleton. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/greatsword_skeleton_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/greatsword_skeleton_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "halfling_scout",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art halfling_scout. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the forest environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/halfling_scout_card_art.png",
+      "res://docs/art/candidates/candidate_bg_forest.png"
+    ],
+    "output": "res://assets/ui/card_art/halfling_scout_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "harpy_hunter",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art harpy_hunter. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the forest environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/harpy_hunter_card_art.png",
+      "res://docs/art/candidates/candidate_bg_forest.png"
+    ],
+    "output": "res://assets/ui/card_art/harpy_hunter_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "hellbat",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art hellbat. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the volcano environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/hellbat_card_art.png",
+      "res://docs/art/candidates/candidate_bg_volcano.png"
+    ],
+    "output": "res://assets/ui/card_art/hellbat_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "hellhound",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art hellhound. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the volcano environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/hellhound_card_art.png",
+      "res://docs/art/candidates/candidate_bg_volcano.png"
+    ],
+    "output": "res://assets/ui/card_art/hellhound_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "knight",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art knight. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the desert environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/knight_card_art.png",
+      "res://docs/art/candidates/candidate_bg_desert.png"
+    ],
+    "output": "res://assets/ui/card_art/knight_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "kobold_miner",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art kobold_miner. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the desert environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/kobold_miner_card_art.png",
+      "res://docs/art/candidates/candidate_bg_desert.png"
+    ],
+    "output": "res://assets/ui/card_art/kobold_miner_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "lancer",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art lancer. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the desert environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/lancer_card_art.png",
+      "res://docs/art/candidates/candidate_bg_desert.png"
+    ],
+    "output": "res://assets/ui/card_art/lancer_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "lava_slime",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art lava_slime. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the volcano environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/lava_slime_card_art.png",
+      "res://docs/art/candidates/candidate_bg_volcano.png"
+    ],
+    "output": "res://assets/ui/card_art/lava_slime_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "lizard_warrior",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art lizard_warrior. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the forest environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/lizard_warrior_card_art.png",
+      "res://docs/art/candidates/candidate_bg_forest.png"
+    ],
+    "output": "res://assets/ui/card_art/lizard_warrior_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "minotaur",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art minotaur. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the desert environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/minotaur_card_art.png",
+      "res://docs/art/candidates/candidate_bg_desert.png"
+    ],
+    "output": "res://assets/ui/card_art/minotaur_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "mushroom_mage",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art mushroom_mage. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the forest environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/mushroom_mage_card_art.png",
+      "res://docs/art/candidates/candidate_bg_forest.png"
+    ],
+    "output": "res://assets/ui/card_art/mushroom_mage_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "necromancer",
+    "prompt": "Use case: compositing. Edit target Image 1 is an existing pixel art game card illustration. Image 2 is the exact replacement environment background. Replace ONLY the navy empty sky and stone-floor background of Image 1 with the environment of Image 2. Keep the foreground character from Image 1 unchanged: identical design, pose, silhouette, weapon/effect, palette, coarse pixel size and proportions. Do not redraw or add any character details. Keep its original relative centered placement and scale, full body visible, feet at about 84% of canvas height. Preserve the original wide landscape canvas aspect ratio. Fit the second environment behind it; environment contrast should be subdued so the existing character is legible. No new effects, glow, particles, borders, card frame, letters or numbers. Retain low-saturation crisp pixel-art rendering, no smoothing or photorealism. Output one finished card illustration only. Target card necromancer, background catacombs.",
+    "inputs": [
+      "res://assets/ui/card_art/necromancer_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/necromancer_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "orc_rider",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art orc_rider. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the desert environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/orc_rider_card_art.png",
+      "res://docs/art/candidates/candidate_bg_desert.png"
+    ],
+    "output": "res://assets/ui/card_art/orc_rider_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "orc",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art orc. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the desert environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/orc_card_art.png",
+      "res://docs/art/candidates/candidate_bg_desert.png"
+    ],
+    "output": "res://assets/ui/card_art/orc_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "quick_soul_substitution",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art quick_soul_substitution. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/quick_soul_substitution_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/quick_soul_substitution_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "ratfolk_plague_doctor",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art ratfolk_plague_doctor. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the forest environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/ratfolk_plague_doctor_card_art.png",
+      "res://docs/art/candidates/candidate_bg_forest.png"
+    ],
+    "output": "res://assets/ui/card_art/ratfolk_plague_doctor_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "red_obsidian_ancient_dragon",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art red_obsidian_ancient_dragon. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the volcano environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/red_obsidian_ancient_dragon_card_art.png",
+      "res://docs/art/candidates/candidate_bg_volcano.png"
+    ],
+    "output": "res://assets/ui/card_art/red_obsidian_ancient_dragon_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "skeleton_archer",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art skeleton_archer. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/skeleton_archer_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/skeleton_archer_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "skeleton",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art skeleton. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/skeleton_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/skeleton_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "slime",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art slime. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the forest environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/slime_card_art.png",
+      "res://docs/art/candidates/candidate_bg_forest.png"
+    ],
+    "output": "res://assets/ui/card_art/slime_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "soldier",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art soldier. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the desert environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/soldier_card_art.png",
+      "res://docs/art/candidates/candidate_bg_desert.png"
+    ],
+    "output": "res://assets/ui/card_art/soldier_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "steel_forge_titan",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art steel_forge_titan. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the volcano environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/steel_forge_titan_card_art.png",
+      "res://docs/art/candidates/candidate_bg_volcano.png"
+    ],
+    "output": "res://assets/ui/card_art/steel_forge_titan_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "swordsman",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art swordsman. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the desert environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/swordsman_card_art.png",
+      "res://docs/art/candidates/candidate_bg_desert.png"
+    ],
+    "output": "res://assets/ui/card_art/swordsman_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "thunderhorn_behemoth",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art thunderhorn_behemoth. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the forest environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/thunderhorn_behemoth_card_art.png",
+      "res://docs/art/candidates/candidate_bg_forest.png"
+    ],
+    "output": "res://assets/ui/card_art/thunderhorn_behemoth_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "tombsea_colossus",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art tombsea_colossus. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/tombsea_colossus_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/tombsea_colossus_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "treant_guardian",
+    "prompt": "Use case: compositing. Edit target Image 1 is an existing pixel art game card illustration. Image 2 is the exact replacement environment background. Replace ONLY the navy empty sky and stone-floor background of Image 1 with the environment of Image 2. Keep the foreground character from Image 1 unchanged: identical design, pose, silhouette, weapon/effect, palette, coarse pixel size and proportions. Do not redraw or add any character details. Keep its original relative centered placement and scale, full body visible, feet at about 84% of canvas height. Preserve the original wide landscape canvas aspect ratio. Fit the second environment behind it; environment contrast should be subdued so the existing character is legible. No new effects, glow, particles, borders, card frame, letters or numbers. Retain low-saturation crisp pixel-art rendering, no smoothing or photorealism. Output one finished card illustration only. Target card treant_guardian, background forest.",
+    "inputs": [
+      "res://assets/ui/card_art/treant_guardian_card_art.png",
+      "res://docs/art/candidates/candidate_bg_forest.png"
+    ],
+    "output": "res://assets/ui/card_art/treant_guardian_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "wandering_bard",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art wandering_bard. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the forest environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/wandering_bard_card_art.png",
+      "res://docs/art/candidates/candidate_bg_forest.png"
+    ],
+    "output": "res://assets/ui/card_art/wandering_bard_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "ward_blast_sigil",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art ward_blast_sigil. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the volcano environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/ward_blast_sigil_card_art.png",
+      "res://docs/art/candidates/candidate_bg_volcano.png"
+    ],
+    "output": "res://assets/ui/card_art/ward_blast_sigil_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "ward_bloodthorn_array",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art ward_bloodthorn_array. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the forest environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/ward_bloodthorn_array_card_art.png",
+      "res://docs/art/candidates/candidate_bg_forest.png"
+    ],
+    "output": "res://assets/ui/card_art/ward_bloodthorn_array_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "ward_reincarnation_sigil",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art ward_reincarnation_sigil. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/ward_reincarnation_sigil_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/ward_reincarnation_sigil_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "ward_royal_tomb_trap",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art ward_royal_tomb_trap. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/ward_royal_tomb_trap_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/ward_royal_tomb_trap_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "ward_soulburn_sigil",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art ward_soulburn_sigil. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/ward_soulburn_sigil_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/ward_soulburn_sigil_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "ward_thorn_sigil",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art ward_thorn_sigil. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the forest environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/ward_thorn_sigil_card_art.png",
+      "res://docs/art/candidates/candidate_bg_forest.png"
+    ],
+    "output": "res://assets/ui/card_art/ward_thorn_sigil_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "warlock",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art warlock. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the catacombs environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/warlock_card_art.png",
+      "res://docs/art/candidates/candidate_bg_catacombs.png"
+    ],
+    "output": "res://assets/ui/card_art/warlock_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "werebear",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art werebear. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the forest environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/werebear_card_art.png",
+      "res://docs/art/candidates/candidate_bg_forest.png"
+    ],
+    "output": "res://assets/ui/card_art/werebear_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "werewolf",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art werewolf. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the forest environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/werewolf_card_art.png",
+      "res://docs/art/candidates/candidate_bg_forest.png"
+    ],
+    "output": "res://assets/ui/card_art/werewolf_themed_card_art.png",
+    "tool": "built-in imagegen"
+  },
+  {
+    "id": "wizard",
+    "prompt": "Use case: compositing. Image 1 is the EDIT TARGET, existing game card art wizard. Image 2 is ONLY the replacement background. Change ONLY the background of image 1 to the volcano environment of image 2. Preserve the foreground character OR spell icon exactly: same pose, all limbs, weapon, symbols, silhouette, colors, coarse pixel detail, original relative size and placement. No redesign, no extra character, no added ornament, no card UI/text. Keep original landscape dimensions and framing. Subdue background brightness, saturation and detail especially directly behind the subject; foreground must dominate at small card size. For icons preserve every symbol and floating placement, do not turn symbols into scenery. Crisp dark fantasy pixel art, not painterly/3D.",
+    "inputs": [
+      "res://assets/ui/card_art/wizard_card_art.png",
+      "res://docs/art/candidates/candidate_bg_volcano.png"
+    ],
+    "output": "res://assets/ui/card_art/wizard_themed_card_art.png",
+    "tool": "built-in imagegen"
+  }
+]

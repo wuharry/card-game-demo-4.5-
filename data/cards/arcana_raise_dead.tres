@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://src/card/card_data.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/ui/icons/antahonist_spells/spell_icons_32x32.png" id="2_sheet"]
 [ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
-[ext_resource type="Texture2D" path="res://assets/ui/card_art/arcana_raise_dead_card_art.png" id="4_card_art"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/arcana_raise_dead_themed_card_art.png" id="4_card_art"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_art"]
 atlas = ExtResource("2_sheet")

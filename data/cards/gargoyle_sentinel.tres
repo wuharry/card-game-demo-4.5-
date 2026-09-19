@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://src/card/card_data.gd" id="1_card"]
 [ext_resource type="Texture2D" path="res://assets/characters/generated/gargoyle_sentinel/Gargoyle_Sentinel_Idle.png" id="2_sheet"]
 [ext_resource type="Script" path="res://src/card/skill_data.gd" id="3_skill"]
-[ext_resource type="Texture2D" path="res://assets/ui/card_art/gargoyle_sentinel_card_art.png" id="4_art"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/gargoyle_sentinel_themed_card_art.png" id="4_art"]
 
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("3_skill")
