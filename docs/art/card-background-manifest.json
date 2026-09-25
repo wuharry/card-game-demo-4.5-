@@ -124,9 +124,9 @@
     "name": "永冬敕令",
     "art": "res://assets/ui/card_art/arcana_eternal_winter_edict_card_art.png",
     "skills": "永冬敕令 / 敵方全體受到 2 點傷害，並凍結 1 回合。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "snow",
+    "reason": "冰雪與凍結題材，沿用冰霜女巫雪景。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/arcana_eternal_winter_edict_themed_card_art.png"
   },
   {
@@ -134,9 +134,9 @@
     "name": "命運窺視",
     "art": "res://assets/ui/card_art/arcana_fate_scry_card_art.png",
     "skills": "命運窺視 / 檢視牌堆頂 3 張:選 1 張加入手牌,其餘放回牌堆底。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "astral",
+    "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/arcana_fate_scry_themed_card_art.png"
   },
   {
@@ -174,9 +174,9 @@
     "name": "寒霜鎖鏈",
     "art": "res://assets/ui/card_art/arcana_frost_shackles_card_art.png",
     "skills": "寒霜鎖鏈 / 對一名敵方單位造成 1 點傷害,並施加凍結 1 回合。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "snow",
+    "reason": "冰雪與凍結題材，沿用冰霜女巫雪景。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/arcana_frost_shackles_themed_card_art.png"
   },
   {
@@ -184,9 +184,9 @@
     "name": "凍土脈衝",
     "art": "res://assets/ui/card_art/arcana_frozen_pulse_card_art.png",
     "skills": "凍土脈衝 / 對一名敵方單位造成 2 點傷害,並施加凍結 1 回合。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "snow",
+    "reason": "冰雪與凍結題材，沿用冰霜女巫雪景。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/arcana_frozen_pulse_themed_card_art.png"
   },
   {
@@ -214,9 +214,9 @@
     "name": "聖光庇佑",
     "art": "res://assets/ui/card_art/arcana_holy_blessing_card_art.png",
     "skills": "聖光庇佑 / 治療一名我方單位 3 點生命。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "desert",
+    "reason": "武者、聖衛或王城題材，統一使用荒原遺跡。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/arcana_holy_blessing_themed_card_art.png"
   },
   {
@@ -224,9 +224,9 @@
     "name": "秘傳靈感",
     "art": "res://assets/ui/card_art/arcana_insight_card_art.png",
     "skills": "秘傳靈感 / 抽 2 張牌。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "astral",
+    "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/arcana_insight_themed_card_art.png"
   },
   {
@@ -244,9 +244,9 @@
     "name": "回憶潮汐",
     "art": "res://assets/ui/card_art/arcana_memory_tide_card_art.png",
     "skills": "回憶潮汐 / 抽 3 張牌。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "ocean",
+    "reason": "潮汐與航海題材，統一使用暗色海岸場景。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/arcana_memory_tide_themed_card_art.png"
   },
   {
@@ -254,9 +254,9 @@
     "name": "夜幕庇護",
     "art": "res://assets/ui/card_art/arcana_night_shelter_card_art.png",
     "skills": "夜幕庇護 / 使一名我方單位獲得夜幕 2 回合。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "astral",
+    "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/arcana_night_shelter_themed_card_art.png"
   },
   {
@@ -314,9 +314,9 @@
     "name": "群星雷暴",
     "art": "res://assets/ui/card_art/arcana_star_tempest_card_art.png",
     "skills": "群星雷暴 / 對敵方場上所有單位造成 1 點傷害。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "astral",
+    "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/arcana_star_tempest_themed_card_art.png"
   },
   {
@@ -324,9 +324,9 @@
     "name": "星海回溯",
     "art": "res://assets/ui/card_art/arcana_starsea_rewind_card_art.png",
     "skills": "星海回溯 / 墓地頂 5 張洗回牌堆，抽 3，恢復本體 5。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "astral",
+    "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/arcana_starsea_rewind_themed_card_art.png"
   },
   {
@@ -334,9 +334,9 @@
     "name": "雷霆貫穿",
     "art": "res://assets/ui/card_art/arcana_thunder_pierce_card_art.png",
     "skills": "雷霆貫穿 / 對一名敵方單位造成 2 點傷害,同路線後排也受到 2 點。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "astral",
+    "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/arcana_thunder_pierce_themed_card_art.png"
   },
   {
@@ -354,9 +354,9 @@
     "name": "雙重雷擊",
     "art": "res://assets/ui/card_art/arcana_twin_thunder_card_art.png",
     "skills": "雙重雷擊 / 對一名敵方單位連續造成兩次 2 點傷害。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "astral",
+    "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/arcana_twin_thunder_themed_card_art.png"
   },
   {
@@ -584,9 +584,9 @@
     "name": "巨神戰鎧",
     "art": "res://assets/ui/card_art/equip_giant_warplate_card_art.png",
     "skills": "巨神戰鎧 / 裝備：生命上限 +8，並獲得【鐵壁】。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "volcano",
+    "reason": "火焰或鍛造題材，統一使用熔岩焦土。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/equip_giant_warplate_themed_card_art.png"
   },
   {
@@ -594,9 +594,9 @@
     "name": "秘銀胸鎧",
     "art": "res://assets/ui/card_art/equip_mithril_plate_card_art.png",
     "skills": "秘銀胸鎧 / 裝備我方從者:生命上限 +2;宿主離場時一併離場。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "volcano",
+    "reason": "火焰或鍛造題材，統一使用熔岩焦土。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/equip_mithril_plate_themed_card_art.png"
   },
   {
@@ -604,9 +604,9 @@
     "name": "泰坦星核",
     "art": "res://assets/ui/card_art/equip_titan_starcore_card_art.png",
     "skills": "泰坦星核 / 裝備：攻擊 +2、生命上限 +10；己方回合開始恢復 3 並獲盾 2。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "astral",
+    "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/equip_titan_starcore_themed_card_art.png"
   },
   {
@@ -744,9 +744,9 @@
     "name": "聖殿騎士",
     "art": "res://assets/ui/card_art/knight_templar_card_art.png",
     "skills": "神聖屏障 / 使自身獲得 5 點護盾。 / 聖光庇護 / 登場時,恢復己方英雄 3 點生命。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "desert",
+    "reason": "武者、聖衛或王城題材，統一使用荒原遺跡。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/knight_templar_themed_card_art.png"
   },
   {
@@ -854,9 +854,9 @@
     "name": "海盜船長",
     "art": "res://assets/ui/card_art/pirate_captain_card_art.png",
     "skills": "掠奪突擊 / 強化攻擊，本次攻擊獲得 +2 攻擊力並具有吸血。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "ocean",
+    "reason": "潮汐與航海題材，統一使用暗色海岸場景。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/pirate_captain_themed_card_art.png"
   },
   {
@@ -864,9 +864,9 @@
     "name": "牧師",
     "art": "res://assets/ui/card_art/priest_card_art.png",
     "skills": "治療術 / 恢復一名友軍 4 點生命。 / 聖光護佑 / 登場時,恢復己方英雄 2 點生命。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "desert",
+    "reason": "武者、聖衛或王城題材，統一使用荒原遺跡。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/priest_themed_card_art.png"
   },
   {
@@ -874,9 +874,9 @@
     "name": "絕對否決",
     "art": "res://assets/ui/card_art/quick_absolute_denial_card_art.png",
     "skills": "絕對否決 / 反制一個敵方召喚、秘術、主動技、普通攻擊或伏印觸發。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "astral",
+    "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/quick_absolute_denial_themed_card_art.png"
   },
   {
@@ -884,9 +884,9 @@
     "name": "星界斷章",
     "art": "res://assets/ui/card_art/quick_astral_severance_card_art.png",
     "skills": "星界斷章 / 反制:對方施放秘術時可發動,抵銷該秘術。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "astral",
+    "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/quick_astral_severance_themed_card_art.png"
   },
   {
@@ -894,9 +894,9 @@
     "name": "因果逆轉",
     "art": "res://assets/ui/card_art/quick_causality_reversal_card_art.png",
     "skills": "因果逆轉 / 反制敵方攻擊型主動技；來源承受該技能原傷害。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "astral",
+    "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/quick_causality_reversal_themed_card_art.png"
   },
   {
@@ -904,9 +904,9 @@
     "name": "逆轉咒律",
     "art": "res://assets/ui/card_art/quick_reversal_edict_card_art.png",
     "skills": "逆轉咒律 / 反制:對方施放秘術時可發動,抵銷該秘術。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "astral",
+    "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/quick_reversal_edict_themed_card_art.png"
   },
   {
@@ -914,9 +914,9 @@
     "name": "王城斷令",
     "art": "res://assets/ui/card_art/quick_royal_decree_card_art.png",
     "skills": "王城斷令 / 反制敵方秘術；然後抽 2 張。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "desert",
+    "reason": "武者、聖衛或王城題材，統一使用荒原遺跡。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/quick_royal_decree_themed_card_art.png"
   },
   {
@@ -934,9 +934,9 @@
     "name": "時隙屏障",
     "art": "res://assets/ui/card_art/quick_time_gap_barrier_card_art.png",
     "skills": "時隙屏障 / 反應普通攻擊：攻擊傷害變為 0，守方仍反擊。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "astral",
+    "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/quick_time_gap_barrier_themed_card_art.png"
   },
   {
@@ -944,9 +944,9 @@
     "name": "虛空反噬",
     "art": "res://assets/ui/card_art/quick_void_rebuke_card_art.png",
     "skills": "虛空反噬 / 反制:對方施放秘術時自動詢問,發動即抵銷。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "catacombs",
+    "reason": "亡靈、咒術或秘偶題材，統一使用幽冥墓穴。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/quick_void_rebuke_themed_card_art.png"
   },
   {
@@ -994,9 +994,9 @@
     "name": "天穹巨鯨",
     "art": "res://assets/ui/card_art/sky_leviathan_card_art.png",
     "skills": "天穹庇護 / 登場時，相鄰友軍獲得 3 點護盾。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "astral",
+    "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/sky_leviathan_themed_card_art.png"
   },
   {
@@ -1044,9 +1044,9 @@
     "name": "蒼衣遊俠",
     "art": "res://assets/ui/card_art/time_fantasy/tf_azure_adventurer.png",
     "skills": "踏前斬 / 本次攻擊額外造成 2 點傷害。",
-    "theme": "neutral",
-    "reason": "原生小尺寸 Time Fantasy 像素素材，保留既有底色以避免生成式重畫改變角色比例與像素。",
-    "status": "retained",
+    "theme": "desert",
+    "reason": "武者、聖衛或王城題材，統一使用荒原遺跡。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/tf_azure_adventurer_themed_card_art.png"
   },
   {
@@ -1054,9 +1054,9 @@
     "name": "赤羽統領",
     "art": "res://assets/ui/card_art/time_fantasy/tf_crimson_captain.png",
     "skills": "破陣斬 / 本次攻擊額外造成 1 點傷害。 / 進軍號令 / 登場時，左右相鄰友軍獲得【鍛強】2 回合。",
-    "theme": "neutral",
-    "reason": "原生小尺寸 Time Fantasy 像素素材，保留既有底色以避免生成式重畫改變角色比例與像素。",
-    "status": "retained",
+    "theme": "desert",
+    "reason": "武者、聖衛或王城題材，統一使用荒原遺跡。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/tf_crimson_captain_themed_card_art.png"
   },
   {
@@ -1064,9 +1064,9 @@
     "name": "曙光聖衛",
     "art": "res://assets/ui/card_art/time_fantasy/tf_dawn_paladin.png",
     "skills": "晨光庇護 / 一名友軍獲得 3 點護盾。 / 曙光降臨 / 登場時，恢復己方英雄 3 點生命。",
-    "theme": "neutral",
-    "reason": "原生小尺寸 Time Fantasy 像素素材，保留既有底色以避免生成式重畫改變角色比例與像素。",
-    "status": "retained",
+    "theme": "desert",
+    "reason": "武者、聖衛或王城題材，統一使用荒原遺跡。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/tf_dawn_paladin_themed_card_art.png"
   },
   {
@@ -1074,9 +1074,9 @@
     "name": "暮色術士",
     "art": "res://assets/ui/card_art/time_fantasy/tf_dusk_mage.png",
     "skills": "暮焰 / 造成 3 點傷害，並施加【灼燒】2 回合。",
-    "theme": "neutral",
-    "reason": "原生小尺寸 Time Fantasy 像素素材，保留既有底色以避免生成式重畫改變角色比例與像素。",
-    "status": "retained",
+    "theme": "volcano",
+    "reason": "火焰或鍛造題材，統一使用熔岩焦土。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/tf_dusk_mage_themed_card_art.png"
   },
   {
@@ -1084,9 +1084,9 @@
     "name": "赤羽吟遊者",
     "art": "res://assets/ui/card_art/time_fantasy/tf_feather_bard.png",
     "skills": "奮起之歌 / 使一名友軍獲得【鍛強】2 回合。",
-    "theme": "neutral",
-    "reason": "原生小尺寸 Time Fantasy 像素素材，保留既有底色以避免生成式重畫改變角色比例與像素。",
-    "status": "retained",
+    "theme": "forest",
+    "reason": "林地、遊獵與自然題材，統一使用幽暗古林。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/tf_feather_bard_themed_card_art.png"
   },
   {
@@ -1094,9 +1094,9 @@
     "name": "青林獵手",
     "art": "res://assets/ui/card_art/time_fantasy/tf_grove_ranger.png",
     "skills": "淬毒箭 / 造成 2 點傷害，並施加【中毒】2 回合。",
-    "theme": "neutral",
-    "reason": "原生小尺寸 Time Fantasy 像素素材，保留既有底色以避免生成式重畫改變角色比例與像素。",
-    "status": "retained",
+    "theme": "forest",
+    "reason": "林地、遊獵與自然題材，統一使用幽暗古林。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/tf_grove_ranger_themed_card_art.png"
   },
   {
@@ -1104,9 +1104,9 @@
     "name": "緋紅劍士",
     "art": "res://assets/ui/card_art/time_fantasy/tf_scarlet_duelist.png",
     "skills": "雙連斬 / 以攻擊力連擊兩次，僅第一次受到反擊。",
-    "theme": "neutral",
-    "reason": "原生小尺寸 Time Fantasy 像素素材，保留既有底色以避免生成式重畫改變角色比例與像素。",
-    "status": "retained",
+    "theme": "desert",
+    "reason": "武者、聖衛或王城題材，統一使用荒原遺跡。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/tf_scarlet_duelist_themed_card_art.png"
   },
   {
@@ -1114,9 +1114,9 @@
     "name": "烈陽武僧",
     "art": "res://assets/ui/card_art/time_fantasy/tf_sun_monk.png",
     "skills": "回元擊 / 本次攻擊額外造成 1 點傷害，吸血。",
-    "theme": "neutral",
-    "reason": "原生小尺寸 Time Fantasy 像素素材，保留既有底色以避免生成式重畫改變角色比例與像素。",
-    "status": "retained",
+    "theme": "desert",
+    "reason": "武者、聖衛或王城題材，統一使用荒原遺跡。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/tf_sun_monk_themed_card_art.png"
   },
   {
@@ -1124,9 +1124,9 @@
     "name": "潮汐祭司",
     "art": "res://assets/ui/card_art/time_fantasy/tf_tide_healer.png",
     "skills": "潮生祈禱 / 恢復一名友軍 3 點生命。",
-    "theme": "neutral",
-    "reason": "原生小尺寸 Time Fantasy 像素素材，保留既有底色以避免生成式重畫改變角色比例與像素。",
-    "status": "retained",
+    "theme": "ocean",
+    "reason": "潮汐與航海題材，統一使用暗色海岸場景。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/tf_tide_healer_themed_card_art.png"
   },
   {
@@ -1134,9 +1134,9 @@
     "name": "幽幕咒師",
     "art": "res://assets/ui/card_art/time_fantasy/tf_veil_warlock.png",
     "skills": "萎靡咒 / 使對路敵人獲得【衰弱】2 回合。",
-    "theme": "neutral",
-    "reason": "原生小尺寸 Time Fantasy 像素素材，保留既有底色以避免生成式重畫改變角色比例與像素。",
-    "status": "retained",
+    "theme": "catacombs",
+    "reason": "亡靈、咒術或秘偶題材，統一使用幽冥墓穴。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/tf_veil_warlock_themed_card_art.png"
   },
   {
@@ -1144,9 +1144,9 @@
     "name": "翠甲衛士",
     "art": "res://assets/ui/card_art/time_fantasy/tf_verdant_guard.png",
     "skills": "固守 / 自身獲得 2 點護盾。",
-    "theme": "neutral",
-    "reason": "原生小尺寸 Time Fantasy 像素素材，保留既有底色以避免生成式重畫改變角色比例與像素。",
-    "status": "retained",
+    "theme": "forest",
+    "reason": "林地、遊獵與自然題材，統一使用幽暗古林。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/tf_verdant_guard_themed_card_art.png"
   },
   {
@@ -1154,9 +1154,9 @@
     "name": "荒原鬥士",
     "art": "res://assets/ui/card_art/time_fantasy/tf_wild_champion.png",
     "skills": "橫掃重擊 / 以攻擊力橫掃目標及左右相鄰路線。",
-    "theme": "neutral",
-    "reason": "原生小尺寸 Time Fantasy 像素素材，保留既有底色以避免生成式重畫改變角色比例與像素。",
-    "status": "retained",
+    "theme": "desert",
+    "reason": "武者、聖衛或王城題材，統一使用荒原遺跡。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/tf_wild_champion_themed_card_art.png"
   },
   {
@@ -1224,9 +1224,9 @@
     "name": "替身秘偶",
     "art": "res://assets/ui/card_art/ward_decoy_puppet_card_art.png",
     "skills": "替身秘偶 / 宿主被秘術／技能指定時：取消並在最近空位召喚 1/1 秘偶。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "catacombs",
+    "reason": "亡靈、咒術或秘偶題材，統一使用幽冥墓穴。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/ward_decoy_puppet_themed_card_art.png"
   },
   {
@@ -1234,9 +1234,9 @@
     "name": "鏡牢伏印",
     "art": "res://assets/ui/card_art/ward_mirror_prison_card_art.png",
     "skills": "鏡牢伏印 / 宿主被秘術／技能指定時：取消；若來源是從者，凍結 1。",
-    "theme": "neutral",
-    "reason": "星空、時間、聖光、水域或抽象術式，保留低干擾暗夜背景",
-    "status": "retained",
+    "theme": "astral",
+    "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+    "status": "complete",
     "output": "res://assets/ui/card_art/ward_mirror_prison_themed_card_art.png"
   },
   {

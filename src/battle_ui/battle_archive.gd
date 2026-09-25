@@ -4,6 +4,7 @@ extends CanvasLayer
 signal closed
 
 const STYLE = preload("res://src/ui/fantasy_ui_theme.gd")
+const SETTINGS = preload("res://src/settings/app_settings.gd")
 const FONT = preload("res://assets/fonts/Noto_Serif_TC/static/NotoSerifTC-SemiBold.ttf")
 var mode: String = ""
 var side: String = ""
@@ -128,7 +129,7 @@ func show_grave(pile_side: String, cards: Array[CardData], side_label: String) -
 	for i in range(cards.size() - 1, -1, -1):
 		var card := cards[i]
 		var button := Button.new()
-		button.text = "%s  ·  %d 費" % [AppSettings.current().card_name(card), card.cost]
+		button.text = "%s  ·  %d 費" % [SETTINGS.current().card_name(card), card.cost]
 		button.custom_minimum_size.y = 48
 		button.add_theme_font_override("font", FONT)
 		button.add_theme_font_size_override("font_size", 17)
@@ -149,7 +150,7 @@ func show_grave(pile_side: String, cards: Array[CardData], side_label: String) -
 
 func _show_details(card: CardData) -> void:
 	_shown_card = card
-	var settings := AppSettings.current()
+	var settings := SETTINGS.current()
 	var lines: PackedStringArray = [settings.card_name(card),
 		"%s · %d 費" % [settings.type_name(card.card_type), card.cost]]
 	if card.card_type == CardData.CardType.MINION:
@@ -162,12 +163,7 @@ func _show_details(card: CardData) -> void:
 	if card.battlecry != null:
 		lines.append("【戰吼】" + settings.skill_description(card.battlecry))
 	_description.text = "\n\n".join(lines)
-	_art.texture = card.art
-	if not card.use_dedicated_art and card.standee != null:
-		var atlas := AtlasTexture.new()
-		atlas.atlas = card.standee
-		atlas.region = Card.visible_bounds_of_frame0(card.standee)
-		_art.texture = atlas
+	_art.texture = Card.face_art(card)
 
 
 func show_history(entries: Array[Dictionary], local_side: String) -> void:

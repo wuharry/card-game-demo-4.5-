@@ -224,7 +224,7 @@ func _make_card_tile(d: CardData) -> Control:
 	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST   # 像素圖放大要銳利
-	art.texture = _cardface_art(d)
+	art.texture = Card.face_art(d)
 	col.add_child(art)
 
 	var name_l := Label.new()
@@ -283,18 +283,6 @@ func _skill_text(d: CardData) -> String:
 	if parts.is_empty():
 		return "—"
 	return "\n".join(parts)
-
-
-## 卡面圖:專用插畫優先;舊從者=立牌第 0 幀;法術=圖示(和戰鬥 hover 預覽同一把尺)。
-func _cardface_art(d: CardData) -> Texture2D:
-	if d.use_dedicated_art and d.art != null:
-		return d.art
-	if d.standee != null:
-		var atlas := AtlasTexture.new()
-		atlas.atlas = d.standee
-		atlas.region = Card.visible_bounds_of_frame0(d.standee)
-		return atlas
-	return d.art
 
 
 ## 卡磚底:半透明深底 + 細金框,和暗幕拉出層次。

@@ -64,7 +64,8 @@ const FRAME_BACK_REGION := Rect2(336.0, 16.0, 64.0, 96.0)
 ## ── 卡框各區的本地座標(逐列掃描量出來的;換卡框圖就要重量)──────
 ## 卡圖窗:相對格子 上 0.177 / 高 0.354 → 本地中心 y = 1.2 − 0.177×2.4 − 0.850/2
 const ART_WINDOW_CENTER := Vector2(0.0, 0.35)      # 窗中心(卡片本地 x/y)
-const ART_WINDOW_SIZE := Vector2(1.600, 0.850)     # 窗寬高(世界單位)
+## 四色卡窗均為 x=11..52、y=17..50；外緣透明像素不屬於插畫窗。
+const ART_WINDOW_SIZE := Vector2(1.050, 0.850)     # 42×34 px × FRAME_PIXEL_SIZE
 const ART_ICON_SIDE_MARGIN := 0.040                # 法術圖示每側留白
 ## 卡圖向框底多延伸 1.2%:覆蓋縮放/旋轉時可能露出的次像素細縫,仍完全藏在框條下。
 const ART_WINDOW_OVERSCAN := 1.012
@@ -259,6 +260,24 @@ static func _cover_crop_rect(texture: Texture2D, target_aspect: float) -> Rect2:
 	else:
 		crop_size.y = source_size.x / target_aspect
 	return Rect2((source_size - crop_size) * 0.5, crop_size)
+
+
+## 圖鑑、預覽、選牌與紀錄共用卡面取景；完整原圖只留在美術對照頁。
+static func face_art(card_data: CardData) -> Texture2D:
+	if card_data.use_dedicated_art and card_data.art != null:
+		var atlas := AtlasTexture.new()
+		atlas.atlas = card_data.art
+		atlas.region = _cover_crop_rect(card_data.art, ART_WINDOW_SIZE.x / ART_WINDOW_SIZE.y)
+		atlas.filter_clip = true
+		return atlas
+	if card_data.standee != null:
+		var atlas := AtlasTexture.new()
+		atlas.atlas = card_data.standee
+		var cell := maxf(float(card_data.standee.get_height()), 1.0)
+		atlas.region = visible_bounds_of_frame0(card_data.standee).grow(2).intersection(
+			Rect2(0.0, 0.0, cell, cell))
+		return atlas
+	return card_data.art
 
 
 ## ── 技能描述(卡框下半的文字區)────────────────────────────

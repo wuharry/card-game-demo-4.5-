@@ -19,6 +19,11 @@ func _run() -> void:
 			push_error("卡圖未完成或綁定錯誤：" + str(entry.id))
 			quit(1)
 			return
+		# 專用插畫必須填滿卡窗；任何半透明像素都會讓場景顏色透進卡面。
+		if not card.use_dedicated_art or card.art.get_image().detect_alpha() != Image.ALPHA_NONE:
+			push_error("卡圖缺少完整不透明背景：" + str(entry.id))
+			quit(1)
+			return
 		checked[entry.id] = true
 		cards.append(card)
 	for file in DirAccess.get_files_at("res://data/cards"):

@@ -53,10 +53,17 @@ func _cell(img: Image, row: int, col: int) -> void:
 		var mnx := 64
 		var mxx := -1
 		for dy in range(y0, y1 + 1):
-			for dx in 64:
-				if img.get_pixel(ox + dx, oy + dy).a < 0.5:
-					mnx = mini(mnx, dx)
-					mxx = maxi(mxx, dx)
+			# 只量與卡片中央相連的透明帶，排除卡框外緣的透明像素。
+			if img.get_pixel(ox + 32, oy + dy).a >= 0.5:
+				continue
+			var left := 32
+			var right := 32
+			while left > 0 and img.get_pixel(ox + left - 1, oy + dy).a < 0.5:
+				left -= 1
+			while right < 63 and img.get_pixel(ox + right + 1, oy + dy).a < 0.5:
+				right += 1
+			mnx = mini(mnx, left)
+			mxx = maxi(mxx, right)
 		print("   透明帶 相對 y %d~%d(高 %d)x %d~%d(寬 %d)" % [
 			y0, y1, y1 - y0 + 1, mnx, mxx, mxx - mnx + 1])
 		print("     → 窗在圖上的絕對位置 Rect2(%d, %d, %d, %d)" % [

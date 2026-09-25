@@ -978,21 +978,8 @@ func show_card_preview(card: Card) -> void:
 			SETTINGS.current().skill_description(d.battlecry)])
 	_prev_body.text = "\n".join(body)
 	_prev_body.visible = not body.is_empty()
-	# 有專用卡圖時優先使用;舊從者才裁立牌第 0 幀,法術則直接顯示圖示。
-	if d.use_dedicated_art and d.art != null:
-		_prev_art.texture = d.art
-		_prev_art.visible = true
-	elif d.standee != null:
-		var atlas := AtlasTexture.new()
-		atlas.atlas = d.standee
-		atlas.region = Card.visible_bounds_of_frame0(d.standee)
-		_prev_art.texture = atlas
-		_prev_art.visible = true
-	elif d.art != null:
-		_prev_art.texture = d.art
-		_prev_art.visible = true
-	else:
-		_prev_art.visible = false
+	_prev_art.texture = Card.face_art(d)
+	_prev_art.visible = _prev_art.texture != null
 	_prev_panel.visible = true
 	_prev_panel.reset_size()
 	_prev_panel.set_anchors_and_offsets_preset(
@@ -1145,7 +1132,7 @@ func _make_pick_tile(d: CardData, idx: int) -> Control:
 	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST   # 像素圖放大要銳利
 	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	art.texture = _cardface_art(d)
+	art.texture = Card.face_art(d)
 	col.add_child(art)
 
 	var name_l := Label.new()
@@ -1179,18 +1166,6 @@ func _make_pick_tile(d: CardData, idx: int) -> Control:
 				and ev.button_index == MOUSE_BUTTON_LEFT and ev.pressed:
 			_answer_pick(idx))
 	return tile
-
-
-## 卡面圖:專用插畫優先;舊從者=立牌第 0 幀;法術=圖示(和 hover 預覽同一把尺)。
-func _cardface_art(d: CardData) -> Texture2D:
-	if d.use_dedicated_art and d.art != null:
-		return d.art
-	if d.standee != null:
-		var atlas := AtlasTexture.new()
-		atlas.atlas = d.standee
-		atlas.region = Card.visible_bounds_of_frame0(d.standee)
-		return atlas
-	return d.art
 
 
 func _answer_pick(idx: int) -> void:

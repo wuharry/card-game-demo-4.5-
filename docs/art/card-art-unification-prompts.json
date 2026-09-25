@@ -1,0 +1,643 @@
+{
+  "date": "2026-09-25",
+  "backgrounds": [
+    {
+      "id": "snow",
+      "src": "assets/ui/card_art/Frost_Witch_CardArt.png",
+      "out": "assets/ui/card_art/backgrounds/card_bg_snow.png",
+      "prompt": "Use case: precise-object-edit. Image 1 is the edit target. Remove the witch, her staff, all clothing and all foreground character pixels completely. Reconstruct only the existing blue snowy ground and distant snow-covered hills underneath. Keep the same subdued dark navy snowy night, sparse tiny stars, low horizon and coarse crisp pixel art. This is a reusable background for the same game card set: landscape about 3:2, clear empty central area, ground plane at the bottom fifth, no character, no object, no text, no frame. Preserve the reference palette and scene scale. Output background only."
+    },
+    {
+      "id": "ocean",
+      "src": "docs/art/candidates/candidate_bg_desert.png",
+      "out": "assets/ui/card_art/backgrounds/card_bg_ocean.png",
+      "prompt": "Use case: style-transfer. Image 1 is the style/composition reference for a dark fantasy pixel art card background. Create a matching reusable moonlit coastline background: dark navy sky, subdued blue-teal ocean and low broken coastal ruins in the distance, dark wet stone shore in the foreground. Match reference coarse crisp pixel clusters, low saturation, quiet central silhouette-free space and restrained detail. Landscape about 3:2. Horizon around 62% height and usable ground near 83% height for a full-body character. The card subject will be added later and must remain dominant: keep the center dark and uncluttered. No people, animals, ships, objects, large moon, icons, symbols, letters, border, smooth painting or 3D."
+    },
+    {
+      "id": "astral",
+      "src": "docs/art/candidates/candidate_bg_catacombs.png",
+      "out": "assets/ui/card_art/backgrounds/card_bg_astral.png",
+      "prompt": "Use case: style-transfer. Image 1 is the exact pixel art style and low-contrast reference. Create a matching reusable dark astral sanctuary background for time, stars and counterspell game cards. Ancient broken stone observatory arches at the outer edges, a dark midnight blue sky with very sparse tiny stars through the center, low desaturated blue-violet stone floor in the bottom fifth. Remove all tombs, purple flames, and underground roof. Keep the central 65% width quiet, dark and empty so one bright small spell symbol will dominate. Match the reference coarse crisp pixel clusters, subdued lighting, restrained texture, and landscape approximately 3:2. No character, prominent astronomical instruments, icons, big moon, constellation lines, symbols, text, border, new focal object, painterly or 3D rendering."
+    }
+  ],
+  "cards": [
+    {
+      "id": "arcana_eternal_winter_edict",
+      "name": "永冬敕令",
+      "theme": "snow",
+      "reason": "冰雪與凍結題材，沿用冰霜女巫雪景。",
+      "inputs": [
+        "assets/ui/card_art/arcana_eternal_winter_edict_card_art.png",
+        "assets/ui/card_art/backgrounds/card_bg_snow.png"
+      ],
+      "output": "assets/ui/card_art/arcana_eternal_winter_edict_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing arcana_eternal_winter_edict pixel-art card illustration. Image 2 supplies ONLY the replacement snow background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    },
+    {
+      "id": "arcana_fate_scry",
+      "name": "命運窺視",
+      "theme": "astral",
+      "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+      "inputs": [
+        "assets/ui/card_art/arcana_fate_scry_card_art.png",
+        "assets/ui/card_art/backgrounds/card_bg_astral.png"
+      ],
+      "output": "assets/ui/card_art/arcana_fate_scry_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing arcana_fate_scry pixel-art card illustration. Image 2 supplies ONLY the replacement astral background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    },
+    {
+      "id": "arcana_frost_shackles",
+      "name": "寒霜鎖鏈",
+      "theme": "snow",
+      "reason": "冰雪與凍結題材，沿用冰霜女巫雪景。",
+      "inputs": [
+        "assets/ui/card_art/arcana_frost_shackles_card_art.png",
+        "assets/ui/card_art/backgrounds/card_bg_snow.png"
+      ],
+      "output": "assets/ui/card_art/arcana_frost_shackles_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing arcana_frost_shackles pixel-art card illustration. Image 2 supplies ONLY the replacement snow background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    },
+    {
+      "id": "arcana_frozen_pulse",
+      "name": "凍土脈衝",
+      "theme": "snow",
+      "reason": "冰雪與凍結題材，沿用冰霜女巫雪景。",
+      "inputs": [
+        "assets/ui/card_art/arcana_frozen_pulse_card_art.png",
+        "assets/ui/card_art/backgrounds/card_bg_snow.png"
+      ],
+      "output": "assets/ui/card_art/arcana_frozen_pulse_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing arcana_frozen_pulse pixel-art card illustration. Image 2 supplies ONLY the replacement snow background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    },
+    {
+      "id": "arcana_holy_blessing",
+      "name": "聖光庇佑",
+      "theme": "desert",
+      "reason": "武者、聖衛或王城題材，統一使用荒原遺跡。",
+      "inputs": [
+        "assets/ui/card_art/arcana_holy_blessing_card_art.png",
+        "docs/art/candidates/candidate_bg_desert.png"
+      ],
+      "output": "assets/ui/card_art/arcana_holy_blessing_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing arcana_holy_blessing pixel-art card illustration. Image 2 supplies ONLY the replacement desert background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    },
+    {
+      "id": "arcana_insight",
+      "name": "秘傳靈感",
+      "theme": "astral",
+      "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+      "inputs": [
+        "assets/ui/card_art/arcana_insight_card_art.png",
+        "assets/ui/card_art/backgrounds/card_bg_astral.png"
+      ],
+      "output": "assets/ui/card_art/arcana_insight_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing arcana_insight pixel-art card illustration. Image 2 supplies ONLY the replacement astral background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    },
+    {
+      "id": "arcana_memory_tide",
+      "name": "回憶潮汐",
+      "theme": "ocean",
+      "reason": "潮汐與航海題材，統一使用暗色海岸場景。",
+      "inputs": [
+        "assets/ui/card_art/arcana_memory_tide_card_art.png",
+        "assets/ui/card_art/backgrounds/card_bg_ocean.png"
+      ],
+      "output": "assets/ui/card_art/arcana_memory_tide_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing arcana_memory_tide pixel-art card illustration. Image 2 supplies ONLY the replacement ocean background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    },
+    {
+      "id": "arcana_night_shelter",
+      "name": "夜幕庇護",
+      "theme": "astral",
+      "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+      "inputs": [
+        "assets/ui/card_art/arcana_night_shelter_card_art.png",
+        "assets/ui/card_art/backgrounds/card_bg_astral.png"
+      ],
+      "output": "assets/ui/card_art/arcana_night_shelter_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing arcana_night_shelter pixel-art card illustration. Image 2 supplies ONLY the replacement astral background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    },
+    {
+      "id": "arcana_star_tempest",
+      "name": "群星雷暴",
+      "theme": "astral",
+      "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+      "inputs": [
+        "assets/ui/card_art/arcana_star_tempest_card_art.png",
+        "assets/ui/card_art/backgrounds/card_bg_astral.png"
+      ],
+      "output": "assets/ui/card_art/arcana_star_tempest_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing arcana_star_tempest pixel-art card illustration. Image 2 supplies ONLY the replacement astral background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    },
+    {
+      "id": "arcana_starsea_rewind",
+      "name": "星海回溯",
+      "theme": "astral",
+      "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+      "inputs": [
+        "assets/ui/card_art/arcana_starsea_rewind_card_art.png",
+        "assets/ui/card_art/backgrounds/card_bg_astral.png"
+      ],
+      "output": "assets/ui/card_art/arcana_starsea_rewind_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing arcana_starsea_rewind pixel-art card illustration. Image 2 supplies ONLY the replacement astral background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    },
+    {
+      "id": "arcana_thunder_pierce",
+      "name": "雷霆貫穿",
+      "theme": "astral",
+      "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+      "inputs": [
+        "assets/ui/card_art/arcana_thunder_pierce_card_art.png",
+        "assets/ui/card_art/backgrounds/card_bg_astral.png"
+      ],
+      "output": "assets/ui/card_art/arcana_thunder_pierce_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing arcana_thunder_pierce pixel-art card illustration. Image 2 supplies ONLY the replacement astral background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    },
+    {
+      "id": "arcana_twin_thunder",
+      "name": "雙重雷擊",
+      "theme": "astral",
+      "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+      "inputs": [
+        "assets/ui/card_art/arcana_twin_thunder_card_art.png",
+        "assets/ui/card_art/backgrounds/card_bg_astral.png"
+      ],
+      "output": "assets/ui/card_art/arcana_twin_thunder_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing arcana_twin_thunder pixel-art card illustration. Image 2 supplies ONLY the replacement astral background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    },
+    {
+      "id": "equip_giant_warplate",
+      "name": "巨神戰鎧",
+      "theme": "volcano",
+      "reason": "火焰或鍛造題材，統一使用熔岩焦土。",
+      "inputs": [
+        "assets/ui/card_art/equip_giant_warplate_card_art.png",
+        "docs/art/candidates/candidate_bg_volcano.png"
+      ],
+      "output": "assets/ui/card_art/equip_giant_warplate_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing equip_giant_warplate pixel-art card illustration. Image 2 supplies ONLY the replacement volcano background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    },
+    {
+      "id": "equip_mithril_plate",
+      "name": "秘銀胸鎧",
+      "theme": "volcano",
+      "reason": "火焰或鍛造題材，統一使用熔岩焦土。",
+      "inputs": [
+        "assets/ui/card_art/equip_mithril_plate_card_art.png",
+        "docs/art/candidates/candidate_bg_volcano.png"
+      ],
+      "output": "assets/ui/card_art/equip_mithril_plate_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing equip_mithril_plate pixel-art card illustration. Image 2 supplies ONLY the replacement volcano background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    },
+    {
+      "id": "equip_titan_starcore",
+      "name": "泰坦星核",
+      "theme": "astral",
+      "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+      "inputs": [
+        "assets/ui/card_art/equip_titan_starcore_card_art.png",
+        "assets/ui/card_art/backgrounds/card_bg_astral.png"
+      ],
+      "output": "assets/ui/card_art/equip_titan_starcore_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing equip_titan_starcore pixel-art card illustration. Image 2 supplies ONLY the replacement astral background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    },
+    {
+      "id": "knight_templar",
+      "name": "聖殿騎士",
+      "theme": "desert",
+      "reason": "武者、聖衛或王城題材，統一使用荒原遺跡。",
+      "inputs": [
+        "assets/ui/card_art/knight_templar_card_art.png",
+        "docs/art/candidates/candidate_bg_desert.png"
+      ],
+      "output": "assets/ui/card_art/knight_templar_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing knight_templar pixel-art card illustration. Image 2 supplies ONLY the replacement desert background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    },
+    {
+      "id": "pirate_captain",
+      "name": "海盜船長",
+      "theme": "ocean",
+      "reason": "潮汐與航海題材，統一使用暗色海岸場景。",
+      "inputs": [
+        "assets/ui/card_art/pirate_captain_card_art.png",
+        "assets/ui/card_art/backgrounds/card_bg_ocean.png"
+      ],
+      "output": "assets/ui/card_art/pirate_captain_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing pirate_captain pixel-art card illustration. Image 2 supplies ONLY the replacement ocean background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    },
+    {
+      "id": "priest",
+      "name": "牧師",
+      "theme": "desert",
+      "reason": "武者、聖衛或王城題材，統一使用荒原遺跡。",
+      "inputs": [
+        "assets/ui/card_art/priest_card_art.png",
+        "docs/art/candidates/candidate_bg_desert.png"
+      ],
+      "output": "assets/ui/card_art/priest_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing priest pixel-art card illustration. Image 2 supplies ONLY the replacement desert background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    },
+    {
+      "id": "quick_absolute_denial",
+      "name": "絕對否決",
+      "theme": "astral",
+      "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+      "inputs": [
+        "assets/ui/card_art/quick_absolute_denial_card_art.png",
+        "assets/ui/card_art/backgrounds/card_bg_astral.png"
+      ],
+      "output": "assets/ui/card_art/quick_absolute_denial_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing quick_absolute_denial pixel-art card illustration. Image 2 supplies ONLY the replacement astral background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    },
+    {
+      "id": "quick_astral_severance",
+      "name": "星界斷章",
+      "theme": "astral",
+      "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+      "inputs": [
+        "assets/ui/card_art/quick_astral_severance_card_art.png",
+        "assets/ui/card_art/backgrounds/card_bg_astral.png"
+      ],
+      "output": "assets/ui/card_art/quick_astral_severance_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing quick_astral_severance pixel-art card illustration. Image 2 supplies ONLY the replacement astral background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    },
+    {
+      "id": "quick_causality_reversal",
+      "name": "因果逆轉",
+      "theme": "astral",
+      "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+      "inputs": [
+        "assets/ui/card_art/quick_causality_reversal_card_art.png",
+        "assets/ui/card_art/backgrounds/card_bg_astral.png"
+      ],
+      "output": "assets/ui/card_art/quick_causality_reversal_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing quick_causality_reversal pixel-art card illustration. Image 2 supplies ONLY the replacement astral background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    },
+    {
+      "id": "quick_reversal_edict",
+      "name": "逆轉咒律",
+      "theme": "astral",
+      "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+      "inputs": [
+        "assets/ui/card_art/quick_reversal_edict_card_art.png",
+        "assets/ui/card_art/backgrounds/card_bg_astral.png"
+      ],
+      "output": "assets/ui/card_art/quick_reversal_edict_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing quick_reversal_edict pixel-art card illustration. Image 2 supplies ONLY the replacement astral background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    },
+    {
+      "id": "quick_royal_decree",
+      "name": "王城斷令",
+      "theme": "desert",
+      "reason": "武者、聖衛或王城題材，統一使用荒原遺跡。",
+      "inputs": [
+        "assets/ui/card_art/quick_royal_decree_card_art.png",
+        "docs/art/candidates/candidate_bg_desert.png"
+      ],
+      "output": "assets/ui/card_art/quick_royal_decree_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing quick_royal_decree pixel-art card illustration. Image 2 supplies ONLY the replacement desert background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    },
+    {
+      "id": "quick_time_gap_barrier",
+      "name": "時隙屏障",
+      "theme": "astral",
+      "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+      "inputs": [
+        "assets/ui/card_art/quick_time_gap_barrier_card_art.png",
+        "assets/ui/card_art/backgrounds/card_bg_astral.png"
+      ],
+      "output": "assets/ui/card_art/quick_time_gap_barrier_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing quick_time_gap_barrier pixel-art card illustration. Image 2 supplies ONLY the replacement astral background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    },
+    {
+      "id": "quick_void_rebuke",
+      "name": "虛空反噬",
+      "theme": "catacombs",
+      "reason": "亡靈、咒術或秘偶題材，統一使用幽冥墓穴。",
+      "inputs": [
+        "assets/ui/card_art/quick_void_rebuke_card_art.png",
+        "docs/art/candidates/candidate_bg_catacombs.png"
+      ],
+      "output": "assets/ui/card_art/quick_void_rebuke_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing quick_void_rebuke pixel-art card illustration. Image 2 supplies ONLY the replacement catacombs background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    },
+    {
+      "id": "sky_leviathan",
+      "name": "天穹巨鯨",
+      "theme": "astral",
+      "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+      "inputs": [
+        "assets/ui/card_art/sky_leviathan_card_art.png",
+        "assets/ui/card_art/backgrounds/card_bg_astral.png"
+      ],
+      "output": "assets/ui/card_art/sky_leviathan_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing sky_leviathan pixel-art card illustration. Image 2 supplies ONLY the replacement astral background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    },
+    {
+      "id": "tf_azure_adventurer",
+      "name": "蒼衣遊俠",
+      "theme": "desert",
+      "reason": "武者、聖衛或王城題材，統一使用荒原遺跡。",
+      "inputs": [
+        "assets/ui/card_art/time_fantasy/tf_azure_adventurer.png",
+        "docs/art/candidates/candidate_bg_desert.png",
+        "assets/ui/card_art/adventurer_themed_card_art.png"
+      ],
+      "output": "assets/ui/card_art/tf_azure_adventurer_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Create the finished game card illustration tf_azure_adventurer. Image 1 is the EDIT TARGET and the only character identity to keep (brown swept hair, azure blue clothing, light scarf and boots, same stance). Image 2 supplies the replacement ruined-wasteland background. Image 3 is ONLY a style and composition reference from the same card set; do not copy its character, weapon, green clothing or action. Replace the flat dark background in Image 1 with the subdued dark pixel-art ruins from Image 2. Match the pixel-art illustration treatment and coarse crisp edges in Image 3 while keeping Image 1's distinct character design, outfit, silhouette and pose. Landscape canvas approximately 3:2, subject centered horizontally, head near 28% height, feet near 83%, entire body and equipment within the central 60% width. Foreground character about 55% of canvas height, dominant at small card size. Low-saturation background, floor under feet, no blank solid backdrop. No text, letters, numbers, card border, extra people, extra weapons, new effects, painterly or smooth 3D rendering. Output a single finished illustration."
+    },
+    {
+      "id": "tf_crimson_captain",
+      "name": "赤羽統領",
+      "theme": "desert",
+      "reason": "武者、聖衛或王城題材，統一使用荒原遺跡。",
+      "inputs": [
+        "assets/ui/card_art/time_fantasy/tf_crimson_captain.png",
+        "docs/art/candidates/candidate_bg_desert.png",
+        "assets/ui/card_art/adventurer_themed_card_art.png"
+      ],
+      "output": "assets/ui/card_art/tf_crimson_captain_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Create the finished game card illustration tf_crimson_captain. Image 1 is the EDIT TARGET and the only character identity to preserve: same hair, headwear, outfit colors, equipment, silhouette and pose. Image 2 supplies ONLY the replacement desert environment. Image 3 is ONLY a style and composition reference from this card set; do not copy its character, green clothes, weapon or effects. Replace the flat dark background with the subdued pixel-art scene of Image 2. Match Image 3's crisp coarse pixel illustration style while keeping Image 1's distinct character design and body proportions. Landscape approximately 3:2, character centered horizontally, whole head near 28% canvas height and feet near 82%, body around 54% canvas height; all equipment inside central 60% width. Keep the background dark, low saturation and quieter than the character. No extra people, extra weapons, new magic effects, icons, lettering, border, 3D or smooth painting. Output one finished card illustration only."
+    },
+    {
+      "id": "tf_dawn_paladin",
+      "name": "曙光聖衛",
+      "theme": "desert",
+      "reason": "武者、聖衛或王城題材，統一使用荒原遺跡。",
+      "inputs": [
+        "assets/ui/card_art/time_fantasy/tf_dawn_paladin.png",
+        "docs/art/candidates/candidate_bg_desert.png",
+        "assets/ui/card_art/adventurer_themed_card_art.png"
+      ],
+      "output": "assets/ui/card_art/tf_dawn_paladin_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Create the finished game card illustration tf_dawn_paladin. Image 1 is the EDIT TARGET and the only character identity to preserve: same hair, headwear, outfit colors, equipment, silhouette and pose. Image 2 supplies ONLY the replacement desert environment. Image 3 is ONLY a style and composition reference from this card set; do not copy its character, green clothes, weapon or effects. Replace the flat dark background with the subdued pixel-art scene of Image 2. Match Image 3's crisp coarse pixel illustration style while keeping Image 1's distinct character design and body proportions. Landscape approximately 3:2, character centered horizontally, whole head near 28% canvas height and feet near 82%, body around 54% canvas height; all equipment inside central 60% width. Keep the background dark, low saturation and quieter than the character. No extra people, extra weapons, new magic effects, icons, lettering, border, 3D or smooth painting. Output one finished card illustration only."
+    },
+    {
+      "id": "tf_dusk_mage",
+      "name": "暮色術士",
+      "theme": "volcano",
+      "reason": "火焰或鍛造題材，統一使用熔岩焦土。",
+      "inputs": [
+        "assets/ui/card_art/time_fantasy/tf_dusk_mage.png",
+        "docs/art/candidates/candidate_bg_volcano.png",
+        "assets/ui/card_art/adventurer_themed_card_art.png"
+      ],
+      "output": "assets/ui/card_art/tf_dusk_mage_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Create the finished game card illustration tf_dusk_mage. Image 1 is the EDIT TARGET and the only character identity to preserve: same hair, headwear, outfit colors, equipment, silhouette and pose. Image 2 supplies ONLY the replacement volcano environment. Image 3 is ONLY a style and composition reference from this card set; do not copy its character, green clothes, weapon or effects. Replace the flat dark background with the subdued pixel-art scene of Image 2. Match Image 3's crisp coarse pixel illustration style while keeping Image 1's distinct character design and body proportions. Landscape approximately 3:2, character centered horizontally, whole head near 28% canvas height and feet near 82%, body around 54% canvas height; all equipment inside central 60% width. Keep the background dark, low saturation and quieter than the character. No extra people, extra weapons, new magic effects, icons, lettering, border, 3D or smooth painting. Output one finished card illustration only."
+    },
+    {
+      "id": "tf_feather_bard",
+      "name": "赤羽吟遊者",
+      "theme": "forest",
+      "reason": "林地、遊獵與自然題材，統一使用幽暗古林。",
+      "inputs": [
+        "assets/ui/card_art/time_fantasy/tf_feather_bard.png",
+        "docs/art/candidates/candidate_bg_forest.png",
+        "assets/ui/card_art/adventurer_themed_card_art.png"
+      ],
+      "output": "assets/ui/card_art/tf_feather_bard_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Create the finished game card illustration tf_feather_bard. Image 1 is the EDIT TARGET and the only character identity to preserve: same hair, headwear, outfit colors, equipment, silhouette and pose. Image 2 supplies ONLY the replacement forest environment. Image 3 is ONLY a style and composition reference from this card set; do not copy its character, green clothes, weapon or effects. Replace the flat dark background with the subdued pixel-art scene of Image 2. Match Image 3's crisp coarse pixel illustration style while keeping Image 1's distinct character design and body proportions. Landscape approximately 3:2, character centered horizontally, whole head near 28% canvas height and feet near 82%, body around 54% canvas height; all equipment inside central 60% width. Keep the background dark, low saturation and quieter than the character. No extra people, extra weapons, new magic effects, icons, lettering, border, 3D or smooth painting. Output one finished card illustration only."
+    },
+    {
+      "id": "tf_grove_ranger",
+      "name": "青林獵手",
+      "theme": "forest",
+      "reason": "林地、遊獵與自然題材，統一使用幽暗古林。",
+      "inputs": [
+        "assets/ui/card_art/time_fantasy/tf_grove_ranger.png",
+        "docs/art/candidates/candidate_bg_forest.png",
+        "assets/ui/card_art/adventurer_themed_card_art.png"
+      ],
+      "output": "assets/ui/card_art/tf_grove_ranger_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Create the finished game card illustration tf_grove_ranger. Image 1 is the EDIT TARGET and the only character identity to preserve: same hair, headwear, outfit colors, equipment, silhouette and pose. Image 2 supplies ONLY the replacement forest environment. Image 3 is ONLY a style and composition reference from this card set; do not copy its character, green clothes, weapon or effects. Replace the flat dark background with the subdued pixel-art scene of Image 2. Match Image 3's crisp coarse pixel illustration style while keeping Image 1's distinct character design and body proportions. Landscape approximately 3:2, character centered horizontally, whole head near 28% canvas height and feet near 82%, body around 54% canvas height; all equipment inside central 60% width. Keep the background dark, low saturation and quieter than the character. No extra people, extra weapons, new magic effects, icons, lettering, border, 3D or smooth painting. Output one finished card illustration only."
+    },
+    {
+      "id": "tf_scarlet_duelist",
+      "name": "緋紅劍士",
+      "theme": "desert",
+      "reason": "武者、聖衛或王城題材，統一使用荒原遺跡。",
+      "inputs": [
+        "assets/ui/card_art/time_fantasy/tf_scarlet_duelist.png",
+        "docs/art/candidates/candidate_bg_desert.png",
+        "assets/ui/card_art/adventurer_themed_card_art.png"
+      ],
+      "output": "assets/ui/card_art/tf_scarlet_duelist_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Create the finished game card illustration tf_scarlet_duelist. Image 1 is the EDIT TARGET and the only character identity to preserve: same hair, headwear, outfit colors, equipment, silhouette and pose. Image 2 supplies ONLY the replacement desert environment. Image 3 is ONLY a style and composition reference from this card set; do not copy its character, green clothes, weapon or effects. Replace the flat dark background with the subdued pixel-art scene of Image 2. Match Image 3's crisp coarse pixel illustration style while keeping Image 1's distinct character design and body proportions. Landscape approximately 3:2, character centered horizontally, whole head near 28% canvas height and feet near 82%, body around 54% canvas height; all equipment inside central 60% width. Keep the background dark, low saturation and quieter than the character. No extra people, extra weapons, new magic effects, icons, lettering, border, 3D or smooth painting. Output one finished card illustration only."
+    },
+    {
+      "id": "tf_sun_monk",
+      "name": "烈陽武僧",
+      "theme": "desert",
+      "reason": "武者、聖衛或王城題材，統一使用荒原遺跡。",
+      "inputs": [
+        "assets/ui/card_art/time_fantasy/tf_sun_monk.png",
+        "docs/art/candidates/candidate_bg_desert.png",
+        "assets/ui/card_art/adventurer_themed_card_art.png"
+      ],
+      "output": "assets/ui/card_art/tf_sun_monk_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Create the finished game card illustration tf_sun_monk. Image 1 is the EDIT TARGET and the only character identity to preserve: same hair, headwear, outfit colors, equipment, silhouette and pose. Image 2 supplies ONLY the replacement desert environment. Image 3 is ONLY a style and composition reference from this card set; do not copy its character, green clothes, weapon or effects. Replace the flat dark background with the subdued pixel-art scene of Image 2. Match Image 3's crisp coarse pixel illustration style while keeping Image 1's distinct character design and body proportions. Landscape approximately 3:2, character centered horizontally, whole head near 28% canvas height and feet near 82%, body around 54% canvas height; all equipment inside central 60% width. Keep the background dark, low saturation and quieter than the character. No extra people, extra weapons, new magic effects, icons, lettering, border, 3D or smooth painting. Output one finished card illustration only."
+    },
+    {
+      "id": "tf_tide_healer",
+      "name": "潮汐祭司",
+      "theme": "ocean",
+      "reason": "潮汐與航海題材，統一使用暗色海岸場景。",
+      "inputs": [
+        "assets/ui/card_art/time_fantasy/tf_tide_healer.png",
+        "assets/ui/card_art/backgrounds/card_bg_ocean.png",
+        "assets/ui/card_art/adventurer_themed_card_art.png"
+      ],
+      "output": "assets/ui/card_art/tf_tide_healer_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Create the finished game card illustration tf_tide_healer. Image 1 is the EDIT TARGET and the only character identity to preserve: same hair, headwear, outfit colors, equipment, silhouette and pose. Image 2 supplies ONLY the replacement ocean environment. Image 3 is ONLY a style and composition reference from this card set; do not copy its character, green clothes, weapon or effects. Replace the flat dark background with the subdued pixel-art scene of Image 2. Match Image 3's crisp coarse pixel illustration style while keeping Image 1's distinct character design and body proportions. Landscape approximately 3:2, character centered horizontally, whole head near 28% canvas height and feet near 82%, body around 54% canvas height; all equipment inside central 60% width. Keep the background dark, low saturation and quieter than the character. No extra people, extra weapons, new magic effects, icons, lettering, border, 3D or smooth painting. Output one finished card illustration only."
+    },
+    {
+      "id": "tf_veil_warlock",
+      "name": "幽幕咒師",
+      "theme": "catacombs",
+      "reason": "亡靈、咒術或秘偶題材，統一使用幽冥墓穴。",
+      "inputs": [
+        "assets/ui/card_art/time_fantasy/tf_veil_warlock.png",
+        "docs/art/candidates/candidate_bg_catacombs.png",
+        "assets/ui/card_art/adventurer_themed_card_art.png"
+      ],
+      "output": "assets/ui/card_art/tf_veil_warlock_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Create the finished game card illustration tf_veil_warlock. Image 1 is the EDIT TARGET and the only character identity to preserve: same hair, headwear, outfit colors, equipment, silhouette and pose. Image 2 supplies ONLY the replacement catacombs environment. Image 3 is ONLY a style and composition reference from this card set; do not copy its character, green clothes, weapon or effects. Replace the flat dark background with the subdued pixel-art scene of Image 2. Match Image 3's crisp coarse pixel illustration style while keeping Image 1's distinct character design and body proportions. Landscape approximately 3:2, character centered horizontally, whole head near 28% canvas height and feet near 82%, body around 54% canvas height; all equipment inside central 60% width. Keep the background dark, low saturation and quieter than the character. No extra people, extra weapons, new magic effects, icons, lettering, border, 3D or smooth painting. Output one finished card illustration only."
+    },
+    {
+      "id": "tf_verdant_guard",
+      "name": "翠甲衛士",
+      "theme": "forest",
+      "reason": "林地、遊獵與自然題材，統一使用幽暗古林。",
+      "inputs": [
+        "assets/ui/card_art/time_fantasy/tf_verdant_guard.png",
+        "docs/art/candidates/candidate_bg_forest.png",
+        "assets/ui/card_art/adventurer_themed_card_art.png"
+      ],
+      "output": "assets/ui/card_art/tf_verdant_guard_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Create the finished game card illustration tf_verdant_guard. Image 1 is the EDIT TARGET and the only character identity to preserve: same hair, headwear, outfit colors, equipment, silhouette and pose. Image 2 supplies ONLY the replacement forest environment. Image 3 is ONLY a style and composition reference from this card set; do not copy its character, green clothes, weapon or effects. Replace the flat dark background with the subdued pixel-art scene of Image 2. Match Image 3's crisp coarse pixel illustration style while keeping Image 1's distinct character design and body proportions. Landscape approximately 3:2, character centered horizontally, whole head near 28% canvas height and feet near 82%, body around 54% canvas height; all equipment inside central 60% width. Keep the background dark, low saturation and quieter than the character. No extra people, extra weapons, new magic effects, icons, lettering, border, 3D or smooth painting. Output one finished card illustration only."
+    },
+    {
+      "id": "tf_wild_champion",
+      "name": "荒原鬥士",
+      "theme": "desert",
+      "reason": "武者、聖衛或王城題材，統一使用荒原遺跡。",
+      "inputs": [
+        "assets/ui/card_art/time_fantasy/tf_wild_champion.png",
+        "docs/art/candidates/candidate_bg_desert.png",
+        "assets/ui/card_art/adventurer_themed_card_art.png"
+      ],
+      "output": "assets/ui/card_art/tf_wild_champion_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Create the finished game card illustration tf_wild_champion. Image 1 is the EDIT TARGET and the only character identity to preserve: same hair, headwear, outfit colors, equipment, silhouette and pose. Image 2 supplies ONLY the replacement desert environment. Image 3 is ONLY a style and composition reference from this card set; do not copy its character, green clothes, weapon or effects. Replace the flat dark background with the subdued pixel-art scene of Image 2. Match Image 3's crisp coarse pixel illustration style while keeping Image 1's distinct character design and body proportions. Landscape approximately 3:2, character centered horizontally, whole head near 28% canvas height and feet near 82%, body around 54% canvas height; all equipment inside central 60% width. Keep the background dark, low saturation and quieter than the character. No extra people, extra weapons, new magic effects, icons, lettering, border, 3D or smooth painting. Output one finished card illustration only."
+    },
+    {
+      "id": "ward_decoy_puppet",
+      "name": "替身秘偶",
+      "theme": "catacombs",
+      "reason": "亡靈、咒術或秘偶題材，統一使用幽冥墓穴。",
+      "inputs": [
+        "assets/ui/card_art/ward_decoy_puppet_card_art.png",
+        "docs/art/candidates/candidate_bg_catacombs.png"
+      ],
+      "output": "assets/ui/card_art/ward_decoy_puppet_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing ward_decoy_puppet pixel-art card illustration. Image 2 supplies ONLY the replacement catacombs background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    },
+    {
+      "id": "ward_mirror_prison",
+      "name": "鏡牢伏印",
+      "theme": "astral",
+      "reason": "星空、時間、雷電與術式題材，統一使用星界遺跡。",
+      "inputs": [
+        "assets/ui/card_art/ward_mirror_prison_card_art.png",
+        "assets/ui/card_art/backgrounds/card_bg_astral.png"
+      ],
+      "output": "assets/ui/card_art/ward_mirror_prison_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Use case: compositing. Image 1 is the EDIT TARGET: the existing ward_mirror_prison pixel-art card illustration. Image 2 supplies ONLY the replacement astral background. Replace the navy empty backdrop and old stone floor in Image 1 with the subdued scene from Image 2. Preserve the foreground character OR spell icon from Image 1: identical design, pose, shape, all symbols, colors, weapons, pixel texture and proportions. Keep the subject centered, its original relative size and placement, all parts visible; keep the full subject within the central 65% width and between 23% and 83% of canvas height so it fits the game card crop. Landscape approximately 3:2. Subdue background detail and contrast behind the subject, same dark fantasy crisp pixel art as the reference. For spell cards preserve the floating icon and its existing effects; do not turn the symbol into scenery. No extra subjects, added iconography, lettering, borders, smooth 3D or painterly rendering. Output one finished card illustration only."
+    }
+  ],
+  "opacity_corrections": [
+    {
+      "id": "arcana_memory_tide",
+      "input": "assets/ui/card_art/arcana_memory_tide_themed_card_art.png",
+      "output": "assets/ui/card_art/arcana_memory_tide_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Edit the supplied final game-card illustration only to make it FULLY OPAQUE. This is a rectangular, printed card illustration, not a transparent sprite. Preserve the exact existing pixel-art subject, symbol, pose, scale, colors, complete dark scenic background and composition. Keep every existing visible detail intact. Render a SOLID rectangular image from edge to edge, including all dark areas, stars, magic glow, objects, and the character. Do not interpret brightness as alpha. There must be no transparent or translucent pixels anywhere; the output must be an opaque RGB illustration with fully opaque background and foreground. Do not add frames, text, border, checkerboard, watermark or new elements. Keep its original landscape canvas."
+    },
+    {
+      "id": "arcana_star_tempest",
+      "input": "assets/ui/card_art/arcana_star_tempest_themed_card_art.png",
+      "output": "assets/ui/card_art/arcana_star_tempest_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Edit the supplied final game-card illustration only to make it FULLY OPAQUE. This is a rectangular, printed card illustration, not a transparent sprite. Preserve the exact existing pixel-art subject, symbol, pose, scale, colors, complete dark scenic background and composition. Keep every existing visible detail intact. Render a SOLID rectangular image from edge to edge, including all dark areas, stars, magic glow, objects, and the character. Do not interpret brightness as alpha. There must be no transparent or translucent pixels anywhere; the output must be an opaque RGB illustration with fully opaque background and foreground. Do not add frames, text, border, checkerboard, watermark or new elements. Keep its original landscape canvas."
+    },
+    {
+      "id": "equip_titan_starcore",
+      "input": "assets/ui/card_art/equip_titan_starcore_themed_card_art.png",
+      "output": "assets/ui/card_art/equip_titan_starcore_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Edit the supplied final game-card illustration only to make it FULLY OPAQUE. This is a rectangular, printed card illustration, not a transparent sprite. Preserve the exact existing pixel-art subject, symbol, pose, scale, colors, complete dark scenic background and composition. Keep every existing visible detail intact. Render a SOLID rectangular image from edge to edge, including all dark areas, stars, magic glow, objects, and the character. Do not interpret brightness as alpha. There must be no transparent or translucent pixels anywhere; the output must be an opaque RGB illustration with fully opaque background and foreground. Do not add frames, text, border, checkerboard, watermark or new elements. Keep its original landscape canvas."
+    },
+    {
+      "id": "quick_absolute_denial",
+      "input": "assets/ui/card_art/quick_absolute_denial_themed_card_art.png",
+      "output": "assets/ui/card_art/quick_absolute_denial_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Edit the supplied final game-card illustration only to make it FULLY OPAQUE. This is a rectangular, printed card illustration, not a transparent sprite. Preserve the exact existing pixel-art subject, symbol, pose, scale, colors, complete dark scenic background and composition. Keep every existing visible detail intact. Render a SOLID rectangular image from edge to edge, including all dark areas, stars, magic glow, objects, and the character. Do not interpret brightness as alpha. There must be no transparent or translucent pixels anywhere; the output must be an opaque RGB illustration with fully opaque background and foreground. Do not add frames, text, border, checkerboard, watermark or new elements. Keep its original landscape canvas."
+    },
+    {
+      "id": "quick_reversal_edict",
+      "input": "assets/ui/card_art/quick_reversal_edict_themed_card_art.png",
+      "output": "assets/ui/card_art/quick_reversal_edict_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Edit the supplied final game-card illustration only to make it FULLY OPAQUE. This is a rectangular, printed card illustration, not a transparent sprite. Preserve the exact existing pixel-art subject, symbol, pose, scale, colors, complete dark scenic background and composition. Keep every existing visible detail intact. Render a SOLID rectangular image from edge to edge, including all dark areas, stars, magic glow, objects, and the character. Do not interpret brightness as alpha. There must be no transparent or translucent pixels anywhere; the output must be an opaque RGB illustration with fully opaque background and foreground. Do not add frames, text, border, checkerboard, watermark or new elements. Keep its original landscape canvas."
+    },
+    {
+      "id": "tf_feather_bard",
+      "input": "assets/ui/card_art/tf_feather_bard_themed_card_art.png",
+      "output": "assets/ui/card_art/tf_feather_bard_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Edit the supplied final game-card illustration only to make it FULLY OPAQUE. This is a rectangular, printed card illustration, not a transparent sprite. Preserve the exact existing pixel-art subject, symbol, pose, scale, colors, complete dark scenic background and composition. Keep every existing visible detail intact. Render a SOLID rectangular image from edge to edge, including all dark areas, stars, magic glow, objects, and the character. Do not interpret brightness as alpha. There must be no transparent or translucent pixels anywhere; the output must be an opaque RGB illustration with fully opaque background and foreground. Do not add frames, text, border, checkerboard, watermark or new elements. Keep its original landscape canvas."
+    },
+    {
+      "id": "ward_mirror_prison",
+      "input": "assets/ui/card_art/ward_mirror_prison_themed_card_art.png",
+      "output": "assets/ui/card_art/ward_mirror_prison_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Edit the supplied final game-card illustration only to make it FULLY OPAQUE. This is a rectangular, printed card illustration, not a transparent sprite. Preserve the exact existing pixel-art subject, symbol, pose, scale, colors, complete dark scenic background and composition. Keep every existing visible detail intact. Render a SOLID rectangular image from edge to edge, including all dark areas, stars, magic glow, objects, and the character. Do not interpret brightness as alpha. There must be no transparent or translucent pixels anywhere; the output must be an opaque RGB illustration with fully opaque background and foreground. Do not add frames, text, border, checkerboard, watermark or new elements. Keep its original landscape canvas."
+    },
+    {
+      "id": "adventurer",
+      "input": "assets/ui/card_art/adventurer_themed_card_art.png",
+      "output": "assets/ui/card_art/adventurer_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Edit the supplied final game-card illustration only to make it FULLY OPAQUE. This is a rectangular, printed card illustration, not a transparent sprite. Preserve the exact existing pixel-art subject, symbol, pose, scale, colors, complete dark scenic background and composition. Keep every existing visible detail intact. Render a SOLID rectangular image from edge to edge, including all dark areas, stars, magic glow, objects, and the character. Do not interpret brightness as alpha. There must be no transparent or translucent pixels anywhere; the output must be an opaque RGB illustration with fully opaque background and foreground. Do not add frames, text, border, checkerboard, watermark or new elements. Keep its original landscape canvas."
+    },
+    {
+      "id": "arcana_battle_fury",
+      "input": "assets/ui/card_art/arcana_battle_fury_themed_card_art.png",
+      "output": "assets/ui/card_art/arcana_battle_fury_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Edit the supplied final game-card illustration only to make it FULLY OPAQUE. This is a rectangular, printed card illustration, not a transparent sprite. Preserve the exact existing pixel-art subject, symbol, pose, scale, colors, complete dark scenic background and composition. Keep every existing visible detail intact. Render a SOLID rectangular image from edge to edge, including all dark areas, stars, magic glow, objects, and the character. Do not interpret brightness as alpha. There must be no transparent or translucent pixels anywhere; the output must be an opaque RGB illustration with fully opaque background and foreground. Do not add frames, text, border, checkerboard, watermark or new elements. Keep its original landscape canvas."
+    },
+    {
+      "id": "archer",
+      "input": "assets/ui/card_art/archer_themed_card_art.png",
+      "output": "assets/ui/card_art/archer_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Edit the supplied final game-card illustration only to make it FULLY OPAQUE. This is a rectangular, printed card illustration, not a transparent sprite. Preserve the exact existing pixel-art subject, symbol, pose, scale, colors, complete dark scenic background and composition. Keep every existing visible detail intact. Render a SOLID rectangular image from edge to edge, including all dark areas, stars, magic glow, objects, and the character. Do not interpret brightness as alpha. There must be no transparent or translucent pixels anywhere; the output must be an opaque RGB illustration with fully opaque background and foreground. Do not add frames, text, border, checkerboard, watermark or new elements. Keep its original landscape canvas."
+    },
+    {
+      "id": "quick_soul_substitution",
+      "input": "assets/ui/card_art/quick_soul_substitution_themed_card_art.png",
+      "output": "assets/ui/card_art/quick_soul_substitution_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Edit the supplied final game-card illustration only to make it FULLY OPAQUE. This is a rectangular, printed card illustration, not a transparent sprite. Preserve the exact existing pixel-art subject, symbol, pose, scale, colors, complete dark scenic background and composition. Keep every existing visible detail intact. Render a SOLID rectangular image from edge to edge, including all dark areas, stars, magic glow, objects, and the character. Do not interpret brightness as alpha. There must be no transparent or translucent pixels anywhere; the output must be an opaque RGB illustration with fully opaque background and foreground. Do not add frames, text, border, checkerboard, watermark or new elements. Keep its original landscape canvas."
+    },
+    {
+      "id": "ward_reincarnation_sigil",
+      "input": "assets/ui/card_art/ward_reincarnation_sigil_themed_card_art.png",
+      "output": "assets/ui/card_art/ward_reincarnation_sigil_themed_card_art.png",
+      "tool": "built-in imagegen",
+      "prompt": "Edit the supplied final game-card illustration only to make it FULLY OPAQUE. This is a rectangular, printed card illustration, not a transparent sprite. Preserve the exact existing pixel-art subject, symbol, pose, scale, colors, complete dark scenic background and composition. Keep every existing visible detail intact. Render a SOLID rectangular image from edge to edge, including all dark areas, stars, magic glow, objects, and the character. Do not interpret brightness as alpha. There must be no transparent or translucent pixels anywhere; the output must be an opaque RGB illustration with fully opaque background and foreground. Do not add frames, text, border, checkerboard, watermark or new elements. Keep its original landscape canvas."
+    }
+  ]
+}

@@ -37,7 +37,11 @@ func slots(group: String) -> Array[Node]:
 
 func verify_assets(entry: Dictionary, card: CardData) -> void:
 	check(Deck.load_pool().has(card), entry.id + " present in playable pool")
-	check(card.use_dedicated_art and card.art.get_size() == Vector2(320, 170), entry.id + " portrait")
+	check(card.use_dedicated_art and card.art != null and card.art.resource_path ==
+		"res://assets/ui/card_art/tf_%s_themed_card_art.png" % entry.id, entry.id + " themed portrait")
+	var original_portrait := load("res://assets/ui/card_art/time_fantasy/tf_%s.png" % entry.id) as Texture2D
+	check(original_portrait != null and original_portrait.get_size() == Vector2(320, 170),
+		entry.id + " original portrait retained")
 	check(not card.art.get_image().detect_alpha(), entry.id + " opaque portrait hides terrain")
 	var actions := {"Idle": "idle1", "Attack01": entry.attack, "Attack02": entry.special,
 		"Hurt": "hit", "Walk": "walk", "Summon": "cheer", "Block": "crouch", "Death": "death"}

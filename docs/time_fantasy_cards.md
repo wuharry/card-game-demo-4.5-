@@ -1,6 +1,6 @@
 # Time Fantasy 新卡（2026-09-10）
 
-首批選用素材包中的 12 名角色，已加入 `data/cards/`，會由 `Deck.load_pool()` 自動加入圖鑑與隨機牌堆。這批直接使用原作者 finalbossblues 的像素；Time Fantasy 的身體比例與 Tiny RPG 不同，沒有將它重繪成 Tiny RPG。
+首批選用素材包中的 12 名角色，已加入 `data/cards/`，會由 `Deck.load_pool()` 自動加入圖鑑與隨機牌堆。戰鬥動畫直接使用原作者 finalbossblues 的像素；2026-09-25 起，靜態卡面改用符合全卡池風格的場景插畫，角色外觀以原素材為參考。原始卡圖與全部動畫仍保留。
 
 | 卡名 | 費用 | 攻擊／生命 | 主動技能（技能費用） | 戰吼／關鍵字 |
 |---|---:|---|---|---|
@@ -22,7 +22,8 @@
 - 角色來源對照與初版數值：`assets/characters/time_fantasy/cards.json`。實際遊戲資料由 `data/cards/tf_*.tres` 載入。
 - 每個動畫格保留來源的 48 × 48 像素與座標；原來的三張動作各停留兩格，輸出 288 × 48 橫排動畫。傷害在 0.35 秒結算時仍看得到出招姿勢。
 - `Death` 使用原本的三張 `crouch` 接原本的 `dead`（蒼衣遊俠的原檔名為 `down`），最後定格。`Summon` 用 `cheer`，`Block` 用 `crouch`。
-- 卡面使用原始待機角色裁切、nearest 整數倍放大，再放入 320 × 170 深色畫布，避免地形透過卡框的透明卡窗。每張卡都有獨立卡圖，不混用其他角色插畫。
+- `assets/ui/card_art/time_fantasy/` 保留原始待機角色裁切、nearest 整數倍放大後的 320 × 170 深色底卡圖，匯入器仍可重建這些原稿。
+- 正式卡面改讀 `assets/ui/card_art/tf_<id>_themed_card_art.png`：以 imagegen 內建編輯模式加入主題場景、統一構圖，保留角色的主要外觀特徵，但不宣稱新插畫逐像素等於原素材。重建動畫不會覆寫新版卡面。
 - 原圖陰影屬於作者素材的一部分，保留；上桌大小與腳底由既有 `Card.show_standee()` 自動計算。
 - 原作者說明：[SOURCE_README.txt](../assets/characters/time_fantasy/SOURCE_README.txt)。ZIP 不需要隨遊戲執行檔配送；重建動畫時才需要提供原始壓縮檔。
 

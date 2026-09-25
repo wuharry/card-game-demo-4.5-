@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://src/card/card_data.gd" id="1_card"]
 [ext_resource type="Script" path="res://src/card/skill_data.gd" id="2_skill"]
-[ext_resource type="Texture2D" path="res://assets/ui/card_art/arcana_star_tempest_card_art.png" id="3_art"]
+[ext_resource type="Texture2D" path="res://assets/ui/card_art/arcana_star_tempest_themed_card_art.png" id="3_art"]
 
 [sub_resource type="Resource" id="Skill_main"]
 script = ExtResource("2_skill")
