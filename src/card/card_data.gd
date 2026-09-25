@@ -29,6 +29,7 @@ enum CardType {
 @export var art: Texture2D                 # 卡面靜態圖;舊從者仍可放 standee 第 0 幀的 AtlasTexture
 @export var use_dedicated_art: bool = false # true = 卡面/預覽讀 art,召喚立牌仍只讀 standee
 @export var standee: Texture2D             # 立牌動畫表(show_standee 切幀播待機動畫)
+@export var approach_on_attack: bool = true # 近戰移到目標身前；遠程設 false。只影響演出。
 @export var active_skill: SkillData        # 主動技能(預設 Attack02 動畫;null = 無主動技,
                                            # 見 README §6.1 與 docs/skills_design.md)
 ## 戰吼:召喚落地時自動結算一次的效果(null = 沒有戰吼)。

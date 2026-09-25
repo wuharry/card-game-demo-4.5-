@@ -586,7 +586,7 @@ func _arcana_visual_positions(target: Card, skill: SkillData) -> Array[Vector3]:
 					recipients.append(back)
 	var positions: Array[Vector3] = []
 	for unit in recipients:
-		positions.append(unit.global_position + Vector3(0, 0.65, 0))
+		positions.append(preload("res://src/fx/actor_feedback.gd").origin_of(unit) + Vector3(0, 0.65, 0))
 	return positions
 
 
@@ -1001,9 +1001,15 @@ func on_action_performed(caster: Card, skill: SkillData, target: Node3D) -> void
 			battle_message.emit(str(ward_result.message))
 			return
 	# 2) 等攻擊動畫揮到一半再扣血,數字跟拳頭一起落地。
-	await get_tree().create_timer(0.35).timeout
-	if not is_instance_valid(caster) or not is_instance_valid(target):
+	caster.play_action_animation(skill, target)
+	await get_tree().create_timer(preload("res://src/fx/actor_feedback.gd").CONTACT_TIME).timeout
+	if not is_instance_valid(caster) or caster.current_hp <= 0:
 		return
+	if not is_instance_valid(target) or (target is Card and target.current_hp <= 0) \
+			or (target is Hero and target.hp <= 0):
+		caster.cancel_attack_motion()
+		return
+	caster.reach_attack_contact()
 	# 先算出這次行動的「傷害輪廓」:多少傷害、會不會吃反擊。
 	var dmg := 0
 	var retaliate := false
@@ -1029,6 +1035,10 @@ func on_action_performed(caster: Card, skill: SkillData, target: Node3D) -> void
 	if time_gap:
 		dmg = 0
 	if target is Hero:
+		if dmg > 0:
+			if preload("res://src/fx/slash_effect.gd").supports(caster.data):
+				preload("res://src/fx/slash_effect.gd").play_at(target)
+			caster.impact_feedback(dmg)
 		(target as Hero).take_damage(dmg)   # 打臉不吃反擊(§4.2)
 		return
 	var mod := SkillData.Modifier.NONE if skill == null else skill.modifier
@@ -1131,9 +1141,15 @@ func _resolve_attack(attacker: Card, defender: Card, dmg: int, retaliate: bool,
 	var counter := defender.atk_total() if retaliate else 0
 	var hits := 2 if mod == SkillData.Modifier.DOUBLE else 1   # 連擊:結算兩次
 	var dealt := 0
+	var shield_before := defender.shield
 	for hit in range(hits):
 		if is_instance_valid(defender):
+			if dmg > 0 and minion_attack and is_instance_valid(attacker) \
+					and preload("res://src/fx/slash_effect.gd").supports(attacker.data):
+				preload("res://src/fx/slash_effect.gd").play_at(defender, defender.shield >= dmg, hit > 0)
 			dealt += _deal_damage(defender, dmg, minion_attack)
+	if is_instance_valid(attacker) and (dealt > 0 or defender.shield < shield_before):
+		attacker.impact_feedback(dealt, dealt == 0)
 	if retaliate and counter > 0 and is_instance_valid(attacker):
 		_deal_damage(attacker, counter, true)
 	# 吸血:回復「實際造成」的傷害——夜幕/鐵壁減免後的數字,不是帳面值。

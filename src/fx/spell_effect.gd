@@ -17,7 +17,7 @@ var _plumes: Array[ShaderMaterial] = []
 
 
 static func play_arcana(host: Node, card: CardData, positions: Array[Vector3]) -> void:
-	if not is_instance_valid(host) or not host.is_inside_tree() or card == null:
+	if NetMatch.is_dedicated_server or not is_instance_valid(host) or not host.is_inside_tree() or card == null:
 		return
 	var id := card.resource_path.get_file().get_basename()
 	if not PROFILES.has(id):
@@ -98,18 +98,36 @@ func _fire(color: Color) -> void:
 
 
 func _thunder(color: Color) -> void:
-	# 以帶狀三角形畫光束；亮芯與外光分開，避免只有一根粗線。
-	for branch in 3:
+	# 主雷先落地，回閃換折線形狀；兩次光脈衝只屬於演出，不再扣第二次血。
+	for pulse in 2:
+		for branch in 3:
+			var points := PackedVector3Array()
+			for i in 12:
+				var t := float(i) / 11.0
+				var spread := 0.48 * sin(t * PI)
+				points.append(Vector3(sin(i * 6.7 + branch * 2.4 + pulse * 4.1) * spread
+					+ (branch - 1) * 0.6 * (1.0 - t),
+					lerpf(4.5 - branch * 0.6, -0.42, t), cos(i * 4.2 + branch + pulse) * spread))
+			var glow := _ribbon(points, 0.065, Color(color, 0.32), 1.5)
+			var core := _ribbon(points, 0.014, Color("e5f5ff"), 2.0)
+			for bolt in [glow, core]:
+				bolt.visible = pulse == 0
+				var tween := create_tween()
+				tween.tween_interval(pulse * 0.12)
+				tween.tween_callback(bolt.show)
+				tween.tween_interval(0.025)
+				tween.tween_property(bolt, "transparency", 1.0, 0.13 + branch * 0.025)
+	# 地面分岔把落點連到擴散光圈；俯視牌桌上仍能看清影響區域。
+	for spoke in 7:
 		var points := PackedVector3Array()
-		for i in 9:
-			var t := float(i) / 8.0
-			var spread := 0.52 * sin(t * PI)
-			points.append(Vector3(sin(i * 6.7 + branch * 2.4) * spread + (branch - 1) * 0.6 * (1.0 - t),
-				(1.0 - t) * (4.5 - branch * 0.6), cos(i * 4.2 + branch) * spread))
-		var glow := _ribbon(points, 0.06, Color(color, 0.28), 1.0)
-		var core := _ribbon(points, 0.015, Color("d9eeff"), 1.2)
-		_fade(glow, 0.48 + branch * 0.08)
-		_fade(core, 0.35 + branch * 0.08)
+		var angle := TAU * float(spoke) / 7.0
+		for step in 6:
+			var radius := float(step) * 0.23
+			var bend := angle + sin(step * 4.1 + spoke) * 0.15
+			points.append(Vector3(cos(bend) * radius, -0.42, sin(bend) * radius))
+		_fade(_ribbon(points, 0.018, Color(color, 0.7), 1.4), 0.45)
+	preload("res://src/fx/camera_impulse.gd").play(self, 0.055)
+	Sfx.play(Sfx.SPELL_CAST, -8.0, 0.02, 0.72)
 
 
 func _ribbon(points: PackedVector3Array, width: float, color: Color, energy: float) -> MeshInstance3D:

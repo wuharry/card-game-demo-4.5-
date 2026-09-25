@@ -1628,16 +1628,7 @@ func _execute_action(target: Node3D) -> void:
 
 ## 行動的本地執行(單機直呼;連線由 _net_action 在兩台各跑一份)。
 func _do_execute_action(caster: Card, skill: SkillData, target: Node3D) -> void:
-	if skill != null:
-		# 技能動畫表由資料指定(skill.anim);沒有該表就退回普攻動畫。
-		if not caster.play_one_shot_anim(skill.anim):
-			caster.play_one_shot_anim("Attack01")
-	else:
-		# 普攻預設 Attack01;牧師/骷髏弓手只有單張「Attack」表 → 備案。
-		if not caster.play_one_shot_anim("Attack01"):
-			caster.play_one_shot_anim("Attack")
-	# 受擊動畫改由 BattleManager 在「傷害落地」那刻播(和飄浮數字同步),
-	# 也順便修掉「被治療卻播受傷動畫」的怪象——挨打是結算的事,不是宣告的事。
+	# BattleManager 接受行動後安排起手與命中，AI／連線重放也共用同一時點。
 	action_performed.emit(caster, skill, target)
 
 

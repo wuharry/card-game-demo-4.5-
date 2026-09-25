@@ -47,7 +47,10 @@ func take_damage(amount: int) -> void:
 		_popup_number("-%d" % amount, Color(1.0, 0.3, 0.25))
 		# 命中爆點(同 card.gd:preload 引用避開 class_name 快取時序,§19)。
 		preload("res://src/fx/fx_burst.gd").spawn_at(self)
-		Sfx.play(Sfx.HIT, -3.0)
+		Sfx.impact(amount)
+		if is_instance_valid(_sprite) and not NetMatch.is_dedicated_server:
+			preload("res://src/fx/actor_feedback.gd").attach(self, _sprite, &"_anim").impact(amount)
+		preload("res://src/fx/camera_impulse.gd").play(self, 0.05)
 	if hp <= 0:
 		_die()
 	else:
@@ -155,23 +158,7 @@ func _refresh_hp() -> void:
 
 ## 飄浮傷害數字(與 card.gd 同語彙;本體站直,往 +Y 飄)。
 func _popup_number(text_value: String, color: Color) -> void:
-	var lb := Label3D.new()
-	lb.text = text_value
-	lb.font_size = 64
-	lb.modulate = color
-	lb.outline_size = 14
-	lb.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	lb.no_depth_test = true
-	lb.render_priority = 2
-	add_child(lb)
-	lb.position = Vector3(0.0, CHAR_HEIGHT * 0.7, 0.0)
-	var tw := lb.create_tween().set_parallel(true)
-	tw.tween_property(lb, "position:y", CHAR_HEIGHT * 0.7 + 0.9,
-		SETTINGS.current().motion_duration(0.8))
-	tw.tween_property(lb, "modulate:a", 0.0, SETTINGS.current().motion_duration(0.8))\
-		.set_ease(Tween.EASE_IN)
-	tw.chain().tween_callback(lb.queue_free)
-
+	preload("res://src/fx/combat_number.gd").show_at(self, text_value, color)
 
 ## ── 動畫表播放(與 card.gd 立牌同一套邏輯,軸心是自己的 _sprite)──
 func _play_idle() -> void:

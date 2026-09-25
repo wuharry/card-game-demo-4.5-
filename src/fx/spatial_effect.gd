@@ -5,7 +5,7 @@ extends Node3D
 const SETTINGS = preload("res://src/settings/app_settings.gd")
 const SHELL_SHADER = preload("res://src/fx/shield_shell.gdshader")
 const COLORS := {
-	"hit": Color("ffc179"), "heal": Color("7effb2"),
+	"hit": Color("ffc179"), "block": Color("77cfff"), "heal": Color("7effb2"),
 	"shield": Color("77cfff"), "fire": Color("ff823d"),
 	"ice": Color("94eaff"), "poison": Color("b2ef6b"),
 	"dark": Color("b58aff"), "forge": Color("ffe29a"),
@@ -17,7 +17,8 @@ static var _crystal_mesh: PrismMesh
 
 
 static func play_at(host: Node3D, kind: String, tint: Color = Color.WHITE) -> Node3D:
-	if not is_instance_valid(host) or not host.is_inside_tree() or not COLORS.has(kind):
+	if NetMatch.is_dedicated_server or not is_instance_valid(host) \
+			or not host.is_inside_tree() or not COLORS.has(kind):
 		return null
 	if host.get_tree().get_nodes_in_group("transient_spatial_fx").size() >= MAX_ACTIVE:
 		return null
@@ -28,7 +29,7 @@ static func play_at(host: Node3D, kind: String, tint: Color = Color.WHITE) -> No
 		parent = host.get_tree().root
 	parent.add_child(fx)
 	fx.add_to_group("transient_spatial_fx")
-	fx.global_position = host.global_position
+	fx.global_position = preload("res://src/fx/actor_feedback.gd").origin_of(host)
 	fx._build(kind, COLORS[kind] if tint == Color.WHITE else tint)
 	return fx
 
@@ -44,12 +45,14 @@ static func status_at(host: Node3D, status: SkillData.Status) -> void:
 
 func _build(kind: String, color: Color) -> void:
 	var reduced: bool = SETTINGS.current().reduce_motion
-	var duration := 0.3 if reduced else (0.5 if kind == "hit" else 0.95)
+	var duration := 0.3 if reduced else (0.5 if kind in ["hit", "block"] else 0.95)
 	var ring := _ring(color)
 	ring.position.y = 0.12
-	if kind == "hit":
+	if kind == "hit" or kind == "block":
 		ring.position.y = 0.65
 		ring.rotation_degrees.x = 65.0
+		if not reduced:
+			_impact_rays(color, kind == "block")
 	elif kind == "shield":
 		_shell(color, reduced, duration)
 	elif kind == "ice":
@@ -75,6 +78,44 @@ func _build(kind: String, color: Color) -> void:
 	var lifetime := create_tween()
 	lifetime.tween_interval(duration + 0.1)
 	lifetime.tween_callback(queue_free)
+
+
+## 白亮芯＋細長放射線，輪廓與餘光分開；格擋縮小成冷色火花。
+func _impact_rays(color: Color, blocked: bool) -> void:
+	var plane := Node3D.new()
+	add_child(plane)
+	plane.position.y = 0.7
+	var camera := get_viewport().get_camera_3d()
+	if camera != null:
+		plane.global_basis = camera.global_basis
+	var count := 6 if blocked or SETTINGS.current().quality == 0 else 10
+	for i in count:
+		var ray := MeshInstance3D.new()
+		var triangle := ImmediateMesh.new()
+		var angle := TAU * float(i) / count + 0.23
+		var length := (0.35 if blocked else 0.7) * (1.0 + float(i % 3) * 0.2)
+		triangle.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
+		for vertex in [Vector3(-0.035, 0.04, 0), Vector3(0.035, 0.04, 0), Vector3(0, length, 0)]:
+			triangle.surface_add_vertex(vertex)
+		triangle.surface_end()
+		ray.mesh = triangle
+		ray.rotation.z = angle
+		ray.material_override = _material(Color("fff1d7") if i % 3 == 0 and not blocked else color)
+		ray.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		plane.add_child(ray)
+		var tw := create_tween().set_parallel(true)
+		tw.tween_property(ray, "position", Vector3(-sin(angle), cos(angle), 0) * 0.3, 0.2)
+		tw.tween_property(ray, "scale", Vector3(0.1, 0.7, 1), 0.25)
+		tw.tween_property(ray, "transparency", 1.0, 0.2).set_delay(0.04)
+	if SETTINGS.current().quality > 0:
+		var light := OmniLight3D.new()
+		light.position.y = 0.8
+		light.light_color = color
+		light.light_energy = 1.2 if blocked else 1.8
+		light.omni_range = 2.0
+		light.shadow_enabled = false
+		add_child(light)
+		create_tween().tween_property(light, "light_energy", 0.0, 0.16)
 
 
 func _material(color: Color) -> StandardMaterial3D:

@@ -36,10 +36,13 @@ func _run() -> void:
 	var ui: BattleUI = cm.battle_ui
 	ui.update_hud(2, NetMatch.my_side, 8, 10, 2)
 	ui.flash_message(app.text("battle_attack_desc"))
-	ui._history_button.button_pressed = true
-	_check(ui._recent_messages.size() > 0, "訊息須保留供重讀")
+	cm.battle_manager.record_event("HUD review event", NetMatch.my_side)
+	ui._history_button.pressed.emit()
+	_check(ui.archive.is_open() and ui.archive.mode == "history",
+		"戰鬥紀錄按鈕必須開啟目前的戰報視窗")
 	_check(ui.blocks_board_pointer(ui._history_button.get_global_rect().get_center()),
-		"最近訊息按鈕不能穿透到牌桌")
+		"戰鬥紀錄視窗不能穿透到牌桌")
+	ui.archive.close()
 	ui.update_arrow(Vector2(420, 400), Vector2(700, 260), true)
 	var host := Node3D.new()
 	scene.add_child(host)
@@ -60,8 +63,8 @@ func _run() -> void:
 	await create_timer(0.2).timeout
 	_check(not ui._hud_panel.get_global_rect().intersects(ui._hud_turn_panel.get_global_rect()),
 		"資源列不能蓋住回合條")
-	_check(not ui._history_panel.get_global_rect().intersects(ui._toast.get_global_rect()),
-		"最近訊息不能蓋住即時提示")
+	_check(root.get_visible_rect().encloses(ui._toast.get_global_rect()),
+		"即時提示在目前 UI 縮放下必須留在畫面內")
 	if DisplayServer.get_name() != "headless" and not args.is_empty():
 		await RenderingServer.frame_post_draw
 		print("capture size=", root.get_texture().get_size(), " UI scale=", root.content_scale_factor)
@@ -70,6 +73,7 @@ func _run() -> void:
 	_check(ui._end_turn_btn.disabled, "AI 回合不可結束回合")
 	ui.update_hud(3, NetMatch.my_side, 3, 3, 0)
 	_check(not ui._end_turn_btn.disabled, "我方回合必須恢復操作")
+	_check(ui._end_turn_btn.size.x <= 124.0, "換過英文對方回合後，按鈕寬度仍須維持操作區範圍")
 	var unit: Card = cm.battle_manager.spawn_unit(load("res://data/cards/knight.tres"),
 		get_nodes_in_group("player_front")[0])
 	unit.equip_atk_bonus = 2

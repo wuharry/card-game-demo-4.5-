@@ -29,3 +29,4 @@ art = ExtResource("4_card_art")
 use_dedicated_art = true
 standee = ExtResource("2_sheet")
 active_skill = SubResource("Skill_main")
+approach_on_attack = false

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-Hant">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>戰鬥演出 · 實機預覽</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#10151b;color:#eee9df}*{box-sizing:border-box}body{max-width:1180px;margin:auto;padding:32px 24px}header{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:24px}.eyebrow{color:#c6a978;letter-spacing:.16em;font-size:12px}h1{font-size:30px;font-weight:650;margin:8px 0}p{color:#bac3ce;line-height:1.7;margin:8px 0}.tag{border:1px solid #46515b;padding:7px 12px;border-radius:30px;white-space:nowrap;font-size:12px}nav{display:flex;gap:8px;margin:16px 0}button,select{font:inherit;background:#1f2933;border:1px solid #48535e;border-radius:6px;color:inherit;padding:10px 18px;cursor:pointer}button[aria-pressed=true]{border-color:#e6bd79;background:#463924;color:#ffe1ac}button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #e6bd79;outline-offset:3px}figure{margin:0;background:#070b0f;border:1px solid #3c4650;border-radius:8px;overflow:hidden}#frame{width:100%;height:auto;display:block;aspect-ratio:16/9}.controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px}input[type=range]{flex:1;min-width:160px;accent-color:#e6bd79}output{font-variant-numeric:tabular-nums;font-size:13px;color:#d7bf97}.note{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:24px 0;padding:20px;background:#19212a;border-radius:8px}.note b{display:block;margin-bottom:6px;color:#f2d6a9}.still{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px}.still img{width:100%;border:1px solid #3c4650;border-radius:6px}.still a{color:#b7dcf5}footer{margin-top:26px;font-size:13px;color:#8996a4}@media(max-width:680px){body{padding:20px 12px}header{display:block}.tag{display:inline-block;margin-top:10px}.note,.still{grid-template-columns:1fr}h1{font-size:25px}button{padding:9px 12px}}
+</style>
+<header><div><div class="eyebrow">COMBAT FEEDBACK · 2026.09.25</div><h1>出手、命中、餘光</h1><p>Godot 實際牌桌錄製。切換演出、慢速播放，或拖動時間軸查看命中。</p></div><span class="tag">Forward+ · 1280 × 720 · 30 fps</span></header>
+<nav aria-label="演出選擇"><button data-clip="slash" aria-pressed="true">劍士斬擊</button><button data-clip="block" aria-pressed="false">護盾格擋</button><button data-clip="thunder" aria-pressed="false">雷霆貫穿</button></nav>
+<figure><img id="frame" src="combat-feedback-preview/slash_11.webp" width="1280" height="720" alt="劍士命中：刀光、爆點與雙方傷害數字"><div class="controls"><button id="play" aria-label="播放演出">播放</button><label for="speed">速度</label><select id="speed"><option value="1">1×</option><option value="0.5">0.5×</option><option value="0.25">0.25×</option></select><input id="seek" aria-label="演出時間軸" type="range" min="0" max="29" value="11"><output id="time">0.37 s / 1.00 s</output></div></figure>
+<div class="note"><div><b id="caption">移動到目標身前 → 揮擊命中 → 退回原位</b><p id="detail">近戰角色先移到目標側前方，再揮擊命中並返回原位。傷害仍在起手後 0.35 秒結算；反擊爆點與數字跟隨角色，卡槽與碰撞位置保持穩定。</p></div><div><b>近戰靠近，遠程原地出手</b><p>弓箭手與法師保留原地出手，治療與加盾不突進。出手方式可依角色調整；Hit-stop 只停角色動作。「減少動態效果」會關閉角色前衝、Hit-stop、鏡頭震動與新生成的粒子／閃光，傷害數字仍保留閱讀時間。</p></div></div>
+<div class="still"><div><a href="combat-feedback-preview/hud.png"><img src="combat-feedback-preview/hud.png" alt="繁體中文魔力與狀態 HUD">繁體中文 HUD</a></div><div><a href="combat-feedback-preview/hud-en-large.png"><img src="combat-feedback-preview/hud-en-large.png" alt="英文 150% HUD 排版">英文介面 · 150% 縮放</a></div></div>
+<footer>畫面直接取自 viewport，沒有裁切或後製。播放器無音軌；音效變調與重疊限制已由程式驗證，實際聽感需在遊戲中試聽。</footer>
+<script>
+const clips={slash:{title:'移動到目標身前 → 揮擊命中 → 退回原位',text:'近戰角色先移到目標側前方，再揮擊命中並返回原位。傷害仍在起手後 0.35 秒結算；反擊爆點與數字跟隨角色，卡槽與碰撞位置保持穩定。',alt:'劍士斬擊實機連續畫面'},block:{title:'藍色火花 → 護盾減少 → 格擋動作',text:'全額護盾吸收不會出現扣血數字；藍色火花與「盾 −N」保留命中資訊。反擊仍按原有戰鬥規則結算。',alt:'護盾格擋實機連續畫面'},thunder:{title:'主雷落地 → 回閃 → 地面電弧與餘光',text:'細白亮芯與藍色外光分層，兩次閃光使用不同折線。回閃只補充視覺，傷害只在施法結算時發生；貫穿同時保留前後排落點。',alt:'雷霆貫穿實機連續畫面'}};
+const frame=document.querySelector('#frame'),seek=document.querySelector('#seek'),play=document.querySelector('#play'),speed=document.querySelector('#speed'),time=document.querySelector('#time');
+let clip='slash',playing=false,position=11,last=0;const cache=new Map();
+function path(name,index){return `combat-feedback-preview/${name}_${String(index).padStart(2,'0')}.webp`}
+function warm(name){if(cache.has(name))return;cache.set(name,Array.from({length:30},(_,i)=>{const image=new Image();image.src=path(name,i);return image}))}
+function render(){const i=Math.min(29,Math.floor(position));frame.src=path(clip,i);seek.value=i;time.textContent=`${(i/30).toFixed(2)} s / 1.00 s`}
+function pause(){playing=false;play.textContent='播放';play.setAttribute('aria-label','播放演出')}
+play.addEventListener('click',()=>{playing=!playing;play.textContent=playing?'暫停':'播放';play.setAttribute('aria-label',playing?'暫停演出':'播放演出');last=performance.now()});
+seek.addEventListener('input',()=>{pause();position=Number(seek.value);render()});
+document.querySelectorAll('[data-clip]').forEach(button=>button.addEventListener('click',()=>{pause();clip=button.dataset.clip;position=clip==='thunder'?4:11;warm(clip);document.querySelectorAll('[data-clip]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));document.querySelector('#caption').textContent=clips[clip].title;document.querySelector('#detail').textContent=clips[clip].text;frame.alt=clips[clip].alt;render()}));
+function tick(now){if(playing){position+=(now-last)/1000*30*Number(speed.value);if(position>=40)position=0;render()}last=now;requestAnimationFrame(tick)}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});warm(clip);requestAnimationFrame(tick);
+</script>
+</html>

@@ -24,3 +24,4 @@ use_dedicated_art = true
 standee = ExtResource("2_sheet")
 active_skill = SubResource("Skill_main")
 keywords = Array[StringName]([&"飛行"])
+approach_on_attack = false

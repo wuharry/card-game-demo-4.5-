@@ -23,3 +23,4 @@ art = ExtResource("2_art")
 use_dedicated_art = true
 standee = ExtResource("3_idle")
 battlecry = SubResource("Skill_battlecry")
+approach_on_attack = false

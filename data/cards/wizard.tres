@@ -36,3 +36,4 @@ use_dedicated_art = true
 standee = ExtResource("2_sheet")
 active_skill = SubResource("Skill_main")
 battlecry = SubResource("Skill_battlecry")
+approach_on_attack = false

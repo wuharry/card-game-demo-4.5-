@@ -45,6 +45,8 @@ const LINE_GOLD := Color(UI_STYLE.GOLD, 0.76)
 var _panel: PanelContainer
 var _title: Label
 var _stats: Label
+var _unit_status: Label
+var _command_source: Card
 var _attack_btn: Button
 var _skill_btn: Button
 var _desc: Label
@@ -66,7 +68,7 @@ var _skill_note: String = ""   # 技能被擋的理由(同上)
 var _hud_turn_panel: PanelContainer
 var _hud_panel: PanelContainer
 var _hud_turn: Label
-# 魔力列拆四段 Label 排一列(藍◆正常/黃◆暫時/藍◇+數字/黃「+n」):
+# 魔力列拆四段 Label 排一列(紫◆正常/黃◆暫時/紫◇空槽/黃「溢出量」):
 # 一個 Label 只有一種顏色;不用 RichTextLabel 是它不會用內容撐開最小寬度,
 # 而 HUD 面板的寬度正是靠魔力列撐的(見 _build_hud 的置中註解)。
 var _hud_mana_row: HBoxContainer
@@ -74,6 +76,13 @@ var _hud_mana_norm: Label
 var _hud_mana_temp: Label
 var _hud_mana_rest: Label
 var _hud_mana_bonus: Label
+var _hud_mana_title: Label
+var _hud_mana_value: Label
+var _hud_mana_detail: Label
+var _hud_mana_delta: Label
+var _mana_feedback: Tween
+var _turn_feedback: Tween
+var _last_hud: Dictionary = {}
 var _hud_opp: Label   # 對方手牌張數(2d;只在連線時顯示)
 var _end_turn_btn: Button
 var _leave_btn: Button   # 中途離開(左上角;真正的攔截在確認窗)
@@ -112,6 +121,9 @@ func _ready() -> void:
 ## attack_note / skill_note = 該行動「被擋的理由」;空字串 = 可以做。
 ## 有理由 → 按鈕灰化、描述列轉述理由(規則在 BattleManager,UI 只負責說人話)。
 func open(card: Card, attack_note: String = "", skill_note: String = "") -> void:
+	_command_source = card
+	if is_instance_valid(_debug_test_btn):
+		_debug_test_btn.hide()
 	hide_spell_drag()
 	_history_button.button_pressed = false
 	# 進入新的指令時收掉上一個提示；訊息仍可從最近訊息重讀。
@@ -128,6 +140,7 @@ func open(card: Card, attack_note: String = "", skill_note: String = "") -> void
 		# HP 顯示「當前/上限」:掉過血的單位一眼看得出來。
 		_stats.text = "ATK %d ／ HP %d／%d" \
 			% [card.atk_total(), card.current_hp, card.data.hp + card.max_hp_bonus]
+		_update_unit_status(card)
 	_attack_btn.disabled = attack_note != ""
 	_attack_btn.tooltip_text = attack_note
 	_skill_btn.tooltip_text = skill_note
@@ -234,6 +247,8 @@ func update_arrow(from_px: Vector2, to_px: Vector2, locked: bool) -> void:
 ## 全部收起來(取消或發動完畢)。
 func close() -> void:
 	_panel.visible = false
+	if is_instance_valid(_debug_test_btn):
+		_debug_test_btn.show()
 	hide_spell_drag()
 	_skill = null
 
@@ -267,6 +282,13 @@ func _build_panel() -> void:
 	_stats.add_theme_font_size_override("font_size", 14)
 	_stats.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 0.6))
 	col.add_child(_stats)
+	_unit_status = Label.new()
+	_unit_status.add_theme_font_override("font", FONT_BODY)
+	_unit_status.add_theme_font_size_override("font_size", 14)
+	_unit_status.add_theme_color_override("font_color", Color("9cd9ee"))
+	_unit_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_unit_status.custom_minimum_size.x = 340
+	col.add_child(_unit_status)
 
 	col.add_child(_make_gold_line())
 
@@ -455,6 +477,15 @@ func _build_hud() -> void:
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 2)
 	_hud_panel.add_child(col)
+	col.custom_minimum_size.x = 220
+	col.add_theme_constant_override("separation", 5)
+	var resource_header := HBoxContainer.new()
+	col.add_child(resource_header)
+	_hud_mana_title = _resource_label(14, UI_STYLE.TEXT_DIM)
+	_hud_mana_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	resource_header.add_child(_hud_mana_title)
+	_hud_mana_value = _resource_label(24, Color("d8c9ff"))
+	resource_header.add_child(_hud_mana_value)
 
 	# 魔力用冷色:和整片暮色金區隔,一眼找得到資源在哪。
 	# 暫時魔力(丟牌回魔 §1.1)用暖黃:回合末就蒸發的錢,顏色先說。
@@ -466,6 +497,11 @@ func _build_hud() -> void:
 	_hud_mana_temp = _make_mana_label(UI_STYLE.GOLD)
 	_hud_mana_rest = _make_mana_label(UI_STYLE.AMETHYST)
 	_hud_mana_bonus = _make_mana_label(UI_STYLE.GOLD)
+	_hud_mana_detail = _resource_label(12, UI_STYLE.GOLD)
+	col.add_child(_hud_mana_detail)
+	_hud_mana_delta = _resource_label(13, UI_STYLE.TEXT)
+	_hud_mana_delta.custom_minimum_size.y = 19
+	col.add_child(_hud_mana_delta)
 
 	# 對方手牌張數(2d):平常隱藏,連線時由 update_opp_count 開燈。
 	_hud_opp = Label.new()
@@ -577,8 +613,8 @@ func _build_history() -> void:
 	add_child(_history_button)
 	_history_button.set_anchors_and_offsets_preset(
 		Control.PRESET_TOP_LEFT, Control.PRESET_MODE_MINSIZE, 24)
-	_history_button.offset_top = 128
-	_history_button.offset_bottom = 164
+	_history_button.custom_minimum_size.y = 46
+	_history_button.position.x = _leave_btn.get_rect().end.x + 10.0
 	_history_button.pressed.connect(func() -> void: history_requested.emit())
 
 
@@ -606,6 +642,21 @@ func _make_mana_label(color: Color) -> Label:
 
 ## HUD 刷新(BattleManager.state_changed 接進來):回合+行動方+該方魔力。
 func update_hud(turn: int, side: String, mana: int, mana_max: int, temp_mana: int) -> void:
+	var same_turn: bool = not _last_hud.is_empty() and _last_hud.side == side and _last_hud.turn == turn
+	if same_turn and int(_last_hud.mana) != mana:
+		_show_mana_change(mana - int(_last_hud.mana))
+	elif not same_turn:
+		if _mana_feedback != null:
+			_mana_feedback.kill()
+		_hud_mana_delta.text = ""
+		if _turn_feedback != null:
+			_turn_feedback.kill()
+		_hud_turn_panel.modulate = Color.WHITE
+		if not SETTINGS.current().reduce_motion and not _last_hud.is_empty():
+			_hud_turn_panel.modulate = Color(1.35, 1.2, 0.9)
+			_turn_feedback = create_tween()
+			_turn_feedback.tween_property(_hud_turn_panel, "modulate", Color.WHITE, 0.45)
+	_last_hud = {"side": side, "turn": turn, "mana": mana}
 	# 「我方」以本機視角判定(2b):my_side 離線恆為 "player",熱座語意不變;
 	# 連線時 client 的我方是 "enemy" 側——別寫死字串。
 	var side_name: String = SETTINGS.current().text("battle_my_turn") \
@@ -615,8 +666,12 @@ func update_hud(turn: int, side: String, mana: int, mana_max: int, temp_mana: in
 	_end_turn_btn.disabled = (NetMatch.is_online or MatchMode.is_vs_ai()) \
 		and side != NetMatch.my_side
 	_end_turn_btn.tooltip_text = side_name if _end_turn_btn.disabled else ""
-	_end_turn_btn.text = side_name if _end_turn_btn.disabled \
+	_end_turn_btn.text = SETTINGS.current().text("battle_wait_turn") if _end_turn_btn.disabled \
 		else SETTINGS.current().text("battle_end_turn")
+	# 換過對方回合後也重新量尺寸；長英文文字不能把按鈕永久撐進預覽區。
+	_end_turn_btn.reset_size()
+	_end_turn_btn.set_anchors_and_offsets_preset(
+		Control.PRESET_CENTER_RIGHT, Control.PRESET_MODE_MINSIZE, 24)
 	# 行動方用顏色再講一次:金=我方、緋=對方(熱座換邊要一眼可辨)。
 	_hud_turn.add_theme_color_override(
 		"font_color", GOLD if side == NetMatch.my_side else UI_STYLE.DANGER)
@@ -624,16 +679,59 @@ func update_hud(turn: int, side: String, mana: int, mana_max: int, temp_mana: in
 	# 黃◆=暫時魔力,疊在最右(付費從右邊扣,見 battle_manager._pay);
 	# 回收可能把 mana 推超過上限(5/5 再棄牌),◇ 用 maxi 兜住別變負。
 	var temp := clampi(temp_mana, 0, maxi(mana, 0))
-	_hud_mana_norm.text = "◆".repeat(maxi(mana - temp, 0))
-	_hud_mana_temp.text = "◆".repeat(temp)
-	_hud_mana_rest.text = "◇".repeat(maxi(mana_max - mana, 0)) + "  %d／%d" % [mana, mana_max]
-	_hud_mana_bonus.text = "(+%d)" % temp
-	_hud_mana_bonus.visible = temp > 0
+	var normal_pips := clampi(mana - temp, 0, 10)
+	var temp_pips := clampi(temp, 0, 10 - normal_pips)
+	_hud_mana_norm.text = "◆".repeat(normal_pips)
+	_hud_mana_temp.text = "◆".repeat(temp_pips)
+	_hud_mana_rest.text = "◇".repeat(clampi(mana_max - mana, 0, 10 - normal_pips - temp_pips))
+	_hud_mana_bonus.text = " +%d" % maxi(0, mana - 10)
+	_hud_mana_bonus.visible = mana > 10
+	_hud_mana_title.text = SETTINGS.current().text("battle_mana_own" if side == NetMatch.my_side else "battle_mana_enemy")
+	_hud_mana_value.text = "%d / %d" % [mana, mana_max]
+	_hud_mana_detail.text = SETTINGS.current().text("battle_temp_mana") % temp if temp > 0 else ""
+	_hud_mana_detail.visible = temp > 0
 	# 內容變了 → 重新量身、貼回右上角(量尺寸要在內容就位之後,同 open() 的課)。
 	_hud_panel.reset_size()
 	_hud_panel.set_anchors_and_offsets_preset(
 		Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 24)
 	_layout_hud()
+
+
+func _resource_label(font_size: int, color: Color) -> Label:
+	var label := Label.new()
+	label.add_theme_font_override("font", FONT_BODY)
+	label.add_theme_font_size_override("font_size", font_size)
+	label.add_theme_color_override("font_color", color)
+	return label
+
+
+func _show_mana_change(change: int) -> void:
+	if _mana_feedback != null:
+		_mana_feedback.kill()
+	_hud_mana_delta.text = SETTINGS.current().text("battle_mana_delta") % ["+" if change > 0 else "−", absi(change)]
+	_hud_mana_delta.modulate = Color("9be7c4") if change > 0 else Color("ffb697")
+	_mana_feedback = create_tween()
+	_mana_feedback.tween_interval(0.9)
+	_mana_feedback.tween_property(_hud_mana_delta, "modulate:a", 0.0, 0.25)
+
+
+func _status_text(card: Card) -> String:
+	var parts: PackedStringArray = []
+	if card.shield > 0:
+		parts.append(SETTINGS.current().text("status_shield") % card.shield)
+	for status in card.statuses:
+		parts.append(SETTINGS.current().text("battle_status_turns") % [
+			SETTINGS.current().status_name(status.id), int(status.turns)])
+	if card.attacked_this_turn:
+		parts.append(SETTINGS.current().text("battle_attack_spent"))
+	if card.skill_used_this_turn:
+		parts.append(SETTINGS.current().text("battle_skill_spent"))
+	return "  /  ".join(parts)
+
+
+func _update_unit_status(card: Card) -> void:
+	_unit_status.text = _status_text(card)
+	_unit_status.visible = not _unit_status.text.is_empty()
 
 
 func _layout_hud() -> void:
@@ -642,6 +740,11 @@ func _layout_hud() -> void:
 	var top := 76.0 if get_viewport().get_visible_rect().size.x < 1050.0 else 24.0
 	_hud_panel.offset_top = top
 	_hud_panel.offset_bottom = top + _hud_panel.get_combined_minimum_size().y
+	# 150% UI 時資源列移到第二排，結束回合也跟著避開它。
+	var button_height := _end_turn_btn.get_combined_minimum_size().y
+	var center_y := get_viewport().get_visible_rect().size.y * 0.5
+	_end_turn_btn.offset_top = maxf(-button_height * 0.5, _hud_panel.offset_bottom + 12.0 - center_y)
+	_end_turn_btn.offset_bottom = _end_turn_btn.offset_top + button_height
 	_place_feedback(_toast, 110)
 	_place_feedback(_hint, 48)
 
@@ -959,6 +1062,9 @@ func show_card_preview(card: Card) -> void:
 				words.append(SETTINGS.current().keyword_name(w))
 			lines.append(SETTINGS.current().text("keywords") + ": " + ", ".join(words))
 		_prev_stats.text = "\n".join(lines)
+		var status_text := _status_text(card)
+		if not status_text.is_empty():
+			_prev_stats.text += "\n" + status_text
 		_prev_stats.visible = true
 	else:
 		_prev_stats.visible = false
@@ -994,6 +1100,9 @@ func hide_card_preview() -> void:
 
 func _build_preview() -> void:
 	_prev_panel = PanelContainer.new()
+	# 文字換行／字型量測晚一幀完成時，面板應向左長，不能推進右側操作區。
+	_prev_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_prev_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
 	_prev_panel.add_theme_stylebox_override("panel", _make_panel_style())
 	_prev_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_prev_panel)
@@ -1017,6 +1126,8 @@ func _build_preview() -> void:
 	_prev_name.add_theme_font_size_override("font_size", 22)
 	_prev_name.add_theme_color_override("font_color", GOLD)
 	_prev_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_prev_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_prev_name.custom_minimum_size.x = 250
 	col.add_child(_prev_name)
 
 	_prev_type = Label.new()
@@ -1032,6 +1143,8 @@ func _build_preview() -> void:
 	_prev_stats.add_theme_font_size_override("font_size", 16)
 	_prev_stats.add_theme_color_override("font_color", Color("e8ddc4"))
 	_prev_stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_prev_stats.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_prev_stats.custom_minimum_size.x = 250
 	col.add_child(_prev_stats)
 
 	_prev_body = Label.new()
@@ -1044,6 +1157,13 @@ func _build_preview() -> void:
 
 
 func _process(_delta: float) -> void:
+	if _panel.visible:
+		if is_instance_valid(_command_source):
+			_stats.text = "ATK %d ／ HP %d／%d" % [_command_source.atk_total(),
+				_command_source.current_hp, _command_source.data.hp + _command_source.max_hp_bonus]
+			_update_unit_status(_command_source)
+		else:
+			close()
 	# 防呆:hover 中的卡被釋放(換邊重建手牌、單位陣亡)不會發 unhover 信號,
 	# 面板會永遠卡在畫面上——來源卡死了就自動收起。
 	if _prev_panel != null and _prev_panel.visible and not is_instance_valid(_prev_source):
@@ -1057,6 +1177,7 @@ func update_opp_count(count: int) -> void:
 	_hud_opp.visible = true
 	_hud_opp.text = SETTINGS.current().text("battle_enemy_hand") % count
 	_hud_panel.reset_size()
+	_layout_hud.call_deferred()
 
 
 ## ── 選牌面板(§抽濾:看頂選一/換牌共用)──────────────────

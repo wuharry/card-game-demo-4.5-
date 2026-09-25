@@ -448,7 +448,7 @@ func _apply_sheet(tex: Texture2D) -> int:
 ## suffix 是動畫表後綴(如 "Attack02"、"Hurt"),交給 CardData.get_anim_sheet 解析;
 ## 找不到該表回傳 false,呼叫端可以換備案(牧師的普攻表叫 "Attack" 不是 "Attack01")。
 ## 縮放沿用召喚時掃出來的 pixel_size:同一隻角色不同動作,身形大小要一致。
-func play_one_shot_anim(suffix: String) -> bool:
+func play_one_shot_anim(suffix: String, frame_seconds: float = 0.1) -> bool:
 	if _standee == null or data == null:
 		return false
 	var tex := data.get_anim_sheet(suffix)
@@ -460,7 +460,7 @@ func play_one_shot_anim(suffix: String) -> bool:
 	_standee_anim = _standee.create_tween()
 	for f in range(frames):
 		_standee_anim.tween_callback(func() -> void: _standee.frame = f)\
-			.set_delay(SETTINGS.current().motion_duration(0.1))
+			.set_delay(SETTINGS.current().motion_duration(frame_seconds))
 	_standee_anim.tween_callback(_restore_idle)   # 最後一格播完 → 回待機
 	return true
 
@@ -471,6 +471,66 @@ func _restore_idle() -> void:
 		return
 	var frames := _apply_sheet(data.standee)
 	_play_sheet_loop(frames)
+
+
+## 動作於規則接受行動後開始；前衝只移立牌，不碰卡槽與點擊碰撞。
+func play_action_animation(skill: SkillData, target: Node3D) -> void:
+	if NetMatch.is_dedicated_server:
+		return
+	if is_instance_valid(_standee) and is_instance_valid(target) \
+			and not SETTINGS.current().reduce_motion \
+			and (skill == null or skill.kind != SkillData.Kind.NON_ATTACK) \
+			and data.approach_on_attack:
+		var run_sheet := data.get_anim_sheet("Run")
+		if run_sheet != null:
+			_play_sheet_loop(_apply_sheet(run_sheet))
+		_feedback().attack_toward(target, _play_action_pose.bind(skill, true))
+	else:
+		_play_action_pose(skill, false)
+
+
+func _play_action_pose(skill: SkillData, approached: bool) -> void:
+	var timing = preload("res://src/fx/actor_feedback.gd")
+	# 第三個動作格對準命中點；先抵達目標身前，再切換揮擊動畫。
+	var frame_seconds: float = (timing.CONTACT_TIME - timing.ARRIVAL_TIME) / 3.0 if approached else 0.1
+	var suffix := skill.anim if skill != null else "Attack01"
+	if not play_one_shot_anim(suffix, frame_seconds):
+		if not play_one_shot_anim("Attack01", frame_seconds):
+			play_one_shot_anim("Attack", frame_seconds)
+
+
+func reach_attack_contact() -> void:
+	if is_instance_valid(_standee):
+		var feedback := _standee.get_node_or_null("ActorFeedback")
+		if feedback != null:
+			feedback.reach_contact()
+
+
+func cancel_attack_motion() -> void:
+	if is_instance_valid(_standee):
+		var feedback := _standee.get_node_or_null("ActorFeedback")
+		if feedback != null:
+			feedback.return_home()
+		if current_hp > 0:
+			_restore_idle()
+
+
+## 世界中的角色腳位；卡槽仍使用 global_position，特效才使用這個位置。
+func combat_position() -> Vector3:
+	if is_instance_valid(_standee):
+		var feedback := _standee.get_node_or_null("ActorFeedback")
+		if feedback != null:
+			return feedback.visual_origin()
+	return global_position
+
+
+func _feedback() -> Node:
+	return preload("res://src/fx/actor_feedback.gd").attach(self, _standee, &"_standee_anim")
+
+
+func impact_feedback(amount: int, blocked: bool = false) -> void:
+	if is_instance_valid(_standee) and not NetMatch.is_dedicated_server:
+		_feedback().impact(amount, blocked)
 
 
 ## 收掉立牌(卡片被取出卡槽時由 CardSlot 呼叫)。
@@ -671,7 +731,9 @@ func take_damage(amount: int) -> void:
 		# 命中爆點:所有傷害(普攻/反擊/技能/灼燒中毒)都經過這裡,一次接線全生效。
 		# 用 preload 引用而非裸名 FxBurst:新 class_name 未進編輯器快取前裸名會解析失敗(§19)。
 		preload("res://src/fx/fx_burst.gd").spawn_at(self)
-		Sfx.play(Sfx.HIT, -3.0)
+		Sfx.impact(amount)
+		impact_feedback(amount)
+		preload("res://src/fx/camera_impulse.gd").play(self, 0.05 if amount >= 5 else 0.025)
 
 
 func heal(amount: int) -> void:
@@ -705,6 +767,10 @@ func absorb_with_shield(amount: int) -> int:
 	shield -= absorbed
 	_update_status_label()
 	_popup_number(SETTINGS.current().text("shield_loss") % absorbed, Color(0.55, 0.8, 1.0))
+	preload("res://src/fx/spatial_effect.gd").play_at(self, "block")
+	impact_feedback(absorbed, true)
+	if absorbed == amount:
+		Sfx.impact(absorbed, true)
 	return amount - absorbed
 
 
@@ -712,23 +778,7 @@ func absorb_with_shield(amount: int) -> int:
 ## 掉血看 HP 小字太吃力,尤其反擊是「攻擊的同時自己也掉血」,
 ## 沒有這個數字,反擊看起來就像沒發生(驗收時的真實回饋)。
 func _popup_number(text_value: String, color: Color) -> void:
-	var lb := Label3D.new()
-	lb.text = text_value
-	lb.font_size = 64
-	lb.modulate = color
-	lb.outline_size = 14
-	lb.billboard = BaseMaterial3D.BILLBOARD_ENABLED   # 永遠面向鏡頭
-	lb.no_depth_test = true      # 不做深度測試 = 不會被立牌/地形擋住
-	lb.render_priority = 2
-	add_child(lb)
-	# 上桌的卡躺平,local +Z = 世界正上方(同 show_standee 的座標邏輯)。
-	lb.position = Vector3(0.0, 0.0, 1.1)
-	var tw := lb.create_tween().set_parallel(true)
-	tw.tween_property(lb, "position:z", 2.0, SETTINGS.current().motion_duration(0.8))
-	tw.tween_property(lb, "modulate:a", 0.0, SETTINGS.current().motion_duration(0.8))\
-		.set_ease(Tween.EASE_IN)
-	tw.chain().tween_callback(lb.queue_free)
-
+	preload("res://src/fx/combat_number.gd").show_at(self, text_value, color)
 
 ## 上限變動後把現血夾回上限(裝備替換:舊裝拆走、bonus 縮水時由帳房呼叫)。
 func clamp_hp() -> void:
@@ -854,6 +904,10 @@ func _update_status_label() -> void:
 ## 由 BattleManager 在 HP 歸零時呼叫(卡槽已先清位)。
 func die() -> void:
 	is_on_board = false
+	if is_instance_valid(_standee):
+		var feedback := _standee.get_node_or_null("ActorFeedback")
+		if feedback != null:
+			feedback.stop_attack()
 	# 屍體不該再吃射線:關碰撞(用 deferred——物理回呼期間直接改會報錯)。
 	var shape: CollisionShape3D = get_node_or_null("Area3D/CollisionShape3D")
 	if shape != null:
