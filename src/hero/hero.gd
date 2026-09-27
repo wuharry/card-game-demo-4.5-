@@ -40,17 +40,12 @@ func setup(hero_side: String, appearance: CardData) -> void:
 
 
 ## ── 血量(由 BattleManager 呼叫;打臉不吃反擊,§4.2)──────
-func take_damage(amount: int) -> void:
+func take_damage(amount: int, feedback_kind: StringName = &"hit") -> void:
 	hp = maxi(0, hp - amount)
 	_refresh_hp()
 	if amount > 0:
 		_popup_number("-%d" % amount, Color(1.0, 0.3, 0.25))
-		# 命中爆點(同 card.gd:preload 引用避開 class_name 快取時序,§19)。
-		preload("res://src/fx/fx_burst.gd").spawn_at(self)
-		Sfx.impact(amount)
-		if is_instance_valid(_sprite) and not NetMatch.is_dedicated_server:
-			preload("res://src/fx/actor_feedback.gd").attach(self, _sprite, &"_anim").impact(amount)
-		preload("res://src/fx/camera_impulse.gd").play(self, 0.05)
+		preload("res://src/fx/combat_feedback.gd").damage(self, amount, feedback_kind)
 	if hp <= 0:
 		_die()
 	else:
@@ -68,7 +63,13 @@ func heal(amount: int) -> void:
 		preload("res://src/fx/spatial_effect.gd").play_at(self, "heal")
 
 
+func impact_feedback(amount: int, blocked: bool = false) -> void:
+	if is_instance_valid(_sprite) and not NetMatch.is_dedicated_server:
+		preload("res://src/fx/actor_feedback.gd").attach(self, _sprite, &"_anim").impact(amount, blocked)
+
+
 func _die() -> void:
+	preload("res://src/fx/combat_feedback.gd").death(self)
 	# 死亡表定格(不回待機);死靈法師的表名全大寫 DEATH,備案再試一次。
 	if not _play_one_shot("Death", false):
 		_play_one_shot("DEATH", false)

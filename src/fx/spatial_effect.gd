@@ -9,6 +9,8 @@ const COLORS := {
 	"shield": Color("77cfff"), "fire": Color("ff823d"),
 	"ice": Color("94eaff"), "poison": Color("b2ef6b"),
 	"dark": Color("b58aff"), "forge": Color("ffe29a"),
+	"burn": Color("ff823d"), "poison_tick": Color("b2ef6b"), "affliction": Color("d3b86b"),
+	"death": Color("ffd6a1"),
 }
 const MAX_ACTIVE := 24
 static var _ring_mesh: TorusMesh
@@ -24,6 +26,7 @@ static func play_at(host: Node3D, kind: String, tint: Color = Color.WHITE) -> No
 		return null
 	var fx := (load("res://src/fx/spatial_effect.gd") as GDScript).new() as Node3D
 	fx.name = "SpatialEffect"
+	fx.set_meta("feedback_kind", kind)
 	var parent: Node = host.get_tree().current_scene
 	if parent == null:
 		parent = host.get_tree().root
@@ -45,6 +48,18 @@ static func status_at(host: Node3D, status: SkillData.Status) -> void:
 
 func _build(kind: String, color: Color) -> void:
 	var reduced: bool = SETTINGS.current().reduce_motion
+	if kind in ["burn", "poison_tick", "affliction"]:
+		# 狀態扣血用小色環；沒有命中放射線、粒子、燈光或鏡頭震動。
+		var tick := _ring(color)
+		tick.position.y = 0.4
+		tick.scale = Vector3.ONE * 0.5
+		if not reduced:
+			create_tween().tween_property(tick, "position:y", 0.75, 0.45)
+		_fade(tick, 0.45)
+		var cleanup := create_tween()
+		cleanup.tween_interval(0.55)
+		cleanup.tween_callback(queue_free)
+		return
 	var duration := 0.3 if reduced else (0.5 if kind in ["hit", "block"] else 0.95)
 	var ring := _ring(color)
 	ring.position.y = 0.12
@@ -69,11 +84,20 @@ func _build(kind: String, color: Color) -> void:
 		orbit.position.y = 0.65
 		orbit.rotation_degrees.z = 70
 		_fade(orbit, duration)
+	elif kind == "death":
+		duration = 0.3 if reduced else 0.6
+		var crown := _ring(color)
+		crown.position.y = 0.6
+		crown.scale = Vector3.ONE * 0.75
+		if not reduced:
+			create_tween().tween_property(crown, "scale", Vector3.ONE * 1.6, duration)
+		_fade(crown, duration)
 	if not reduced:
 		ring.scale = Vector3.ONE * 0.35
 		create_tween().tween_property(ring, "scale", Vector3.ONE * 1.25,
 			duration).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-		_particles(color, kind == "hit", duration)
+		if kind != "death":
+			_particles(color, kind == "hit", duration)
 	_fade(ring, duration)
 	var lifetime := create_tween()
 	lifetime.tween_interval(duration + 0.1)

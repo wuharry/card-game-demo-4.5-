@@ -723,17 +723,12 @@ var equipped_cards: Array[CardData] = []
 
 
 ## ── 血量增減(由 BattleManager 呼叫)────────────────
-func take_damage(amount: int) -> void:
+func take_damage(amount: int, feedback_kind: StringName = &"hit") -> void:
 	current_hp = maxi(0, current_hp - amount)
 	_refresh_hp_label()
 	if amount > 0:
 		_popup_number("-%d" % amount, Color(1.0, 0.3, 0.25))
-		# 命中爆點:所有傷害(普攻/反擊/技能/灼燒中毒)都經過這裡,一次接線全生效。
-		# 用 preload 引用而非裸名 FxBurst:新 class_name 未進編輯器快取前裸名會解析失敗(§19)。
-		preload("res://src/fx/fx_burst.gd").spawn_at(self)
-		Sfx.impact(amount)
-		impact_feedback(amount)
-		preload("res://src/fx/camera_impulse.gd").play(self, 0.05 if amount >= 5 else 0.025)
+		preload("res://src/fx/combat_feedback.gd").damage(self, amount, feedback_kind)
 
 
 func heal(amount: int) -> void:
@@ -769,8 +764,7 @@ func absorb_with_shield(amount: int) -> int:
 	_popup_number(SETTINGS.current().text("shield_loss") % absorbed, Color(0.55, 0.8, 1.0))
 	preload("res://src/fx/spatial_effect.gd").play_at(self, "block")
 	impact_feedback(absorbed, true)
-	if absorbed == amount:
-		Sfx.impact(absorbed, true)
+	Sfx.impact(absorbed, true)
 	return amount - absorbed
 
 
@@ -903,6 +897,7 @@ func _update_status_label() -> void:
 ## ── 死亡演出:死亡表定格 → 縮小消失 → 自毀 ─────────
 ## 由 BattleManager 在 HP 歸零時呼叫(卡槽已先清位)。
 func die() -> void:
+	preload("res://src/fx/combat_feedback.gd").death(self)
 	is_on_board = false
 	if is_instance_valid(_standee):
 		var feedback := _standee.get_node_or_null("ActorFeedback")

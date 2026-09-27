@@ -429,8 +429,10 @@ func _tick_dot_side(side: String, phase_start: bool) -> void:
 			dmg += 1
 		if dmg > 0:
 			record_event("【%s】受到灼燒／中毒結算，傷害 %d" % [u.data.card_name, dmg], side)
-			u.take_damage(dmg)
-			u.play_one_shot_anim("Hurt")
+			var feedback_kind: StringName = &"burn" if u.has_status(SkillData.Status.BURN) else &"poison"
+			if dmg > 1:
+				feedback_kind = &"affliction"
+			u.take_damage(dmg, feedback_kind)
 			_check_death(u)
 
 
@@ -1039,7 +1041,7 @@ func on_action_performed(caster: Card, skill: SkillData, target: Node3D) -> void
 			if preload("res://src/fx/slash_effect.gd").supports(caster.data):
 				preload("res://src/fx/slash_effect.gd").play_at(target)
 			caster.impact_feedback(dmg)
-		(target as Hero).take_damage(dmg)   # 打臉不吃反擊(§4.2)
+		(target as Hero).take_damage(dmg, _attack_feedback_kind(caster))   # 打臉不吃反擊(§4.2)
 		return
 	var mod := SkillData.Modifier.NONE if skill == null else skill.modifier
 	if skill == null and caster.has_equipped_lifesteal():
@@ -1128,6 +1130,13 @@ func _hero_of(side: String) -> Hero:
 	return null
 
 
+## 和刀光共用持刃名單；這個分類只影響音效。
+func _attack_feedback_kind(attacker: Card) -> StringName:
+	if is_instance_valid(attacker) and preload("res://src/fx/slash_effect.gd").supports(attacker.data):
+		return &"slash"
+	return &"hit"
+
+
 ## §4.2 雙向傷害交換:「同時結算」——反擊值用交戰前的數值先記下、再一起扣,
 ## 誰先歸零都不影響對方吃到的傷害(順序扣血會讓先死的一方打不出反擊,規則就錯了)。
 ## mod = 打法修飾(§6):連擊/吸血/橫掃/貫穿都在這裡展開;副目標一律不反擊。
@@ -1142,35 +1151,36 @@ func _resolve_attack(attacker: Card, defender: Card, dmg: int, retaliate: bool,
 	var hits := 2 if mod == SkillData.Modifier.DOUBLE else 1   # 連擊:結算兩次
 	var dealt := 0
 	var shield_before := defender.shield
+	var feedback_kind := _attack_feedback_kind(attacker) if minion_attack else &"hit"
 	for hit in range(hits):
 		if is_instance_valid(defender):
 			if dmg > 0 and minion_attack and is_instance_valid(attacker) \
 					and preload("res://src/fx/slash_effect.gd").supports(attacker.data):
 				preload("res://src/fx/slash_effect.gd").play_at(defender, defender.shield >= dmg, hit > 0)
-			dealt += _deal_damage(defender, dmg, minion_attack)
+			dealt += _deal_damage(defender, dmg, minion_attack, feedback_kind)
 	if is_instance_valid(attacker) and (dealt > 0 or defender.shield < shield_before):
 		attacker.impact_feedback(dealt, dealt == 0)
 	if retaliate and counter > 0 and is_instance_valid(attacker):
-		_deal_damage(attacker, counter, true)
+		_deal_damage(attacker, counter, true, _attack_feedback_kind(defender))
 	# 吸血:回復「實際造成」的傷害——夜幕/鐵壁減免後的數字,不是帳面值。
 	if mod == SkillData.Modifier.LIFESTEAL and dealt > 0 and is_instance_valid(attacker):
 		attacker.heal(dealt)
 	# 橫掃:同一排、左右相鄰路線的單位各吃一份。
 	if mod == SkillData.Modifier.SPREAD_3:
 		for u in _adjacent_lane_units(defender):
-			_deal_damage(u, dmg, minion_attack)
+			_deal_damage(u, dmg, minion_attack, feedback_kind)
 			_check_death(u)
 	# 全體:守方場上所有其他單位各吃一份(前後排都算)。
 	# 和橫掃共用「副目標不反擊、不吃附帶狀態」的規矩——差別只在取目標的範圍。
 	if mod == SkillData.Modifier.SPREAD_ALL:
 		for u in _other_units_of_side(defender):
-			_deal_damage(u, dmg, minion_attack)
+			_deal_damage(u, dmg, minion_attack, feedback_kind)
 			_check_death(u)
 	# 貫穿:同路線的後排也吃一份。
 	if mod == SkillData.Modifier.PIERCE:
 		var back := _unit_behind(defender)
 		if back != null:
-			_deal_damage(back, dmg, minion_attack)
+			_deal_damage(back, dmg, minion_attack, feedback_kind)
 			_check_death(back)
 	_check_death(defender)
 	if attacker != defender:
@@ -1189,7 +1199,8 @@ func _resolve_attack(attacker: Card, defender: Card, dmg: int, retaliate: bool,
 ##
 ## ⚠ 回傳值的語意:吸血回的是「HP 真的少了多少」,不含被盾吃掉的部分——
 ##   盾不是血,砍在盾上沒有血可吸。5 點吸血打 3 盾的滿血目標 → 掉 2 血、攻擊者回 2。
-func _deal_damage(unit: Card, amount: int, minion_attack: bool) -> int:
+func _deal_damage(unit: Card, amount: int, minion_attack: bool,
+		feedback_kind: StringName = &"hit") -> int:
 	if not is_instance_valid(unit):
 		return 0
 	var dmg := amount
@@ -1217,11 +1228,15 @@ func _deal_damage(unit: Card, amount: int, minion_attack: bool) -> int:
 				battle_message.emit("瞬咒【%s】阻止了【%s】的死亡！" % [
 					rescue.card_name, unit.data.card_name])
 				return 0
-	unit.take_damage(dmg)
+	unit.take_damage(dmg, feedback_kind)
 	record_event("【%s】受到 %d 傷害，剩餘生命 %d" % [unit.data.card_name, dmg, unit.current_hp], side_of(unit))
 	# 演出:格擋播 Block(沒有該表就退回 Hurt);其餘吃到傷害才縮。
 	# 盾擋下全部也算「擋住了」——有 Block 表就播,讓玩家看得出盾有作用。
 	if blocked or (shielded and dmg == 0):
+		if blocked and dmg == 0 and not shielded:
+			preload("res://src/fx/spatial_effect.gd").play_at(unit, "block")
+			Sfx.impact(1, true)
+			unit.impact_feedback(1, true)
 		if not unit.play_one_shot_anim("Block"):
 			unit.play_one_shot_anim("Hurt")
 	elif dmg > 0:

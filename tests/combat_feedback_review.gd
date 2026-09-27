@@ -27,6 +27,20 @@ func _capture(suffix: String) -> void:
 		"capture " + suffix)
 
 
+func _has_sound(stream: AudioStream) -> bool:
+	for voice in get_nodes_in_group("sfx_voices"):
+		if voice.stream == stream:
+			return true
+	return false
+
+
+func _has_effect(kind: String) -> bool:
+	for effect in get_nodes_in_group("transient_spatial_fx"):
+		if effect.get_meta("feedback_kind", "") == kind:
+			return true
+	return false
+
+
 func _run() -> void:
 	_args = OS.get_cmdline_user_args()
 	NetMatch.reset()
@@ -161,6 +175,73 @@ func _run() -> void:
 		_check(effect.find_children("*", "GPUParticles3D", true, false).is_empty()
 			and effect.find_children("*", "OmniLight3D", true, false).is_empty(), "減少動態不生成爆閃燈光或粒子")
 	await create_timer(1.0).timeout
+	app.reduce_motion = false
+
+	# 真實結算驗證音色、持續傷害和死亡替代；不直接呼叫音效來假裝接線成功。
+	await create_timer(1.0).timeout
+	target.shield = 0
+	target_hp = target.current_hp
+	bm._resolve_attack(attacker, target, 1, false, SkillData.Modifier.NONE)
+	_check(target.current_hp == target_hp - 1 and _has_sound(Sfx.SLASH), "持刃攻擊扣血時使用獨立斬擊音源")
+	await create_timer(1.1).timeout
+	target.shield = 1
+	target_hp = target.current_hp
+	bm._deal_damage(target, 2, false)
+	_check(target.current_hp == target_hp - 1 and target.shield == 0
+		and _has_sound(Sfx.BLOCK) and _has_sound(Sfx.HIT), "破盾穿血同時保留格擋與命中聲")
+	await create_timer(1.1).timeout
+	target.iron_wall_used_this_turn = false
+	target_hp = target.current_hp
+	bm._deal_damage(target, 1, true)
+	_check(target.current_hp == target_hp and _has_sound(Sfx.BLOCK)
+		and not _has_sound(Sfx.HIT), "鐵壁完全減免也有格擋聲，不誤播扣血聲")
+	await create_timer(1.1).timeout
+	target.add_status(SkillData.Status.BURN, 2)
+	target.add_status(SkillData.Status.POISON, 2)
+	await create_timer(1.2).timeout
+	target_hp = target.current_hp
+	var motion: Node = target._feedback()
+	bm._tick_dot_side("enemy", true)
+	_check(target.current_hp == target_hp - 1 and _has_effect("burn")
+		and _has_sound(Sfx.STATUS_TICK) and not _has_sound(Sfx.HIT), "回合開始灼燒只扣一血並播放輕量提示")
+	_check(motion._hold == 0.0 and camera.get_node("CameraImpulse")._strength == 0.0,
+		"持續傷害不啟動 Hit-stop 或鏡頭震動")
+	await _capture("_burn")
+	await create_timer(1.1).timeout
+	bm._tick_dot_side("enemy", false)
+	_check(target.current_hp == target_hp - 3 and _has_effect("affliction"), "回合結束合併灼燒與中毒，維持原本兩點傷害")
+	target.remove_status(SkillData.Status.BURN)
+	await create_timer(1.1).timeout
+	bm._tick_dot_side("enemy", false)
+	_check(target.current_hp == target_hp - 4 and _has_effect("poison_tick"), "單獨中毒顯示綠色扣血提示")
+	target.remove_status(SkillData.Status.POISON)
+	await create_timer(1.1).timeout
+	var revived := bm.spawn_unit(load("res://data/cards/tombsea_colossus.tres"), get_nodes_in_group("enemy_front")[0])
+	await create_timer(1.1).timeout
+	bm._deal_damage(revived, 99, false)
+	bm._check_death(revived)
+	_check(revived.current_hp == 5 and revived.revived and not _has_sound(Sfx.DEATH_IMPACT)
+		and not _has_effect("death"), "不滅救回角色時不誤播死亡收尾")
+	bm.set_ward(load("res://data/cards/ward_reincarnation_sigil.tres"), revived)
+	bm._deal_damage(revived, 99, false)
+	bm._check_death(revived)
+	_check(revived.current_hp > 0 and not _has_sound(Sfx.DEATH_IMPACT), "輪迴伏印救回角色時不誤播死亡聲")
+	await create_timer(1.2).timeout
+	bm._deal_damage(revived, 99, false)
+	bm._check_death(revived)
+	_check(not revived.is_on_board and _has_sound(Sfx.DEATH_IMPACT) and _has_effect("death"),
+		"真正死亡才播放重音與擴散光環")
+	await _capture("_death")
+	await create_timer(1.2).timeout
+	_check(not _has_effect("death") and not _has_sound(Sfx.DEATH_IMPACT), "角色離場後死亡聲畫正常回收")
+	var low_motion := bm.spawn_unit(load("res://data/cards/soldier.tres"), get_nodes_in_group("enemy_front")[0])
+	await create_timer(1.1).timeout
+	app.reduce_motion = true
+	bm._deal_damage(low_motion, 99, false)
+	bm._check_death(low_motion)
+	_check(_has_effect("death") and _has_sound(Sfx.DEATH_IMPACT)
+		and camera.get_node("CameraImpulse")._strength == 0.0, "減少動態保留死亡提示與聲音，不啟動震動")
+	await create_timer(1.2).timeout
 	app.reduce_motion = false
 
 	seed(1993)

@@ -14,6 +14,10 @@ const CARD_DRAW := preload("res://assets/audio/sfx/card_draw.ogg")       # 回�
 const CARD_SHUFFLE := preload("res://assets/audio/sfx/card_shuffle.ogg") # 開局發牌
 const CARD_BURY := preload("res://assets/audio/sfx/card_bury.ogg")       # 入土落定
 const HIT := preload("res://assets/audio/sfx/hit.ogg")                   # 受擊(從者/本體)
+const SLASH := preload("res://assets/audio/sfx/slash.ogg")
+const BLOCK := preload("res://assets/audio/sfx/block.ogg")
+const DEATH_IMPACT := preload("res://assets/audio/sfx/death_impact.ogg")
+const STATUS_TICK := preload("res://assets/audio/sfx/status_tick.ogg")
 const SPELL_CAST := preload("res://assets/audio/sfx/spell_cast.ogg")     # 秘術結算
 const MANA_GAIN := preload("res://assets/audio/sfx/mana_gain.ogg")       # 丟牌回魔(數錢)
 const TURN_FLIP := preload("res://assets/audio/sfx/turn_flip.ogg")       # 換回合(翻頁)
@@ -58,6 +62,13 @@ static func play(stream: AudioStream, volume_db: float = 0.0,
 	p.play()
 
 
-static func impact(amount: int, blocked: bool = false) -> void:
-	play(HIT, -8.0 if blocked else -4.0, 0.025,
-		1.25 if blocked else (0.82 if amount >= 5 else 1.0))
+static func impact(amount: int, blocked: bool = false, kind: StringName = &"hit") -> void:
+	if amount <= 0:
+		return
+	if blocked:
+		play(BLOCK, -10.0, 0.025)
+	elif kind in [&"burn", &"poison", &"affliction"]:
+		play(STATUS_TICK, -15.0, 0.025, 0.9 if kind == &"poison" else 1.1)
+	else:
+		play(SLASH if kind == &"slash" else HIT, -4.0, 0.025,
+			0.82 if amount >= 5 else 1.0)
