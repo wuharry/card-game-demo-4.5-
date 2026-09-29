@@ -72,7 +72,7 @@ func _compare_views(data: CardData, card: Card, gallery: CardGallery, battle_ui:
 	var views := {
 		"gallery": _find_art(gallery_tile),
 		"picker": _find_art(pick_tile),
-		"hover": battle_ui._prev_art,
+		"hover": battle_ui._prev_panel._art,
 		"archive": battle_ui.archive._art,
 	}
 	for label in views:

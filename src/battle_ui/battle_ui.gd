@@ -49,7 +49,7 @@ var _unit_status: Label
 var _command_source: Card
 var _attack_btn: Button
 var _skill_btn: Button
-var _desc: Label
+var _desc: RichTextLabel
 var _hint: Label
 var _spell_drop_panel: Panel
 var _spell_drop_title: Label
@@ -121,6 +121,7 @@ func _ready() -> void:
 ## attack_note / skill_note = 該行動「被擋的理由」;空字串 = 可以做。
 ## 有理由 → 按鈕灰化、描述列轉述理由(規則在 BattleManager,UI 只負責說人話)。
 func open(card: Card, attack_note: String = "", skill_note: String = "") -> void:
+	hide_card_preview()
 	_command_source = card
 	if is_instance_valid(_debug_test_btn):
 		_debug_test_btn.hide()
@@ -170,6 +171,7 @@ func open(card: Card, attack_note: String = "", skill_note: String = "") -> void
 
 ## 進入指定目標模式:收起面板、亮出提示字。
 func show_targeting(hint_text: String) -> void:
+	hide_card_preview()
 	_spell_drop_panel.hide()
 	_panel.visible = false
 	_hint.text = hint_text
@@ -247,6 +249,8 @@ func update_arrow(from_px: Vector2, to_px: Vector2, locked: bool) -> void:
 ## 全部收起來(取消或發動完畢)。
 func close() -> void:
 	_panel.visible = false
+	_command_source = null
+	hide_related_preview()
 	if is_instance_valid(_debug_test_btn):
 		_debug_test_btn.show()
 	hide_spell_drag()
@@ -318,12 +322,10 @@ func _build_panel() -> void:
 	col.add_child(_make_gold_line())
 
 	# 描述列:游標懸停/焦點停在哪個指令,就講那個指令的效果(歧路旅人的做法)。
-	_desc = Label.new()
-	_desc.add_theme_font_override("font", FONT_BODY)
-	_desc.add_theme_font_size_override("font_size", 14)
-	_desc.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 0.75))
-	_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_desc.custom_minimum_size = Vector2(340, 44)
+	_desc = CardDetailPanel.description_label(340, 14)
+	_desc.custom_minimum_size.y = 44
+	_desc.meta_hover_started.connect(_on_command_reference)
+	_desc.meta_hover_ended.connect(func(_meta: Variant) -> void: _related_hide_time = 0.3)
 	col.add_child(_desc)
 
 
@@ -430,6 +432,7 @@ func _hide_arrow() -> void:
 
 ## 描述列:能做就講效果,不能做就講「為什麼不行」(理由來自 BattleManager)。
 func _show_attack_desc() -> void:
+	hide_related_preview()
 	_desc.text = SETTINGS.current().text("battle_attack_desc") \
 		if _attack_note == "" else "✕ " + _attack_note
 
@@ -437,8 +440,10 @@ func _show_attack_desc() -> void:
 func _show_skill_desc() -> void:
 	if _skill == null:
 		return
-	_desc.text = SETTINGS.current().skill_description(_skill) \
-		if _skill_note == "" else "✕ " + _skill_note
+	hide_related_preview()
+	_desc.text = CardDetailPanel.skill_text(_command_source.data, _skill)
+	if not _skill_note.is_empty():
+		_desc.text += "\n" + CardDetailPanel.escaped("✕ " + _skill_note)
 
 
 ## 深色半透明+金邊的面板底(指令選單/HUD/結束回合鈕共用同一張皮)。
@@ -622,7 +627,7 @@ func _build_history() -> void:
 func blocks_board_pointer(point: Vector2) -> bool:
 	if archive.is_open():
 		return true
-	for control: Control in [_history_button, _leave_btn,
+	for control: Control in [_panel, _prev_panel, _related_panel, _history_button, _leave_btn,
 			_end_turn_btn, _debug_test_btn, _hud_panel, _hud_turn_panel]:
 		if is_instance_valid(control) and control.is_visible_in_tree() \
 				and control.get_global_rect().has_point(point):
@@ -879,6 +884,8 @@ var _react_body: Label = null
 
 
 func show_reaction(title_text: String, body_text: String) -> void:
+	close()
+	hide_card_preview()
 	archive.close()
 	if _react_dim == null:
 		_build_reaction()
@@ -1024,139 +1031,118 @@ func _answer_leave(confirmed: bool) -> void:
 ## 卡面空間小、描述超過 5 行會截斷(card.gd 的 _fit_card_text);
 ## hover 任何卡(手牌或桌上單位)時,右側顯示完整資訊:
 ## 卡圖/名稱/費用/卡型/攻血(桌上單位含當前血與靈裝加成)/關鍵字/技能全文。
-## 純顯示、mouse_filter 全設 IGNORE——面板絕不攔截滑鼠,不干擾拖曳與點擊。
-var _prev_panel: PanelContainer = null
-var _prev_art: TextureRect = null
-var _prev_name: Label = null
-var _prev_type: Label = null
-var _prev_stats: Label = null
-var _prev_body: Label = null
-var _prev_source: Card = null   # 來源卡:被釋放(換手牌/陣亡)時面板要自動收起
+## 來源卡離開後短暫保留，讓游標能移進面板查召喚物；面板內的點擊不穿透牌桌。
+var _prev_panel: CardDetailPanel
+var _prev_source: Card
+var _preview_hide_time := -1.0
+var _related_panel: CardDetailPanel
+var _related_anchor: Control
+var _related_hide_time := -1.0
+const PREVIEW_TRAVEL_SECONDS := 0.8
 
-const TYPE_NAMES := {
-	CardData.CardType.MINION: "從者",
-	CardData.CardType.EQUIP: "靈裝",
-	CardData.CardType.ARCANA: "秘術",
-	CardData.CardType.QUICK: "瞬咒",
-	CardData.CardType.WARD: "伏印",
-	CardData.CardType.DOMAIN: "領域",
-}
+
+func command_menu_is_open() -> bool:
+	return _panel.visible and is_instance_valid(_command_source)
+
+
+func command_contains(point: Vector2) -> bool:
+	return _panel.is_visible_in_tree() and _panel.get_global_rect().has_point(point)
+
+
+func has_modal_choice() -> bool:
+	for panel: Control in [_react_panel, _pick_panel, _leave_panel, _over_panel]:
+		if is_instance_valid(panel) and panel.is_visible_in_tree():
+			return true
+	return false
+
+
+func preview_contains(point: Vector2) -> bool:
+	for panel: Control in [_prev_panel, _related_panel]:
+		if is_instance_valid(panel) and panel.is_visible_in_tree() \
+				and panel.get_global_rect().has_point(point):
+			return true
+	return false
 
 
 func show_card_preview(card: Card) -> void:
-	if card == null or card.data == null:
+	if card == null or card.data == null or has_modal_choice():
 		return
 	if _prev_panel == null:
-		_build_preview()
+		_prev_panel = CardDetailPanel.new()
+		add_child(_prev_panel)
+		_prev_panel.reference_hovered.connect(func(data: CardData) -> void:
+			_show_related_preview(data, _prev_panel))
+		_prev_panel.reference_left.connect(func() -> void: _related_hide_time = 0.3)
+	if _prev_source != card:
+		hide_related_preview()
 	_prev_source = card
-	var d := card.data
-	_prev_name.text = "%s  ◆%d" % [SETTINGS.current().card_name(d), d.cost]
-	_prev_type.text = SETTINGS.current().type_name(d.card_type)
-	if d.card_type == CardData.CardType.MINION:
-		# 桌上單位印當前血/上限(含靈裝加成);手牌印模板值(setup 時 current_hp = hp)。
-		var lines: PackedStringArray = [SETTINGS.current().text("battle_stats") % [
-			card.atk_total(), card.current_hp, d.hp + card.max_hp_bonus]]
-		if not d.keywords.is_empty():
-			var words: PackedStringArray = []
-			for w in d.keywords:
-				words.append(SETTINGS.current().keyword_name(w))
-			lines.append(SETTINGS.current().text("keywords") + ": " + ", ".join(words))
-		_prev_stats.text = "\n".join(lines)
-		var status_text := _status_text(card)
-		if not status_text.is_empty():
-			_prev_stats.text += "\n" + status_text
-		_prev_stats.visible = true
-	else:
-		_prev_stats.visible = false
-	var body: PackedStringArray = []
-	if d.active_skill != null:
-		var s := d.active_skill
-		if d.card_type == CardData.CardType.MINION:
-			# 三分類跟著標(強化=用掉攻擊機會/獨立=額外一刀/非攻擊=登場回合也能用)。
-			body.append("【%s】◆%d·%s\n%s" % [
-				SETTINGS.current().skill_name(d, s), s.cost, SETTINGS.current().kind_name(s.kind),
-				SETTINGS.current().skill_description(s)])
-		else:
-			body.append(SETTINGS.current().skill_description(s))
-	# 戰吼不收費、也不佔行動經濟(登場自動跑),所以不標 ◆ 與三分類。
-	if d.battlecry != null:
-		body.append("【%s】%s" % [SETTINGS.current().text("battlecry"),
-			SETTINGS.current().skill_description(d.battlecry)])
-	_prev_body.text = "\n".join(body)
-	_prev_body.visible = not body.is_empty()
-	_prev_art.texture = Card.face_art(d)
-	_prev_art.visible = _prev_art.texture != null
-	_prev_panel.visible = true
-	_prev_panel.reset_size()
-	_prev_panel.set_anchors_and_offsets_preset(
-		Control.PRESET_CENTER_RIGHT, Control.PRESET_MODE_MINSIZE, 168)
+	_preview_hide_time = -1.0
+	_prev_panel.show_card(card.data, card, _status_text(card))
+	_layout_previews.call_deferred()
+
+
+func release_card_preview(card: Card) -> void:
+	if _prev_source == card:
+		_preview_hide_time = PREVIEW_TRAVEL_SECONDS
 
 
 func hide_card_preview() -> void:
 	_prev_source = null
+	_preview_hide_time = -1.0
 	if _prev_panel != null:
-		_prev_panel.visible = false
+		_prev_panel.hide()
+	hide_related_preview()
 
 
-func _build_preview() -> void:
-	_prev_panel = PanelContainer.new()
-	# 文字換行／字型量測晚一幀完成時，面板應向左長，不能推進右側操作區。
-	_prev_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	_prev_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
-	_prev_panel.add_theme_stylebox_override("panel", _make_panel_style())
-	_prev_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_prev_panel)
-
-	var col := VBoxContainer.new()
-	col.custom_minimum_size = Vector2(250, 0)
-	col.add_theme_constant_override("separation", 8)
-	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_prev_panel.add_child(col)
-
-	_prev_art = TextureRect.new()
-	_prev_art.custom_minimum_size = Vector2(0, 110)
-	_prev_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_prev_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_prev_art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST   # 像素圖放大要銳利
-	_prev_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	col.add_child(_prev_art)
-
-	_prev_name = Label.new()
-	_prev_name.add_theme_font_override("font", FONT_TITLE)
-	_prev_name.add_theme_font_size_override("font_size", 22)
-	_prev_name.add_theme_color_override("font_color", GOLD)
-	_prev_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_prev_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_prev_name.custom_minimum_size.x = 250
-	col.add_child(_prev_name)
-
-	_prev_type = Label.new()
-	_prev_type.add_theme_font_override("font", FONT_BODY)
-	_prev_type.add_theme_font_size_override("font_size", 14)
-	_prev_type.add_theme_color_override("font_color", GOLD_DIM)
-	_prev_type.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(_prev_type)
-	col.add_child(_make_gold_line())
-
-	_prev_stats = Label.new()
-	_prev_stats.add_theme_font_override("font", FONT_BODY)
-	_prev_stats.add_theme_font_size_override("font_size", 16)
-	_prev_stats.add_theme_color_override("font_color", Color("e8ddc4"))
-	_prev_stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_prev_stats.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_prev_stats.custom_minimum_size.x = 250
-	col.add_child(_prev_stats)
-
-	_prev_body = Label.new()
-	_prev_body.add_theme_font_override("font", FONT_BODY)
-	_prev_body.add_theme_font_size_override("font_size", 15)
-	_prev_body.add_theme_color_override("font_color", Color("cfc4a6"))
-	_prev_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_prev_body.custom_minimum_size = Vector2(250, 0)
-	col.add_child(_prev_body)
+func _on_command_reference(meta: Variant) -> void:
+	if not command_menu_is_open():
+		return
+	var target := CardDetailPanel.summoned_data(_command_source.data, _skill)
+	if target != null and target.resource_path == str(meta):
+		_show_related_preview(target, _panel)
 
 
-func _process(_delta: float) -> void:
+func _show_related_preview(data: CardData, anchor: Control) -> void:
+	if _related_panel == null:
+		_related_panel = CardDetailPanel.new()
+		_related_panel.interactive = false # 一層預覽即可看全資料，也避免史萊姆自我分裂無限展開。
+		add_child(_related_panel)
+	_related_anchor = anchor
+	_related_hide_time = -1.0
+	_related_panel.show_card(data)
+	_layout_previews.call_deferred()
+
+
+func hide_related_preview() -> void:
+	_related_hide_time = -1.0
+	if _related_panel != null:
+		_related_panel.hide()
+
+
+## 使用 viewport 的邏輯尺寸，兼容視窗大小與 UI 比例；量完文字再定位。
+func _layout_previews() -> void:
+	var bounds := get_viewport().get_visible_rect().size
+	if _prev_panel != null and _prev_panel.visible:
+		_prev_panel.fit_to_viewport()
+		_prev_panel.position = Vector2(bounds.x - 168 - _prev_panel.size.x,
+			(bounds.y - _prev_panel.size.y) * 0.5)
+		_clamp_preview(_prev_panel, bounds)
+	if _related_panel != null and _related_panel.visible and is_instance_valid(_related_anchor):
+		_related_panel.fit_to_viewport()
+		var anchor := _related_anchor.get_global_rect()
+		var x := anchor.position.x - _related_panel.size.x - 8
+		if x < 8:
+			x = anchor.end.x + 8
+		_related_panel.position = Vector2(x, anchor.position.y)
+		_clamp_preview(_related_panel, bounds)
+
+
+func _clamp_preview(panel: CardDetailPanel, bounds: Vector2) -> void:
+	panel.position.x = clampf(panel.position.x, 8, maxf(8, bounds.x - panel.size.x - 8))
+	panel.position.y = clampf(panel.position.y, 8, maxf(8, bounds.y - panel.size.y - 8))
+
+
+func _process(delta: float) -> void:
 	if _panel.visible:
 		if is_instance_valid(_command_source):
 			_stats.text = "ATK %d ／ HP %d／%d" % [_command_source.atk_total(),
@@ -1164,10 +1150,25 @@ func _process(_delta: float) -> void:
 			_update_unit_status(_command_source)
 		else:
 			close()
-	# 防呆:hover 中的卡被釋放(換邊重建手牌、單位陣亡)不會發 unhover 信號,
-	# 面板會永遠卡在畫面上——來源卡死了就自動收起。
-	if _prev_panel != null and _prev_panel.visible and not is_instance_valid(_prev_source):
-		hide_card_preview()
+	if _prev_panel != null and _prev_panel.visible:
+		if not is_instance_valid(_prev_source) or has_modal_choice() or archive.is_open():
+			hide_card_preview()
+		elif _preview_hide_time >= 0:
+			if preview_contains(get_viewport().get_mouse_position()) \
+					or (command_menu_is_open() and _command_source == _prev_source):
+				_preview_hide_time = PREVIEW_TRAVEL_SECONDS
+			else:
+				_preview_hide_time -= delta
+				if _preview_hide_time < 0:
+					hide_card_preview()
+	if _related_panel != null and _related_panel.visible and _related_hide_time >= 0:
+		if _related_panel.get_global_rect().has_point(get_viewport().get_mouse_position()):
+			_related_hide_time = 0.3
+		else:
+			_related_hide_time -= delta
+			if _related_hide_time < 0:
+				hide_related_preview()
+	_layout_previews()
 
 
 ## 對方手牌張數(2d;連線時 CardManager 每次帳變動就刷新)。
@@ -1185,6 +1186,8 @@ func update_opp_count(count: int) -> void:
 ## 開著時 CardManager 用 _picking 旗標擋掉取消/結束回合。
 func show_card_picker(title_text: String, hint_text: String,
 		cards: Array[CardData]) -> void:
+	close()
+	hide_card_preview()
 	archive.close()
 	if _pick_panel == null:
 		_build_picker()

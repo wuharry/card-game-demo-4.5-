@@ -59,7 +59,7 @@ var currently_hovered_slot: CardSlot = null
 ## 同一顆滑鼠左鍵在不同狀態下代表不同動作,全部集中在這裡分流:
 ##   IDLE      平時:點手牌=抓起拖曳、點上桌單位=開指令選單
 ##   DRAGGING  拖曳中(原本的行為)
-##   MENU_OPEN 指令選單開著:3D 場景不吃點擊,等 BattleUI 的信號
+##   MENU_OPEN 指令選單可點外部取消／換卡；反制與選牌仍鎖住其他操作
 ##   TARGETING 指定目標中:懸停合法目標會亮、左鍵=發動、右鍵/ESC=取消
 ##   GAME_OVER 勝負已分:3D 互動全關,只剩勝負畫面的按鈕
 enum UiState { IDLE, DRAGGING, MENU_OPEN, TARGETING, GAME_OVER }
@@ -169,10 +169,14 @@ func _ready() -> void:
 
 ## ── 收到「滑鼠移到某張卡上」事件 ──────────────────
 func on_card_hovered(card: Card) -> void:
-	if battle_ui.archive.is_open():
+	if battle_ui.archive.is_open() or battle_ui.has_modal_choice() \
+			or battle_ui.blocks_board_pointer(get_viewport().get_mouse_position()):
 		return
 	# 防呆 1：正在拖牌時，不要去放大底下其他的牌。
 	if card_being_dragged != null:
+		return
+	# 指令開啟時直接在左下技能說明查召喚物，避免第二塊主卡預覽擋住換選的卡。
+	if ui_state == UiState.MENU_OPEN:
 		return
 
 	# 右側放大預覽:手牌、桌上單位都給(卡面字有截斷,全文在預覽面板看)。
@@ -207,11 +211,11 @@ func on_card_hovered(card: Card) -> void:
 
 ## ── 收到「滑鼠離開某張卡」事件 ──────────────────
 func on_card_unhovered(card: Card) -> void:
-	# 收放大預覽——只有「離開的正是預覽中那張」才收:扇形手牌重疊時
+	# 預覽短暫保留供游標移入——只有「離開的正是預覽中那張」才排程收起:扇形手牌重疊時
 	# 事件序是 enter(B) 可能先於 exit(A),無條件收會把剛開的 B 預覽誤殺。
 	if _previewed_card == card:
 		_previewed_card = null
-		battle_ui.hide_card_preview()
+		battle_ui.release_card_preview(card)
 
 	# 指定目標模式:離開的是亮著的候選目標 → 收掉高亮。
 	if hovered_target == card and card_being_dragged == null:
@@ -397,8 +401,9 @@ func _input(event: InputEvent) -> void:
 	if (is_rmb or is_esc) and _leave_pending:
 		battle_ui.dismiss_leave_confirm()
 		return
-	if (is_rmb or is_esc) and not _picking \
-			and ui_state in [UiState.DRAGGING, UiState.MENU_OPEN, UiState.TARGETING]:
+	if (is_rmb or is_esc) and not _picking and not battle_ui.has_modal_choice() \
+			and (ui_state in [UiState.DRAGGING, UiState.TARGETING] \
+				or (ui_state == UiState.MENU_OPEN and battle_ui.command_menu_is_open())):
 		_cancel_command()
 		return
 	# 平時(沒選單、沒瞄準、沒拖卡)按 ESC = 想離開,和左上角按鈕同一個入口。
@@ -417,6 +422,18 @@ func _input(event: InputEvent) -> void:
 	# 只關心「滑鼠左鍵」事件。
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
+			if battle_ui.has_modal_choice():
+				return
+			if ui_state == UiState.MENU_OPEN and not _picking and battle_ui.command_menu_is_open():
+				if battle_ui.command_contains(event.position) or battle_ui.preview_contains(event.position):
+					return
+				# 先收指令，再讓本次點擊接續換卡、拖牌或 HUD 操作。
+				# 反制、付費選牌與連線等待沒有卡片指令，不會經過這個取消入口。
+				var same_card := _raycast_card_at(event.position) == active_unit
+				_cancel_command()
+				if not same_card and not battle_ui.blocks_board_pointer(event.position):
+					_on_left_pressed_idle_at(event.position)
+				return
 			if battle_ui.blocks_board_pointer(event.position):
 				return
 			match ui_state:
@@ -424,10 +441,6 @@ func _input(event: InputEvent) -> void:
 					_on_left_pressed_idle_at(event.position)
 				UiState.TARGETING:
 					_on_left_pressed_targeting()
-				_:
-					# MENU_OPEN:點擊交給 UI 按鈕處理(Control 自己吃事件),
-					# 點在 3D 空地不做事——要反悔請按「取消」或右鍵。
-					pass
 		elif ui_state == UiState.DRAGGING:
 			_on_left_released_drag_at(event.position)
 
@@ -546,6 +559,7 @@ func _on_left_pressed_idle_at(mouse_pos: Vector2) -> void:
 		return
 	var card := _raycast_card_at(mouse_pos)
 	if card == null:
+		battle_ui.hide_card_preview()
 		return
 	if card.is_on_board:
 		active_unit = card
@@ -1235,6 +1249,7 @@ func _cancel_command() -> void:
 	active_unit = null
 	ui_state = UiState.IDLE
 	battle_ui.close()
+	battle_ui.hide_card_preview()
 
 
 ## ── 目標合法性 ────────────────────────────────────

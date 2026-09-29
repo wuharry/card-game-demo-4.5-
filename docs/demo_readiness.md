@@ -51,6 +51,8 @@ FxDirector 依 effect／status／modifier 選 FxProfile
 
 ## UI／UX 完成度
 
+朋友試玩提出的「點別處收起指令」與「召喚物名稱 hover 詳情」改善、重現步驟及驗收結果，見 [卡片操作與召喚物預覽驗收](playtest_ui_acceptance.md)。
+
 戰鬥 HUD 已有清楚的回合條、`◆／◇` 魔力、雙方紅盾生命值、卡牌 hover 詳情、瞄準箭頭、離開確認與勝負畫面；它已經有可用骨架，但「現在能做什麼、剛才發生什麼」仍不夠清楚。
 
 | 優先 | UI 項目 | 現況 | Demo 前怎麼補 |
