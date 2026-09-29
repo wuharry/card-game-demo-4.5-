@@ -61,7 +61,7 @@ const LINE_GOLD := Color(UI_STYLE.GOLD, 0.76)
 
 var _single_player_button: Button # 單人遊戲鈕,換場景前鎖住以免連點
 var _multiplayer_button: Button   # 多人遊戲鈕,單人遊戲進場期間一起鎖住
-var _fade_rect: ColorRect    # 蓋在最上層的黑幕:開場淡入、換場景淡出都靠它
+var _fade_rect: ColorRect    # 主選單開場淡入用的黑幕
 var _entering: bool = false
 var _fade_tween: Tween
 
@@ -305,30 +305,22 @@ func _lock_entry_buttons() -> void:
 	_multiplayer_button.disabled = true
 
 
-## 淡出到黑 → 切進牌桌。單機與連線共用同一段演出;呼叫前牌桌環境要先定案
-## (單機:自己 pick_random;連線:伺服器抽好、經 NetClient 的配對 RPC 寫進 ArenaPool)。
+## 單機與連線共用載入畫面，戰場由呼叫端事先選定。
 func _enter_game() -> void:
 	if _entering:
 		return
 	_entering = true
 	_lock_entry_buttons()
-	_fade_rect.mouse_filter = Control.MOUSE_FILTER_STOP
-	if _fade_tween != null:
-		_fade_tween.kill()
-	# 淡出到全黑(純手感)。await = 停在這行,等 tween 的 finished 信號發出才繼續。
-	var tw := create_tween()
-	tw.tween_property(_fade_rect, "color:a", 1.0, SETTINGS.current().motion_duration(0.35))
-	await tw.finished
-	# change_scene_to_file:卸載目前場景,載入並切換到指定路徑的場景。
-	var err := get_tree().change_scene_to_file(GAME_SCENE)
-	if err != OK:
-		# 換場景失敗(路徑打錯/檔案壞了)時別讓玩家卡在黑畫面:報錯並還原選單。
-		push_error("進入牌桌失敗:%s(錯誤碼 %d)" % [GAME_SCENE, err])
-		_fade_rect.color.a = 0.0
-		_fade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var loading := preload("res://src/loading/loading_screen.gd").new()
+	get_tree().root.add_child(loading)
+	loading.failed.connect(func() -> void:
 		_entering = false
 		_single_player_button.disabled = false
 		_multiplayer_button.disabled = false
+		if _lobby_col.visible:
+			_close_lobby()
+		_single_player_button.grab_focus())
+	loading.start(GAME_SCENE, ArenaPool.next_arena_path)
 
 
 ## ── 大廳欄(2a):建立房間 / 輸 IP 加入 / 狀態字 / 返回 ──────────

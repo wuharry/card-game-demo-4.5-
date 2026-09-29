@@ -62,6 +62,10 @@ static func _free_fallback() -> void:
 		_fallback = null
 
 const ZH := {
+	"loading_resources": "正在載入戰場…",
+	"loading_prepare": "正在準備牌桌…",
+	"loading_failed": "載入失敗，請返回後重試",
+	"loading_hint": "牌局將啟，靜候對決。",
 	"game_title": "卡牌對決",
 	"menu_single": "單人遊戲",
 	"menu_multiplayer": "多人遊戲",
@@ -150,6 +154,10 @@ const ZH := {
 }
 
 const EN := {
+	"loading_resources": "Loading battlefield…",
+	"loading_prepare": "Preparing the table…",
+	"loading_failed": "Loading failed. Please try again.",
+	"loading_hint": "The cards await. Your duel begins soon.",
 	"game_title": "CARD DUEL",
 	"menu_single": "Single Player",
 	"menu_multiplayer": "Multiplayer",
