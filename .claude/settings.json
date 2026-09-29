@@ -46,7 +46,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.harness/claude_hook.py\"",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-$(pwd)}\"; while [ ! -f \"$d/.harness/claude_hook.py\" ] && [ \"$d\" != \"/\" ]; do d=\"$(dirname \"$d\")\"; done; [ -f \"$d/.harness/claude_hook.py\" ] || exit 0; exec python3 \"$d/.harness/claude_hook.py\"",
             "timeout": 180
           }
         ],
@@ -58,7 +58,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.harness/claude_hook.py\"",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-$(pwd)}\"; while [ ! -f \"$d/.harness/claude_hook.py\" ] && [ \"$d\" != \"/\" ]; do d=\"$(dirname \"$d\")\"; done; [ -f \"$d/.harness/claude_hook.py\" ] || exit 0; exec python3 \"$d/.harness/claude_hook.py\"",
             "timeout": 180
           }
         ],
@@ -70,7 +70,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.harness/claude_hook.py\"",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-$(pwd)}\"; while [ ! -f \"$d/.harness/claude_hook.py\" ] && [ \"$d\" != \"/\" ]; do d=\"$(dirname \"$d\")\"; done; [ -f \"$d/.harness/claude_hook.py\" ] || exit 0; exec python3 \"$d/.harness/claude_hook.py\"",
             "timeout": 180
           }
         ]
@@ -81,7 +81,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.harness/claude_hook.py\"",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-$(pwd)}\"; while [ ! -f \"$d/.harness/claude_hook.py\" ] && [ \"$d\" != \"/\" ]; do d=\"$(dirname \"$d\")\"; done; [ -f \"$d/.harness/claude_hook.py\" ] || exit 0; exec python3 \"$d/.harness/claude_hook.py\"",
             "timeout": 180
           }
         ]
